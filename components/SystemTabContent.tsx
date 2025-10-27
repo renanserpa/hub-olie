@@ -1,10 +1,8 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
 import { Button } from './ui/Button';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -53,7 +51,7 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         }
         setIsSaving(true);
         try {
-            await firestoreService.updateSystemSettings(settings);
+            await firebaseService.updateSystemSettings(settings);
             toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas.' });
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar as configurações.', variant: 'destructive' });
@@ -98,10 +96,9 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                                         try {
                                             const parsed = JSON.parse(setting.value);
                                             if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                                                // FIX: Cast `parsed` to `Record<string, unknown>` to resolve a type inference issue.
-                                                // After `JSON.parse`, `parsed` is `any`, and TypeScript was failing to infer that
-                                                // `Object.entries(parsed)` returns an array, causing an error when calling `.map`.
-                                                return Object.entries(parsed as Record<string, unknown>).map(([key, value]) => {
+                                                // FIX: Using Object.entries with a type assertion to prevent TypeScript from inferring
+                                                // the parsed object as `unknown`, which caused the `.map` method to be unavailable.
+                                                return Object.entries(parsed as Record<string, any>).map(([key, value]) => {
                                                     return renderField(setting, key, value);
                                                 });
                                             }

@@ -1,514 +1,335 @@
+import { db } from '../lib/firebase';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  writeBatch,
+  serverTimestamp,
+  DocumentData,
+  WithFieldValue
+} from 'firebase/firestore';
+import {
+    AnyProduct,
+    AppData,
+    BasicMaterial,
+    Contact,
+    InventoryBalance,
+    InventoryMovement,
+    Order, OrderStatus,
+    Product,
+    ProductCategory,
+    ProductionOrder,
+    SettingsCategory,
+    SystemSetting,
+    Task,
+    TaskStatus,
+    User
+} from "../types";
 
+// --- Generic CRUD Functions ---
 
-import { AppData, User, SettingsCategory, AnySettingsItem, SystemSetting, Order, Contact, Product, OrderStatus, CatalogData, MaterialData, LogisticaData, ProductionOrder, OmnichannelData, InventoryBalance, InventoryMovement, TaskStatus, Task, AnyContact, ProductCategory, AnyProduct } from '../types';
-
-// --- MOCK DATA ---
-const mockUser: User = {
-  uid: 'admin123',
-  email: 'carolina.pommot@olie.com.br',
-  role: 'AdminGeral',
+/**
+ * Fetches all documents from a Firestore collection.
+ * @param path - The path to the collection (e.g., 'contacts').
+ * @returns A promise that resolves to an array of documents with their IDs.
+ */
+export const getCollection = async <T>(path: string): Promise<T[]> => {
+  const querySnapshot = await getDocs(collection(db, path));
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
 };
 
-const mockContacts: Contact[] = [
-    { 
-        id: 'contact1', 
-        name: 'Ana Silva', 
-        email: 'ana.silva@example.com', 
-        phone: '11987654321', 
-        whatsapp: '11987654321',
-        instagram: '@anasilva',
-        cpf_cnpj: '123.456.789-00',
-        birth_date: '1990-05-15',
-        address: { 
-            street: 'Rua das Flores', 
-            number: '123',
-            complement: 'Apto 4B',
-            neighborhood: 'Jardins',
-            city: 'São Paulo', 
-            state: 'SP', 
-            zip: '01234-567' 
-        } 
-    },
-    { 
-        id: 'contact2', 
-        name: 'Carlos Pereira', 
-        email: 'carlos.p@example.com', 
-        phone: '21912345678', 
-        address: { 
-            street: 'Avenida Copacabana',
-            number: '456',
-            city: 'Rio de Janeiro', 
-            state: 'RJ', 
-            zip: '22020-001',
-            neighborhood: 'Copacabana'
-        } 
-    },
-    { 
-        id: 'contact3',
-        name: 'Renan Serpa',
-        email: 'serparenan@gmail.com',
-        phone: '65992834900',
-        whatsapp: '65992834900',
-        instagram: '@serparenan',
-        address: {
-            street: '',
-            number: '',
-            city: 'Cuiabá',
-            state: 'MT',
-            zip: '',
-            neighborhood: ''
-        }
-    }
-];
-
-const mockProductCategories: ProductCategory[] = [
-    { id: 'cat1', name: 'Bolsas Maternidade' },
-    { id: 'cat2', name: 'Mochilas Infantis' },
-    { id: 'cat3', name: 'Acessórios de Viagem' },
-    { id: 'cat4', name: 'Vestuário' },
-];
-
-const mockProducts: Product[] = [
-    { id: 'prod1', name: 'Bolsa Maternidade Classic', sku: 'BOL-MAT-CLA-01', basePrice: 299.90, category_id: 'cat1', stock_quantity: 50, hasVariants: true, attributes: { embroidery: true, fabricColor: ['ct1', 'ct2'], zipperColor: ['cz1'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'prod2', name: 'Mochila Aventura Kids', sku: 'MOC-KID-AVT-01', basePrice: 189.90, category_id: 'cat2', stock_quantity: 30, hasVariants: true, attributes: { fabricColor: ['ct1', 'ct3'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'prod3', name: 'Necessaire Viagem', sku: 'NEC-VIA-01', basePrice: 79.90, category_id: 'cat3', stock_quantity: 100, hasVariants: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'prod4', name: 'Jaqueta Moletom', sku: 'JAQ-MOL-01', basePrice: 220.00, category_id: 'cat4', stock_quantity: 40, hasVariants: true, attributes: { embroidery: true, fabricColor: ['ct1', 'ct2', 'ct3'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-];
-
-
-const mockOrders: Order[] = [
-    { 
-        id: 'order1', order_number: 'OLI-00001', contact_id: 'contact1', status: 'paid',
-        items: [{ id: 'item1', product_id: 'prod1', product_name: 'Bolsa Maternidade Classic', quantity: 1, unit_price: 299.90, total: 299.90, config_json: { fabricColor: 'Rosa Bebê', embroidery: { enabled: true, text: 'Baby Ana', font: 'Brush Script MT'} } }],
-        subtotal: 299.90, discount: 0, shipping_cost: 25.00, total: 324.90,
-        payments: { status: 'paid', method: 'credit_card', transactionId: 'txn_123' },
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString()
-    },
-    { 
-        id: 'order2', order_number: 'OLI-00002', contact_id: 'contact2', status: 'in_production',
-        items: [{ id: 'item2', product_id: 'prod2', product_name: 'Mochila Aventura Kids', quantity: 2, unit_price: 189.90, total: 379.80 }],
-        subtotal: 379.80, discount: 20, shipping_cost: 30.00, total: 389.80,
-        payments: { status: 'paid', method: 'pix', transactionId: 'txn_456' },
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString()
-    },
-    { 
-        id: 'order3', order_number: 'OLI-00003', contact_id: 'contact1', status: 'pending_payment',
-        items: [{ id: 'item3', product_id: 'prod3', product_name: 'Necessaire Viagem', quantity: 3, unit_price: 79.90, total: 239.70 }],
-        subtotal: 239.70, discount: 0, shipping_cost: 15.00, total: 254.70,
-        payments: { status: 'pending', method: 'link', checkoutUrl: '#' },
-        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
-    },
-];
-
-const mockProductionOrders: ProductionOrder[] = [
-    {
-        id: 'po1', po_number: 'OP-2024-001', product_id: 'prod1', quantity: 10, status: 'em_andamento', priority: 'alta',
-        due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        started_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: 'Cliente VIP, priorizar a produção desta ordem. Bordado especial "Baby Ana".',
-        steps_completed: 2, steps_total: 5,
-    },
-    {
-        id: 'po2', po_number: 'OP-2024-002', product_id: 'prod2', quantity: 25, status: 'planejado', priority: 'normal',
-        due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        notes: '',
-        steps_completed: 1, steps_total: 4,
-    },
-    {
-        id: 'po3', po_number: 'OP-2024-003', product_id: 'prod3', quantity: 50, status: 'novo', priority: 'normal',
-        due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        notes: 'Aguardando definição de cor do zíper pelo cliente.',
-        steps_completed: 0, steps_total: 3,
-    },
-     {
-        id: 'po4', po_number: 'OP-2024-004', product_id: 'prod1', quantity: 5, status: 'finalizado', priority: 'baixa',
-        due_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        started_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        completed_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: '',
-        steps_completed: 5, steps_total: 5,
-    },
-     {
-        id: 'po5', po_number: 'OP-2024-005', product_id: 'prod2', quantity: 15, status: 'em_espera', priority: 'alta',
-        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        started_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: 'Aguardando chegada de tecido estampado.',
-        steps_completed: 1, steps_total: 4,
-    }
-];
-
-const mockTaskStatuses: TaskStatus[] = [
-  { id: 'status-1', name: 'Fila', color: '#E5E7EB', position: 1 }, // gray-200
-  { id: 'status-2', name: 'Corte', color: '#DBEAFE', position: 2 }, // blue-200
-  { id: 'status-3', name: 'Bordado', color: '#F3E8FF', position: 3 }, // purple-100
-  { id: 'status-4', name: 'Costura', color: '#FEF3C7', position: 4 }, // amber-100
-  { id: 'status-5', name: 'QA', color: '#FFEDD5', position: 5 }, // orange-100
-];
-
-const mockTasks: Task[] = [
-    { id: 'task-1', title: 'Jaqueta Moletom', status_id: 'status-3', client_name: 'Cliente', quantity: 1, position: 1 },
-    { id: 'task-2', title: 'Bolsa Maternidade', status_id: 'status-4', client_name: 'Ana Silva', quantity: 1, position: 1 },
-    { id: 'task-3', title: 'Mochila Aventura', status_id: 'status-3', client_name: 'Carlos Pereira', quantity: 2, position: 2 },
-    { id: 'task-4', title: 'Necessaire Viagem', status_id: 'status-1', client_name: 'Ana Silva', quantity: 3, position: 1 },
-];
-
-
-const mockInventoryBalances: InventoryBalance[] = [
-    { material_id: 'mat1', quantity_on_hand: 150.5, quantity_reserved: 25, low_stock_threshold: 50, location: 'Prateleira A-1', last_updated_at: new Date().toISOString() },
-    { material_id: 'mat2', quantity_on_hand: 800, quantity_reserved: 350, low_stock_threshold: 200, location: 'Caixa B-3', last_updated_at: new Date().toISOString() },
-];
-
-const mockInventoryMovements: InventoryMovement[] = [
-    { id: 'move1', material_id: 'mat1', type: 'in', quantity: 200, reason: 'compra', reference_id: 'PO-001', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'move2', material_id: 'mat1', type: 'out', quantity: -50, reason: 'consumo_producao', reference_id: 'OP-2024-001', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'move3', material_id: 'mat1', type: 'adjustment', quantity: 0.5, reason: 'contagem', notes: 'Ajuste de final de mês', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'move4', material_id: 'mat2', type: 'in', quantity: 1000, reason: 'compra', reference_id: 'PO-002', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'move5', material_id: 'mat2', type: 'out', quantity: -200, reason: 'consumo_producao', reference_id: 'OP-2024-002', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-];
-
-const mockData: AppData = {
-  catalogs: {
-    paletas_cores: [
-      { id: 'pc1', name: 'Paleta Olie Base', descricao: 'Cores padrão da marca', is_active: true },
-      { id: 'pc2', name: 'Paleta Verão 2024', descricao: 'Cores vibrantes para a estação', is_active: true },
-      { id: 'pc3', name: 'Paleta Neutros', descricao: 'Tons sóbios e elegantes', is_active: false },
-    ],
-    cores_texturas: {
-        tecido: [
-            { id: 'ct1', name: 'Rosa Bebê', hex: '#F4C2C2', palette_id: 'pc1', is_active: true },
-            { id: 'ct2', name: 'Caramelo', hex: '#D2A66D', palette_id: 'pc1', is_active: true },
-            { id: 'ct3', name: 'Verde Musgo', hex: '#556B2F', palette_id: 'pc2', is_active: true },
-        ],
-        ziper: [
-            { id: 'cz1', name: 'Dourado', hex: '#FFD700', palette_id: 'pc1', is_active: true },
-            { id: 'cz2', name: 'Prateado', hex: '#C0C0C0', palette_id: 'pc1', is_active: true },
-        ],
-        forro: [{ id: 'cf1', name: 'Forro Impermeável Branco', hex: '#FFFFFF', palette_id: 'pc1', is_active: true }],
-        puxador: [{ id: 'cpull1', name: 'Puxador Ouro Velho', hex: '#C8AD7F', palette_id: 'pc1', is_active: true }],
-        vies: [{ id: 'cv1', name: 'Viés Bege', hex: '#F5F5DC', palette_id: 'pc1', is_active: true }],
-        bordado: [{ id: 'cb1', name: 'Linha Rosé Gold', hex: '#B76E79', palette_id: 'pc2', thread_type: 'metallic', is_active: true }],
-        texturas: [{ id: 'tex1', name: 'Poá Clássico', thumbnail_url: '/poa.png', tile_url: '/poa_tile.png', texture_type: 'poa', is_active: true }],
-    },
-    fontes_monogramas: [
-        { id: 'font1', name: 'Brush Script MT', style: 'script', category: 'script', preview_url: '/brush_script.png', font_file_url: '/brush.ttf', is_active: true },
-        { id: 'font2', name: 'Script Elegant', style: 'script', category: 'script', preview_url: '/elegant.png', font_file_url: '/elegant.ttf', is_active: true },
-    ],
-  },
-  materials: {
-    grupos_suprimento: [
-      { id: 'gi1', name: 'Têxteis', codigo: 'TEX', descricao: 'Tecidos, sintéticos e malhas' },
-      { id: 'gi2', name: 'Ferragens', codigo: 'FER', descricao: 'Metais, zíperes e aviamentos' },
-    ],
-    materiais_basicos: [
-      { id: 'mat1', name: 'Nylon 600D Preto', codigo: 'NYL600', supply_group_id: 'gi1', unit: 'm', default_cost: 28.90 },
-      { id: 'mat2', name: 'Mosquetão Ouro', codigo: 'MOSQ01', supply_group_id: 'gi2', unit: 'un', default_cost: 3.50 },
-    ],
-  },
-  logistica: { 
-    metodos_entrega: [
-        { id: 'me1', type: 'correios', enabled: true, notes: 'Integração via Melhor Envio' },
-        { id: 'me2', type: 'motoboy', enabled: true, notes: 'Apenas para Grande SP' },
-        { id: 'me3', type: 'retirada', enabled: false, notes: 'Retirada no ateliê com hora marcada' },
-    ],
-    calculo_frete: [
-        { id: 'main', radius_km: 50, base_fee: 10, fee_per_km: 1.5, free_shipping_threshold: 299.90 }
-    ],
-    tipos_embalagem: [
-        { id: 'te1', name: 'Caixa P', codigo: 'CX-P', material: 'papelão', weight_limit_g: 1000, dimensions_json: '{"w":20,"h":15,"d":10}'}
-    ],
-    tipos_vinculo: [
-        { id: 'tv1', name: 'CLT', codigo: 'CLT', payroll_effects_json: '{"fgts": true, "inss": true}'}
-    ]
-  },
-  sistema: [
-    { id: 'currency', name: 'Moeda', value: JSON.stringify({ code: 'BRL', symbol: 'R$' }), category: 'system', description: 'Moeda padrão para transações e relatórios.' },
-    { id: 'timezone', name: 'Fuso Horário', value: JSON.stringify({ iana: 'America/Sao_Paulo' }), category: 'system', description: 'Fuso horário para datas e agendamentos.' },
-    { id: 'order_prefix', name: 'Prefixo de Pedido', value: JSON.stringify({ prefix: 'OLI-' }), category: 'orders', description: 'Texto inicial para todos os números de pedido.' },
-  ],
-  midia: {},
-  orders: mockOrders,
-  contacts: mockContacts,
-  products: mockProducts,
-  product_categories: mockProductCategories,
-  production_orders: mockProductionOrders,
-  task_statuses: mockTaskStatuses,
-  tasks: mockTasks,
-  omnichannel: { conversations: [], messages: [], quotes: [] },
-  inventory_balances: mockInventoryBalances,
-  inventory_movements: mockInventoryMovements,
+/**
+ * Fetches a single document from Firestore by its ID.
+ * @param path - The path to the collection.
+ * @param id - The ID of the document.
+ * @returns A promise that resolves to the document data with its ID, or null if not found.
+ */
+export const getDocument = async <T>(path: string, id: string): Promise<T | null> => {
+  const docRef = doc(db, path, id);
+  const docSnap = await getDoc(docRef);
+  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as T : null;
 };
-// --- END MOCK DATA ---
 
-const delay = <T,>(data: T, ms = 300): Promise<T> => 
-  new Promise(resolve => setTimeout(() => resolve(JSON.parse(JSON.stringify(data))), ms));
-  
-const getCategoryData = (category: SettingsCategory, subCategory?: string | null, subSubCategory?: string | null): AnySettingsItem[] => {
-    const mainCategoryData = mockData[category];
+/**
+ * Adds a new document to a Firestore collection with automatic timestamps.
+ * @param path - The path to the collection.
+ * @param data - The data for the new document (without 'id').
+ * @returns A promise that resolves to the ID of the newly created document.
+ */
+export const addDocument = async <T>(path: string, data: WithFieldValue<DocumentData>) => {
+  const dataWithTimestamp = {
+      ...data,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+  };
+  const docRef = await addDoc(collection(db, path), dataWithTimestamp);
+  return docRef.id;
+};
 
-    if (subCategory && mainCategoryData && typeof mainCategoryData === 'object' && !Array.isArray(mainCategoryData)) {
-        const subCategoryData = (mainCategoryData as any)[subCategory];
+/**
+ * Updates an existing document in Firestore with an automatic 'updated_at' timestamp.
+ * @param path - The path to the collection.
+ * @param id - The ID of the document to update.
+ * @param data - An object containing the fields to update.
+ */
+export const updateDocument = async (path: string, id: string, data: WithFieldValue<DocumentData>) => {
+  const dataWithTimestamp = {
+      ...data,
+      updated_at: serverTimestamp(),
+  };
+  const docRef = doc(db, path, id);
+  await updateDoc(docRef, dataWithTimestamp);
+};
 
-        if (subSubCategory && subCategoryData && typeof subCategoryData === 'object' && !Array.isArray(subCategoryData)) {
-            const subSubCategoryData = (subCategoryData as any)[subSubCategory];
-            if (!subSubCategoryData) throw new Error(`Sub-subcategory ${subSubCategory} not found in ${category}.${subCategory}`);
-            return subSubCategoryData;
-        }
+/**
+ * Deletes a document from Firestore.
+ * @param path - The path to the collection.
+ * @param id - The ID of the document to delete.
+ */
+export const deleteDocument = async (path: string, id: string) => {
+  await deleteDoc(doc(db, path, id));
+};
 
-        if (!subCategoryData) throw new Error(`Subcategory ${subCategory} not found in ${category}`);
-        return subCategoryData;
-    }
+
+// --- App-Specific Helper Functions ---
+
+const getSettingsCollectionPath = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    if (subSubTab) return subSubTab;
+    if (subTab) return subTab;
+    return category;
+};
+
+const getProductCategories = (): Promise<ProductCategory[]> => getCollection<ProductCategory>('product_categories');
+
+const getProducts = async (): Promise<Product[]> => {
+    const products = await getCollection<Product>('products');
+    const categories = await getProductCategories();
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
+    return products.map(product => ({
+        ...product,
+        category: categoryMap.get(product.category_id)
+    }));
+};
+
+const getOrders = async (): Promise<Order[]> => {
+    const orders = await getCollection<Order>('orders');
+    const contacts = await getCollection<Contact>('contacts');
+    const contactsMap = new Map(contacts.map(c => [c.id, c]));
+
+    const products = await getProducts();
+    const productsMap = new Map(products.map(p => [p.id, p]));
     
-    if (Array.isArray(mainCategoryData)) {
-        return mainCategoryData as AnySettingsItem[];
-    }
-
-    throw new Error(`Category ${category} could not be retrieved.`);
-}
-
-export const firestoreService = {
-  getCurrentUser: (): Promise<User> => {
-    return delay<User>(mockUser, 100);
-  },
-
-  getSettings: (): Promise<AppData> => {
-    return delay<AppData>(mockData);
-  },
-
-  updateSetting: async <T extends AnySettingsItem>(category: SettingsCategory, itemId: string, data: Partial<T>, subCategory?: string | null, subSubCategory?: string | null): Promise<T> => {
-    const dataList = getCategoryData(category, subCategory, subSubCategory) as T[];
-    const itemIndex = dataList.findIndex(item => item.id === itemId);
-    if (itemIndex === -1) throw new Error('Item not found');
-    
-    const updatedItem = { ...dataList[itemIndex], ...data };
-    dataList[itemIndex] = updatedItem;
-    
-    return delay<T>(updatedItem);
-  },
-
-  addSetting: async <T extends AnySettingsItem>(category: SettingsCategory, data: Omit<T, 'id'>, subCategory?: string | null, subSubCategory?: string | null): Promise<T> => {
-    const dataList = getCategoryData(category, subCategory, subSubCategory) as T[];
-    const newItem = { ...data, id: `new_${Date.now()}` } as T;
-    dataList.push(newItem);
-    return delay<T>(newItem);
-  },
-
-  deleteSetting: async (category: SettingsCategory, itemId: string, subCategory?: string | null, subSubCategory?: string | null): Promise<void> => {
-    const dataList = getCategoryData(category, subCategory, subSubCategory);
-    const itemIndex = dataList.findIndex(item => item.id === itemId);
-    if (itemIndex === -1) throw new Error('Item not found');
-
-    dataList.splice(itemIndex, 1);
-    return delay<void>(undefined);
-  },
-
-  updateSystemSettings: async (settingsToUpdate: SystemSetting[]): Promise<void> => {
-    settingsToUpdate.forEach(setting => {
-        const index = mockData.sistema.findIndex(s => s.id === setting.id);
-        if (index !== -1) {
-            mockData.sistema[index] = setting;
-        }
-    });
-    return delay<void>(undefined);
-  },
-
-  // --- Orders Service ---
-  getOrders: (): Promise<Order[]> => {
-    const ordersWithContactsAndProducts = mockData.orders.map(order => ({
+    return orders.map(order => ({
         ...order,
-        contact: mockData.contacts.find(c => c.id === order.contact_id),
-        items: order.items.map(item => ({
-            ...item,
-            product: mockData.products.find(p => p.id === item.product_id)
-        }))
+        contact: contactsMap.get(order.contact_id),
+        items: order.items.map(item => ({...item, product: productsMap.get(item.product_id)}))
     }));
-    return delay(ordersWithContactsAndProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-  },
+};
 
-  // --- Products Service ---
-  getProducts: (): Promise<Product[]> => {
-    const productsWithCategories = mockData.products.map(product => ({
-      ...product,
-      category: mockData.product_categories.find(c => c.id === product.category_id),
-    }));
-    return delay(productsWithCategories);
-  },
+const getTasks = (): Promise<Task[]> => getCollection<Task>('tasks');
+const getTaskStatuses = (): Promise<TaskStatus[]> => getCollection<TaskStatus>('task_statuses');
 
-  getProductCategories: (): Promise<ProductCategory[]> => delay(mockData.product_categories),
-
-  addProduct: async (productData: AnyProduct): Promise<Product> => {
-    const newProduct: Product = {
-      ...productData,
-      id: `prod_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    mockData.products.push(newProduct);
-    return delay(newProduct);
-  },
-
-  updateProduct: async (productId: string, data: Partial<AnyProduct>): Promise<Product> => {
-    const productIndex = mockData.products.findIndex(p => p.id === productId);
-    if (productIndex === -1) throw new Error("Product not found");
-
-    const updatedProduct = { ...mockData.products[productIndex], ...data, updatedAt: new Date().toISOString() };
-    mockData.products[productIndex] = updatedProduct;
-
-    return delay(updatedProduct);
-  },
-
-  
-  // --- Contacts Service ---
-  getContacts: (): Promise<Contact[]> => delay(mockData.contacts),
-  
-  addContact: async (contactData: AnyContact): Promise<Contact> => {
-    const newContact: Contact = {
-        ...contactData,
-        id: `contact_${Date.now()}`,
-    };
-    mockData.contacts.push(newContact);
-    return delay(newContact);
-  },
-
-  updateContact: async (contactId: string, data: Partial<AnyContact>): Promise<Contact> => {
-    const contactIndex = mockData.contacts.findIndex(c => c.id === contactId);
-    if (contactIndex === -1) throw new Error("Contact not found");
-
-    const updatedContact = { ...mockData.contacts[contactIndex], ...data };
-    mockData.contacts[contactIndex] = updatedContact;
-
-    return delay(updatedContact);
-  },
-
-
-  addOrder: async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at'>): Promise<Order> => {
-    const maxOrderNum = mockData.orders.reduce((max, order) => {
-        const num = parseInt(order.order_number.split('-')[1]);
-        return num > max ? num : max;
-    }, 0);
-    const newOrderNumber = `OLI-${(maxOrderNum + 1).toString().padStart(5, '0')}`;
-
-    const newOrder: Order = {
-        ...orderData,
-        id: `order_${Date.now()}`,
-        order_number: newOrderNumber,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-    };
-
-    mockData.orders.push(newOrder);
-
-    // Simulate stock decrement
-    newOrder.items.forEach(item => {
-        const productIndex = mockData.products.findIndex(p => p.id === item.product_id);
-        if (productIndex !== -1) {
-            mockData.products[productIndex].stock_quantity -= item.quantity;
-        }
-    });
-
-    return delay(newOrder);
-  },
-
-  updateOrderStatus: async (orderId: string, status: OrderStatus): Promise<Order> => {
-    const orderIndex = mockData.orders.findIndex(o => o.id === orderId);
-    if (orderIndex === -1) throw new Error("Order not found");
-
-    mockData.orders[orderIndex].status = status;
-    mockData.orders[orderIndex].updated_at = new Date().toISOString();
-    
-    return delay(mockData.orders[orderIndex]);
-  },
-  
-  updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => {
-    const orderIndex = mockData.orders.findIndex(o => o.id === orderId);
-    if (orderIndex === -1) throw new Error("Order not found");
-
-    const updatedOrder = { ...mockData.orders[orderIndex], ...data, updated_at: new Date().toISOString() };
-    mockData.orders[orderIndex] = updatedOrder;
-
-    return delay(updatedOrder);
-  },
-
-  // --- Production Service ---
-  getProductionOrders: (): Promise<ProductionOrder[]> => {
-    const ordersWithProducts = mockData.production_orders.map(po => ({
+const getProductionOrders = async (): Promise<ProductionOrder[]> => {
+    const poCollection = await getCollection<ProductionOrder>('production_orders');
+    const products = await getCollection<Product>('products');
+    const productMap = new Map(products.map(p => [p.id, p]));
+    return poCollection.map(po => ({
         ...po,
-        product: mockData.products.find(p => p.id === po.product_id)
+        product: productMap.get(po.product_id)
     }));
-    return delay(ordersWithProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+};
+
+const getAllBasicMaterials = (): Promise<BasicMaterial[]> => getCollection<BasicMaterial>('materiais_basicos');
+
+const getInventoryBalances = async (): Promise<InventoryBalance[]> => {
+    const balances = await getCollection<InventoryBalance>('inventory_balances');
+    const materials = await getAllBasicMaterials();
+    const materialMap = new Map(materials.map(m => [m.id, m]));
+    return balances.map(b => ({
+        ...b,
+        material: materialMap.get(b.material_id)
+    }));
+};
+
+
+// --- Exported Service Object ---
+
+export const firebaseService = {
+  getCollection,
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument,
+  
+  // App-specific methods
+  getSettings: async (): Promise<AppData> => {
+    const [
+        paletas_cores,
+        tecido, ziper, forro, puxador, vies, bordado, texturas,
+        fontes_monogramas,
+        grupos_suprimento,
+        materiais_basicos,
+        metodos_entrega,
+        calculo_frete,
+        tipos_embalagem,
+        tipos_vinculo,
+        sistema,
+        orders,
+        contacts,
+        products,
+        product_categories,
+        production_orders,
+        task_statuses,
+        tasks,
+        inventory_balances,
+    ] = await Promise.all([
+        getCollection('paletas_cores'),
+        getCollection('tecido'), getCollection('ziper'), getCollection('forro'), getCollection('puxador'), getCollection('vies'), getCollection('bordado'), getCollection('texturas'),
+        getCollection('fontes_monogramas'),
+        getCollection('grupos_suprimento'),
+        getAllBasicMaterials(),
+        getCollection('metodos_entrega'),
+        getCollection('calculo_frete'),
+        getCollection('tipos_embalagem'),
+        getCollection('tipos_vinculo'),
+        getCollection<SystemSetting>('sistema'),
+        getOrders(),
+        getCollection<Contact>('contacts'),
+        getProducts(),
+        getProductCategories(),
+        getProductionOrders(),
+        getTaskStatuses(),
+        getTasks(),
+        getInventoryBalances(),
+    ]);
+
+    return {
+        catalogs: {
+            paletas_cores,
+            cores_texturas: { tecido, ziper, forro, puxador, vies, bordado, texturas },
+            fontes_monogramas
+        },
+        materials: {
+            grupos_suprimento,
+            materiais_basicos
+        },
+        logistica: {
+            metodos_entrega,
+            calculo_frete,
+            tipos_embalagem,
+            tipos_vinculo
+        },
+        sistema,
+        midia: {},
+        orders,
+        contacts,
+        products,
+        product_categories,
+        production_orders,
+        task_statuses,
+        tasks,
+        omnichannel: { conversations: [], messages: [], quotes: [] },
+        inventory_balances,
+        inventory_movements: [],
+    } as AppData;
+  },
+  getCurrentUser: async (): Promise<User | null> => ({
+      uid: 'mock-user-id',
+      email: 'admin@olie.com.br',
+      role: 'AdminGeral',
+  }),
+
+  // Settings
+  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getSettingsCollectionPath(category, subTab, subSubTab), data),
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getSettingsCollectionPath(category, subTab, subSubTab), id, data),
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getSettingsCollectionPath(category, subTab, subSubTab), id),
+  updateSystemSettings: async (settings: SystemSetting[]) => {
+      const batch = writeBatch(db);
+      settings.forEach(setting => {
+          const { id, ...data } = setting;
+          const docRef = doc(db, 'sistema', id);
+          batch.update(docRef, { ...data, updated_at: serverTimestamp() });
+      });
+      await batch.commit();
+  },
+
+  // Orders
+  getOrders,
+  updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
+      await updateDocument('orders', orderId, { status: newStatus });
+      const updatedOrder = await getDocument<Order>('orders', orderId);
+      if (!updatedOrder) throw new Error("Order not found after update");
+      if (updatedOrder.contact_id) {
+          updatedOrder.contact = await getDocument<Contact>('contacts', updatedOrder.contact_id);
+      }
+      return updatedOrder;
+  },
+  addOrder: async (orderData: Partial<Order>) => {
+      const q = query(collection(db, 'orders'));
+      const querySnapshot = await getDocs(q);
+      const year = new Date().getFullYear();
+      const orderNumber = `P-${year}-${(querySnapshot.size + 1).toString().padStart(4, '0')}`;
+      return addDocument('orders', { ...orderData, order_number: orderNumber });
+  },
+  updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => {
+        await updateDocument('orders', orderId, data);
+        const updatedOrder = await getDocument<Order>('orders', orderId);
+        if (!updatedOrder) throw new Error("Order not found");
+        return updatedOrder;
+  },
+
+  // Production
+  getProductionOrders,
+  getTasks,
+  getTaskStatuses,
+  updateTask: (taskId: string, data: Partial<Task>) => updateDocument('tasks', taskId, data),
+
+  // Inventory
+  getInventoryBalances,
+  getAllBasicMaterials,
+  getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
+      const q = query(collection(db, 'inventory_movements'), where('material_id', '==', materialId), orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryMovement));
+  },
+  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
+        const batch = writeBatch(db);
+        const balanceDocRef = doc(db, 'inventory_balances', movementData.material_id);
+        const balanceDoc = await getDoc(balanceDocRef);
+
+        if (balanceDoc.exists()) {
+            const currentBalance = balanceDoc.data().quantity_on_hand;
+            batch.update(balanceDocRef, { quantity_on_hand: currentBalance + movementData.quantity, last_updated_at: serverTimestamp() });
+        } else {
+             batch.set(balanceDocRef, { 
+                 material_id: movementData.material_id, 
+                 quantity_on_hand: movementData.quantity,
+                 quantity_reserved: 0,
+                 low_stock_threshold: 10, // default
+                 last_updated_at: serverTimestamp()
+             });
+        }
+        
+        const movementRef = doc(collection(db, "inventory_movements"));
+        batch.set(movementRef, {...movementData, created_at: serverTimestamp()});
+
+        await batch.commit();
   },
   
-  getTaskStatuses: (): Promise<TaskStatus[]> => {
-      return delay(mockData.task_statuses.sort((a, b) => a.position - b.position));
-  },
-
-  getTasks: (): Promise<Task[]> => {
-      return delay(mockData.tasks);
-  },
-
-  updateTask: async (taskId: string, updates: Partial<Task>): Promise<Task> => {
-    const taskIndex = mockData.tasks.findIndex(t => t.id === taskId);
-    if (taskIndex === -1) throw new Error("Task not found");
-
-    const updatedTask = { ...mockData.tasks[taskIndex], ...updates };
-    mockData.tasks[taskIndex] = updatedTask;
-
-    return delay(updatedTask);
-  },
-
-  // --- Inventory Service ---
-  getInventoryBalances: (): Promise<InventoryBalance[]> => {
-    const balancesWithMaterials = mockData.inventory_balances.map(balance => ({
-      ...balance,
-      material: mockData.materials.materiais_basicos.find(m => m.id === balance.material_id),
-    }));
-    return delay(balancesWithMaterials);
-  },
-
-  getInventoryMovements: (materialId: string): Promise<InventoryMovement[]> => {
-    const movements = mockData.inventory_movements
-      .filter(m => m.material_id === materialId)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    return delay(movements);
-  },
-
-  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {
-    const newMovement: InventoryMovement = {
-        ...movementData,
-        id: `move_${Date.now()}`,
-        created_at: new Date().toISOString(),
-    };
-    mockData.inventory_movements.push(newMovement);
-
-    // Update balance
-    const balanceIndex = mockData.inventory_balances.findIndex(b => b.material_id === movementData.material_id);
-    if (balanceIndex !== -1) {
-        mockData.inventory_balances[balanceIndex].quantity_on_hand += movementData.quantity;
-        mockData.inventory_balances[balanceIndex].last_updated_at = newMovement.created_at;
-    } else {
-        // Create new balance if it doesn't exist
-        mockData.inventory_balances.push({
-            material_id: movementData.material_id,
-            quantity_on_hand: movementData.quantity,
-            quantity_reserved: 0,
-            low_stock_threshold: 10, // Default value
-            last_updated_at: newMovement.created_at,
-        });
-    }
-
-    return delay(newMovement);
-  },
-
-  getAllBasicMaterials: () => {
-    return delay(mockData.materials.materiais_basicos);
+  // Products
+  getProducts,
+  getProductCategories,
+  addProduct: (productData: AnyProduct) => addDocument('products', productData),
+  updateProduct: (productId: string, productData: Product | AnyProduct) => {
+      const { id, category, ...dataToUpdate } = productData as Product;
+      return updateDocument('products', productId, dataToUpdate);
   },
 };

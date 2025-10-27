@@ -1,6 +1,8 @@
+
+
 import { useState, useEffect, useCallback } from 'react';
 import { Task, TaskStatus } from '../types';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
 export function useProductionKanban() {
@@ -12,8 +14,8 @@ export function useProductionKanban() {
         setIsLoading(true);
         try {
             const [tasksData, statusesData] = await Promise.all([
-                firestoreService.getTasks(),
-                firestoreService.getTaskStatuses(),
+                firebaseService.getTasks(),
+                firebaseService.getTaskStatuses(),
             ]);
             setTasks(tasksData);
             setStatuses(statusesData);
@@ -53,7 +55,7 @@ export function useProductionKanban() {
         setTasks(updatedTasks.sort((a, b) => a.position - b.position));
         
         try {
-            await firestoreService.updateTask(taskId, { status_id: newStatusId, position: newPosition });
+            await firebaseService.updateTask(taskId, { status_id: newStatusId, position: newPosition });
             // Optionally re-fetch to confirm, but optimistic is usually enough
         } catch (error) {
             // Revert on error

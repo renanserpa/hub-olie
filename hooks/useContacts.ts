@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Contact, AnyContact } from '../types';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
 export function useContacts(onDataChange: () => void) {
@@ -15,10 +15,11 @@ export function useContacts(onDataChange: () => void) {
     const loadContacts = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await firestoreService.getContacts();
+            const data = await firebaseService.getCollection<Contact>('contacts');
             setAllContacts(data);
         } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
+            console.error(error);
+            toast({ title: "Erro!", description: "Não foi possível carregar os contatos do Firebase.", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
@@ -35,8 +36,8 @@ export function useContacts(onDataChange: () => void) {
             const lowercasedQuery = searchQuery.toLowerCase();
             contacts = contacts.filter(c =>
                 c.name.toLowerCase().includes(lowercasedQuery) ||
-                c.email.toLowerCase().includes(lowercasedQuery) ||
-                c.phone.includes(lowercasedQuery)
+                (c.email && c.email.toLowerCase().includes(lowercasedQuery)) ||
+                (c.phone && c.phone.includes(lowercasedQuery))
             );
         }
 
@@ -66,16 +67,17 @@ export function useContacts(onDataChange: () => void) {
     const saveContact = async (contactData: AnyContact | Contact) => {
         try {
             if ('id' in contactData) {
-                await firestoreService.updateContact(contactData.id, contactData);
+                const { id, ...dataToUpdate } = contactData;
+                await firebaseService.updateDocument('contacts', id, dataToUpdate);
                 toast({ title: "Sucesso!", description: "Contato atualizado." });
             } else {
-                await firestoreService.addContact(contactData);
+                await firebaseService.addDocument('contacts', contactData);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
-            onDataChange();
             loadContacts(); // Re-fetch contacts after change
             closeDialog();
         } catch (error) {
+            console.error(error);
             toast({ title: "Erro!", description: "Não foi possível salvar o contato.", variant: "destructive" });
         }
     };

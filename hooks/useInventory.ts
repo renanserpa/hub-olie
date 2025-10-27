@@ -1,7 +1,9 @@
 
+
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
 export function useInventory(onDataChange: () => void) {
@@ -18,8 +20,8 @@ export function useInventory(onDataChange: () => void) {
         setIsLoading(true);
         try {
             const [balancesData, materialsData] = await Promise.all([
-                firestoreService.getInventoryBalances(),
-                firestoreService.getAllBasicMaterials()
+                firebaseService.getInventoryBalances(),
+                firebaseService.getAllBasicMaterials()
             ]);
             setAllBalances(balancesData);
             setAllMaterials(materialsData);
@@ -45,7 +47,7 @@ export function useInventory(onDataChange: () => void) {
             }
             setIsLoadingMovements(true);
             try {
-                const movementsData = await firestoreService.getInventoryMovements(selectedMaterialId);
+                const movementsData = await firebaseService.getInventoryMovements(selectedMaterialId);
                 setMovements(movementsData);
             } catch (error) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar os movimentos.', variant: 'destructive' });
@@ -72,7 +74,7 @@ export function useInventory(onDataChange: () => void) {
 
     const addInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
         try {
-            await firestoreService.addInventoryMovement(movementData);
+            await firebaseService.addInventoryMovement(movementData);
             toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
             onDataChange(); // Trigger a full data refresh
         } catch (error) {

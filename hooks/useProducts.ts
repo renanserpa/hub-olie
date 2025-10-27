@@ -1,7 +1,9 @@
 
+
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Product, ProductCategory, AnyProduct } from '../types';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
 export function useProducts(onDataChange: () => void) {
@@ -17,8 +19,8 @@ export function useProducts(onDataChange: () => void) {
         setIsLoading(true);
         try {
             const [productsData, categoriesData] = await Promise.all([
-                firestoreService.getProducts(),
-                firestoreService.getProductCategories()
+                firebaseService.getProducts(),
+                firebaseService.getProductCategories()
             ]);
             setAllProducts(productsData);
             setCategories(categoriesData);
@@ -60,10 +62,10 @@ export function useProducts(onDataChange: () => void) {
     const saveProduct = async (productData: AnyProduct | Product) => {
         try {
             if ('id' in productData) {
-                await firestoreService.updateProduct(productData.id, productData);
+                await firebaseService.updateProduct(productData.id, productData);
                 toast({ title: "Sucesso!", description: "Produto atualizado." });
             } else {
-                await firestoreService.addProduct(productData as AnyProduct);
+                await firebaseService.addProduct(productData as AnyProduct);
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
             onDataChange();

@@ -14,7 +14,6 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: keyof typeof badgeVariants.variant;
 }
 
-// FIX: Refactor to use React.forwardRef to fix type inference issue and align with other UI components.
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant = "default", ...props }, ref) => {
     return (

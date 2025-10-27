@@ -1,4 +1,5 @@
 
+
 import { useState } from 'react';
 import { toast } from './use-toast';
 import { Contact, FiscalDetails, LogisticsDetails, PaymentDetails } from '../types';
@@ -17,7 +18,6 @@ export function useTinyApi() {
       // toast({ title: "Sucesso (Mock)", description: successMessage });
       return mockResult;
     } catch (e: any) {
-      // FIX: The `toast` function does not have an `error` method. Changed to call `toast` with a 'destructive' variant payload.
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
       return null;
     } finally {

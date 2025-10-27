@@ -1,5 +1,6 @@
 
 
+
 import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
 import { cn } from '../../lib/utils';
 
@@ -27,7 +28,6 @@ export const ResizablePanelGroup: React.FC<ResizablePanelGroupProps> = ({ direct
 
     const initialSizes = React.Children.map(children, (child) => {
       if (React.isValidElement(child) && child.type === ResizablePanel) {
-        // FIX: Cast child.props to ResizablePanelProps to correctly infer the type of defaultSize.
         return (child.props as ResizablePanelProps).defaultSize || 0;
       }
       return 0;
@@ -54,11 +54,9 @@ export const ResizablePanelGroup: React.FC<ResizablePanelGroupProps> = ({ direct
         const firstPanel = newSizes[index];
         const secondPanel = newSizes[index + 1];
 
-        // FIX: Safely access props by checking if the child is a valid React element before trying to access its props.
         const firstPanelElement = React.Children.toArray(children)[index * 2];
         const firstPanelMin = React.isValidElement<ResizablePanelProps>(firstPanelElement) ? firstPanelElement.props.minSize || 0 : 0;
         
-        // FIX: Safely access props by checking if the child is a valid React element.
         const secondPanelElement = React.Children.toArray(children)[(index + 1) * 2];
         const secondPanelMin = React.isValidElement<ResizablePanelProps>(secondPanelElement) ? secondPanelElement.props.minSize || 0 : 0;
         

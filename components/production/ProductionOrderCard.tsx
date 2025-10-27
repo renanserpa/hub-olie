@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../../types';
 import { Card } from '../ui/Card';
@@ -30,7 +31,6 @@ const STATUS_CONFIG: Record<ProductionOrderStatus, StatusInfo> = {
     cancelado: { label: 'Cancelada', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-100' },
 };
 
-// FIX: Wrap icons in a span with a title attribute for tooltip, as 'title' is not a direct prop of the icon component.
 const PRIORITY_ICONS = {
     baixa: null,
     normal: null,
@@ -69,7 +69,6 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSele
                     <span>Qtd: <span className="font-bold text-textPrimary">{order.quantity}</span></span>
                     <div className="flex items-center gap-2">
                         {PRIORITY_ICONS[order.priority]}
-                        {/* FIX: Wrap icon in a span with a title attribute for tooltip. */}
                         {isOverdue && <span title="Atrasado"><AlertCircle size={14} className="text-red-500" /></span>}
                         <div className="flex items-center gap-1.5">
                             <Clock size={12} />

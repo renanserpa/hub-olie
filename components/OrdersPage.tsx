@@ -1,7 +1,9 @@
 
 
+
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 import { Order, User, OrderStatus, AppData } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';
@@ -37,7 +39,7 @@ const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => 
     const loadOrders = useCallback(async () => {
         setLoading(true);
         try {
-            const ordersData = await firestoreService.getOrders();
+            const ordersData = await firebaseService.getOrders();
             setOrders(ordersData);
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível carregar os pedidos.', variant: 'destructive' });
@@ -56,7 +58,7 @@ const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => 
 
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
-            const updatedOrder = await firestoreService.updateOrderStatus(orderId, newStatus);
+            const updatedOrder = await firebaseService.updateOrderStatus(orderId, newStatus);
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: updatedOrder.status, updated_at: updatedOrder.updated_at } : o));
             toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.order_number.split('-')[1]} atualizado para ${newStatus}.` });
         } catch (error) {

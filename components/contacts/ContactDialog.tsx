@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -61,7 +62,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                 address: {
                     ...prev.address,
                     zip: data.cep,
-                    street: data.logradouro,
+                    street: data.logouro,
                     neighborhood: data.bairro,
                     city: data.localidade,
                     state: data.uf,
@@ -167,7 +168,6 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                     </Button>
                 </div>
             </form>
-            {/* FIX: Removed invalid 'style jsx' tag and replaced with Tailwind CSS classes for consistent styling. */}
         </Modal>
     );
 };

@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState } from 'react';
 import { Order, ConfigJson } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
@@ -7,7 +9,7 @@ import { Button } from './ui/Button';
 import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
 import { useTinyApi } from '../hooks/useTinyApi';
 import { toast } from '../hooks/use-toast';
-import { firestoreService } from '../services/firestoreService';
+import { firebaseService } from '../services/firestoreService';
 
 interface OrderDetailProps {
   order: Order;
@@ -45,7 +47,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
     const tinyApi = useTinyApi();
 
     const handleUpdate = async (field: 'payments' | 'fiscal' | 'logistics', data: any) => {
-        const updatedOrder = await firestoreService.updateOrder(order.id, { [field]: data });
+        const updatedOrder = await firebaseService.updateOrder(order.id, { [field]: data });
         setOrder(updatedOrder);
         onUpdate();
         return updatedOrder;

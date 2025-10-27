@@ -1,8 +1,6 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { firestoreService } from './services/firestoreService';
-import { AppData, User, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
+import { firebaseService } from './services/firestoreService';
+import { AppData, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
 import TabLayout from './components/ui/TabLayout';
@@ -19,6 +17,12 @@ import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import { cn } from './lib/utils';
+
+// Auth Imports
+import { useAuth } from './context/AuthContext';
+import LoginPage from './components/LoginPage';
+import type { AuthUser } from './services/authService';
+
 
 const MAIN_TABS = [
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
@@ -40,7 +44,7 @@ const SETTINGS_TABS = [
 
 const formatSubCategoryName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const SettingsPage: React.FC<{ settings: AppData; user: User | null; onDataChange: () => void }> = ({ settings, user, onDataChange }) => {
+const SettingsPage: React.FC<{ settings: AppData; user: AuthUser | null; onDataChange: () => void }> = ({ settings, user, onDataChange }) => {
     const [activeTab, setActiveTab] = useState<SettingsCategory>('catalogs');
     const [activeSubTab, setActiveSubTab] = useState<string | null>(null);
     const [activeSubSubTab, setActiveSubSubTab] = useState<string | null>(null);
@@ -97,9 +101,9 @@ const SettingsPage: React.FC<{ settings: AppData; user: User | null; onDataChang
         }
     };
     
-    const handleAddItem = (itemData: Omit<AnySettingsItem, 'id'>) => handleAction(firestoreService.addSetting(activeTab, itemData, activeSubTab, activeSubSubTab));
-    const handleUpdateItem = (itemData: AnySettingsItem) => handleAction(firestoreService.updateSetting(activeTab, itemData.id, itemData, activeSubTab, activeSubSubTab));
-    const handleDeleteItem = (itemId: string) => handleAction(firestoreService.deleteSetting(activeTab, itemId, activeSubTab, activeSubSubTab));
+    const handleAddItem = (itemData: Omit<AnySettingsItem, 'id'>) => handleAction(firebaseService.addSetting(activeTab, itemData, activeSubTab, activeSubSubTab));
+    const handleUpdateItem = (itemData: AnySettingsItem) => handleAction(firebaseService.updateSetting(activeTab, itemData.id, itemData, activeSubTab, activeSubSubTab));
+    const handleDeleteItem = (itemId: string) => handleAction(firebaseService.deleteSetting(activeTab, itemId, activeSubTab, activeSubSubTab));
 
     const getFieldsForCategory = (tab: string, subTab?: string | null, subSubTab?: string | null): FieldConfig[] => {
         const key = subSubTab || subTab || tab;
@@ -221,33 +225,36 @@ const SettingsPage: React.FC<{ settings: AppData; user: User | null; onDataChang
 
 
 const App: React.FC = () => {
+    const { user, isLoading: isAuthLoading } = useAuth();
     const [data, setData] = useState<AppData | null>(null);
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activePage, setActivePage] = useState('orders');
 
     const loadData = useCallback(async () => {
+        if (!user) {
+            setIsDataLoading(false);
+            setData(null);
+            return;
+        }
         try {
-            setLoading(true);
+            setIsDataLoading(true);
             setError(null);
-            const [settingsData, userData] = await Promise.all([
-                firestoreService.getSettings(),
-                firestoreService.getCurrentUser()
-            ]);
+            const settingsData = await firebaseService.getSettings();
             setData(settingsData);
-            setUser(userData);
         } catch (e) {
             const errorMessage = 'Falha ao carregar os dados.';
             setError(errorMessage);
             toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
             console.error(e);
         } finally {
-            setLoading(false);
+            setIsDataLoading(false);
         }
-    }, []);
+    }, [user]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
     
     const renderActivePage = () => {
         if (!data || !user) return null;
@@ -271,7 +278,7 @@ const App: React.FC = () => {
         }
     };
 
-    if (loading) {
+    if (isAuthLoading || isDataLoading) {
         return (
             <div className="flex justify-center items-center h-screen bg-background">
                 <div className="text-center">
@@ -280,6 +287,10 @@ const App: React.FC = () => {
                 </div>
             </div>
         );
+    }
+    
+    if (!user) {
+        return <LoginPage />;
     }
     
     return (
