@@ -150,7 +150,9 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? `Editar: ${currentItem.name}` : `Adicionar Novo Item`}>
+      {/* FIX: Check for the 'name' property before accessing it to avoid type errors with items like DeliveryMethod. 
+          Provide fallback properties ('type', 'id') for a more descriptive title. */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? `Editar: ${'name' in currentItem && currentItem.name ? currentItem.name : ('type' in currentItem ? currentItem.type : currentItem.id)}` : `Adicionar Novo Item`}>
         <form onSubmit={handleSubmit}>
             <div className="space-y-4">
             {fields.map(field => field.key !== 'id' && (

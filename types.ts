@@ -142,7 +142,8 @@ export interface ConfigJson { color?: string; material?: string; text?: string; 
 export interface OrderItem { id: string; product_id: string; product_name: string; quantity: number; unit_price: number; total: number; config_json?: ConfigJson; }
 export interface PaymentDetails { status: 'pending' | 'paid' | 'failed'; method: string; checkoutUrl?: string; transactionId?: string; }
 export interface FiscalDetails { status: 'pending' | 'authorized' | 'rejected'; nfeNumber?: string; serie?: string; pdfUrl?: string; xmlUrl?: string; }
-export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
+// FIX: Add 'shipped' to the status union type to align with its usage in OrderCard.tsx.
+export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'shipped' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
 export interface Order { id: string; order_number: string; contact_id: string; contact?: Contact; status: OrderStatus; items: OrderItem[]; subtotal: number; discount: number; shipping_cost: number; total: number; payments?: PaymentDetails; fiscal?: FiscalDetails; logistics?: LogisticsDetails; notes?: string; source?: 'manual' | 'catalog' | 'whatsapp'; created_at: string; updated_at: string; }
 export interface Product extends BaseItem { price: number; stock_quantity: number; }
 
@@ -336,7 +337,8 @@ export interface AppData {
   inventory_movements: InventoryMovement[];
 };
 
-export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'midia' | 'production_orders' | 'task_statuses' | 'tasks' | 'omnichannel' | 'inventory_balances' | 'inventory_movements'>;
+// FIX: Remove 'midia' from Omit<> to make it a valid SettingsCategory, aligning the type with its usage in App.tsx.
+export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'production_orders' | 'task_statuses' | 'tasks' | 'omnichannel' | 'inventory_balances' | 'inventory_movements'>;
 
 
 export type FieldConfig = {

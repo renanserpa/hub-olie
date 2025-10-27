@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -81,76 +83,79 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
         setIsSubmitting(false);
     };
 
+    const inputStyle = "mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50";
+    const labelStyle = "block text-sm font-medium text-textSecondary";
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={contact ? 'Editar Contato' : 'Novo Contato'}>
             <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 
                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2">Dados Pessoais</h3>
                 <div>
-                    <label>Nome Completo *</label>
-                    <input name="name" value={formData.name || ''} onChange={handleChange} required className="w-full input-style" />
+                    <label className={labelStyle}>Nome Completo *</label>
+                    <input name="name" value={formData.name || ''} onChange={handleChange} required className={inputStyle} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label>Data de Nascimento</label>
-                        <input name="birth_date" type="date" value={formData.birth_date || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Data de Nascimento</label>
+                        <input name="birth_date" type="date" value={formData.birth_date || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                     <div>
-                        <label>CPF/CNPJ</label>
-                        <input name="cpf_cnpj" value={formData.cpf_cnpj || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>CPF/CNPJ</label>
+                        <input name="cpf_cnpj" value={formData.cpf_cnpj || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                 </div>
 
                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2 pt-2">Contato</h3>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label>Email</label>
-                        <input name="email" type="email" value={formData.email || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Email</label>
+                        <input name="email" type="email" value={formData.email || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                      <div>
-                        <label>Telefone</label>
-                        <input name="phone" type="tel" value={formData.phone || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Telefone</label>
+                        <input name="phone" type="tel" value={formData.phone || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                     <div>
-                        <label>WhatsApp</label>
-                        <input name="whatsapp" type="tel" value={formData.whatsapp || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>WhatsApp</label>
+                        <input name="whatsapp" type="tel" value={formData.whatsapp || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                     <div>
-                        <label>Instagram</label>
-                        <input name="instagram" placeholder="@usuario" value={formData.instagram || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Instagram</label>
+                        <input name="instagram" placeholder="@usuario" value={formData.instagram || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                  </div>
 
                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2 pt-2 flex items-center gap-2"><MapPin size={16}/>Endereço</h3>
                  <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-1 relative">
-                        <label>CEP</label>
-                        <input name="address.zip" value={formData.address?.zip || ''} onChange={handleChange} onBlur={(e) => handleCepLookup(e.target.value)} className="w-full input-style" />
+                        <label className={labelStyle}>CEP</label>
+                        <input name="address.zip" value={formData.address?.zip || ''} onChange={handleChange} onBlur={(e) => handleCepLookup(e.target.value)} className={inputStyle} />
                         {isCepLoading && <Loader2 className="absolute right-2 top-9 h-4 w-4 animate-spin text-primary" />}
                     </div>
                      <div className="col-span-2">
-                        <label>Logradouro</label>
-                        <input name="address.street" value={formData.address?.street || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Logradouro</label>
+                        <input name="address.street" value={formData.address?.street || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                  </div>
                  <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-1">
-                        <label>Número *</label>
-                        <input name="address.number" value={formData.address?.number || ''} onChange={handleChange} required className="w-full input-style" />
+                        <label className={labelStyle}>Número *</label>
+                        <input name="address.number" value={formData.address?.number || ''} onChange={handleChange} required className={inputStyle} />
                     </div>
                     <div className="col-span-2">
-                        <label>Complemento</label>
-                        <input name="address.complement" value={formData.address?.complement || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Complemento</label>
+                        <input name="address.complement" value={formData.address?.complement || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                 </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label>Bairro</label>
-                        <input name="address.neighborhood" value={formData.address?.neighborhood || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Bairro</label>
+                        <input name="address.neighborhood" value={formData.address?.neighborhood || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                     <div>
-                        <label>Cidade</label>
-                        <input name="address.city" value={formData.address?.city || ''} onChange={handleChange} className="w-full input-style" />
+                        <label className={labelStyle}>Cidade</label>
+                        <input name="address.city" value={formData.address?.city || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                  </div>
 
@@ -162,26 +167,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                     </Button>
                 </div>
             </form>
-             <style jsx>{`
-                .input-style {
-                    margin-top: 0.25rem;
-                    padding: 0.5rem 0.75rem;
-                    border: 1px solid var(--border-color, #EAE7E1);
-                    border-radius: 0.75rem;
-                    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
-                    background-color: var(--background-color, #FCFAF8);
-                }
-                .input-style:focus {
-                    outline: none;
-                    box-shadow: 0 0 0 2px var(--primary-color-focus, rgba(210, 166, 109, 0.5));
-                }
-                label {
-                     display: block;
-                     font-size: 0.875rem;
-                     font-weight: 500;
-                     color: var(--text-secondary-color, #6B6B6B);
-                }
-            `}</style>
+            {/* FIX: Removed invalid 'style jsx' tag and replaced with Tailwind CSS classes for consistent styling. */}
         </Modal>
     );
 };

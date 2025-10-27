@@ -148,9 +148,9 @@ const mockTaskStatuses: TaskStatus[] = [
 ];
 
 const mockTasks: Task[] = [
-    { id: 'task-1', title: 'Jaqueta Moletom', status_id: 'status-2', client_name: 'Cliente', quantity: 1, position: 1 },
+    { id: 'task-1', title: 'Jaqueta Moletom', status_id: 'status-3', client_name: 'Cliente', quantity: 1, position: 1 },
     { id: 'task-2', title: 'Bolsa Maternidade', status_id: 'status-4', client_name: 'Ana Silva', quantity: 1, position: 1 },
-    { id: 'task-3', title: 'Mochila Aventura', status_id: 'status-2', client_name: 'Carlos Pereira', quantity: 2, position: 2 },
+    { id: 'task-3', title: 'Mochila Aventura', status_id: 'status-3', client_name: 'Carlos Pereira', quantity: 2, position: 2 },
     { id: 'task-4', title: 'Necessaire Viagem', status_id: 'status-1', client_name: 'Ana Silva', quantity: 3, position: 1 },
 ];
 

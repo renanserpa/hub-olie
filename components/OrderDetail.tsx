@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
@@ -96,7 +97,8 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                                             {tinyApi.loading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
                                             Emitir NFe
                                         </Button>
-                                        {order.fiscal?.pdfUrl && <Button variant="outline" asChild><a href={order.fiscal.pdfUrl} target="_blank">Ver DANFE</a></Button>}
+                                        {/* FIX: Removed unsupported 'asChild' prop. Using an onClick handler to open the link is a better pattern for this action button. */}
+                                        {order.fiscal?.pdfUrl && <Button variant="outline" onClick={() => window.open(order.fiscal!.pdfUrl!, '_blank')}>Ver DANFE</Button>}
                                     </div>
                                )}
                                {activeTab === 'logistics' && (

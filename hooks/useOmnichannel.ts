@@ -33,9 +33,10 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
                 if (firstConversation && !selectedConversationId) {
                     setSelectedConversationId(firstConversation.id);
                 }
-            } catch (error) {
+            } catch (error: any) {
+                const errorMessage = error.message || 'Não foi possível carregar as conversas.';
                 console.error("Error fetching initial data:", error);
-                toast({ title: 'Erro!', description: 'Não foi possível carregar as conversas.', variant: 'destructive' });
+                toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
             } finally {
                 setIsLoading(false);
             }
@@ -115,9 +116,10 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
                 if (messagesError) throw messagesError;
                 setMessages(messagesData as Message[] || []);
 
-            } catch (error) {
+            } catch (error: any) {
+                 const errorMessage = error.message || 'Não foi possível carregar as mensagens.';
                  console.error("Error fetching messages:", error);
-                 toast({ title: 'Erro!', description: 'Não foi possível carregar as mensagens.', variant: 'destructive' });
+                 toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
             }
         };
 

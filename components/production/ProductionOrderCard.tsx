@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../../types';
 import { Card } from '../ui/Card';
@@ -28,11 +30,12 @@ const STATUS_CONFIG: Record<ProductionOrderStatus, StatusInfo> = {
     cancelado: { label: 'Cancelada', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-100' },
 };
 
+// FIX: Wrap icons in a span with a title attribute for tooltip, as 'title' is not a direct prop of the icon component.
 const PRIORITY_ICONS = {
     baixa: null,
     normal: null,
-    alta: <Flame size={14} className="text-orange-500" title="Prioridade Alta" />,
-    urgente: <Flame size={14} className="text-red-600" title="Prioridade Urgente" />,
+    alta: <span title="Prioridade Alta"><Flame size={14} className="text-orange-500" /></span>,
+    urgente: <span title="Prioridade Urgente"><Flame size={14} className="text-red-600" /></span>,
 };
 
 const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSelected, onClick }) => {
@@ -66,7 +69,8 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSele
                     <span>Qtd: <span className="font-bold text-textPrimary">{order.quantity}</span></span>
                     <div className="flex items-center gap-2">
                         {PRIORITY_ICONS[order.priority]}
-                        {isOverdue && <AlertCircle size={14} className="text-red-500" title="Atrasado" />}
+                        {/* FIX: Wrap icon in a span with a title attribute for tooltip. */}
+                        {isOverdue && <span title="Atrasado"><AlertCircle size={14} className="text-red-500" /></span>}
                         <div className="flex items-center gap-1.5">
                             <Clock size={12} />
                             <span>{formatDate(order.due_date)}</span>

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Order, OrderStatus } from '../types';
 import { Card } from './ui/Card';
@@ -54,9 +55,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onClick, className }) => {
                 <div className="flex items-center justify-between text-xs text-textSecondary border-t border-border pt-3">
                     <span>Integrações:</span>
                     <div className="flex items-center gap-3">
-                        <CreditCard size={16} className={cn(order.payments?.status === 'paid' ? 'text-green-500' : 'text-gray-300')} title={`Pagamento: ${order.payments?.status}`} />
-                        <FileText size={16} className={cn(order.fiscal?.status === 'authorized' ? 'text-blue-500' : 'text-gray-300')} title={`NFe: ${order.fiscal?.status || 'pendente'}`} />
-                        <Truck size={16} className={cn(order.logistics?.status === 'shipped' || order.logistics?.status === 'delivered' ? 'text-indigo-500' : 'text-gray-300')} title={`Frete: ${order.logistics?.status || 'pendente'}`} />
+                        {/* FIX: Wrap icon in a span to apply the title attribute for tooltips, as it's not a direct prop of the Lucide icon. */}
+                        <span title={`Pagamento: ${order.payments?.status}`}>
+                            <CreditCard size={16} className={cn(order.payments?.status === 'paid' ? 'text-green-500' : 'text-gray-300')} />
+                        </span>
+                        {/* FIX: Wrap icon in a span to apply the title attribute for tooltips. */}
+                        <span title={`NFe: ${order.fiscal?.status || 'pendente'}`}>
+                            <FileText size={16} className={cn(order.fiscal?.status === 'authorized' ? 'text-blue-500' : 'text-gray-300')} />
+                        </span>
+                        {/* FIX: Correct the status check logic and wrap the icon in a span for the title attribute. */}
+                        <span title={`Frete: ${order.logistics?.status || 'pendente'}`}>
+                            <Truck size={16} className={cn(order.logistics?.status === 'shipped' || order.logistics?.status === 'delivered' ? 'text-indigo-500' : 'text-gray-300')} />
+                        </span>
                     </div>
                 </div>
             </div>
