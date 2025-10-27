@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
@@ -88,10 +89,20 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                                 <h4 className="font-semibold text-textPrimary">{setting.name}</h4>
                                 <p className="text-sm text-textSecondary mb-4">{setting.description}</p>
                                 <div className="space-y-3">
-                                    {/* FIX: Add type assertion to handle 'unknown' type from JSON.parse() */}
-                                    {Object.entries(JSON.parse(setting.value) as Record<string, any>).map(([key, value]) => 
-                                      renderField(setting, key, value)
-                                    )}
+                                    {/* FIX: Safely parse setting.value to ensure it is a valid object before using Object.entries. This avoids type errors and potential runtime crashes. */}
+                                    {(() => {
+                                        try {
+                                            const parsed = JSON.parse(setting.value);
+                                            if (typeof parsed === 'object' && parsed !== null) {
+                                                return Object.entries(parsed).map(([key, value]) => 
+                                                  renderField(setting, key, value)
+                                                );
+                                            }
+                                        } catch (e) {
+                                            // Silently ignore if value is not valid JSON
+                                        }
+                                        return null;
+                                    })()}
                                 </div>
                             </div>
                         ))}
