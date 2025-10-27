@@ -32,29 +32,35 @@ export interface Status extends BaseItem {
   description: string;
 }
 
-export interface GlobalConfig extends BaseItem {
+// Replaces GlobalConfig, value is a stringified JSON
+export interface SystemSetting {
+  id: string; // The setting key, e.g., "currency"
+  name: string; // The display name, e.g., "Moeda"
   value: string;
-  unit: string;
+  category: string;
+  description: string;
 }
+
 
 // Nested data structures
 export type CatalogData = Record<string, CatalogItem[]>;
 export type MaterialData = Record<string, Material[]>;
-export type StatusData = Record<string, Status[]>;
+export type LogisticaData = Record<string, Status[]>;
 
 export type SettingsData = {
   integrations: Integration[];
   catalogs: CatalogData;
   materials: MaterialData;
-  statuses: StatusData;
-  globalConfigs: GlobalConfig[];
+  logistica: LogisticaData;
+  sistema: SystemSetting[];
+  aparencia: {};
+  seguranca: {};
 };
 
 export type SettingsCategory = keyof SettingsData;
 
-export type AnyItem = Integration | CatalogItem | Material | Status | GlobalConfig;
+export type AnyItem = Integration | CatalogItem | Material | Status | SystemSetting;
 
-// FIX: Added FieldConfig type here to be used across the application.
 export type FieldConfig = {
     key: string;
     label: string;

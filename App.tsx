@@ -1,25 +1,36 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { firestoreService } from './services/firestoreService';
-// FIX: Import FieldConfig from the shared types file.
 import { SettingsData, User, SettingsCategory, AnyItem, FieldConfig } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
 import TabLayout from './components/ui/TabLayout';
+import Toaster from './components/Toaster';
+import { toast } from './hooks/use-toast';
+import { SlidersHorizontal, Upload, Download, PlugZap, Palette, Layers, Truck, Paintbrush, Shield } from 'lucide-react';
+import { Button } from './components/ui/Button';
+import IntegrationsTabContent from './components/IntegrationsTabContent';
+import SystemTabContent from './components/SystemTabContent';
+import AppearanceTabContent from './components/AppearanceTabContent';
+import SecurityTabContent from './components/SecurityTabContent';
+import { cn } from './lib/utils';
 
-const TABS: Record<SettingsCategory, string> = {
-    integrations: 'Integrações',
-    catalogs: 'Catálogos',
-    materials: 'Materiais',
-    statuses: 'Status',
-    globalConfigs: 'Configurações Globais'
-};
+const TABS = [
+    { id: 'integrations', label: 'Integrações', icon: PlugZap },
+    { id: 'catalogs', label: 'Catálogos', icon: Palette },
+    { id: 'materials', label: 'Materiais', icon: Layers },
+    { id: 'logistica', label: 'Logística', icon: Truck },
+    { id: 'sistema', label: 'Sistema', icon: SlidersHorizontal },
+    { id: 'aparencia', label: 'Aparência', icon: Paintbrush },
+    { id: 'seguranca', label: 'Segurança', icon: Shield }
+];
 
 const App: React.FC = () => {
     const [settings, setSettings] = useState<SettingsData | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<SettingsCategory>('integrations');
+    const [activeTab, setActiveTab] = useState<string>('integrations');
     const [activeSubTab, setActiveSubTab] = useState<string | null>(null);
 
     const isAdmin = user?.role === 'AdminGeral';
@@ -35,7 +46,9 @@ const App: React.FC = () => {
             setSettings(settingsData);
             setUser(userData);
         } catch (e) {
-            setError('Falha ao carregar as configurações.');
+            const errorMessage = 'Falha ao carregar as configurações.';
+            setError(errorMessage);
+            toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
             console.error(e);
         } finally {
             setLoading(false);
@@ -49,11 +62,16 @@ const App: React.FC = () => {
     useEffect(() => {
         if (!settings) return;
 
-        const currentTabData = settings[activeTab];
+        const currentTabData = settings[activeTab as SettingsCategory];
         if (typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null) {
             const subCategories = Object.keys(currentTabData);
-            if (subCategories.length > 0 && !subCategories.includes(activeSubTab ?? '')) {
-                setActiveSubTab(subCategories[0]);
+            if (subCategories.length > 0) {
+                const currentSubTabIsValid = activeSubTab && subCategories.includes(activeSubTab);
+                if (!currentSubTabIsValid) {
+                    setActiveSubTab(subCategories[0]);
+                }
+            } else {
+                setActiveSubTab(null);
             }
         } else {
             setActiveSubTab(null);
@@ -68,16 +86,20 @@ const App: React.FC = () => {
             setSettings(prev => {
                 if (!prev) return null;
                 const newSettings = JSON.parse(JSON.stringify(prev));
-                if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'statuses')) {
+                if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'logistica')) {
                     (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab].push(newItem);
                 } else {
                     (newSettings[category] as AnyItem[]).push(newItem);
                 }
                 return newSettings;
             });
+            toast({ title: 'Sucesso!', description: `Item "${newItem.name}" adicionado.` });
         } catch (e) {
+            const errorMessage = `Falha ao adicionar item.`;
             console.error("Failed to add item", e);
-            setError(`Falha ao adicionar item.`);
+            setError(errorMessage);
+            toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
+            throw e; // Re-throw to be caught in the form handler
         }
     };
 
@@ -89,7 +111,7 @@ const App: React.FC = () => {
                  if (!prev) return null;
                 const newSettings = JSON.parse(JSON.stringify(prev));
                 let dataList: AnyItem[];
-                 if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'statuses')) {
+                 if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'logistica')) {
                     dataList = (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab];
                 } else {
                     dataList = newSettings[category] as AnyItem[];
@@ -98,9 +120,13 @@ const App: React.FC = () => {
                 if (index !== -1) dataList[index] = updatedItem;
                 return newSettings;
             });
+            toast({ title: 'Sucesso!', description: `Item "${updatedItem.name}" salvo.` });
         } catch (e) {
+            const errorMessage = `Falha ao atualizar item.`;
             console.error("Failed to update item", e);
-            setError(`Falha ao atualizar item.`);
+            setError(errorMessage);
+            toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
+            throw e; // Re-throw to be caught in the form handler
         }
     };
 
@@ -108,23 +134,32 @@ const App: React.FC = () => {
         if (!isAdmin) return;
         try {
             await firestoreService.deleteSetting(category, itemId, activeSubTab);
+             let deletedItemName = 'Item';
             setSettings(prev => {
                 if (!prev) return null;
                 const newSettings = JSON.parse(JSON.stringify(prev));
-                 if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'statuses')) {
-                    (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab] = (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab].filter((item: AnyItem) => item.id !== itemId);
+                 if (activeSubTab && (category === 'catalogs' || category === 'materials' || category === 'logistica')) {
+                    const list = (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab];
+                    const item = list.find((i: AnyItem) => i.id === itemId);
+                    if (item) deletedItemName = `"${item.name}"`;
+                    (newSettings[category] as Record<string, AnyItem[]>)[activeSubTab] = list.filter((i: AnyItem) => i.id !== itemId);
                 } else {
-                    newSettings[category] = (newSettings[category] as AnyItem[]).filter((item: AnyItem) => item.id !== itemId);
+                    const list = (newSettings[category] as AnyItem[]);
+                    const item = list.find((i: AnyItem) => i.id === itemId);
+                    if (item) deletedItemName = `"${item.name}"`;
+                    newSettings[category] = list.filter((i: AnyItem) => i.id !== itemId);
                 }
                 return newSettings;
             });
+            toast({ title: 'Sucesso!', description: `${deletedItemName} excluído.` });
         } catch (e) {
+            const errorMessage = `Falha ao deletar item.`;
             console.error("Failed to delete item", e);
-            setError(`Falha ao deletar item.`);
+            setError(errorMessage);
+            toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
         }
     };
     
-    // FIX: Add explicit return type FieldConfig[] to fix type inference issue.
     const getFieldsForCategory = (category: SettingsCategory): FieldConfig[] => {
         switch (category) {
             case 'integrations': return [
@@ -133,23 +168,94 @@ const App: React.FC = () => {
                 { key: 'name', label: 'Nome', type: 'text' }, { key: 'code', label: 'Código', type: 'text' }, { key: 'hexColor', label: 'Cor', type: 'color' }];
             case 'materials': return [
                 { key: 'name', label: 'Nome', type: 'text' }, { key: 'group', label: 'Grupo', type: 'text' }, { key: 'supplier', label: 'Fornecedor', type: 'text' }, { key: 'texture', label: 'Textura', type: 'text' }];
-            case 'statuses': return [
-                { key: 'name', label: 'Nome', type: 'text' }, { key: 'color', label: 'Cor', type: 'color' }, { key: 'description', label: 'Descrição', type: 'text' }];
-            case 'globalConfigs': return [
-                { key: 'name', label: 'Configuração', type: 'text' }, { key: 'value', label: 'Valor', type: 'text' }, { key: 'unit', label: 'Unidade', type: 'text' }];
+            case 'logistica': return [
+                { key: 'name', label: 'Nome', type: 'text' }, { key: 'color', label: 'Cor', type: 'color' }, { key: 'description', label: 'Descrição', type: 'textarea' }];
             default: return [{ key: 'name', label: 'Name', type: 'text' }];
         }
     };
 
     const formatSubCategoryName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    const renderContent = () => {
+        if (!settings) {
+            return (
+                <Card>
+                   <CardContent className="py-10 text-center text-textSecondary">
+                       <p>Selecione uma categoria para configurar.</p>
+                   </CardContent>
+                </Card>
+            );
+        }
 
-    const currentTabData = settings ? settings[activeTab] : null;
-    const isNested = typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null;
-    // FIX: Ensure dataForContent is always an array to satisfy TabContent's `data` prop type.
-    const dataForContent = isNested 
-        ? (currentTabData as Record<string, AnyItem[]>)[activeSubTab ?? ''] ?? []
-        : (currentTabData as AnyItem[] ?? []);
-    const contentTitle = isNested && activeSubTab ? `${formatSubCategoryName(activeSubTab)}` : TABS[activeTab];
+        switch (activeTab) {
+            case 'integrations':
+                return <IntegrationsTabContent />;
+            case 'sistema':
+                return <SystemTabContent initialSettings={settings.sistema} isAdmin={isAdmin} />;
+            case 'aparencia':
+                return <AppearanceTabContent />;
+            case 'seguranca':
+                return <SecurityTabContent />;
+            case 'catalogs':
+            case 'materials':
+            case 'logistica': {
+                const currentCategory = activeTab as SettingsCategory;
+                const currentTabData = settings[currentCategory];
+                const isNested = typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null;
+                const dataForContent = isNested 
+                    ? (currentTabData as Record<string, AnyItem[]>)[activeSubTab ?? ''] ?? []
+                    : (currentTabData as AnyItem[] ?? []);
+                const contentTitle = isNested && activeSubTab ? `${formatSubCategoryName(activeSubTab)}` : TABS.find(t => t.id === activeTab)?.label ?? "Configurações";
+
+                return (
+                    <Card>
+                        {isNested && currentTabData && (
+                           <div className="border-b border-border px-6">
+                               <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Sub-tabs">
+                                   {Object.keys(currentTabData).map((subCategory) => (
+                                       <button
+                                           key={subCategory}
+                                           onClick={() => setActiveSubTab(subCategory)}
+                                           className={cn(
+                                               'flex-shrink-0 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                                               activeSubTab === subCategory
+                                                   ? 'border-primary text-primary'
+                                                   : 'border-transparent text-textSecondary hover:text-textPrimary'
+                                           )}
+                                       >
+                                           {formatSubCategoryName(subCategory)}
+                                       </button>
+                                   ))}
+                               </nav>
+                           </div>
+                       )}
+                       <CardContent>
+                           <TabContent
+                               key={`${activeTab}-${activeSubTab}`}
+                               category={currentCategory}
+                               title={contentTitle}
+                               data={dataForContent}
+                               fields={getFieldsForCategory(currentCategory)}
+                               onAdd={handleAddItem}
+                               onUpdate={handleUpdateItem}
+                               onDelete={handleDeleteItem}
+                               isAdmin={isAdmin}
+                           />
+                       </CardContent>
+                   </Card>
+                );
+            }
+            default:
+                return (
+                    <Card>
+                       <CardContent className="py-10 text-center text-textSecondary">
+                           <p>Esta seção ainda não foi implementada.</p>
+                       </CardContent>
+                    </Card>
+                );
+        }
+    };
+
 
     if (loading) {
         return (
@@ -164,6 +270,7 @@ const App: React.FC = () => {
     
     return (
         <div className="min-h-screen font-sans">
+            <Toaster />
             <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <h1 className="text-xl font-bold text-textPrimary">Olie Hub <span className="font-normal text-primary">| Configurações</span></h1>
@@ -177,38 +284,33 @@ const App: React.FC = () => {
             </header>
 
             <main className="container mx-auto p-4 sm:p-6">
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert">{error}</div>}
+                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert" onClick={() => setError(null)}>{error}</div>}
+                 
+                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <SlidersHorizontal className="text-primary" size={28}/>
+                            <h1 className="text-3xl font-bold text-textPrimary">Configurações</h1>
+                        </div>
+                        <p className="text-textSecondary mt-1">Gerencie integrações e preferências do sistema</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline"><Upload className="w-4 h-4 mr-2"/>Importar</Button>
+                        <Button variant="outline"><Download className="w-4 h-4 mr-2"/>Exportar</Button>
+                    </div>
+                 </div>
 
-                <Card>
+                <div className="bg-secondary p-1 rounded-2xl">
                    <TabLayout
-                        tabs={Object.entries(TABS).map(([id, label]) => ({ id, label }))}
+                        tabs={TABS}
                         activeTab={activeTab}
-                        onTabChange={(tabId) => setActiveTab(tabId as SettingsCategory)}
-                        subTabs={isNested ? Object.keys(currentTabData).map(key => ({ id: key, label: formatSubCategoryName(key) })) : undefined}
-                        activeSubTab={activeSubTab}
-                        onSubTabChange={setActiveSubTab}
+                        onTabChange={(tabId) => setActiveTab(tabId)}
                     />
+                </div>
 
-                    {settings && dataForContent ? (
-                         <CardContent>
-                            <TabContent
-                                key={`${activeTab}-${activeSubTab}`}
-                                category={activeTab}
-                                title={contentTitle}
-                                data={dataForContent}
-                                fields={getFieldsForCategory(activeTab)}
-                                onAdd={handleAddItem}
-                                onUpdate={handleUpdateItem}
-                                onDelete={handleDeleteItem}
-                                isAdmin={isAdmin}
-                            />
-                        </CardContent>
-                    ) : (
-                        <CardContent className="py-10 text-center text-textSecondary">
-                            <p>Nenhum dado para exibir.</p>
-                        </CardContent>
-                    )}
-                </Card>
+                <div className="mt-6">
+                    {renderContent()}
+                 </div>
             </main>
         </div>
     );
