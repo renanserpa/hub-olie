@@ -88,7 +88,8 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                         <CardTitle>{formatCategoryName(category)}</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {settingsInCategory.map(setting => (
+                        {/* FIX: Add an Array.isArray check to ensure settingsInCategory is an array before mapping. */}
+                        {Array.isArray(settingsInCategory) && settingsInCategory.map(setting => (
                             <div key={setting.id} className="p-4 border rounded-xl bg-secondary/50">
                                 <h4 className="font-semibold text-textPrimary">{setting.name}</h4>
                                 <p className="text-sm text-textSecondary mb-4">{setting.description}</p>
