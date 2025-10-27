@@ -135,17 +135,73 @@ export type AnySettingsItem =
     | SystemSetting;
 
 
-// --- Orders Module Types (unchanged) ---
+// --- Products Module Types ---
+export interface ProductCategory extends BaseItem {
+  description?: string;
+}
+
+export interface Product extends BaseItem {
+  sku: string;
+  basePrice: number;
+  category_id: string;
+  category?: ProductCategory;
+  stock_quantity: number;
+  hasVariants: boolean;
+  attributes?: {
+    fabricColor?: string[]; // IDs from FabricColor
+    zipperColor?: string[]; // IDs from ZipperColor
+    liningColor?: string[]; // IDs from LiningColor
+    biasColor?: string[]; // IDs from BiasColor
+    embroidery?: boolean;
+  };
+  images?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'category'>;
+
+
+// --- Orders Module Types ---
 
 export type OrderStatus = 'pending_payment' | 'paid' | 'in_production' | 'awaiting_shipping' | 'shipped' | 'delivered' | 'cancelled';
-export interface ConfigJson { color?: string; material?: string; text?: string; width?: number; height?: number; thickness?: number; notes?: string; }
-export interface OrderItem { id: string; product_id: string; product_name: string; quantity: number; unit_price: number; total: number; config_json?: ConfigJson; }
+
+export interface ConfigJson {
+  // Legacy fields
+  color?: string;
+  material?: string;
+  text?: string;
+  width?: number;
+  height?: number;
+  thickness?: number;
+  notes?: string;
+  
+  // New structured personalization fields
+  fabricColor?: string; // Hex code or name
+  zipperColor?: string;
+  biasColor?: string;
+  liningColor?: string;
+  embroidery?: {
+    enabled: boolean;
+    text: string;
+    font: string; // font id
+  };
+}
+
+export interface OrderItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+  config_json?: ConfigJson;
+  product?: Product;
+}
 export interface PaymentDetails { status: 'pending' | 'paid' | 'failed'; method: string; checkoutUrl?: string; transactionId?: string; }
 export interface FiscalDetails { status: 'pending' | 'authorized' | 'rejected'; nfeNumber?: string; serie?: string; pdfUrl?: string; xmlUrl?: string; }
-// FIX: Add 'shipped' to the status union type to align with its usage in OrderCard.tsx.
 export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'shipped' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
 export interface Order { id: string; order_number: string; contact_id: string; contact?: Contact; status: OrderStatus; items: OrderItem[]; subtotal: number; discount: number; shipping_cost: number; total: number; payments?: PaymentDetails; fiscal?: FiscalDetails; logistics?: LogisticsDetails; notes?: string; source?: 'manual' | 'catalog' | 'whatsapp'; created_at: string; updated_at: string; }
-export interface Product extends BaseItem { price: number; stock_quantity: number; }
 
 
 // --- Contacts Module Types ---
@@ -325,7 +381,9 @@ export interface AppData {
   // Data for Orders module
   orders: Order[];
   contacts: Contact[];
+  // Data for Products module
   products: Product[];
+  product_categories: ProductCategory[];
   // Data for Production module
   production_orders: ProductionOrder[];
   task_statuses: TaskStatus[];
@@ -337,13 +395,12 @@ export interface AppData {
   inventory_movements: InventoryMovement[];
 };
 
-// FIX: Remove 'midia' from Omit<> to make it a valid SettingsCategory, aligning the type with its usage in App.tsx.
-export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'production_orders' | 'task_statuses' | 'tasks' | 'omnichannel' | 'inventory_balances' | 'inventory_movements'>;
+export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'product_categories' | 'production_orders' | 'task_statuses' | 'tasks' | 'omnichannel' | 'inventory_balances' | 'inventory_movements'>;
 
 
 export type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select' | 'date';
+    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select' | 'date' | 'multiselect';
     options?: { value: string; label: string }[];
 };

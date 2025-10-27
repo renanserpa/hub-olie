@@ -1,10 +1,10 @@
 
 
 import React, { useState } from 'react';
-import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from '../types';
+import { Order, ConfigJson } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
-import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
 import { useTinyApi } from '../hooks/useTinyApi';
 import { toast } from '../hooks/use-toast';
 import { firestoreService } from '../services/firestoreService';
@@ -14,6 +14,30 @@ interface OrderDetailProps {
   onClose: () => void;
   onUpdate: () => void;
 }
+
+const CustomizationDetail: React.FC<{ config: ConfigJson }> = ({ config }) => {
+    const details = [];
+    if (config.fabricColor) details.push({ icon: Palette, label: 'Tecido', value: config.fabricColor });
+    if (config.zipperColor) details.push({ icon: Palette, label: 'Zíper', value: config.zipperColor });
+    if (config.embroidery?.enabled) {
+        details.push({ icon: Type, label: 'Bordado', value: `${config.embroidery.text} (${config.embroidery.font.split(' ')[0]})` });
+    }
+    if (config.notes) details.push({ icon: FileText, label: 'Obs', value: config.notes });
+
+    if (details.length === 0) return null;
+
+    return (
+        <div className="mt-2 pl-4 border-l-2 border-primary/20 space-y-1">
+            {details.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center gap-2 text-xs text-textSecondary">
+                    <Icon size={12} />
+                    <span className="font-medium">{label}:</span>
+                    <span>{value}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose, onUpdate }) => {
     const [order, setOrder] = useState(initialOrder);
@@ -97,7 +121,6 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                                             {tinyApi.loading && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
                                             Emitir NFe
                                         </Button>
-                                        {/* FIX: Removed unsupported 'asChild' prop. Using an onClick handler to open the link is a better pattern for this action button. */}
                                         {order.fiscal?.pdfUrl && <Button variant="outline" onClick={() => window.open(order.fiscal!.pdfUrl!, '_blank')}>Ver DANFE</Button>}
                                     </div>
                                )}
@@ -132,6 +155,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                                 <div key={item.id} className="border-b last:border-b-0 py-2">
                                     <p className="font-medium">{item.quantity}x {item.product_name}</p>
                                     <p className="text-sm text-textSecondary">R$ {item.total.toFixed(2)}</p>
+                                    {item.config_json && <CustomizationDetail config={item.config_json} />}
                                 </div>
                             ))}
                             <div className="border-t mt-2 pt-2 space-y-1 text-sm">

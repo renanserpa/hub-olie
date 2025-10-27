@@ -1,6 +1,6 @@
 
 
-import { AppData, User, SettingsCategory, AnySettingsItem, SystemSetting, Order, Contact, Product, OrderStatus, CatalogData, MaterialData, LogisticaData, ProductionOrder, OmnichannelData, InventoryBalance, InventoryMovement, TaskStatus, Task, AnyContact } from '../types';
+import { AppData, User, SettingsCategory, AnySettingsItem, SystemSetting, Order, Contact, Product, OrderStatus, CatalogData, MaterialData, LogisticaData, ProductionOrder, OmnichannelData, InventoryBalance, InventoryMovement, TaskStatus, Task, AnyContact, ProductCategory, AnyProduct } from '../types';
 
 // --- MOCK DATA ---
 const mockUser: User = {
@@ -61,17 +61,25 @@ const mockContacts: Contact[] = [
     }
 ];
 
-const mockProducts: Product[] = [
-    { id: 'prod1', name: 'Bolsa Maternidade Classic', price: 299.90, stock_quantity: 50 },
-    { id: 'prod2', name: 'Mochila Aventura Kids', price: 189.90, stock_quantity: 30 },
-    { id: 'prod3', name: 'Necessaire Viagem', price: 79.90, stock_quantity: 100 },
-    { id: 'prod4', name: 'Jaqueta Moletom', price: 220.00, stock_quantity: 40 },
+const mockProductCategories: ProductCategory[] = [
+    { id: 'cat1', name: 'Bolsas Maternidade' },
+    { id: 'cat2', name: 'Mochilas Infantis' },
+    { id: 'cat3', name: 'Acessórios de Viagem' },
+    { id: 'cat4', name: 'Vestuário' },
 ];
+
+const mockProducts: Product[] = [
+    { id: 'prod1', name: 'Bolsa Maternidade Classic', sku: 'BOL-MAT-CLA-01', basePrice: 299.90, category_id: 'cat1', stock_quantity: 50, hasVariants: true, attributes: { embroidery: true, fabricColor: ['ct1', 'ct2'], zipperColor: ['cz1'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'prod2', name: 'Mochila Aventura Kids', sku: 'MOC-KID-AVT-01', basePrice: 189.90, category_id: 'cat2', stock_quantity: 30, hasVariants: true, attributes: { fabricColor: ['ct1', 'ct3'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'prod3', name: 'Necessaire Viagem', sku: 'NEC-VIA-01', basePrice: 79.90, category_id: 'cat3', stock_quantity: 100, hasVariants: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'prod4', name: 'Jaqueta Moletom', sku: 'JAQ-MOL-01', basePrice: 220.00, category_id: 'cat4', stock_quantity: 40, hasVariants: true, attributes: { embroidery: true, fabricColor: ['ct1', 'ct2', 'ct3'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+];
+
 
 const mockOrders: Order[] = [
     { 
         id: 'order1', order_number: 'OLI-00001', contact_id: 'contact1', status: 'paid',
-        items: [{ id: 'item1', product_id: 'prod1', product_name: 'Bolsa Maternidade Classic', quantity: 1, unit_price: 299.90, total: 299.90, config_json: { color: '#F4C2C2', text: 'Baby Ana' } }],
+        items: [{ id: 'item1', product_id: 'prod1', product_name: 'Bolsa Maternidade Classic', quantity: 1, unit_price: 299.90, total: 299.90, config_json: { fabricColor: 'Rosa Bebê', embroidery: { enabled: true, text: 'Baby Ana', font: 'Brush Script MT'} } }],
         subtotal: 299.90, discount: 0, shipping_cost: 25.00, total: 324.90,
         payments: { status: 'paid', method: 'credit_card', transactionId: 'txn_123' },
         created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString()
@@ -176,8 +184,15 @@ const mockData: AppData = {
       { id: 'pc3', name: 'Paleta Neutros', descricao: 'Tons sóbios e elegantes', is_active: false },
     ],
     cores_texturas: {
-        tecido: [{ id: 'ct1', name: 'Rosa Bebê', hex: '#F4C2C2', palette_id: 'pc1', is_active: true }],
-        ziper: [{ id: 'cz1', name: 'Dourado', hex: '#FFD700', palette_id: 'pc1', is_active: true }],
+        tecido: [
+            { id: 'ct1', name: 'Rosa Bebê', hex: '#F4C2C2', palette_id: 'pc1', is_active: true },
+            { id: 'ct2', name: 'Caramelo', hex: '#D2A66D', palette_id: 'pc1', is_active: true },
+            { id: 'ct3', name: 'Verde Musgo', hex: '#556B2F', palette_id: 'pc2', is_active: true },
+        ],
+        ziper: [
+            { id: 'cz1', name: 'Dourado', hex: '#FFD700', palette_id: 'pc1', is_active: true },
+            { id: 'cz2', name: 'Prateado', hex: '#C0C0C0', palette_id: 'pc1', is_active: true },
+        ],
         forro: [{ id: 'cf1', name: 'Forro Impermeável Branco', hex: '#FFFFFF', palette_id: 'pc1', is_active: true }],
         puxador: [{ id: 'cpull1', name: 'Puxador Ouro Velho', hex: '#C8AD7F', palette_id: 'pc1', is_active: true }],
         vies: [{ id: 'cv1', name: 'Viés Bege', hex: '#F5F5DC', palette_id: 'pc1', is_active: true }],
@@ -185,7 +200,8 @@ const mockData: AppData = {
         texturas: [{ id: 'tex1', name: 'Poá Clássico', thumbnail_url: '/poa.png', tile_url: '/poa_tile.png', texture_type: 'poa', is_active: true }],
     },
     fontes_monogramas: [
-        { id: 'font1', name: 'Brush Script MT', style: 'script', category: 'script', preview_url: '/brush_script.png', font_file_url: '/brush.ttf', is_active: true }
+        { id: 'font1', name: 'Brush Script MT', style: 'script', category: 'script', preview_url: '/brush_script.png', font_file_url: '/brush.ttf', is_active: true },
+        { id: 'font2', name: 'Script Elegant', style: 'script', category: 'script', preview_url: '/elegant.png', font_file_url: '/elegant.ttf', is_active: true },
     ],
   },
   materials: {
@@ -223,6 +239,7 @@ const mockData: AppData = {
   orders: mockOrders,
   contacts: mockContacts,
   products: mockProducts,
+  product_categories: mockProductCategories,
   production_orders: mockProductionOrders,
   task_statuses: mockTaskStatuses,
   tasks: mockTasks,
@@ -306,14 +323,49 @@ export const firestoreService = {
 
   // --- Orders Service ---
   getOrders: (): Promise<Order[]> => {
-    const ordersWithContacts = mockData.orders.map(order => ({
+    const ordersWithContactsAndProducts = mockData.orders.map(order => ({
         ...order,
-        contact: mockData.contacts.find(c => c.id === order.contact_id)
+        contact: mockData.contacts.find(c => c.id === order.contact_id),
+        items: order.items.map(item => ({
+            ...item,
+            product: mockData.products.find(p => p.id === item.product_id)
+        }))
     }));
-    return delay(ordersWithContacts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    return delay(ordersWithContactsAndProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
   },
 
-  getProducts: (): Promise<Product[]> => delay(mockData.products),
+  // --- Products Service ---
+  getProducts: (): Promise<Product[]> => {
+    const productsWithCategories = mockData.products.map(product => ({
+      ...product,
+      category: mockData.product_categories.find(c => c.id === product.category_id),
+    }));
+    return delay(productsWithCategories);
+  },
+
+  getProductCategories: (): Promise<ProductCategory[]> => delay(mockData.product_categories),
+
+  addProduct: async (productData: AnyProduct): Promise<Product> => {
+    const newProduct: Product = {
+      ...productData,
+      id: `prod_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    mockData.products.push(newProduct);
+    return delay(newProduct);
+  },
+
+  updateProduct: async (productId: string, data: Partial<AnyProduct>): Promise<Product> => {
+    const productIndex = mockData.products.findIndex(p => p.id === productId);
+    if (productIndex === -1) throw new Error("Product not found");
+
+    const updatedProduct = { ...mockData.products[productIndex], ...data, updatedAt: new Date().toISOString() };
+    mockData.products[productIndex] = updatedProduct;
+
+    return delay(updatedProduct);
+  },
+
   
   // --- Contacts Service ---
   getContacts: (): Promise<Contact[]> => delay(mockData.contacts),

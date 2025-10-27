@@ -1,0 +1,138 @@
+
+import React, { useState, useEffect } from 'react';
+import Modal from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Product, ProductCategory, AnyProduct, AppData } from '../../types';
+import { Loader2 } from 'lucide-react';
+import ProductConfigurator from './ProductConfigurator';
+
+interface ProductDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (data: AnyProduct | Product) => Promise<void>;
+    product: Product | null;
+    categories: ProductCategory[];
+    appData: AppData;
+}
+
+const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, product, categories, appData }) => {
+    const [formData, setFormData] = useState<Partial<Product>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (product) {
+            setFormData(product);
+        } else {
+            setFormData({
+                name: '',
+                sku: '',
+                basePrice: 0,
+                category_id: '',
+                stock_quantity: 0,
+                hasVariants: false,
+                attributes: {},
+            });
+        }
+    }, [product, isOpen]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        
+        if (type === 'checkbox') {
+             const { checked } = e.target as HTMLInputElement;
+             setFormData(prev => ({ ...prev, [name]: checked }));
+        } else if (type === 'number') {
+            setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+    
+    const handleAttributesChange = (attributes: Product['attributes']) => {
+        setFormData(prev => ({...prev, attributes}));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await onSave(formData as Product);
+        } catch(e) {
+            // Error toast is handled by hook
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const inputStyle = "mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50";
+    const labelStyle = "block text-sm font-medium text-textSecondary";
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={product ? 'Editar Produto' : 'Novo Produto'}>
+            <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+                
+                <div>
+                    <label className={labelStyle}>Nome do Produto *</label>
+                    <input name="name" value={formData.name || ''} onChange={handleChange} required className={inputStyle} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className={labelStyle}>SKU *</label>
+                        <input name="sku" value={formData.sku || ''} onChange={handleChange} required className={inputStyle} />
+                    </div>
+                    <div>
+                        <label className={labelStyle}>Categoria</label>
+                         <select name="category_id" value={formData.category_id || ''} onChange={handleChange} required className={inputStyle}>
+                            <option value="">Selecione</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className={labelStyle}>Preço Base (R$)</label>
+                        <input name="basePrice" type="number" step="0.01" value={formData.basePrice || ''} onChange={handleChange} required className={inputStyle} />
+                    </div>
+                    <div>
+                        <label className={labelStyle}>Estoque Inicial</label>
+                        <input name="stock_quantity" type="number" value={formData.stock_quantity || ''} onChange={handleChange} required className={inputStyle} />
+                    </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                     <label className="flex items-center gap-3 text-sm text-textPrimary cursor-pointer font-medium">
+                        <input 
+                            type="checkbox"
+                            name="hasVariants"
+                            checked={!!formData.hasVariants} 
+                            onChange={handleChange}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        Este produto tem variações e personalizações
+                     </label>
+                </div>
+                
+                {formData.hasVariants && (
+                    <ProductConfigurator 
+                        attributes={formData.attributes || {}}
+                        onAttributesChange={handleAttributesChange}
+                        appData={appData}
+                    />
+                )}
+
+
+                <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Salvar Produto
+                    </Button>
+                </div>
+            </form>
+        </Modal>
+    );
+};
+
+export default ProductDialog;

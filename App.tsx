@@ -17,6 +17,7 @@ import ProductionPage from './components/ProductionPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
+import ProductsPage from './components/ProductsPage';
 import { cn } from './lib/utils';
 
 const MAIN_TABS = [
@@ -25,6 +26,7 @@ const MAIN_TABS = [
     { id: 'inventory', label: 'Estoque', icon: Package },
     { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare },
     { id: 'contacts', label: 'Contatos', icon: Users },
+    { id: 'products', label: 'Produtos', icon: Package },
     { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -80,7 +82,7 @@ const SettingsPage: React.FC<{ settings: AppData; user: User | null; onDataChang
              if (subSubCategories.length > 0 && (!activeSubSubTab || !subSubCategories.includes(activeSubSubTab))) {
                 setActiveSubSubTab(subSubCategories[0]);
              }
-        } else {
+        } else if (activeTab !== 'catalogs' || activeSubTab !== 'cores_texturas') {
             setActiveSubSubTab(null);
         }
     }, [activeTab, activeSubTab, settings, activeSubSubTab]);
@@ -128,7 +130,7 @@ const SettingsPage: React.FC<{ settings: AppData; user: User | null; onDataChang
             case 'logistica': {
                 const currentTabData = settings[activeTab];
                 const isNested = typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null;
-                if (!isNested) return null; // Should not happen based on new structure
+                if (!isNested) return null; 
 
                 const subCategories = Object.keys(currentTabData);
 
@@ -223,7 +225,7 @@ const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [activePage, setActivePage] = useState('contacts');
+    const [activePage, setActivePage] = useState('orders');
 
     const loadData = useCallback(async () => {
         try {
@@ -261,9 +263,11 @@ const App: React.FC = () => {
                 return <OmnichannelPage user={user} allContacts={data.contacts} allOrders={data.orders} />;
             case 'contacts':
                 return <ContactsPage user={user} onDataChange={loadData} />;
+            case 'products':
+                return <ProductsPage user={user} data={data} onDataChange={loadData} />;
             case 'orders':
             default:
-                return <OrdersPage user={user} />;
+                return <OrdersPage user={user} data={data} />;
         }
     };
 
@@ -296,7 +300,6 @@ const App: React.FC = () => {
                             </button>
                         ))}
                     </nav>
-                     {/* User info is now in the main header, so this can be removed or kept as a secondary display */}
                 </aside>
 
                 <div className="flex-1">

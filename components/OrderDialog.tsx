@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
-import { Contact, Product, OrderItem, ConfigJson } from '../types';
+import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
 import { firestoreService } from '../services/firestoreService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
@@ -12,13 +13,12 @@ interface OrderDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;
+    appData: AppData;
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) => {
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
+const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, appData }) => {
+    const { contacts, products } = appData;
+    
     // Form state
     const [contactId, setContactId] = useState('');
     const [items, setItems] = useState<Partial<OrderItem>[]>([]);
@@ -31,24 +31,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
     const [customizingItemIndex, setCustomizingItemIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        if (isOpen) {
-            const loadData = async () => {
-                setLoading(true);
-                try {
-                    const [contactsData, productsData] = await Promise.all([
-                        firestoreService.getContacts(),
-                        firestoreService.getProducts(),
-                    ]);
-                    setContacts(contactsData);
-                    setProducts(productsData);
-                } catch (error) {
-                    toast({ title: "Erro", description: "Falha ao carregar dados para o formulário.", variant: 'destructive' });
-                } finally {
-                    setLoading(false);
-                }
-            };
-            loadData();
-        } else {
+        if (!isOpen) {
             // Reset form on close
             setContactId('');
             setItems([]);
@@ -74,7 +57,8 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
             const product = products.find(p => p.id === value);
             item.product_id = value;
             item.product_name = product?.name;
-            item.unit_price = product?.price || 0;
+            item.unit_price = product?.basePrice || 0;
+            item.product = product;
         } else {
             // @ts-ignore
             item[field] = value;
@@ -106,7 +90,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
         try {
             await firestoreService.addOrder({
                 contact_id: contactId,
-                items: items as OrderItem[],
+                items: items.map(({ product, ...item }) => item) as OrderItem[], // Remove temporary product object before saving
                 status: 'pending_payment',
                 subtotal,
                 discount,
@@ -123,11 +107,12 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
             setIsSubmitting(false);
         }
     };
+    
+    const itemToCustomize = customizingItemIndex !== null ? items[customizingItemIndex] : null;
 
     return (
         <>
         <Modal isOpen={isOpen} onClose={onClose} title="Criar Novo Pedido">
-            {loading ? <div className="text-center p-8">Carregando...</div> :
             <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <div>
                     <label className="block text-sm font-medium text-textSecondary">Cliente</label>
@@ -158,7 +143,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
                                     <p className="text-sm font-medium">R$ {item.total?.toFixed(2) || '0.00'}</p>
                                 </div>
                                 <div className="col-span-2 flex items-center justify-end gap-1">
-                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCustomizingItemIndex(index)}><Settings size={14}/></Button>
+                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCustomizingItemIndex(index)} disabled={!item.product_id}><Settings size={14}/></Button>
                                     <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500" onClick={() => handleRemoveItem(index)}><Trash2 size={14}/></Button>
                                 </div>
                             </div>
@@ -195,14 +180,15 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave }) =>
                     </Button>
                 </div>
             </form>
-            }
         </Modal>
-        {customizingItemIndex !== null && (
+        {itemToCustomize && itemToCustomize.product && (
              <CustomizeItemDialog
                 isOpen={customizingItemIndex !== null}
                 onClose={() => setCustomizingItemIndex(null)}
                 onSave={handleCustomizationSave}
-                initialConfig={items[customizingItemIndex]?.config_json || {}}
+                initialConfig={itemToCustomize.config_json || {}}
+                product={itemToCustomize.product}
+                appData={appData}
             />
         )}
         </>

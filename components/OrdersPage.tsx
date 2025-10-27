@@ -1,7 +1,8 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { firestoreService } from '../services/firestoreService';
-import { Order, User, OrderStatus } from '../types';
+import { Order, User, OrderStatus, AppData } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -21,7 +22,7 @@ const ORDER_STATUS_TABS: { id: OrderStatus | 'all', label: string }[] = [
     { id: 'awaiting_shipping', label: 'Pronto para Envio' },
 ];
 
-const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
+const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>(
@@ -129,6 +130,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                     setIsDialogOpen(false);
                     loadOrders();
                 }}
+                appData={data}
             />
         </div>
     );

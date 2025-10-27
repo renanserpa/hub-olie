@@ -1,61 +1,124 @@
 
-import React, { useState } from 'react';
-import { ConfigJson } from '../types';
+
+import React, { useState, useMemo } from 'react';
+import { ConfigJson, Product, AppData } from '../types';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
+import { cn } from '../lib/utils';
 
 interface CustomizeItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (config: ConfigJson) => void;
   initialConfig: ConfigJson;
+  product: Product;
+  appData: AppData;
 }
 
-const COLOR_OPTIONS = ['#F4C2C2', '#92A8D1', '#FFD700', '#C0C0C0', '#F5F5DC', '#000000', '#FFFFFF', '#E0BFB8'];
-
-const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClose, onSave, initialConfig }) => {
+const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClose, onSave, initialConfig, product, appData }) => {
     const [config, setConfig] = useState<ConfigJson>(initialConfig);
 
     const handleChange = (field: keyof ConfigJson, value: any) => {
         setConfig(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleEmbroideryChange = (field: 'enabled' | 'text' | 'font', value: any) => {
+        setConfig(prev => ({
+            ...prev,
+            embroidery: {
+                ...prev.embroidery,
+                enabled: prev.embroidery?.enabled || false,
+                text: prev.embroidery?.text || '',
+                font: prev.embroidery?.font || '',
+                [field]: value
+            }
+        }));
+    };
+
     const handleSave = () => {
         onSave(config);
     };
 
+    const getColorOptions = (colorType: 'tecido' | 'ziper' | 'forro' | 'vies') => {
+        const colorIds = product.attributes?.[`${colorType}Color` as keyof typeof product.attributes] as string[] | undefined;
+        if (!colorIds) return [];
+        return appData.catalogs.cores_texturas[colorType].filter(c => colorIds.includes(c.id));
+    };
+    
+    const fontOptions = appData.catalogs.fontes_monogramas;
+    const selectedFont = fontOptions.find(f => f.id === config.embroidery?.font);
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Personalizar Item">
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-textSecondary">Cor</label>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                        {COLOR_OPTIONS.map(color => (
-                            <button key={color} type="button" onClick={() => handleChange('color', color)}
-                                className={`w-8 h-8 rounded-full border-2 ${config.color === color ? 'border-primary ring-2 ring-primary/50' : 'border-border'}`}
-                                style={{ backgroundColor: color }}
+        <Modal isOpen={isOpen} onClose={onClose} title={`Personalizar: ${product.name}`}>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                
+                {product.attributes?.fabricColor && (
+                     <div>
+                        <label className="block text-sm font-medium text-textSecondary">Cor do Tecido</label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                            {getColorOptions('tecido').map(color => (
+                                <button key={color.id} type="button" onClick={() => handleChange('fabricColor', color.name)}
+                                    className={cn(`w-8 h-8 rounded-full border-2 flex items-center justify-center`, config.fabricColor === color.name ? 'border-primary ring-2 ring-primary/50' : 'border-border')}
+                                    style={{ backgroundColor: color.hex }}
+                                    title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {product.attributes?.zipperColor && (
+                     <div>
+                        <label className="block text-sm font-medium text-textSecondary">Cor do Zíper</label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                             {getColorOptions('ziper').map(color => (
+                                <button key={color.id} type="button" onClick={() => handleChange('zipperColor', color.name)}
+                                    className={cn(`w-8 h-8 rounded-full border-2`, config.zipperColor === color.name ? 'border-primary ring-2 ring-primary/50' : 'border-border')}
+                                    style={{ backgroundColor: color.hex }}
+                                     title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {product.attributes?.embroidery && (
+                    <div className="space-y-3 pt-4 border-t">
+                         <label className="flex items-center gap-2 text-sm text-textPrimary cursor-pointer font-medium">
+                            <input 
+                                type="checkbox" 
+                                checked={!!config.embroidery?.enabled} 
+                                onChange={(e) => handleEmbroideryChange('enabled', e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
-                        ))}
+                            Adicionar Bordado
+                         </label>
+                         {config.embroidery?.enabled && (
+                             <div className="pl-6 space-y-3 animate-fade-in">
+                                 <div>
+                                    <label htmlFor="text" className="block text-sm font-medium text-textSecondary">Texto do Bordado</label>
+                                    <input id="text" type="text" value={config.embroidery.text || ''} onChange={e => handleEmbroideryChange('text', e.target.value)} maxLength={50} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                                </div>
+                                <div>
+                                     <label htmlFor="font" className="block text-sm font-medium text-textSecondary">Fonte</label>
+                                     <select id="font" value={config.embroidery.font || ''} onChange={e => handleEmbroideryChange('font', e.target.value)} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                        <option value="">Selecione a fonte</option>
+                                        {fontOptions.map(font => <option key={font.id} value={font.id}>{font.name}</option>)}
+                                     </select>
+                                </div>
+                                {config.embroidery.text && (
+                                    <div className="p-4 bg-secondary rounded-lg">
+                                        <p className="text-xs text-textSecondary">Pré-visualização:</p>
+                                        <p className="text-2xl" style={{ fontFamily: selectedFont?.name || 'serif' }}>
+                                            {config.embroidery.text}
+                                        </p>
+                                    </div>
+                                )}
+                             </div>
+                         )}
                     </div>
-                </div>
-                <div>
-                    <label htmlFor="text" className="block text-sm font-medium text-textSecondary">Texto Personalizado</label>
-                    <input id="text" type="text" value={config.text || ''} onChange={e => handleChange('text', e.target.value)} maxLength={50} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                </div>
-                 <div className="grid grid-cols-3 gap-3">
-                    <div>
-                        <label htmlFor="width" className="block text-sm font-medium text-textSecondary">Largura (cm)</label>
-                        <input id="width" type="number" value={config.width || ''} onChange={e => handleChange('width', parseFloat(e.target.value))} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                    </div>
-                     <div>
-                        <label htmlFor="height" className="block text-sm font-medium text-textSecondary">Altura (cm)</label>
-                        <input id="height" type="number" value={config.height || ''} onChange={e => handleChange('height', parseFloat(e.target.value))} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                    </div>
-                     <div>
-                        <label htmlFor="thickness" className="block text-sm font-medium text-textSecondary">Espessura (cm)</label>
-                        <input id="thickness" type="number" value={config.thickness || ''} onChange={e => handleChange('thickness', parseFloat(e.target.value))} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                    </div>
-                </div>
+                )}
+                
                 <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-textSecondary">Observações do Item</label>
                     <textarea id="notes" value={config.notes || ''} onChange={e => handleChange('notes', e.target.value)} rows={3} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
