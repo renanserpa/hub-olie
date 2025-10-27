@@ -32,9 +32,14 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         setSettings(prevSettings => {
             return prevSettings.map(setting => {
                 if (setting.id === id) {
-                    const parsedValue = JSON.parse(setting.value);
-                    parsedValue[field] = value;
-                    return { ...setting, value: JSON.stringify(parsedValue) };
+                    try {
+                        const parsedValue = JSON.parse(setting.value);
+                        parsedValue[field] = value;
+                        return { ...setting, value: JSON.stringify(parsedValue) };
+                    } catch (e) {
+                        console.error("Failed to parse setting value", setting.value);
+                        return setting;
+                    }
                 }
                 return setting;
             });
@@ -89,14 +94,16 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                                 <h4 className="font-semibold text-textPrimary">{setting.name}</h4>
                                 <p className="text-sm text-textSecondary mb-4">{setting.description}</p>
                                 <div className="space-y-3">
-                                    {/* FIX: Safely parse setting.value to ensure it is a valid object before using Object.entries. This avoids type errors and potential runtime crashes. */}
                                     {(() => {
                                         try {
                                             const parsed = JSON.parse(setting.value);
-                                            if (typeof parsed === 'object' && parsed !== null) {
-                                                return Object.entries(parsed).map(([key, value]) => 
-                                                  renderField(setting, key, value)
-                                                );
+                                            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                                                // FIX: Cast `parsed` to `Record<string, unknown>` to resolve a type inference issue.
+                                                // After `JSON.parse`, `parsed` is `any`, and TypeScript was failing to infer that
+                                                // `Object.entries(parsed)` returns an array, causing an error when calling `.map`.
+                                                return Object.entries(parsed as Record<string, unknown>).map(([key, value]) => {
+                                                    return renderField(setting, key, value);
+                                                });
                                             }
                                         } catch (e) {
                                             // Silently ignore if value is not valid JSON

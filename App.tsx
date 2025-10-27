@@ -8,15 +8,23 @@ import { Card, CardContent } from './components/ui/Card';
 import TabLayout from './components/ui/TabLayout';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { SlidersHorizontal, Upload, Download, Palette, Layers, Truck, Image as ImageIcon, ShoppingCart, Settings } from 'lucide-react';
+import { SlidersHorizontal, Upload, Download, Palette, Layers, Truck, Image as ImageIcon, ShoppingCart, Settings, Workflow, MessagesSquare, Package, Search, Bell, Users } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import SystemTabContent from './components/SystemTabContent';
 import MediaTabContent from './components/MediaTabContent';
 import OrdersPage from './components/OrdersPage';
+import ProductionPage from './components/ProductionPage';
+import OmnichannelPage from './components/OmnichannelPage';
+import InventoryPage from './components/InventoryPage';
+import ContactsPage from './components/ContactsPage';
 import { cn } from './lib/utils';
 
 const MAIN_TABS = [
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
+    { id: 'production', label: 'Produção', icon: Workflow },
+    { id: 'inventory', label: 'Estoque', icon: Package },
+    { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare },
+    { id: 'contacts', label: 'Contatos', icon: Users },
     { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -215,7 +223,7 @@ const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [activePage, setActivePage] = useState('orders');
+    const [activePage, setActivePage] = useState('contacts');
 
     const loadData = useCallback(async () => {
         try {
@@ -238,6 +246,26 @@ const App: React.FC = () => {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+    
+    const renderActivePage = () => {
+        if (!data || !user) return null;
+
+        switch (activePage) {
+            case 'settings':
+                return <SettingsPage settings={data} user={user} onDataChange={loadData} />;
+            case 'production':
+                return <ProductionPage />;
+            case 'inventory':
+                return <InventoryPage user={user} onDataChange={loadData} />;
+            case 'omnichannel':
+                return <OmnichannelPage user={user} allContacts={data.contacts} allOrders={data.orders} />;
+            case 'contacts':
+                return <ContactsPage user={user} onDataChange={loadData} />;
+            case 'orders':
+            default:
+                return <OrdersPage user={user} />;
+        }
+    };
 
     if (loading) {
         return (
@@ -268,29 +296,47 @@ const App: React.FC = () => {
                             </button>
                         ))}
                     </nav>
-                    <div className="mt-auto">
-                        {user && (
-                            <div className="bg-accent p-3 rounded-xl">
-                                <p className="font-medium text-textPrimary text-sm truncate">{user.email}</p>
-                                <p className="text-xs text-textSecondary">{user.role}</p>
-                            </div>
-                        )}
-                    </div>
+                     {/* User info is now in the main header, so this can be removed or kept as a secondary display */}
                 </aside>
 
                 <div className="flex-1">
                      <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
-                        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-                            <h1 className="text-xl font-bold text-textPrimary capitalize">{activePage}</h1>
+                        <div className="container mx-auto px-6 h-20 flex justify-between items-center">
+                           <div className="relative w-full max-w-md">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <Search className="h-4 w-4 text-textSecondary" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar pedidos, clientes, produtos..."
+                                    className="w-full pl-9 pr-3 py-2 border border-transparent rounded-xl shadow-sm bg-secondary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <button className="relative text-textSecondary hover:text-textPrimary">
+                                    <Bell size={20} />
+                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                    </span>
+                                </button>
+                                {user && (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                            {user.email.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-sm text-textPrimary truncate">{user.email.split('@')[0]}</p>
+                                            <p className="text-xs text-textSecondary">{user.role.replace('AdminGeral', 'Admin')}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </header>
                     <main className="container mx-auto p-4 sm:p-6">
                         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert" onClick={() => setError(null)}>{error}</div>}
-                        {data && user && (
-                            activePage === 'settings' 
-                                ? <SettingsPage settings={data} user={user} onDataChange={loadData} /> 
-                                : <OrdersPage user={user} />
-                        )}
+                        {renderActivePage()}
                     </main>
                 </div>
             </div>

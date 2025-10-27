@@ -144,8 +144,174 @@ export interface PaymentDetails { status: 'pending' | 'paid' | 'failed'; method:
 export interface FiscalDetails { status: 'pending' | 'authorized' | 'rejected'; nfeNumber?: string; serie?: string; pdfUrl?: string; xmlUrl?: string; }
 export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
 export interface Order { id: string; order_number: string; contact_id: string; contact?: Contact; status: OrderStatus; items: OrderItem[]; subtotal: number; discount: number; shipping_cost: number; total: number; payments?: PaymentDetails; fiscal?: FiscalDetails; logistics?: LogisticsDetails; notes?: string; source?: 'manual' | 'catalog' | 'whatsapp'; created_at: string; updated_at: string; }
-export interface Contact extends BaseItem { email: string; phone: string; address: { street: string; city: string; state: string; zip: string; }; }
 export interface Product extends BaseItem { price: number; stock_quantity: number; }
+
+
+// --- Contacts Module Types ---
+export interface Contact extends BaseItem {
+  email: string;
+  phone: string;
+  birth_date?: string;
+  cpf_cnpj?: string;
+  whatsapp?: string;
+  instagram?: string;
+  address: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+}
+export type AnyContact = Omit<Contact, 'id'>;
+
+
+// --- Production Module Types ---
+export type ProductionOrderStatus = 'novo' | 'planejado' | 'em_andamento' | 'em_espera' | 'finalizado' | 'cancelado';
+
+export interface ProductionOrder {
+  id: string;
+  po_number: string; // ex: "OP-2024-001"
+  product_id: string;
+  product?: Product; // For joined data
+  variant_id?: string;
+  quantity: number;
+  status: ProductionOrderStatus;
+  priority: 'baixa' | 'normal' | 'alta' | 'urgente';
+  due_date: string;
+  started_at?: string;
+  completed_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // For progress bar
+  steps_completed: number;
+  steps_total: number;
+}
+
+export interface TaskStatus extends BaseItem {
+  color: string;
+  position: number;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  status_id: string;
+  client_name: string;
+  quantity: number;
+  position: number;
+}
+
+// --- Omnichannel Module Types ---
+export type Channel = 'whatsapp' | 'instagram' | 'site';
+export type ConversationStatus = 'open' | 'pending' | 'waiting_customer' | 'waiting_internal' | 'closed';
+export type Priority = 'low' | 'normal' | 'high' | 'urgent';
+export type MessageDirection = 'in' | 'out' | 'note';
+export type MessageType = 'text' | 'image' | 'file' | 'quote' | 'test_preview';
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'approved' | 'rejected';
+
+
+export interface Conversation {
+  id: string;
+  channel: Channel;
+  customerId: string;
+  customerHandle: string;
+  customerName: string;
+  customerAvatar?: string;
+  title: string;
+  status: ConversationStatus;
+  priority: Priority;
+  assigneeId?: string;
+  assigneeName?: string;
+  tags: string[];
+  slaDueAt?: string;
+  lastMessageAt: string;
+  unreadCount: number;
+  quoteId?: string;
+  testConfigId?: string;
+  closedAt?: string;
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  direction: MessageDirection;
+  type: MessageType;
+  content: string;
+  meta?: Record<string, any>;
+  status: MessageStatus;
+  authorId?: string;
+  authorName?: string;
+  createdAt: string;
+}
+
+export interface QuoteItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  config?: ConfigJson;
+}
+
+export interface Quote {
+  id: string;
+  conversationId: string;
+  customerId: string;
+  status: QuoteStatus;
+  items: QuoteItem[];
+  shipping: {
+    method: string;
+    cost: number;
+    estimatedDelivery: string;
+  };
+  totals: {
+    subtotal: number;
+    discount: number;
+    shipping: number;
+    grandTotal: number;
+  };
+  validUntil: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OmnichannelData {
+    conversations: Conversation[];
+    messages: Message[];
+    quotes: Quote[];
+}
+
+// --- Inventory Module Types ---
+export interface InventoryBalance {
+  material_id: string;
+  material?: BasicMaterial; // Joined data
+  quantity_on_hand: number;
+  quantity_reserved: number;
+  location?: string;
+  low_stock_threshold: number;
+  last_updated_at: string;
+}
+
+export type InventoryMovementType = 'in' | 'out' | 'adjustment';
+export type InventoryMovementReason = 'compra' | 'consumo_producao' | 'venda' | 'contagem' | 'devolucao' | 'perda';
+
+export interface InventoryMovement {
+  id: string;
+  material_id: string;
+  type: InventoryMovementType;
+  quantity: number;
+  reason: InventoryMovementReason;
+  reference_id?: string; // e.g., PO number or Production Order number
+  notes?: string;
+  created_at: string;
+}
 
 
 // --- Main Data Structure ---
@@ -159,14 +325,23 @@ export interface AppData {
   orders: Order[];
   contacts: Contact[];
   products: Product[];
+  // Data for Production module
+  production_orders: ProductionOrder[];
+  task_statuses: TaskStatus[];
+  tasks: Task[];
+  // Data for Omnichannel module
+  omnichannel: OmnichannelData;
+  // Data for Inventory module
+  inventory_balances: InventoryBalance[];
+  inventory_movements: InventoryMovement[];
 };
 
-export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'midia'>;
+export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'products' | 'midia' | 'production_orders' | 'task_statuses' | 'tasks' | 'omnichannel' | 'inventory_balances' | 'inventory_movements'>;
 
 
 export type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select';
+    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select' | 'date';
     options?: { value: string; label: string }[];
 };

@@ -14,7 +14,9 @@
     "lucide-react": "0.344.0",
     "clsx": "latest",
     "tailwind-merge": "latest",
-    "@google/genai": "latest"
+    "@google/genai": "latest",
+    "@supabase/supabase-js": "2",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
