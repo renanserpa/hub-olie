@@ -3,31 +3,18 @@ import { Contact, AnyContact } from '../types';
 import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
-export function useContacts(onDataChange: () => void) {
-    const [allContacts, setAllContacts] = useState<Contact[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+export function useContacts(initialContacts: Contact[], onDataChange: () => void) {
+    const [allContacts, setAllContacts] = useState<Contact[]>(initialContacts);
+    const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<'all' | 'birthdays'>('all');
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
-    const loadContacts = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await firebaseService.getCollection<Contact>('contacts');
-            setAllContacts(data);
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Erro!", description: "Não foi possível carregar os contatos do Firebase.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        loadContacts();
-    }, [loadContacts]);
+        setAllContacts(initialContacts);
+    }, [initialContacts])
 
     const filteredContacts = useMemo(() => {
         let contacts = allContacts;
@@ -65,6 +52,7 @@ export function useContacts(onDataChange: () => void) {
     };
     
     const saveContact = async (contactData: AnyContact | Contact) => {
+        setIsLoading(true);
         try {
             if ('id' in contactData) {
                 const { id, ...dataToUpdate } = contactData;
@@ -74,11 +62,13 @@ export function useContacts(onDataChange: () => void) {
                 await firebaseService.addDocument('contacts', contactData);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
-            loadContacts(); // Re-fetch contacts after change
+            onDataChange();
             closeDialog();
         } catch (error) {
             console.error(error);
             toast({ title: "Erro!", description: "Não foi possível salvar o contato.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
         }
     };
 

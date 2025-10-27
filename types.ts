@@ -1,9 +1,10 @@
 
 
+
 export interface User {
   uid: string;
   email: string;
-  role: 'AdminGeral' | 'Administrativo' | 'Produção' | 'Vendas' | 'Financeiro' | 'Conteúdo';
+  role: 'AdminGeral' | 'Administrativo' | 'Producao' | 'Vendas' | 'Financeiro' | 'Conteudo';
 }
 
 export interface BaseItem {

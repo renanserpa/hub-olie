@@ -35,8 +35,9 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                         parsedValue[field] = value;
                         return { ...setting, value: JSON.stringify(parsedValue) };
                     } catch (e) {
-                        console.error("Failed to parse setting value", setting.value);
-                        return setting;
+                        // This case handles non-JSON values, which shouldn't happen based on the data structure
+                        // but it's a safe fallback.
+                        return { ...setting, value: value };
                     }
                 }
                 return setting;
@@ -94,16 +95,16 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                                 <div className="space-y-3">
                                     {(() => {
                                         try {
-                                            const parsed = JSON.parse(setting.value);
+                                            const parsed = JSON.parse(setting.value) as Record<string, any>;
                                             if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                                                // FIX: Using Object.entries with a type assertion to prevent TypeScript from inferring
-                                                // the parsed object as `unknown`, which caused the `.map` method to be unavailable.
-                                                return Object.entries(parsed as Record<string, any>).map(([key, value]) => {
+                                                return Object.keys(parsed).map((key) => {
+                                                    const value = parsed[key];
                                                     return renderField(setting, key, value);
                                                 });
                                             }
                                         } catch (e) {
-                                            // Silently ignore if value is not valid JSON
+                                            // Silently ignore if value is not valid JSON, or render a simple text input for it
+                                            return renderField(setting, 'value', setting.value);
                                         }
                                         return null;
                                     })()}

@@ -241,11 +241,6 @@ export const firebaseService = {
         inventory_movements: [],
     } as AppData;
   },
-  getCurrentUser: async (): Promise<User | null> => ({
-      uid: 'mock-user-id',
-      email: 'admin@olie.com.br',
-      role: 'AdminGeral',
-  }),
 
   // Settings
   addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getSettingsCollectionPath(category, subTab, subSubTab), data),

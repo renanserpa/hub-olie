@@ -25,7 +25,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ user, data, onDataChange })
         openDialog,
         closeDialog,
         saveProduct,
-    } = useProducts(onDataChange);
+    } = useProducts(data.products, data.product_categories, onDataChange);
 
     return (
         <div>

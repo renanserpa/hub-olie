@@ -6,13 +6,16 @@ import { useContacts } from '../hooks/useContacts';
 import ContactCard from './contacts/ContactCard';
 import ContactDialog from './contacts/ContactDialog';
 import { cn } from '../lib/utils';
+import { AppData } from '../types';
+
 
 interface ContactsPageProps {
   user: User;
   onDataChange: () => void;
+  data: AppData;
 }
 
-const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange }) => {
+const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange, data }) => {
     const {
         isLoading,
         filteredContacts,
@@ -25,7 +28,7 @@ const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange }) => {
         openDialog,
         closeDialog,
         saveContact,
-    } = useContacts(onDataChange);
+    } = useContacts(data.contacts, onDataChange);
     
     const TABS = [
         { id: 'all', label: `Todos (${filteredContacts.length})` },

@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { db } from '../lib/firebase';
+import { collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+
 
 export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Order[]) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -12,118 +14,49 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [assigneeFilter, setAssigneeFilter] = useState<'all' | 'mine' | 'unassigned'>('all');
 
-    // Effect for initial data load and real-time subscriptions
+    // Real-time listener for conversations
     useEffect(() => {
-        let messageChannel: RealtimeChannel;
-        let conversationChannel: RealtimeChannel;
+        setIsLoading(true);
+        const q = query(collection(db, 'omni_conversations'), orderBy('lastMessageAt', 'desc'));
 
-        const fetchInitialData = async () => {
-            setIsLoading(true);
-            try {
-                const { data: convosData, error: convosError } = await supabase
-                    .from('omni_conversations')
-                    .select('*')
-                    .order('lastMessageAt', { ascending: false });
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const convosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Conversation);
+            setConversations(convosData);
 
-                if (convosError) throw convosError;
-                
-                setConversations(convosData as Conversation[] || []);
-
+            if (isLoading) { // On first load, select the first conversation
                 const firstConversation = convosData?.[0];
                 if (firstConversation && !selectedConversationId) {
                     setSelectedConversationId(firstConversation.id);
                 }
-            } catch (error: any) {
-                const errorMessage = error.message || 'Não foi possível carregar as conversas.';
-                console.error("Error fetching initial data:", error);
-                toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
-            } finally {
-                setIsLoading(false);
             }
-        };
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching conversations in real-time:", error);
+            toast({ title: 'Erro de Conexão!', description: 'Não foi possível carregar as conversas em tempo real.', variant: 'destructive' });
+            setIsLoading(false);
+        });
 
-        fetchInitialData();
+        return () => unsubscribe(); // Cleanup listener on unmount
+    }, []); // Empty dependency array to set up the listener only once
 
-        // Subscribe to new messages
-        messageChannel = supabase.channel('omni_messages_realtime')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'omni_messages' },
-                (payload) => {
-                    const newMessage = payload.new as Message;
-                    
-                    // Add message if it belongs to the currently viewed conversation
-                    if (newMessage.conversationId === selectedConversationId) {
-                        setMessages(currentMessages => [...currentMessages, newMessage].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
-                    }
-
-                    // Update conversation list
-                    setConversations(currentConvos => {
-                        const convoIndex = currentConvos.findIndex(c => c.id === newMessage.conversationId);
-                        if (convoIndex === -1) return currentConvos;
-
-                        const updatedConvo = {
-                            ...currentConvos[convoIndex],
-                            lastMessageAt: newMessage.createdAt,
-                            unreadCount: newMessage.conversationId === selectedConversationId ? 0 : (currentConvos[convoIndex].unreadCount || 0) + 1,
-                        };
-                        
-                        const otherConvos = currentConvos.filter(c => c.id !== newMessage.conversationId);
-                        return [updatedConvo, ...otherConvos];
-                    });
-
-                    if (newMessage.direction === 'in' && newMessage.conversationId !== selectedConversationId) {
-                        toast({ title: "Nova Mensagem", description: `de ${newMessage.authorName}` });
-                    }
-                }
-            ).subscribe();
-
-        // Subscribe to conversation changes
-        conversationChannel = supabase.channel('omni_conversations_realtime')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'omni_conversations' },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        setConversations(currentConvos => [payload.new as Conversation, ...currentConvos]);
-                    }
-                    if (payload.eventType === 'UPDATE') {
-                        setConversations(currentConvos => currentConvos.map(c => c.id === payload.new.id ? payload.new as Conversation : c));
-                    }
-                    if (payload.eventType === 'DELETE') {
-                        setConversations(currentConvos => currentConvos.filter(c => c.id !== (payload.old as any).id));
-                    }
-                }
-            ).subscribe();
-
-        return () => {
-            if (messageChannel) supabase.removeChannel(messageChannel);
-            if (conversationChannel) supabase.removeChannel(conversationChannel);
-        };
-    }, [selectedConversationId]);
-
-    // Effect to fetch messages when conversation changes
+    // Real-time listener for messages of the selected conversation
     useEffect(() => {
-        const fetchMessages = async () => {
-            if (!selectedConversationId) {
-                setMessages([]);
-                return;
-            };
+        if (!selectedConversationId) {
+            setMessages([]);
+            return;
+        }
 
-            try {
-                const { data: messagesData, error: messagesError } = await supabase
-                    .from('omni_messages')
-                    .select('*')
-                    .eq('conversationId', selectedConversationId)
-                    .order('createdAt', { ascending: true });
+        const q = query(collection(db, `omni_conversations/${selectedConversationId}/messages`), orderBy('createdAt', 'asc'));
 
-                if (messagesError) throw messagesError;
-                setMessages(messagesData as Message[] || []);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Message);
+            setMessages(messagesData);
+        }, (error) => {
+            console.error(`Error fetching messages for convo ${selectedConversationId}:`, error);
+            toast({ title: 'Erro!', description: 'Não foi possível carregar as mensagens.', variant: 'destructive' });
+        });
 
-            } catch (error: any) {
-                 const errorMessage = error.message || 'Não foi possível carregar as mensagens.';
-                 console.error("Error fetching messages:", error);
-                 toast({ title: 'Erro!', description: errorMessage, variant: 'destructive' });
-            }
-        };
-
-        fetchMessages();
+        return () => unsubscribe(); // Cleanup listener
     }, [selectedConversationId]);
 
     const filteredConversations = useMemo(() => {
@@ -159,14 +92,11 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
         
         const convoToUpdate = conversations.find(c => c.id === conversationId);
         if (convoToUpdate && convoToUpdate.unreadCount > 0) {
+            // Optimistic update for faster UI response
             setConversations(prev => prev.map(c =>
                 c.id === conversationId ? { ...c, unreadCount: 0 } : c
             ));
-            
-            await supabase
-                .from('omni_conversations')
-                .update({ unreadCount: 0 })
-                .eq('id', conversationId);
+            await firebaseService.updateDocument('omni_conversations', conversationId, { unreadCount: 0 });
         }
     };
     
@@ -182,15 +112,21 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
             status: 'sent',
             authorId: user.uid,
             authorName: user.role,
+            createdAt: serverTimestamp(),
         };
         
         setIsSending(true);
-        const { error } = await supabase.from('omni_messages').insert(newMessage);
-        setIsSending(false);
-
-        if (error) {
+        try {
+            await firebaseService.addDocument(`omni_conversations/${selectedConversationId}/messages`, newMessage);
+            await firebaseService.updateDocument('omni_conversations', selectedConversationId, {
+                lastMessageAt: serverTimestamp(),
+                title: content, // Update the preview text of the conversation
+            });
+        } catch(error) {
             console.error("Error sending message:", error);
             toast({ title: "Erro", description: "Não foi possível enviar a mensagem.", variant: 'destructive' });
+        } finally {
+            setIsSending(false);
         }
     };
 

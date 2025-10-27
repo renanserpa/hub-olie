@@ -241,6 +241,7 @@ const App: React.FC = () => {
             setIsDataLoading(true);
             setError(null);
             const settingsData = await firebaseService.getSettings();
+            console.log("🔥 Firestore conectado: getSettings() executado com sucesso.");
             setData(settingsData);
         } catch (e) {
             const errorMessage = 'Falha ao carregar os dados.';
@@ -269,7 +270,7 @@ const App: React.FC = () => {
             case 'omnichannel':
                 return <OmnichannelPage user={user} allContacts={data.contacts} allOrders={data.orders} />;
             case 'contacts':
-                return <ContactsPage user={user} onDataChange={loadData} />;
+                return <ContactsPage user={user} onDataChange={loadData} data={data} />;
             case 'products':
                 return <ProductsPage user={user} data={data} onDataChange={loadData} />;
             case 'orders':
