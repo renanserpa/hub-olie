@@ -1,6 +1,4 @@
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, ConfigJson } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
@@ -43,10 +41,30 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
     const [order, setOrder] = useState(initialOrder);
     const [activeTab, setActiveTab] = useState('payments');
     const tinyApi = useTinyApi();
+    
+    useEffect(() => {
+        // Update local state if the initial prop changes (e.g., from parent's real-time update)
+        setOrder(initialOrder);
+    }, [initialOrder]);
+
+    useEffect(() => {
+        const listener = supabaseService.listenToDocument<Order>('orders', initialOrder.id, async () => {
+            // When an update is detected for this specific order, refetch it with the contact join
+            const updatedOrderData = await supabaseService.getOrder(initialOrder.id);
+            if (updatedOrderData) {
+                setOrder(updatedOrderData);
+            }
+        });
+
+        return () => {
+            listener.unsubscribe();
+        };
+    }, [initialOrder.id]);
+
 
     const handleUpdate = async (field: 'payments' | 'fiscal' | 'logistics', data: any) => {
         const updatedOrder = await supabaseService.updateOrder(order.id, { [field]: data });
-        setOrder(updatedOrder);
+        // No need for setOrder here, listener will catch the change. onUpdate is also redundant now but kept for compatibility.
         onUpdate();
         return updatedOrder;
     };

@@ -33,26 +33,45 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     const isAdmin = user?.role === 'AdminGeral';
 
-    const loadPageData = useCallback(async () => {
-        setLoading(true);
+    const loadStaticData = useCallback(async () => {
         try {
-            const [ordersData, contactsData, productsData] = await Promise.all([
-                supabaseService.getOrders(),
+            const [contactsData, productsData] = await Promise.all([
                 supabaseService.getCollection<Contact>('contacts'),
                 supabaseService.getProducts()
             ]);
-            setOrders(ordersData);
             setPageData({ contacts: contactsData, products: productsData });
         } catch (error) {
-            toast({ title: 'Erro!', description: 'Não foi possível carregar os dados da página.', variant: 'destructive' });
-        } finally {
-            setLoading(false);
+            toast({ title: 'Erro!', description: 'Não foi possível carregar contatos e produtos.', variant: 'destructive' });
         }
     }, []);
 
+    // Load static data once on component mount
     useEffect(() => {
-        loadPageData();
-    }, [loadPageData]);
+        loadStaticData();
+    }, [loadStaticData]);
+
+    // Listen for real-time order updates
+    useEffect(() => {
+        setLoading(true);
+        const listener = supabaseService.listenToCollection<Order>('orders', '*, contacts(*)', (newOrders) => {
+            setOrders(newOrders);
+            if (loading) setLoading(false);
+        });
+        
+        // Also fetch initial data
+        supabaseService.getOrders().then((initialOrders) => {
+            setOrders(initialOrders);
+            setLoading(false);
+        }).catch(() => {
+            toast({ title: 'Erro!', description: 'Não foi possível carregar os pedidos iniciais.', variant: 'destructive' });
+            setLoading(false);
+        });
+
+        return () => {
+            listener.unsubscribe();
+        };
+    }, [loading]);
+
 
     useEffect(() => {
         localStorage.setItem(VIEW_MODE_KEY, viewMode);
@@ -61,8 +80,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
             const updatedOrder = await supabaseService.updateOrderStatus(orderId, newStatus);
-            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: updatedOrder.status, updated_at: updatedOrder.updated_at } : o));
-            toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.order_number.split('-')[1]} atualizado para ${newStatus}.` });
+            // No need for setOrders here, the real-time listener will handle it.
+            toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.order_number.split('-')[1]} atualizado.` });
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível atualizar o status do pedido.', variant: 'destructive' });
         }
@@ -74,7 +93,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     if (selectedOrderId) {
         const selectedOrder = orders.find(o => o.id === selectedOrderId);
-        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={loadPageData} /> : null;
+        // Pass a callback to OrderDetail so it can trigger a data reload if needed, though real-time should handle most cases.
+        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={() => {}} /> : null;
     }
 
     return (
@@ -132,7 +152,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                 onClose={() => setIsDialogOpen(false)}
                 onSave={() => {
                     setIsDialogOpen(false);
-                    loadPageData();
+                    // No explicit reload needed, listener will catch the new order.
                 }}
                 contacts={pageData.contacts}
                 products={pageData.products}

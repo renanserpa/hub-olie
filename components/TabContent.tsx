@@ -55,11 +55,27 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    const submissionData = { ...formData };
+
+    // Sanitize data before sending to the backend, especially for numeric types
+    for (const field of fields) {
+        if (field.type === 'number') {
+            const key = field.key;
+            if (Object.prototype.hasOwnProperty.call(submissionData, key)) {
+                const value = submissionData[key];
+                const parsed = parseFloat(value);
+                // If parsing results in NaN (e.g., from an empty string), send null. Otherwise, send the parsed number.
+                submissionData[key] = isNaN(parsed) ? null : parsed;
+            }
+        }
+    }
+
     try {
         if (currentItem) {
-          await onUpdate(formData as AnySettingsItem);
+          await onUpdate(submissionData as AnySettingsItem);
         } else {
-          await onAdd(formData as Omit<AnySettingsItem, 'id'>);
+          await onAdd(submissionData as Omit<AnySettingsItem, 'id'>);
         }
         closeModal();
     } catch (error) {

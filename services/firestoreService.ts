@@ -1,4 +1,5 @@
-// services/firestoreService.ts
+// DEPRECATED FILENAME - TODO: Rename to supabaseService.ts
+// services/supabaseService.ts
 import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
@@ -87,6 +88,51 @@ export const supabaseService = {
   updateDocument,
   deleteDocument,
   
+  listenToCollection: <T>(table: string, join: string | undefined, callback: (payload: T[]) => void) => {
+      const channel = supabase.channel(`public:${table}`);
+      channel
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: table },
+          async () => {
+            console.log(`Change detected in ${table}, refetching...`);
+            const data = await getCollection<T>(table, join);
+            callback(data);
+          }
+        )
+        .subscribe();
+
+      return {
+        unsubscribe: () => {
+          supabase.removeChannel(channel);
+        },
+      };
+  },
+  
+  listenToDocument: <T>(table: string, id: string, callback: (payload: T) => void) => {
+      const channel = supabase.channel(`public:${table}:${id}`);
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: table,
+            filter: `id=eq.${id}`,
+          },
+          (payload) => {
+            callback(payload.new as T);
+          }
+        )
+        .subscribe();
+
+      return {
+        unsubscribe: () => {
+          supabase.removeChannel(channel);
+        },
+      };
+  },
+
   getSettings: async (): Promise<AppData> => {
     try {
         const [
@@ -145,6 +191,13 @@ export const supabaseService = {
   },
 
   getOrders: (): Promise<Order[]> => getCollection<Order>('orders', '*, contacts(*)'),
+  getOrder: async (id: string): Promise<Order | null> => {
+    const { data, error } = await supabase.from('orders').select('*, contacts(*)').eq('id', id).single();
+    if (error && error.code !== 'PGRST116') {
+      handleError(error, `getOrder(${id})`);
+    }
+    return data as Order | null;
+  },
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
 // FIX: Explicitly provided the generic type argument to `updateDocument` to ensure correct type inference for the return value.
       return updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
