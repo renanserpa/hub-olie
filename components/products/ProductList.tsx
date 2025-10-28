@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Product } from '../../types';
 import { Card, CardContent } from '../ui/Card';
@@ -56,7 +57,8 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }
                                 {products.map(product => (
                                     <tr key={product.id} className="border-b border-border hover:bg-accent/50">
                                         <td className="p-4 font-medium text-textPrimary">{product.name}</td>
-                                        <td className="p-4 font-mono text-xs">{product.sku}</td>
+                                        {/* FIX: Property 'sku' does not exist on type 'Product'. Use 'base_sku'. */}
+                                        <td className="p-4 font-mono text-xs">{product.base_sku}</td>
                                         <td className="p-4"><Badge variant="secondary">{product.category?.name || 'N/A'}</Badge></td>
                                         <td className="p-4">R$ {product.basePrice.toFixed(2)}</td>
                                         <td className="p-4">{product.stock_quantity}</td>

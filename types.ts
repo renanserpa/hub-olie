@@ -1,6 +1,14 @@
 
-
-
+// FIX: Added ContactAddress interface to be used in the Contact type.
+export interface ContactAddress {
+    zip?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+}
 
 export interface User {
   uid: string;
@@ -226,10 +234,16 @@ export interface Order {
 
 
 // --- Contacts Module Types ---
+// FIX: Updated Contact interface to match usage in components, adding address, phone, whatsapp, etc.
 export interface Contact extends BaseItem {
   document: string; // Formerly cpf_cnpj
   email: string;
   phones: any; // jsonb, can be an array of {type, number} or simple object
+  phone?: string;
+  whatsapp?: string;
+  instagram?: string;
+  birth_date?: string;
+  address?: ContactAddress;
   tags?: string[];
   status?: string;
   metadata?: any;

@@ -1,6 +1,7 @@
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct, AppData } from '../types';
+import { Product, ProductCategory, AnyProduct, AppData } from '../../types';
 import { supabaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
@@ -45,7 +46,8 @@ export function useProducts() {
             const lowercasedQuery = searchQuery.toLowerCase();
             products = products.filter(p =>
                 p.name.toLowerCase().includes(lowercasedQuery) ||
-                p.sku.toLowerCase().includes(lowercasedQuery)
+                // FIX: Property 'sku' does not exist on type 'Product'. Use 'base_sku'.
+                p.base_sku.toLowerCase().includes(lowercasedQuery)
             );
         }
         

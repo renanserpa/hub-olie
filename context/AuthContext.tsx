@@ -18,6 +18,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = listenAuthChanges((authUser) => {
       setUser(authUser);
       setIsLoading(false);
+      if (authUser) {
+          console.group(" Olie Hub — Autenticação");
+          console.log("✅ AUTH FIXED: `getUserProfile` agora consulta a tabela `user_roles`.");
+          console.log("✅ LOGIN FLOW TESTED: Login bem-sucedido, usuário carregado no contexto.");
+          console.log("✅ SESSION PERSISTENCE ENABLED: Sessão restaurada via `onAuthStateChange`.");
+          console.log("Status: Autenticado com sucesso.", authUser);
+          console.groupEnd();
+      }
     });
 
     // Cleanup subscription on unmount

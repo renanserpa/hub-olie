@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { login } from '../services/authService';
 import { Button } from './ui/Button';
 import { Loader2 } from 'lucide-react';
+import { toast } from '../hooks/use-toast';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email: string): boolean => {
@@ -16,11 +16,10 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
 
     if (!validateEmail(email)) {
-        setError('Por favor, insira um formato de e-mail válido.');
+        toast({ title: "Erro de Validação", description: "Por favor, insira um formato de e-mail válido.", variant: 'destructive'});
         setIsLoading(false);
         return;
     }
@@ -28,8 +27,9 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       // The App.tsx component will handle the redirection automatically
+      toast({ title: 'Login bem-sucedido!', description: 'Bem-vindo(a) ao Olie Hub.' });
     } catch (err) {
-      setError((err as Error).message);
+      toast({ title: 'Falha no Login', description: (err as Error).message, variant: 'destructive'});
     } finally {
       setIsLoading(false);
     }
@@ -71,8 +71,6 @@ const LoginPage: React.FC = () => {
                         className="w-full px-4 py-2 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                 </div>
-
-                {error && <p className="text-sm text-red-600">{error}</p>}
 
                 <div className="pt-2">
                     <Button 

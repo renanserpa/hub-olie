@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
@@ -65,7 +66,8 @@ export function useOmnichannel(user: User) {
     
     const customerOrders = useMemo(() => {
         if (!selectedConversation) return [];
-        return allOrders.filter(o => o.contact_id === selectedConversation.customerId)
+        // FIX: Property 'contact_id' does not exist on type 'Order'. Use 'customer_id' instead.
+        return allOrders.filter(o => o.customer_id === selectedConversation.customerId)
             .sort((a, b) => safeGetTime(b.created_at) - safeGetTime(a.created_at));
     }, [selectedConversation, allOrders]);
 

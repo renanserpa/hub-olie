@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -25,7 +26,8 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
         } else {
             setFormData({
                 name: '',
-                sku: '',
+                // FIX: 'sku' does not exist on type 'Product'. Use 'base_sku'.
+                base_sku: '',
                 basePrice: 0,
                 category_id: '',
                 stock_quantity: 0,
@@ -79,7 +81,8 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                 <div className="grid grid-cols-2 gap-4">
                      <div>
                         <label className={labelStyle}>SKU *</label>
-                        <input name="sku" value={formData.sku || ''} onChange={handleChange} required className={inputStyle} />
+                        {/* FIX: Property 'sku' does not exist on type 'Product'. Use 'base_sku'. */}
+                        <input name="base_sku" value={formData.base_sku || ''} onChange={handleChange} required className={inputStyle} />
                     </div>
                     <div>
                         <label className={labelStyle}>Categoria</label>

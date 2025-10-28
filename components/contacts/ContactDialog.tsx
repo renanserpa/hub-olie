@@ -1,6 +1,5 @@
 
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -27,7 +26,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
         } else {
             setFormData({
                 name: '', email: '', phone: '', whatsapp: '', instagram: '',
-                cpf_cnpj: '', birth_date: '',
+                // FIX: renamed cpf_cnpj to document to match type
+                document: '', birth_date: '',
                 address: { zip: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' }
             });
         }
@@ -38,7 +38,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
         if (name.startsWith('address.')) {
             const addressField = name.split('.')[1];
             setFormData(prev => ({ ...prev, address: { ...prev.address, [addressField]: value } }));
-        } else if (name === 'cpf_cnpj') {
+        } else if (name === 'document') {
+            // FIX: renamed cpf_cnpj to document to match type
             setFormData(prev => ({ ...prev, [name]: maskCpfCnpj(value) }));
         }
         else {
@@ -103,7 +104,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                     </div>
                     <div>
                         <label className={labelStyle}>CPF/CNPJ</label>
-                        <input name="cpf_cnpj" value={formData.cpf_cnpj || ''} onChange={handleChange} className={inputStyle} />
+                        {/* FIX: renamed cpf_cnpj to document to match type */}
+                        <input name="document" value={formData.document || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                 </div>
 

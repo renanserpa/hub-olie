@@ -35,14 +35,27 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getUserProfile = async (supabaseUser: SupabaseUser): Promise<AuthUser> => {
-    // TENTATIVA 5: A busca em `app_metadata` falhou. A próxima hipótese é que a permissão (role)
-    // esteja nos `user_metadata`, que são metadados gerenciáveis pela aplicação.
-    // Esta implementação adiciona um fallback para verificar ambos os locais.
-    const role = (supabaseUser.app_metadata?.role || supabaseUser.user_metadata?.role) as UserRole;
+    // Query the public.user_roles table to get the user's role
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', supabaseUser.id)
+      .single();
 
-    if (!role) {
-        console.error("User role not found in app_metadata or user_metadata:", supabaseUser);
-        throw new Error("Não foi possível encontrar a permissão (role) do usuário. Acesso negado.");
+    if (error || !data) {
+      console.error("Error fetching user role or role not found:", error);
+      // Log out the user if they have no role, as they can't use the app.
+      await supabase.auth.signOut(); 
+      throw new Error("Seu usuário não tem uma permissão de acesso definida. Contate o administrador.");
+    }
+
+    const role = data.role as UserRole;
+
+    // Optional: Double check if the role is one of the accepted roles
+    const validRoles: UserRole[] = ['AdminGeral', 'Administrativo', 'Producao', 'Vendas', 'Financeiro', 'Conteudo'];
+    if (!validRoles.includes(role)) {
+      await supabase.auth.signOut(); 
+      throw new Error(`Permissão de acesso inválida ('${role}'). Acesso negado.`);
     }
 
     return {

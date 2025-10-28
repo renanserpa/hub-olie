@@ -42,10 +42,11 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit }) => {
             </div>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
                 <InfoItem icon={Mail} value={contact.email} href={`mailto:${contact.email}`} />
+                {/* FIX: Use optional chaining for properties that may not exist on Contact. */}
                 <InfoItem icon={Phone} value={contact.phone} href={`tel:${contact.phone}`} />
                 <InfoItem icon={MessageSquare} value={contact.whatsapp} href={`https://wa.me/${contact.whatsapp?.replace(/\D/g, '')}`} />
                 <InfoItem icon={InstagramIcon} value={contact.instagram} href={contact.instagram ? `https://instagram.com/${contact.instagram.replace('@', '')}` : undefined} />
-                <InfoItem icon={MapPin} value={contact.address.city && contact.address.state ? `${contact.address.city}, ${contact.address.state}` : ''} />
+                <InfoItem icon={MapPin} value={contact.address?.city && contact.address?.state ? `${contact.address.city}, ${contact.address.state}` : ''} />
             </div>
         </Card>
     );
