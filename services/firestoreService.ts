@@ -1,5 +1,18 @@
 import { db } from "../lib/firebase";
-import * as firestore from "firebase/firestore";
+import {
+    getDocs,
+    collection,
+    doc,
+    getDoc,
+    addDoc,
+    serverTimestamp,
+    updateDoc,
+    deleteDoc,
+    writeBatch,
+    query,
+    where,
+    orderBy,
+} from "firebase/firestore";
 
 import {
     AnyProduct,
@@ -22,37 +35,37 @@ import {
 // --- Generic CRUD Functions ---
 
 export const getCollection = async <T>(path: string): Promise<T[]> => {
-  const querySnapshot = await firestore.getDocs(firestore.collection(db, path));
+  const querySnapshot = await getDocs(collection(db, path));
   return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as T));
 };
 
 export const getDocument = async <T>(path: string, id: string): Promise<T | null> => {
-  const docRef = firestore.doc(db, path, id);
-  const docSnap = await firestore.getDoc(docRef);
+  const docRef = doc(db, path, id);
+  const docSnap = await getDoc(docRef);
   return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as T : null;
 };
 
 export const addDocument = async (path: string, data: any) => {
   const dataWithTimestamp = {
       ...data,
-      created_at: firestore.serverTimestamp(),
-      updated_at: firestore.serverTimestamp(),
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
   };
-  const docRef = await firestore.addDoc(firestore.collection(db, path), dataWithTimestamp);
+  const docRef = await addDoc(collection(db, path), dataWithTimestamp);
   return docRef.id;
 };
 
 export const updateDocument = async (path: string, id: string, data: any) => {
   const dataWithTimestamp = {
       ...data,
-      updated_at: firestore.serverTimestamp(),
+      updated_at: serverTimestamp(),
   };
-  const docRef = firestore.doc(db, path, id);
-  await firestore.updateDoc(docRef, dataWithTimestamp);
+  const docRef = doc(db, path, id);
+  await updateDoc(docRef, dataWithTimestamp);
 };
 
 export const deleteDocument = async (path: string, id: string) => {
-  await firestore.deleteDoc(firestore.doc(db, path, id));
+  await deleteDoc(doc(db, path, id));
 };
 
 
@@ -205,11 +218,11 @@ export const firebaseService = {
   updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getSettingsCollectionPath(category, subTab, subSubTab), id, data),
   deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getSettingsCollectionPath(category, subTab, subSubTab), id),
   updateSystemSettings: async (settings: SystemSetting[]) => {
-      const batch = firestore.writeBatch(db);
+      const batch = writeBatch(db);
       settings.forEach(setting => {
           const { id, ...data } = setting;
-          const docRef = firestore.doc(db, 'sistema', id);
-          batch.update(docRef, { ...data, updated_at: firestore.serverTimestamp() });
+          const docRef = doc(db, 'sistema', id);
+          batch.update(docRef, { ...data, updated_at: serverTimestamp() });
       });
       await batch.commit();
   },
@@ -226,7 +239,7 @@ export const firebaseService = {
       return updatedOrder;
   },
   addOrder: async (orderData: Partial<Order>) => {
-      const querySnapshot = await firestore.getDocs(firestore.collection(db, 'orders'));
+      const querySnapshot = await getDocs(collection(db, 'orders'));
       const year = new Date().getFullYear();
       const orderNumber = `P-${year}-${(querySnapshot.size + 1).toString().padStart(4, '0')}`;
       return addDocument('orders', { ...orderData, order_number: orderNumber });
@@ -248,23 +261,23 @@ export const firebaseService = {
   getInventoryBalances,
   getAllBasicMaterials,
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
-      const q = firestore.query(firestore.collection(db, 'inventory_movements'),
-        firestore.where('material_id', '==', materialId),
-        firestore.orderBy('created_at', 'desc')
+      const q = query(collection(db, 'inventory_movements'),
+        where('material_id', '==', materialId),
+        orderBy('created_at', 'desc')
       );
-      const querySnapshot = await firestore.getDocs(q);
+      const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as InventoryMovement));
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
-        const batch = firestore.writeBatch(db);
-        const balanceDocRef = firestore.doc(db, 'inventory_balances', movementData.material_id);
-        const balanceDoc = await firestore.getDoc(balanceDocRef);
+        const batch = writeBatch(db);
+        const balanceDocRef = doc(db, 'inventory_balances', movementData.material_id);
+        const balanceDoc = await getDoc(balanceDocRef);
 
         if (balanceDoc.exists()) {
             const currentBalance = balanceDoc.data()!.quantity_on_hand;
             batch.update(balanceDocRef, { 
                 quantity_on_hand: currentBalance + movementData.quantity, 
-                last_updated_at: firestore.serverTimestamp() 
+                last_updated_at: serverTimestamp() 
             });
         } else {
              batch.set(balanceDocRef, { 
@@ -272,12 +285,12 @@ export const firebaseService = {
                  quantity_on_hand: movementData.quantity,
                  quantity_reserved: 0,
                  low_stock_threshold: 10, // default
-                 last_updated_at: firestore.serverTimestamp()
+                 last_updated_at: serverTimestamp()
              });
         }
         
-        const movementRef = firestore.doc(firestore.collection(db, "inventory_movements"));
-        batch.set(movementRef, {...movementData, created_at: firestore.serverTimestamp()});
+        const movementRef = doc(collection(db, "inventory_movements"));
+        batch.set(movementRef, {...movementData, created_at: serverTimestamp()});
 
         await batch.commit();
   },

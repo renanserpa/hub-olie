@@ -1,10 +1,9 @@
 // lib/firebase.ts
-// FIX: Use namespace imports for Firebase modules to prevent issues with bundlers that may not correctly handle named exports.
-import * as firebaseApp from "firebase/app";
-import * as firebaseAuth from "firebase/auth";
-import * as firebaseFirestore from "firebase/firestore";
-import * as firebaseStorage from "firebase/storage";
-import * as firebaseAnalytics from "firebase/analytics";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBTKL9uFL8mwruNSuFaeHQByjSQ6uU3cRA",
@@ -17,17 +16,17 @@ const firebaseConfig = {
 };
 
 // Garantir inicialização única
-const app = !firebaseApp.getApps().length ? firebaseApp.initializeApp(firebaseConfig) : firebaseApp.getApp();
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Inicializações principais
-export const db = firebaseFirestore.getFirestore(app);
-export const auth = firebaseAuth.getAuth(app);
-export const storage = firebaseStorage.getStorage(app);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Analytics opcional (verifica suporte)
-firebaseAnalytics.isSupported().then((supported) => {
+isSupported().then((supported) => {
   if (supported) {
-    const analytics = firebaseAnalytics.getAnalytics(app);
+    const analytics = getAnalytics(app);
     console.log("📊 Analytics ativo:", analytics.app.name);
   } else {
     console.warn("Analytics não suportado neste ambiente.");

@@ -1,7 +1,6 @@
 import { db, auth } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-// FIX: Changed to namespace import to fix module resolution issues.
-import * as firebaseAuth from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import type { User } from '../types';
 
 export type UserRole =
@@ -19,8 +18,7 @@ export interface AuthUser {
 }
 
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  // FIX: Use function from the imported namespace.
-  const userCredential = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
   if (!userCredential.user) {
     throw new Error('User authentication failed.');
   }
@@ -28,12 +26,10 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
 };
 
 export const logout = async (): Promise<void> => {
-  // FIX: Use function from the imported namespace.
-  await firebaseAuth.signOut(auth);
+  await signOut(auth);
 };
 
-// FIX: Use the User type from the imported namespace.
-export const getUserProfile = async (firebaseUser: firebaseAuth.User): Promise<AuthUser> => {
+export const getUserProfile = async (firebaseUser: FirebaseUser): Promise<AuthUser> => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
   const userDocSnap = await getDoc(userDocRef);
 
@@ -48,8 +44,7 @@ export const getUserProfile = async (firebaseUser: firebaseAuth.User): Promise<A
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void) => {
-  // FIX: Use function from the imported namespace.
-  return firebaseAuth.onAuthStateChanged(auth, async (firebaseUser) => {
+  return onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       const userProfile = await getUserProfile(firebaseUser);
       callback(userProfile);
