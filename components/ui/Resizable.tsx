@@ -1,11 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { cn } from '../../lib/utils';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "../../lib/utils";
 
 type Direction = "horizontal" | "vertical";
 
@@ -17,26 +11,22 @@ const normalizeSizes = (sizes: number[]): number[] => {
     return sizes.map(s => (s / total) * 100);
 };
 
-export function Resizable({
-  direction = "horizontal",
-  children,
-  initialSizes,
-  minSizes = [],
-  className,
-}: {
+interface ResizableProps {
   direction?: Direction;
-  children: React.ReactNode;
+  children: React.ReactNode | React.ReactNode[];
   initialSizes: number[];
   minSizes?: number[];
   className?: string;
-}) {
+}
+
+export function Resizable({ direction = "horizontal", children, initialSizes, minSizes = [], className }: ResizableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isResizing = useRef(false);
   const activeHandleIndex = useRef<number | null>(null);
   const startSizes = useRef<number[]>([]);
   const startPosition = useRef(0);
 
-  const panels = React.Children.toArray(children).filter(Boolean);
+  const panels = useMemo(() => React.Children.toArray(children).filter(Boolean), [children]);
   const panelCount = panels.length;
   
   const safeMinSizes = useMemo(() => Array.from({ length: panelCount }, (_, i) => minSizes[i] ?? 0), [minSizes, panelCount]);
