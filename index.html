@@ -1,91 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Olie Hub Ops Platform</title>
-
-    <!-- Fonte e estilo -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tema Tailwind personalizado -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#D2A66D",
-              secondary: "#F8F6F2",
-              accent: "#F2EAE0",
-              textPrimary: "#2C2C2C",
-              textSecondary: "#6B6B6B",
-              border: "#EAE7E1",
-              background: "#FCFAF8",
-              card: "#ffffff",
-            },
-            borderRadius: {
-              xl: "12px",
-              "2xl": "16px",
-            },
-            keyframes: {
-              'highlight-fade': {
-                '0%': { 'box-shadow': '0 0 0 3px rgba(210, 166, 109, 0.6)' },
-                '100%': { 'box-shadow': '0 0 0 0 rgba(210, 166, 109, 0)' },
-              },
-              'toast-in': {
-                  'from': { transform: 'translateY(2rem)', opacity: '0' },
-                  'to': { transform: 'translateY(0)', opacity: '1' },
-              },
-              'toast-out': {
-                  'from': { transform: 'translateY(0)', opacity: '1' },
-                  'to': { transform: 'translateY(2rem)', opacity: '0' },
-              }
-            },
-            animation: {
-              'highlight-fade': 'highlight-fade 1.5s ease-out',
-              'toast-in': 'toast-in 0.3s ease-out forwards',
-              'toast-out': 'toast-out 0.3s ease-in forwards',
-            }
-          },
-        },
-      };
-    </script>
-
-    <!-- Import Map -->
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
-    "clsx": "https://esm.sh/clsx",
-    "tailwind-merge": "https://esm.sh/tailwind-merge",
-    "date-fns": "https://esm.sh/date-fns@3.6.0",
-    "date-fns/": "https://esm.sh/date-fns@3.6.0/",
-    "firebase/app": "https://esm.sh/firebase@10.13.1/app",
-    "firebase/auth": "https://esm.sh/firebase@10.13.1/auth",
-    "firebase/firestore": "https://esm.sh/firebase@10.13.1/firestore",
-    "firebase/storage": "https://esm.sh/firebase@10.13.1/storage",
-    "firebase/analytics": "https://esm.sh/firebase@10.13.1/analytics",
-    "@google/genai": "https://esm.sh/@google/genai@0.15.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.4.0/"
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hub Olie</title>
+  <!-- Import map: unified to esm.sh only to avoid duplicate React/Firebase versions -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom": "https://esm.sh/react-dom@18.2.0",
+      "firebase/app": "https://esm.sh/firebase@10.13.1/app",
+      "firebase/firestore": "https://esm.sh/firebase@10.13.1/firestore",
+      "firebase/auth": "https://esm.sh/firebase@10.13.1/auth"
+    }
   }
-}
-</script>
-  </head>
+  </script>
+  <!-- Removed conflicting aistudiocdn.com entries as per architectural audit to avoid multiple React/Firebase instances -->
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import React from 'react'
+    import { createRoot } from 'react-dom/client'
+    import App from './src/App.tsx'
 
-  <body class="bg-background text-textPrimary font-[Inter,sans-serif]">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+    const container = document.getElementById('root')
+    if (container) {
+      const root = createRoot(container)
+      root.render(React.createElement(App))
+    }
+  </script>
+</body>
 </html>
