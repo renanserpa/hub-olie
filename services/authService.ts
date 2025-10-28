@@ -35,19 +35,21 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getUserProfile = async (supabaseUser: SupabaseUser): Promise<AuthUser> => {
+    // CORREÇÃO DEFINITIVA: Apontar para a tabela 'user_roles' e buscar por 'user_id'
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_roles')
       .select('role')
-      .eq('id', supabaseUser.id)
+      .eq('user_id', supabaseUser.id)
+      .limit(1) // Garante que pegamos apenas um, mesmo que haja múltiplos
       .single();
 
     if (error) {
-        console.error("Error fetching user profile:", error);
-        throw new Error(`Falha ao buscar perfil: ${error.message}. Verifique as permissões (RLS) da tabela 'profiles'.`);
+        console.error("Error fetching user role:", error);
+        throw new Error(`Falha ao buscar permissões: ${error.message}. Verifique as permissões (RLS) da tabela 'user_roles'.`);
     }
     
     if (!data) {
-        throw new Error("Perfil de usuário não encontrado no banco de dados. Acesso negado.");
+        throw new Error("Permissão de usuário não encontrada no banco de dados. Acesso negado.");
     }
 
     return {
