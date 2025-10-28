@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';
@@ -37,9 +37,9 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         setLoading(true);
         try {
             const [ordersData, contactsData, productsData] = await Promise.all([
-                firebaseService.getOrders(),
-                firebaseService.getCollection<Contact>('contacts'),
-                firebaseService.getProducts()
+                supabaseService.getOrders(),
+                supabaseService.getCollection<Contact>('contacts'),
+                supabaseService.getProducts()
             ]);
             setOrders(ordersData);
             setPageData({ contacts: contactsData, products: productsData });
@@ -60,7 +60,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
-            const updatedOrder = await firebaseService.updateOrderStatus(orderId, newStatus);
+            const updatedOrder = await supabaseService.updateOrderStatus(orderId, newStatus);
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: updatedOrder.status, updated_at: updatedOrder.updated_at } : o));
             toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.order_number.split('-')[1]} atualizado para ${newStatus}.` });
         } catch (error) {

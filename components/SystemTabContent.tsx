@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
 import { Button } from './ui/Button';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -52,7 +52,7 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         }
         setIsSaving(true);
         try {
-            await firebaseService.updateSystemSettings(settings);
+            await supabaseService.updateSystemSettings(settings);
             toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas.' });
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar as configurações.', variant: 'destructive' });

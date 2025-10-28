@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../types';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export type ProductionOrderFiltersState = {
@@ -19,7 +19,7 @@ export function useProductionOrders() {
     const loadOrders = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await firebaseService.getProductionOrders();
+            const data = await supabaseService.getProductionOrders();
             setAllOrders(data);
             if (data.length > 0 && !selectedOrderId) {
                 // Pre-select the first order on initial load
@@ -30,7 +30,7 @@ export function useProductionOrders() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [selectedOrderId]);
 
     useEffect(() => {
         loadOrders();

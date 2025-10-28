@@ -1,7 +1,5 @@
-// This file is being prepared for migration to Supabase.
-// All Firebase-specific logic has been removed by ArquitetoSupremo.
-// SupaDataMaster will implement the Supabase logic.
-
+// services/supabaseService.ts
+import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
     AppData,
@@ -17,64 +15,159 @@ import {
     SystemSetting,
     Task,
     TaskStatus,
-    User
 } from "../types";
 
-const notImplemented = (functionName: string) => {
-    console.warn(`firebaseService.${functionName} is not implemented yet.`);
-    return Promise.resolve([]);
-}
 
-const emptyAppData: AppData = {
-    catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
-    materials: { grupos_suprimento: [], materiais_basicos: [] },
-    logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-    sistema: [],
-    midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+const handleError = (error: any, context: string) => {
+    console.error(`Error in ${context}:`, error);
+    throw new Error(`Supabase operation failed in ${context}.`);
 };
 
-export const firebaseService = {
-  getCollection: <T>(path: string): Promise<T[]> => notImplemented(`getCollection(${path})`) as Promise<T[]>,
-  getDocument: <T>(path: string, id: string): Promise<T | null> => {
-      console.warn(`firebaseService.getDocument(${path}, ${id}) is not implemented yet.`);
-      return Promise.resolve(null);
-  },
-  addDocument: (path: string, data: any) => notImplemented(`addDocument(${path})`),
-  updateDocument: (path: string, id: string, data: any) => notImplemented(`updateDocument(${path}, ${id})`),
-  deleteDocument: (path: string, id: string) => notImplemented(`deleteDocument(${path}, ${id})`),
+// --- Generic Helpers ---
+
+const getCollection = async <T>(table: string, join?: string): Promise<T[]> => {
+    const query = join ? supabase.from(table).select(join) : supabase.from(table).select('*');
+    const { data, error } = await query;
+    if (error) handleError(error, `getCollection(${table})`);
+    return (data as T[]) || [];
+};
+
+const getDocument = async <T>(table: string, id: string): Promise<T | null> => {
+    const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+    if (error && error.code !== 'PGRST116') { // Ignore "exact one row" error for not found
+      handleError(error, `getDocument(${table}, ${id})`);
+    }
+    return data as T | null;
+};
+
+const addDocument = async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
+    const { data, error } = await supabase.from(table).insert(docData).select().single();
+    if (error) handleError(error, `addDocument(${table})`);
+    return data as T;
+};
+
+const updateDocument = async <T>(table: string, id: string, docData: Partial<T>): Promise<T> => {
+    const { data, error } = await supabase.from(table).update(docData).eq('id', id).select().single();
+    if (error) handleError(error, `updateDocument(${table}, ${id})`);
+    return data as T;
+};
+
+const deleteDocument = async (table: string, id: string): Promise<void> => {
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) handleError(error, `deleteDocument(${table}, ${id})`);
+};
+
+
+// --- App-specific Methods ---
+
+const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    if (subSubTab) return subSubTab;
+    if (subTab) return subTab;
+    return category;
+};
+
+export const supabaseService = {
+  getCollection,
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument,
   
-  // App-specific methods
   getSettings: async (): Promise<AppData> => {
-    console.warn('getSettings not implemented');
-    return Promise.resolve(emptyAppData);
+    try {
+        const [
+            paletas_cores, tecido, ziper, forro, puxador, vies, bordado, texturas, fontes_monogramas,
+            grupos_suprimento, materiais_basicos,
+            metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo,
+            sistema
+        ] = await Promise.all([
+            getCollection('paletas_cores'), getCollection('cores_tecido'), getCollection('cores_ziper'), getCollection('cores_forro'), getCollection('cores_puxador'), getCollection('cores_vies'), getCollection('cores_bordado'), getCollection('texturas_tecido'), getCollection('fontes_monograma'),
+            getCollection('grupos_suprimento'), getCollection('materiais_basicos'),
+            getCollection('metodos_entrega'), getCollection('calculo_frete'), getCollection('tipos_embalagem'), getCollection('tipos_vinculo'),
+            getCollection<SystemSetting>('sistema')
+        ]);
+        
+        return {
+            catalogs: { 
+                paletas_cores, 
+                cores_texturas: { tecido, ziper, forro, puxador, vies, bordado, texturas }, 
+                fontes_monogramas 
+            },
+            materials: { grupos_suprimento, materiais_basicos },
+            logistica: { metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo },
+            sistema,
+            // --- These are placeholders as they are fetched by their own modules ---
+            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+        };
+    } catch (error) {
+        handleError(error, 'getSettings');
+        // Return an empty structure on failure
+        return {
+            catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
+            materials: { grupos_suprimento: [], materiais_basicos: [] },
+            logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
+            sistema: [],
+            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+        };
+    }
   },
 
-  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => notImplemented('addSetting'),
-  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => notImplemented('updateSetting'),
-  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => notImplemented('deleteSetting'),
-  updateSystemSettings: async (settings: SystemSetting[]) => notImplemented('updateSystemSettings'),
+  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => {
+      const table = getTableNameForSetting(category, subTab, subSubTab);
+      return addDocument(table, data);
+  },
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => {
+      const table = getTableNameForSetting(category, subTab, subSubTab);
+      return updateDocument(table, id, data);
+  },
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => {
+      const table = getTableNameForSetting(category, subTab, subSubTab);
+      return deleteDocument(table, id);
+  },
+  updateSystemSettings: async (settings: SystemSetting[]) => {
+      const updates = settings.map(s => updateDocument('sistema', s.id, { value: s.value }));
+      return Promise.all(updates);
+  },
 
-  getOrders: (): Promise<Order[]> => notImplemented('getOrders'),
+  getOrders: (): Promise<Order[]> => getCollection<Order>('orders', '*, contacts(*)'),
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
-      throw new Error("updateOrderStatus not implemented");
+      return updateDocument('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
   },
-  addOrder: async (orderData: Partial<Order>) => notImplemented('addOrder'),
+  addOrder: async (orderData: Partial<Order>) => {
+      const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+      const fullOrderData = {
+          ...orderData,
+          order_number: orderNumber,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+      };
+      return addDocument('orders', fullOrderData);
+  },
   updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => {
-        throw new Error("updateOrder not implemented");
+        return updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() });
   },
 
-  getProductionOrders: (): Promise<ProductionOrder[]> => notImplemented('getProductionOrders'),
-  getTasks: (): Promise<Task[]> => notImplemented('getTasks'),
-  getTaskStatuses: (): Promise<TaskStatus[]> => notImplemented('getTaskStatuses'),
-  updateTask: (taskId: string, data: Partial<Task>) => notImplemented('updateTask'),
+  getProductionOrders: (): Promise<ProductionOrder[]> => getCollection('production_orders', '*, products(*)'),
+  getTasks: (): Promise<Task[]> => getCollection('tasks'),
+  getTaskStatuses: (): Promise<TaskStatus[]> => getCollection('task_statuses'),
+  updateTask: (taskId: string, data: Partial<Task>) => updateDocument('tasks', taskId, data),
 
-  getInventoryBalances: (): Promise<InventoryBalance[]> => notImplemented('getInventoryBalances'),
-  getAllBasicMaterials: (): Promise<BasicMaterial[]> => notImplemented('getAllBasicMaterials'),
-  getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => notImplemented('getInventoryMovements'),
-  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => notImplemented('addInventoryMovement'),
+  getInventoryBalances: (): Promise<InventoryBalance[]> => getCollection('inventory_balances', '*, materials_basicos(*)'),
+  getAllBasicMaterials: (): Promise<BasicMaterial[]> => getCollection('materiais_basicos'),
+  getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
+    const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
+    if (error) handleError(error, 'getInventoryMovements');
+    return data || [];
+  },
+  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
+      return addDocument('inventory_movements', movementData);
+  },
   
-  getProducts: (): Promise<Product[]> => notImplemented('getProducts'),
-  getProductCategories: (): Promise<ProductCategory[]> => notImplemented('getProductCategories'),
-  addProduct: (productData: AnyProduct) => notImplemented('addProduct'),
-  updateProduct: (productId: string, productData: Product | AnyProduct) => notImplemented('updateProduct'),
+  getProducts: (): Promise<Product[]> => getCollection('products', '*, product_categories(*)'),
+  getProductCategories: (): Promise<ProductCategory[]> => getCollection('product_categories'),
+  addProduct: (productData: AnyProduct) => addDocument('products', productData),
+  updateProduct: (productId: string, productData: Product | AnyProduct) => {
+      const { id, category, ...updateData } = productData as Product;
+      return updateDocument('products', productId, updateData);
+  },
 };

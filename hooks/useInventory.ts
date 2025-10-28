@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export function useInventory() {
@@ -17,8 +17,8 @@ export function useInventory() {
         setIsLoading(true);
         try {
             const [balancesData, materialsData] = await Promise.all([
-                firebaseService.getInventoryBalances(),
-                firebaseService.getAllBasicMaterials()
+                supabaseService.getInventoryBalances(),
+                supabaseService.getAllBasicMaterials()
             ]);
             setAllBalances(balancesData);
             setAllMaterials(materialsData);
@@ -44,7 +44,7 @@ export function useInventory() {
             }
             setIsLoadingMovements(true);
             try {
-                const movementsData = await firebaseService.getInventoryMovements(selectedMaterialId);
+                const movementsData = await supabaseService.getInventoryMovements(selectedMaterialId);
                 setMovements(movementsData);
             } catch (error) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar os movimentos.', variant: 'destructive' });
@@ -71,7 +71,7 @@ export function useInventory() {
 
     const addInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
         try {
-            await firebaseService.addInventoryMovement(movementData);
+            await supabaseService.addInventoryMovement(movementData);
             toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
             loadData(); // Trigger a full data refresh
         } catch (error) {

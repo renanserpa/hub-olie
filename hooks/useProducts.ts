@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Product, ProductCategory, AnyProduct, AppData } from '../types';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export function useProducts() {
@@ -18,9 +18,9 @@ export function useProducts() {
         setIsLoading(true);
         try {
             const [productsData, categoriesData, settings] = await Promise.all([
-                firebaseService.getProducts(),
-                firebaseService.getProductCategories(),
-                firebaseService.getSettings(), // For catalogs needed in ProductDialog
+                supabaseService.getProducts(),
+                supabaseService.getProductCategories(),
+                supabaseService.getSettings(), // For catalogs needed in ProductDialog
             ]);
             setAllProducts(productsData);
             setCategories(categoriesData);
@@ -64,11 +64,11 @@ export function useProducts() {
     const saveProduct = async (productData: AnyProduct | Product) => {
         setIsSaving(true);
         try {
-            if ('id' in productData) {
-                await firebaseService.updateProduct(productData.id, productData);
+            if ('id' in productData && productData.id) {
+                await supabaseService.updateProduct(productData.id, productData);
                 toast({ title: "Sucesso!", description: "Produto atualizado." });
             } else {
-                await firebaseService.addProduct(productData as AnyProduct);
+                await supabaseService.addProduct(productData as AnyProduct);
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
             loadData(); // Reload data

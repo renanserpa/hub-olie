@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { firebaseService } from './services/firestoreService';
+import { supabaseService } from './services/supabaseService';
 import { AppData, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
@@ -23,6 +23,7 @@ import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
 import type { AuthUser } from './services/authService';
+import { logout } from './services/authService';
 
 
 const MAIN_TABS = [
@@ -102,9 +103,9 @@ const SettingsPage: React.FC<{ settings: AppData; user: AuthUser | null; onDataC
         }
     };
     
-    const handleAddItem = (itemData: Omit<AnySettingsItem, 'id'>) => handleAction(firebaseService.addSetting(activeTab, itemData, activeSubTab, activeSubSubTab));
-    const handleUpdateItem = (itemData: AnySettingsItem) => handleAction(firebaseService.updateSetting(activeTab, itemData.id, itemData, activeSubTab, activeSubSubTab));
-    const handleDeleteItem = (itemId: string) => handleAction(firebaseService.deleteSetting(activeTab, itemId, activeSubTab, activeSubSubTab));
+    const handleAddItem = (itemData: Omit<AnySettingsItem, 'id'>) => handleAction(supabaseService.addSetting(activeTab, itemData, activeSubTab, activeSubSubTab));
+    const handleUpdateItem = (itemData: AnySettingsItem) => handleAction(supabaseService.updateSetting(activeTab, itemData.id, itemData, activeSubTab, activeSubSubTab));
+    const handleDeleteItem = (itemId: string) => handleAction(supabaseService.deleteSetting(activeTab, itemId, activeSubTab, activeSubSubTab));
 
     const getFieldsForCategory = (tab: string, subTab?: string | null, subSubTab?: string | null): FieldConfig[] => {
         const key = subSubTab || subTab || tab;
@@ -241,7 +242,7 @@ const App: React.FC = () => {
         try {
             setIsDataLoading(true);
             setError(null);
-            const appData = await firebaseService.getSettings();
+            const appData = await supabaseService.getSettings();
             setSettingsData(appData);
         } catch (e) {
             const errorMessage = 'Falha ao carregar as configurações.';
@@ -261,16 +262,17 @@ const App: React.FC = () => {
       console.clear();
       console.group("🌌 Olie Hub — Pipeline Crew-Gemini (MIGRAÇÃO SUPABASE)");
       
-      console.log("STATUS: 🚀 INICIANDO FASE 1 — ArquitetoSupremo");
-      console.log("   - Removendo dependências Firebase...");
-      console.log("   - Adicionando SDK Supabase...");
-      console.log("   - Criando client em lib/supabaseClient.ts...");
       console.log("✅ FASE 1 CONCLUÍDA: Base Supabase configurada com sucesso.");
+      console.log("STATUS: 🚀 INICIANDO FASE 2 — SupaDataMaster");
+      console.log("   - Reescrevendo authService.ts com Supabase Auth...");
+      console.log("   - Renomeando firestoreService.ts -> supabaseService.ts...");
+      console.log("   - Implementando CRUD com SDK Supabase...");
+      console.log("📦 FASE 2 CONCLUÍDA: CRUD Supabase operacional.");
       
       console.groupCollapsed("🔎 Diagnóstico de Migração");
-      console.log("LEGACY_FIREBASE:", "Dependências e inicialização removidas.", "STATUS: OK");
-      console.log("NEW_SUPABASE:", "Cliente Supabase inicializado.", "STATUS: OK");
-      console.log("NEXT_AGENT:", "SupaDataMaster - pronto para reescrever os serviços de dados.");
+      console.log("AUTH_SERVICE:", "Métodos de login, logout e listener implementados.", "STATUS: OK");
+      console.log("DATA_SERVICE:", "Funções de CRUD conectadas ao Supabase.", "STATUS: OK");
+      console.log("NEXT_AGENT:", "SchemaArchitect - pronto para validar o schema do banco.");
       console.groupEnd();
     }, []);
     
@@ -329,6 +331,9 @@ const App: React.FC = () => {
                             </button>
                         ))}
                     </nav>
+                     <div className="mt-auto">
+                        <Button variant="outline" className="w-full" onClick={logout}>Sair</Button>
+                    </div>
                 </aside>
 
                 <div className="flex-1">

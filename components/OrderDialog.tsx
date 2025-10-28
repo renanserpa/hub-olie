@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
 import CustomizeItemDialog from './CustomizeItemDialog';
@@ -32,7 +32,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
     const [appData, setAppData] = useState<AppData | null>(null);
     useEffect(() => {
         if(isOpen) {
-            firebaseService.getSettings().then(setAppData);
+            supabaseService.getSettings().then(setAppData);
         }
     }, [isOpen]);
 
@@ -95,7 +95,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
         }
         setIsSubmitting(true);
         try {
-            await firebaseService.addOrder({
+            await supabaseService.addOrder({
                 contact_id: contactId,
                 items: items.map(({ product, ...item }) => item) as OrderItem[], // Remove temporary product object before saving
                 status: 'pending_payment',

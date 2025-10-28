@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { firebaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
 
@@ -28,8 +28,8 @@ export function useOmnichannel(user: User) {
             setIsLoading(true);
             try {
                  const [contactsData, ordersData] = await Promise.all([
-                    firebaseService.getCollection<Contact>('contacts'),
-                    firebaseService.getOrders()
+                    supabaseService.getCollection<Contact>('contacts'),
+                    supabaseService.getOrders()
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);

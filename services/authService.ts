@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import type { User } from '../types';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export type UserRole =
   | 'AdminGeral'
@@ -15,45 +15,55 @@ export interface AuthUser {
   role: UserRole;
 }
 
-// SupaDataMaster will implement this
-export const login = async (email: string, password: string): Promise<AuthUser> => {
-  console.warn("authService.login is not implemented for Supabase yet.");
-  // Placeholder logic
-  if (email && password) {
-      // This is a temporary mock to allow UI to proceed.
-      // The real implementation will be done by the SupaDataMaster agent.
-      if (email === "demo@olie.com.br" && password === "demo") {
-         return { uid: 'mock-uid', email, role: 'AdminGeral' };
-      }
-  }
-  throw new Error('Login not implemented or invalid credentials.');
+export const login = async (email: string, password: string): Promise<void> => {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
 };
 
-// SupaDataMaster will implement this
 export const logout = async (): Promise<void> => {
-  console.warn("authService.logout is not implemented for Supabase yet.");
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
 };
 
-// SupaDataMaster will implement this
-export const getUserProfile = async (supabaseUser: any): Promise<AuthUser> => {
-  console.warn("authService.getUserProfile is not implemented for Supabase yet.");
-  return {
-    uid: supabaseUser.id,
-    email: supabaseUser.email || '',
-    role: 'Vendas', // Default role
-  };
+export const getUserProfile = async (supabaseUser: SupabaseUser): Promise<AuthUser | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', supabaseUser.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return {
+      uid: supabaseUser.id,
+      email: supabaseUser.email || '',
+      role: data?.role || 'Vendas', // Default to 'Vendas' if no profile found
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return { // Return a default user object on error to avoid breaking the app
+        uid: supabaseUser.id,
+        email: supabaseUser.email || '',
+        role: 'Vendas'
+    };
+  }
 };
 
-// SupaDataMaster will implement this
-export const listenAuthChanges = (callback: (user: AuthUser | null) => void) => {
-  console.warn("authService.listenAuthChanges is not implemented for Supabase yet.");
-  // Immediately call with null to prevent app from hanging in loading state,
-  // then mock a login for development purposes.
-  // The real implementation will use supabase.auth.onAuthStateChange
-  setTimeout(() => {
-    callback({ uid: 'mock-uid', email: 'demo@olie.com.br', role: 'AdminGeral' });
-  }, 500);
-  
-  // Return a dummy unsubscribe function
-  return () => {};
+export const listenAuthChanges = (callback: (user: AuthUser | null) => void): (() => void) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (session?.user) {
+        const profile = await getUserProfile(session.user);
+        callback(profile);
+      } else {
+        callback(null);
+      }
+    }
+  );
+
+  // Return the unsubscribe function
+  return () => subscription?.unsubscribe();
 };
