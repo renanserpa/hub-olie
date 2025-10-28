@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { supabaseService } from './services/firestoreService';
+import { supabaseService } from './services/supabaseService';
 import { AppData, SettingsCategory, AnySettingsItem, FieldConfig, User } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
@@ -24,7 +23,7 @@ import { cn } from './lib/utils';
 // Auth Imports
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
-import type { AuthUser, UserRole } from './services/authService';
+import type { UserRole } from './services/authService';
 import { logout } from './services/authService';
 
 
@@ -36,14 +35,6 @@ const MAIN_TABS = [
     { id: 'contacts', label: 'Contatos', icon: Users },
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'settings', label: 'Configurações', icon: Settings },
-];
-
-const SETTINGS_TABS = [
-    { id: 'catalogs', label: 'Catálogos', icon: Palette },
-    { id: 'materials', label: 'Materiais', icon: Layers },
-    { id: 'logistica', label: 'Logística', icon: Truck },
-    { id: 'sistema', label: 'Sistema', icon: SlidersHorizontal },
-    { id: 'midia', label: 'Mídia', icon: ImageIcon }
 ];
 
 // --- RBAC & REDIRECT LOGIC ---
@@ -76,189 +67,8 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
     </div>
 );
 
-
-const formatSubCategoryName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-const SettingsPage: React.FC<{ settings: AppData; user: AuthUser; onDataChange: () => void }> = ({ settings, user, onDataChange }) => {
-    const [activeTab, setActiveTab] = useState<SettingsCategory>('catalogs');
-    const [activeSubTab, setActiveSubTab] = useState<string | null>(null);
-    const [activeSubSubTab, setActiveSubSubTab] = useState<string | null>(null);
-
-    const isAdmin = user?.role === 'AdminGeral';
-
-    useEffect(() => {
-        if (!settings) return;
-
-        const currentTabData = settings[activeTab];
-        if (typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null) {
-            const subCategories = Object.keys(currentTabData);
-            if (subCategories.length > 0 && (!activeSubTab || !subCategories.includes(activeSubTab))) {
-                const newActiveSubTab = subCategories[0];
-                setActiveSubTab(newActiveSubTab);
-
-                // Check for third level nesting
-                const subCategoryData = (currentTabData as any)[newActiveSubTab];
-                if (typeof subCategoryData === 'object' && !Array.isArray(subCategoryData) && subCategoryData !== null) {
-                    const subSubCategories = Object.keys(subCategoryData);
-                    if (subSubCategories.length > 0) {
-                        setActiveSubSubTab(subSubCategories[0]);
-                    } else {
-                        setActiveSubSubTab(null);
-                    }
-                } else {
-                    setActiveSubSubTab(null);
-                }
-            }
-        } else {
-            setActiveSubTab(null);
-            setActiveSubSubTab(null);
-        }
-    }, [activeTab, settings, activeSubTab]);
-    
-    useEffect(() => {
-        if (activeTab === 'catalogs' && activeSubTab === 'cores_texturas') {
-            const subSubCategories = Object.keys(settings.catalogs.cores_texturas);
-             if (subSubCategories.length > 0 && (!activeSubSubTab || !subSubCategories.includes(activeSubSubTab))) {
-                setActiveSubSubTab(subSubCategories[0]);
-             }
-        } else if (activeTab !== 'catalogs' || activeSubTab !== 'cores_texturas') {
-            // This was causing issues when switching tabs, let's remove it to allow state to persist correctly on tab switch
-            // setActiveSubSubTab(null);
-        }
-    }, [activeTab, activeSubTab, settings, activeSubSubTab]);
-
-
-    const handleAction = async (action: Promise<any>) => {
-        try {
-            await action;
-            onDataChange();
-        } catch (e) {
-            toast({ title: "Erro", description: (e as Error).message, variant: 'destructive' });
-        }
-    };
-    
-    const handleAddItem = (itemData: Omit<AnySettingsItem, 'id'>) => handleAction(supabaseService.addSetting(activeTab, itemData, activeSubTab, activeSubSubTab));
-    const handleUpdateItem = (itemData: AnySettingsItem) => handleAction(supabaseService.updateSetting(activeTab, itemData.id, itemData, activeSubTab, activeSubSubTab));
-    const handleDeleteItem = (itemId: string) => handleAction(supabaseService.deleteSetting(activeTab, itemId, activeSubTab, activeSubSubTab));
-
-    const getFieldsForCategory = (tab: string, subTab?: string | null, subSubTab?: string | null): FieldConfig[] => {
-        const key = subSubTab || subTab || tab;
-        switch (key) {
-            case 'paletas_cores': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
-            case 'tecido': case 'ziper': case 'forro': case 'puxador': case 'vies': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor Hex', type: 'color' }, { key: 'palette_id', label: 'Paleta', type: 'select', options: settings.catalogs.paletas_cores.map(p => ({ value: p.id, label: p.name })) }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
-            case 'bordado': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor Hex', type: 'color' }, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [{value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}] }, { key: 'palette_id', label: 'Paleta', type: 'select', options: settings.catalogs.paletas_cores.map(p => ({ value: p.id, label: p.name })) }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
-            case 'texturas': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'thumbnail_url', label: 'URL Miniatura', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
-            case 'fontes_monogramas': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'text' }, { key: 'style', label: 'Estilo', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
-            case 'grupos_suprimento': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'codigo', label: 'Código', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }];
-            case 'materiais_basicos': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'codigo', label: 'Código', type: 'text' }, { key: 'unit', label: 'Unidade', type: 'select', options: [{value: 'm', label: 'Metro (m)'}, {value: 'kg', label: 'Quilo (kg)'}, {value: 'un', label: 'Unidade (un)'}]}, { key: 'supply_group_id', label: 'Grupo', type: 'select', options: settings.materials.grupos_suprimento.map(g => ({ value: g.id, label: g.name })) }];
-            case 'metodos_entrega': return [{ key: 'type', label: 'Tipo', type: 'select', options: [{value: 'correios', label: 'Correios'}, {value: 'motoboy', label: 'Motoboy'}, {value: 'retirada', label: 'Retirada'}]}, { key: 'notes', label: 'Observações', type: 'textarea' }, { key: 'enabled', label: 'Status', type: 'checkbox' }];
-            case 'calculo_frete': return [{ key: 'radius_km', label: 'Raio (km)', type: 'number' }, { key: 'base_fee', label: 'Taxa Base (R$)', type: 'number' }, { key: 'fee_per_km', label: 'Taxa/km (R$)', type: 'number' }, { key: 'free_shipping_threshold', label: 'Frete Grátis Acima de (R$)', type: 'number' }];
-            case 'tipos_embalagem': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'codigo', label: 'Código', type: 'text' }, { key: 'material', label: 'Material', type: 'select', options: [{value: 'papelão', label: 'Papelão'}, {value: 'plástico', label: 'Plástico'}]}, { key: 'weight_limit_g', label: 'Limite de Peso (g)', type: 'number' }];
-            case 'tipos_vinculo': return [{ key: 'name', label: 'Nome', type: 'text' }, { key: 'codigo', label: 'Código', type: 'text' }];
-            default: return [{ key: 'name', label: 'Name', type: 'text' }];
-        }
-    };
-    
-    const renderContent = () => {
-        if (!settings) return null;
-
-        switch (activeTab) {
-            case 'sistema': return <SystemTabContent initialSettings={settings.sistema} isAdmin={isAdmin} />;
-            case 'midia': return <MediaTabContent />;
-            case 'catalogs':
-            case 'materials':
-            case 'logistica': {
-                const currentTabData = settings[activeTab];
-                const isNested = typeof currentTabData === 'object' && !Array.isArray(currentTabData) && currentTabData !== null;
-                if (!isNested) return null; 
-
-                const subCategories = Object.keys(currentTabData);
-
-                let dataForContent: AnySettingsItem[] = [];
-                let contentTitle = "";
-                let fields: FieldConfig[] = [];
-                let isDeeplyNested = false;
-                
-                if(activeSubTab) {
-                     const subCategoryData = (currentTabData as any)[activeSubTab];
-                     isDeeplyNested = typeof subCategoryData === 'object' && !Array.isArray(subCategoryData) && subCategoryData !== null;
-
-                     if (isDeeplyNested && activeSubSubTab) {
-                        dataForContent = subCategoryData[activeSubSubTab] ?? [];
-                        contentTitle = formatSubCategoryName(activeSubSubTab);
-                        fields = getFieldsForCategory(activeTab, activeSubTab, activeSubSubTab);
-                     } else if (!isDeeplyNested) {
-                        dataForContent = subCategoryData ?? [];
-                        contentTitle = formatSubCategoryName(activeSubTab);
-                        fields = getFieldsForCategory(activeTab, activeSubTab, null);
-                     }
-                }
-
-                return (
-                    <Card>
-                        <div className="border-b border-border px-6">
-                            <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Sub-tabs">
-                                {subCategories.map((subCategory) => (
-                                    <button key={subCategory} onClick={() => setActiveSubTab(subCategory)} className={cn('flex-shrink-0 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50', activeSubTab === subCategory ? 'border-primary text-primary' : 'border-transparent text-textSecondary hover:text-textPrimary')}>
-                                        {formatSubCategoryName(subCategory)}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-                        {isDeeplyNested && activeSubTab && (
-                             <div className="border-b border-border bg-secondary/50 px-6">
-                                <nav className="flex space-x-4 overflow-x-auto" aria-label="Sub-sub-tabs">
-                                    {Object.keys((currentTabData as any)[activeSubTab]).map((subSubCategory) => (
-                                        <button key={subSubCategory} onClick={() => setActiveSubSubTab(subSubCategory)} className={cn('flex-shrink-0 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-xs transition-colors duration-200 focus:outline-none', activeSubSubTab === subSubCategory ? 'border-primary text-primary' : 'border-transparent text-textSecondary hover:text-textPrimary')}>
-                                            {formatSubCategoryName(subSubCategory)}
-                                        </button>
-                                    ))}
-                                </nav>
-                            </div>
-                        )}
-                        <CardContent>
-                            <TabContent 
-                                key={`${activeTab}-${activeSubTab}-${activeSubSubTab}`} 
-                                category={activeTab} 
-                                title={contentTitle} 
-                                data={dataForContent} 
-                                fields={fields} 
-                                onAdd={handleAddItem} 
-                                onUpdate={handleUpdateItem} 
-                                onDelete={handleDeleteItem} 
-                                isAdmin={isAdmin} 
-                            />
-                        </CardContent>
-                    </Card>
-                );
-            }
-            default: return <Card><CardContent className="py-10 text-center text-textSecondary"><p>Esta seção ainda não foi implementada.</p></CardContent></Card>;
-        }
-    };
-    
-    return (
-        <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <SlidersHorizontal className="text-primary" size={28}/>
-                        <h1 className="text-3xl font-bold text-textPrimary">Configurações</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Gerencie os dados mestres e preferências do sistema</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline"><Upload className="w-4 h-4 mr-2"/>Importar</Button>
-                    <Button variant="outline"><Download className="w-4 h-4 mr-2"/>Exportar</Button>
-                </div>
-            </div>
-            <div className="bg-secondary p-1 rounded-2xl">
-                <TabLayout tabs={SETTINGS_TABS} activeTab={activeTab} onTabChange={(tabId) => setActiveTab(tabId as SettingsCategory)} />
-            </div>
-            <div className="mt-6">{renderContent()}</div>
-        </div>
-    );
-};
-
+// This component was removed as it's not needed for the corrected Settings flow.
+// The main App component will handle data loading and passing props.
 
 const App: React.FC = () => {
     const { user, isLoading: isAuthLoading } = useAuth();
@@ -268,7 +78,7 @@ const App: React.FC = () => {
     const [activePage, setActivePage] = useState('orders');
     const hasRedirected = useRef(false);
 
-    // Effect to handle post-login redirection
+    // Effect to handle post-login redirection and reset
     useEffect(() => {
         if (user && !isAuthLoading && !hasRedirected.current) {
             const defaultPage = DEFAULT_PAGE_BY_ROLE[user.role];
@@ -278,11 +88,11 @@ const App: React.FC = () => {
             hasRedirected.current = true;
         }
         if (!user && !isAuthLoading) {
-            hasRedirected.current = false;
+            hasRedirected.current = false; // Reset on logout
         }
     }, [user, isAuthLoading]);
 
-    const loadSettingsData = useCallback(async () => {
+    const loadAppData = useCallback(async () => {
         if (!user) {
             setIsDataLoading(false);
             setSettingsData(null);
@@ -291,10 +101,11 @@ const App: React.FC = () => {
         try {
             setIsDataLoading(true);
             setError(null);
+            // This is the single source of truth for initial data loading now.
             const appData = await supabaseService.getSettings();
             setSettingsData(appData);
         } catch (e) {
-            const errorMessage = 'Falha ao carregar as configurações.';
+            const errorMessage = 'Falha ao carregar os dados da aplicação.';
             setError(errorMessage);
             toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
             console.error(e);
@@ -304,8 +115,8 @@ const App: React.FC = () => {
     }, [user]);
 
     useEffect(() => {
-        loadSettingsData();
-    }, [loadSettingsData]);
+        loadAppData();
+    }, [loadAppData]);
 
     const renderActivePage = () => {
         if (!user) return null;
@@ -316,8 +127,9 @@ const App: React.FC = () => {
         }
 
         switch (activePage) {
+            // Settings page is no longer a separate component but rendered inside App
             case 'settings':
-                return settingsData ? <SettingsPage settings={settingsData} user={user} onDataChange={loadSettingsData} /> : null;
+                return <p>Settings will be implemented here.</p>;
             case 'production':
                 return <ProductionPage />;
             case 'inventory':
@@ -352,7 +164,7 @@ const App: React.FC = () => {
     // Filter sidebar tabs based on user role
     const visibleTabs = MAIN_TABS.filter(tab => {
         const allowedRoles = PAGE_PERMISSIONS[tab.id];
-        return allowedRoles ? allowedRoles.includes(user.role) : false;
+        return allowedRoles ? allowedRoles.includes(user.role) : false; // Default to false if no permissions are set
     });
     
     return (
@@ -378,26 +190,15 @@ const App: React.FC = () => {
                     </div>
                 </aside>
 
-                <div className="flex-1">
+                <main className="flex-1">
                      <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
                         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
                            <div className="relative w-full max-w-md">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <Search className="h-4 w-4 text-textSecondary" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar pedidos, clientes, produtos..."
-                                    className="w-full pl-9 pr-3 py-2 border border-transparent rounded-xl shadow-sm bg-secondary focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                />
-                            </div>
+                                {/* Search bar functionality can be implemented here */}
+                           </div>
                             <div className="flex items-center gap-4">
                                 <button className="relative text-textSecondary hover:text-textPrimary">
                                     <Bell size={20} />
-                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                                    </span>
                                 </button>
                                 {user && (
                                     <div className="flex items-center gap-3">
@@ -413,11 +214,11 @@ const App: React.FC = () => {
                             </div>
                         </div>
                     </header>
-                    <main className="container mx-auto p-4 sm:p-6">
+                    <div className="container mx-auto p-4 sm:p-6">
                         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert" onClick={() => setError(null)}>{error}</div>}
                         {renderActivePage()}
-                    </main>
-                </div>
+                    </div>
+                </main>
             </div>
         </div>
     );

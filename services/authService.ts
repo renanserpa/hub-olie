@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { toast } from '../hooks/use-toast';
 
 export type UserRole =
   | 'AdminGeral'
@@ -16,73 +15,87 @@ export interface AuthUser {
   role: UserRole;
 }
 
-export const login = async (email: string, password: string): Promise<void> => {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    if (error.message.includes('Invalid login credentials')) {
+export const login = async (email: string, password: string): Promise<AuthUser> => {
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (loginError) {
+    if (loginError.message.includes('Invalid login credentials')) {
         throw new Error('Credenciais inválidas. Verifique seu e-mail e senha.');
     }
-    if (error.message.includes('Email not confirmed')) {
-        throw new Error('E-mail não confirmado. Por favor, verifique sua caixa de entrada.');
-    }
-    throw new Error(error.message);
+    throw new Error(loginError.message);
   }
+  
+  if (!loginData.user) {
+    throw new Error('Falha no login, usuário não encontrado.');
+  }
+
+  // After successful login, fetch the user's role. RLS will enforce security.
+  const { data: roleData, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', loginData.user.id)
+    .single();
+
+  // If there's an error or no role is found, sign the user out immediately.
+  if (roleError || !roleData) {
+    await supabase.auth.signOut();
+    console.error("Error fetching user role or role not found:", roleError);
+    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Contate o administrador.");
+  }
+
+  return {
+    uid: loginData.user.id,
+    email: loginData.user.email || '',
+    role: roleData.role as UserRole,
+  };
 };
 
 export const logout = async (): Promise<void> => {
   const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("Error signing out:", error);
+    throw new Error(error.message);
+  }
 };
 
-export const getUserProfile = async (supabaseUser: SupabaseUser): Promise<AuthUser> => {
-    // Query the public.user_roles table to get the user's role
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', supabaseUser.id)
-      .single();
+export const getCurrentUser = async (): Promise<AuthUser | null> => {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session?.user) {
+    if (sessionError) console.error("Error getting session:", sessionError);
+    return null;
+  }
+  
+  const user = session.user;
+  
+  const { data: roleData, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+    
+  if (roleError || !roleData) {
+     if (roleError.code !== 'PGRST116') { // Ignore 'exact one row' error for not found
+        console.error("Error fetching role for current user:", roleError);
+     }
+     // Don't sign out here, let the auth listener handle it to avoid loops
+     return null;
+  }
 
-    if (error || !data) {
-      console.error("Error fetching user role or role not found:", error);
-      // Log out the user if they have no role, as they can't use the app.
-      await supabase.auth.signOut(); 
-      throw new Error("Seu usuário não tem uma permissão de acesso definida. Contate o administrador.");
-    }
-
-    const role = data.role as UserRole;
-
-    // Optional: Double check if the role is one of the accepted roles
-    const validRoles: UserRole[] = ['AdminGeral', 'Administrativo', 'Producao', 'Vendas', 'Financeiro', 'Conteudo'];
-    if (!validRoles.includes(role)) {
-      await supabase.auth.signOut(); 
-      throw new Error(`Permissão de acesso inválida ('${role}'). Acesso negado.`);
-    }
-
-    return {
-      uid: supabaseUser.id,
-      email: supabaseUser.email || '',
-      role: role,
-    };
+  return {
+    uid: user.id,
+    email: user.email || '',
+    role: roleData.role as UserRole,
+  };
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void): (() => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     async (event, session) => {
-      if (session?.user) {
-        try {
-            const profile = await getUserProfile(session.user);
-            callback(profile);
-        } catch(error) {
-            console.error(error);
-            toast({
-                title: 'Erro de Acesso',
-                description: (error as Error).message,
-                variant: 'destructive'
-            });
-            await logout();
-            callback(null);
-        }
-      } else {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const profile = await getCurrentUser();
+        callback(profile);
+      } else if (event === 'SIGNED_OUT') {
         callback(null);
       }
     }

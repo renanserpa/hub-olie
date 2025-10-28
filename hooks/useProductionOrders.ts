@@ -1,9 +1,8 @@
 
 
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../types';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export type ProductionOrderFiltersState = {
@@ -22,8 +21,8 @@ export function useProductionOrders() {
         try {
             const data = await supabaseService.getProductionOrders();
             setAllOrders(data);
-            if (data.length > 0 && !selectedOrderId) {
-                // Pre-select the first order on initial load if none is selected
+            // Set initial selection only if there's no selection yet and data is available
+            if (data.length > 0 && selectedOrderId === null) {
                 setSelectedOrderId(data[0].id);
             }
         } catch (error) {
@@ -31,7 +30,7 @@ export function useProductionOrders() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrderId]); // Dependency kept to re-evaluate initial selection logic if needed, but the inner condition prevents loops.
+    }, [selectedOrderId]); // Dependency on selectedOrderId is intentional for initial selection logic
 
     useEffect(() => {
         loadOrders();
@@ -48,7 +47,9 @@ export function useProductionOrders() {
             cancelado: 0,
         };
         allOrders.forEach(order => {
-            counts[order.status]++;
+            if(counts[order.status] !== undefined) {
+                counts[order.status]++;
+            }
         });
         return counts;
     }, [allOrders]);
@@ -77,10 +78,8 @@ export function useProductionOrders() {
         setFilters({ search: '', status: [] });
     };
 
-    // When filters change, if the currently selected order is no longer in the filtered list,
-    // select the first item from the new filtered list.
     useEffect(() => {
-        if(selectedOrderId && !filteredOrders.find(o => o.id === selectedOrderId)) {
+        if(selectedOrderId && filteredOrders.length > 0 && !filteredOrders.find(o => o.id === selectedOrderId)) {
              setSelectedOrderId(filteredOrders[0]?.id || null);
         }
     }, [filteredOrders, selectedOrderId]);

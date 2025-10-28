@@ -1,11 +1,10 @@
 
 
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabaseService } from '../services/firestoreService';
-import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
+import { supabaseService } from '../services/supabaseService';
+import { Order, User, OrderStatus, Contact, Product } from '../types';
 import { toast } from '../hooks/use-toast';
-import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';
+import { Plus, LayoutGrid, List, ShoppingCart, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
 import OrderKanban from './OrderKanban';
@@ -36,44 +35,38 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     const isAdmin = user?.role === 'AdminGeral';
 
-    const loadStaticData = useCallback(async () => {
+    const loadPageData = useCallback(async () => {
+        setLoading(true);
         try {
-            const [contactsData, productsData] = await Promise.all([
-                supabaseService.getCollection<Contact>('customers'),
-                supabaseService.getProducts()
+            const [contactsData, productsData, initialOrders] = await Promise.all([
+                supabaseService.getContacts(),
+                supabaseService.getProducts(),
+                supabaseService.getOrders()
             ]);
             setPageData({ contacts: contactsData, products: productsData });
+            setOrders(initialOrders);
         } catch (error) {
-            toast({ title: 'Erro!', description: 'Não foi possível carregar contatos e produtos.', variant: 'destructive' });
+            toast({ title: 'Erro!', description: 'Não foi possível carregar os dados da página de pedidos.', variant: 'destructive' });
+        } finally {
+            setLoading(false);
         }
     }, []);
 
-    // Load static data once on component mount
     useEffect(() => {
-        loadStaticData();
-    }, [loadStaticData]);
-
-    // Listen for real-time order updates
+        loadPageData();
+    }, [loadPageData]);
+    
+    // Listen for real-time order updates (optional, initial load is now more robust)
     useEffect(() => {
-        setLoading(true);
         const listener = supabaseService.listenToCollection<Order>('orders', '*, customers(*)', (newOrders) => {
-            setOrders(newOrders);
-            if (loading) setLoading(false);
-        });
-        
-        // Also fetch initial data
-        supabaseService.getOrders().then((initialOrders) => {
-            setOrders(initialOrders);
-            setLoading(false);
-        }).catch(() => {
-            toast({ title: 'Erro!', description: 'Não foi possível carregar os pedidos iniciais.', variant: 'destructive' });
-            setLoading(false);
+            // This is a simple implementation. For production, you might want more sophisticated merging.
+            loadPageData();
         });
 
         return () => {
             listener.unsubscribe();
         };
-    }, [loading]);
+    }, [loadPageData]);
 
 
     useEffect(() => {
@@ -82,13 +75,21 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
-            const updatedOrder = await supabaseService.updateOrderStatus(orderId, newStatus);
-            // No need for setOrders here, the real-time listener will handle it.
-            // FIX: The property is `number`, not `order_number` on the Order type.
+            // Optimistic update
+            setOrders(prev => prev.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+            // FIX: Explicitly specify the generic type for updateDocument to ensure correct return type.
+            const updatedOrder = await supabaseService.updateDocument<Order>('orders', orderId, { status: newStatus });
             toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.number.split('-')[1]} atualizado.` });
+            // The listener will trigger a full reload, ensuring data consistency
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível atualizar o status do pedido.', variant: 'destructive' });
+            loadPageData(); // Revert optimistic update on error
         }
+    };
+    
+    const handleSaveOrder = () => {
+        setIsDialogOpen(false);
+        // The real-time listener will pick up the change, no need for manual reload.
     };
 
     const filteredOrders = activeListTab === 'all'
@@ -97,8 +98,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     if (selectedOrderId) {
         const selectedOrder = orders.find(o => o.id === selectedOrderId);
-        // Pass a callback to OrderDetail so it can trigger a data reload if needed, though real-time should handle most cases.
-        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={() => {}} /> : null;
+        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={loadPageData} /> : null;
     }
 
     return (
@@ -121,9 +121,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
             </div>
 
             {loading ? (
-                 <div className="text-center py-10">
-                    <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-primary mx-auto"></div>
-                    <p className="mt-4 text-sm font-semibold text-textSecondary">Carregando pedidos...</p>
+                 <div className="text-center py-10 flex items-center justify-center gap-2 text-textSecondary">
+                    <Loader2 className="h-5 w-5 animate-spin"/> Carregando pedidos...
                 </div>
             ) : viewMode === 'kanban' ? (
                 <OrderKanban orders={orders} onStatusChange={handleStatusChange} onCardClick={setSelectedOrderId} />
@@ -154,10 +153,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
             <OrderDialog 
                 isOpen={isDialogOpen}
                 onClose={() => setIsDialogOpen(false)}
-                onSave={() => {
-                    setIsDialogOpen(false);
-                    // No explicit reload needed, listener will catch the new order.
-                }}
+                onSave={handleSaveOrder}
                 contacts={pageData.contacts}
                 products={pageData.products}
             />

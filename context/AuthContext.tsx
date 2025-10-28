@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { listenAuthChanges, type AuthUser } from '../services/authService';
+import { listenAuthChanges, getCurrentUser, type AuthUser } from '../services/authService';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -15,22 +15,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Check for current user on initial load
+    const checkCurrentUser = async () => {
+        try {
+            const currentUser = await getCurrentUser();
+            setUser(currentUser);
+        } catch (e) {
+            console.error("Failed to get current user on load", e);
+            setUser(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    checkCurrentUser();
+
+    // 2. Listen for subsequent auth changes (login/logout)
     const unsubscribe = listenAuthChanges((authUser) => {
       setUser(authUser);
-      setIsLoading(false);
-      if (authUser) {
-          console.group(" Olie Hub — Autenticação");
-          console.log("✅ AUTH FIXED: `getUserProfile` agora consulta a tabela `user_roles`.");
-          console.log("✅ LOGIN FLOW TESTED: Login bem-sucedido, usuário carregado no contexto.");
-          console.log("✅ SESSION PERSISTENCE ENABLED: Sessão restaurada via `onAuthStateChange`.");
-          console.log("Status: Autenticado com sucesso.", authUser);
-          console.groupEnd();
-      }
+      // Don't set loading here, as it might cause flicker on logout
+      if (isLoading) setIsLoading(false);
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
   const value = { user, isLoading };
 

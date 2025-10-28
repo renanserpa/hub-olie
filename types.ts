@@ -1,4 +1,5 @@
 
+
 // FIX: Added ContactAddress interface to be used in the Contact type.
 export interface ContactAddress {
     zip?: string;
@@ -153,8 +154,7 @@ export interface ProductCategory extends BaseItem {
 export interface Product extends BaseItem {
   base_sku: string;
   basePrice: number;
-  category_id: string;
-  category?: ProductCategory;
+  category?: string; // Corrected: This is a text field, not a relation.
   stock_quantity: number;
   hasVariants: boolean;
   attributes?: {
@@ -169,7 +169,7 @@ export interface Product extends BaseItem {
   updatedAt: string;
 }
 
-export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'category'>;
+export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 
 
 // --- Orders Module Types ---

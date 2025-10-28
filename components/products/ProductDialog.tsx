@@ -29,7 +29,8 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                 // FIX: 'sku' does not exist on type 'Product'. Use 'base_sku'.
                 base_sku: '',
                 basePrice: 0,
-                category_id: '',
+                // FIX: Property 'category_id' does not exist on type 'Product'. Use 'category'.
+                category: '',
                 stock_quantity: 0,
                 hasVariants: false,
                 attributes: {},
@@ -86,9 +87,11 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                     </div>
                     <div>
                         <label className={labelStyle}>Categoria</label>
-                         <select name="category_id" value={formData.category_id || ''} onChange={handleChange} required className={inputStyle}>
+                         {/* FIX: Changed name and value from category_id to category to match the type definition. */}
+                         <select name="category" value={formData.category || ''} onChange={handleChange} required className={inputStyle}>
                             <option value="">Selecione</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {/* FIX: The value of the option should be the category name (string), not its ID. */}
+                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                         </select>
                     </div>
                 </div>

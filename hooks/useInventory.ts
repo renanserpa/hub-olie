@@ -1,7 +1,8 @@
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export function useInventory() {
@@ -17,14 +18,34 @@ export function useInventory() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
+            // These functions are now safe and will return [] if tables don't exist
             const [balancesData, materialsData] = await Promise.all([
                 supabaseService.getInventoryBalances(),
-                supabaseService.getAllBasicMaterials()
+                // FIX: supabaseService will be updated to export getCollection
+                supabaseService.getCollection<BasicMaterial>('config_basic_materials')
             ]);
-            setAllBalances(balancesData);
+            
+            // Because inventory_balances doesn't exist, balancesData will be [].
+            // We can enrich the materials with placeholder balance data for the UI to work.
+            const enrichedBalances = materialsData.map(material => {
+                const existingBalance = balancesData.find(b => b.material_id === material.id);
+                if (existingBalance) return {...existingBalance, material};
+
+                // Create a zero-state placeholder
+                return {
+                    material_id: material.id,
+                    material: material,
+                    quantity_on_hand: 0,
+                    quantity_reserved: 0,
+                    low_stock_threshold: 10, // default
+                } as InventoryBalance;
+            });
+
+            setAllBalances(enrichedBalances);
             setAllMaterials(materialsData);
-            if (balancesData.length > 0 && !selectedMaterialId) {
-                setSelectedMaterialId(balancesData[0].material_id);
+            
+            if (enrichedBalances.length > 0 && !selectedMaterialId) {
+                setSelectedMaterialId(enrichedBalances[0].material_id);
             }
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar o estoque.", variant: "destructive" });
@@ -57,6 +78,7 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     const filteredBalances = useMemo(() => {
+        if (searchQuery === '') return allBalances;
         return allBalances.filter(balance => {
             const material = balance.material;
             if (!material) return false;
@@ -72,7 +94,9 @@ export function useInventory() {
 
     const addInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
         try {
-            await supabaseService.addInventoryMovement(movementData);
+            // FIX: Added created_at timestamp to match the expected type for insertion.
+            const fullMovementData = { ...movementData, created_at: new Date().toISOString() };
+            await supabaseService.addDocument('inventory_movements', fullMovementData);
             toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
             loadData(); // Trigger a full data refresh
         } catch (error) {
@@ -80,9 +104,8 @@ export function useInventory() {
         }
     };
     
-    // Auto-select first item if current selection is filtered out
      useEffect(() => {
-        if(selectedMaterialId && !filteredBalances.find(b => b.material_id === selectedMaterialId)) {
+        if(selectedMaterialId && filteredBalances.length > 0 && !filteredBalances.find(b => b.material_id === selectedMaterialId)) {
              setSelectedMaterialId(filteredBalances[0]?.material_id || null);
         }
     }, [filteredBalances, selectedMaterialId]);
