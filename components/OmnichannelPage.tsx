@@ -4,7 +4,7 @@ import { useOmnichannel } from '../hooks/useOmnichannel';
 import InboxList from './omnichannel/InboxList';
 import ConversationThread from './omnichannel/ConversationThread';
 import CustomerPanel from './omnichannel/CustomerPanel';
-import { Resizable } from './ui/Resizable';
+import { Resizable, ResizablePanel, ResizableHandle } from './ui/Resizable';
 import { MessageCircle, User as UserIcon } from 'lucide-react';
 
 interface OmnichannelPageProps {
@@ -43,44 +43,50 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
     return (
         <div className="h-[calc(100vh-10rem)] border border-border rounded-2xl bg-card overflow-hidden flex flex-col">
             <Resizable direction="horizontal" initialSizes={[24, 52, 24]} minSizes={[20, 30, 20]} className="flex-1">
-                <InboxList
-                    conversations={filteredConversations}
-                    selectedConversationId={selectedConversation?.id || null}
-                    onSelectConversation={setSelectedConversation}
-                    assigneeFilter={assigneeFilter}
-                    onAssigneeFilterChange={setAssigneeFilter}
-                />
-                
-                {selectedConversation ? (
-                    <ConversationThread
-                        key={selectedConversation.id}
-                        conversation={selectedConversation}
-                        messages={currentMessages}
-                        onSendMessage={sendMessage}
-                        isSending={isSending}
+                <ResizablePanel>
+                    <InboxList
+                        conversations={filteredConversations}
+                        selectedConversationId={selectedConversation?.id || null}
+                        onSelectConversation={setSelectedConversation}
+                        assigneeFilter={assigneeFilter}
+                        onAssigneeFilterChange={setAssigneeFilter}
                     />
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
-                        <MessageCircle size={48} className="mb-4 text-gray-300" />
-                        <h2 className="text-xl font-semibold text-textPrimary">Selecione uma conversa</h2>
-                        <p>Escolha uma conversa da lista para ver as mensagens.</p>
-                    </div>
-                )}
-
-                 {selectedConversation ? (
-                    <CustomerPanel
-                        key={selectedConversation.id}
-                        customer={customerInfo}
-                        orders={customerOrders}
-                        quote={currentQuote}
-                    />
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
-                        <UserIcon size={48} className="mb-4 text-gray-300" />
-                        <h2 className="text-xl font-semibold text-textPrimary">Informações do Cliente</h2>
-                        <p>Os detalhes do cliente aparecerão aqui.</p>
-                    </div>
-                )}
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel>
+                    {selectedConversation ? (
+                        <ConversationThread
+                            key={selectedConversation.id}
+                            conversation={selectedConversation}
+                            messages={currentMessages}
+                            onSendMessage={sendMessage}
+                            isSending={isSending}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
+                            <MessageCircle size={48} className="mb-4 text-gray-300" />
+                            <h2 className="text-xl font-semibold text-textPrimary">Selecione uma conversa</h2>
+                            <p>Escolha uma conversa da lista para ver as mensagens.</p>
+                        </div>
+                    )}
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel>
+                     {selectedConversation ? (
+                        <CustomerPanel
+                            key={selectedConversation.id}
+                            customer={customerInfo}
+                            orders={customerOrders}
+                            quote={currentQuote}
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
+                            <UserIcon size={48} className="mb-4 text-gray-300" />
+                            <h2 className="text-xl font-semibold text-textPrimary">Informações do Cliente</h2>
+                            <p>Os detalhes do cliente aparecerão aqui.</p>
+                        </div>
+                    )}
+                </ResizablePanel>
             </Resizable>
         </div>
     );
