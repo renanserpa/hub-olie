@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { AnySettingsItem, SettingsCategory, FieldConfig } from '../types';
 import { Pencil, Trash2, Plus, Loader2, PackageOpen } from 'lucide-react';
@@ -9,6 +10,7 @@ import { IconButton } from './ui/IconButton';
 import Modal from './ui/Modal';
 import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
+import { supabaseService } from '../services/supabaseService'; // Corrected import
 
 
 interface TabContentProps {
@@ -58,14 +60,12 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
 
     const submissionData = { ...formData };
 
-    // Sanitize data before sending to the backend, especially for numeric types
     for (const field of fields) {
         if (field.type === 'number') {
             const key = field.key;
             if (Object.prototype.hasOwnProperty.call(submissionData, key)) {
                 const value = submissionData[key];
                 const parsed = parseFloat(value);
-                // If parsing results in NaN (e.g., from an empty string), send null. Otherwise, send the parsed number.
                 submissionData[key] = isNaN(parsed) ? null : parsed;
             }
         }
@@ -79,7 +79,6 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
         }
         closeModal();
     } catch (error) {
-        // Error toast is handled by the parent `App.tsx` component
         console.error("Submission failed", error);
     } finally {
         setIsSubmitting(false);

@@ -1,10 +1,8 @@
-
-
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
 import CustomizeItemDialog from './CustomizeItemDialog';
@@ -66,7 +64,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
             const product = products.find(p => p.id === value);
             item.product_id = value;
             item.product_name = product?.name;
-            item.unit_price = product?.basePrice || 0;
+            item.unit_price = product?.base_price || 0;
             item.product = product;
         } else {
             // @ts-ignore

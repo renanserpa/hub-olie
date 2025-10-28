@@ -58,9 +58,8 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }
                                     <tr key={product.id} className="border-b border-border hover:bg-accent/50">
                                         <td className="p-4 font-medium text-textPrimary">{product.name}</td>
                                         <td className="p-4 font-mono text-xs">{product.base_sku}</td>
-                                        {/* Corrected: 'category' is a string now, not an object. */}
                                         <td className="p-4"><Badge variant="secondary">{product.category || 'N/A'}</Badge></td>
-                                        <td className="p-4">R$ {product.basePrice.toFixed(2)}</td>
+                                        <td className="p-4">R$ {product.base_price.toFixed(2)}</td>
                                         <td className="p-4">{product.stock_quantity}</td>
                                         <td className="p-4 text-right">
                                             <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>

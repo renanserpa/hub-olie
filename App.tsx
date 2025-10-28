@@ -1,22 +1,19 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabaseService } from './services/supabaseService';
-import { AppData, SettingsCategory, AnySettingsItem, FieldConfig, User } from './types';
-import TabContent from './components/TabContent';
-import { Card, CardContent } from './components/ui/Card';
-import TabLayout from './components/ui/TabLayout';
+import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { SlidersHorizontal, Upload, Download, Palette, Layers, Truck, Image as ImageIcon, ShoppingCart, Settings, Workflow, MessagesSquare, Package, Search, Bell, Users, ShieldAlert } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert } from 'lucide-react';
 import { Button } from './components/ui/Button';
-import SystemTabContent from './components/SystemTabContent';
-import MediaTabContent from './components/MediaTabContent';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
+import SettingsPage from './components/SettingsPage'; // Placeholder page
 import { cn } from './lib/utils';
 
 
@@ -67,12 +64,9 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
     </div>
 );
 
-// This component was removed as it's not needed for the corrected Settings flow.
-// The main App component will handle data loading and passing props.
 
 const App: React.FC = () => {
     const { user, isLoading: isAuthLoading } = useAuth();
-    const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activePage, setActivePage] = useState('orders');
@@ -92,31 +86,23 @@ const App: React.FC = () => {
         }
     }, [user, isAuthLoading]);
 
-    const loadAppData = useCallback(async () => {
-        if (!user) {
-            setIsDataLoading(false);
-            setSettingsData(null);
-            return;
-        }
-        try {
-            setIsDataLoading(true);
-            setError(null);
-            // This is the single source of truth for initial data loading now.
-            const appData = await supabaseService.getSettings();
-            setSettingsData(appData);
-        } catch (e) {
-            const errorMessage = 'Falha ao carregar os dados da aplicação.';
-            setError(errorMessage);
-            toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
-            console.error(e);
-        } finally {
-            setIsDataLoading(false);
-        }
-    }, [user]);
-
+    // Data loading is now simplified as settings are the only global load.
+    // Module-specific data is fetched within its own page/hook.
     useEffect(() => {
-        loadAppData();
-    }, [loadAppData]);
+        if (!user) {
+          setIsDataLoading(false);
+          return;
+        }
+        setIsDataLoading(true);
+        supabaseService.getSettings()
+            .catch((e) => {
+                const errorMessage = 'Falha ao carregar as configurações da aplicação.';
+                setError(errorMessage);
+                toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
+                console.error(e);
+            })
+            .finally(() => setIsDataLoading(false));
+    }, [user]);
 
     const renderActivePage = () => {
         if (!user) return null;
@@ -127,9 +113,8 @@ const App: React.FC = () => {
         }
 
         switch (activePage) {
-            // Settings page is no longer a separate component but rendered inside App
             case 'settings':
-                return <p>Settings will be implemented here.</p>;
+                return <SettingsPage />;
             case 'production':
                 return <ProductionPage />;
             case 'inventory':
@@ -161,10 +146,9 @@ const App: React.FC = () => {
         return <LoginPage />;
     }
     
-    // Filter sidebar tabs based on user role
     const visibleTabs = MAIN_TABS.filter(tab => {
         const allowedRoles = PAGE_PERMISSIONS[tab.id];
-        return allowedRoles ? allowedRoles.includes(user.role) : false; // Default to false if no permissions are set
+        return allowedRoles ? allowedRoles.includes(user.role) : false;
     });
     
     return (

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Order, ConfigJson, Contact } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
@@ -7,7 +5,7 @@ import { Button } from './ui/Button';
 import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
 import { useTinyApi } from '../hooks/useTinyApi';
 import { toast } from '../hooks/use-toast';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 
 interface OrderDetailProps {
   order: Order;
@@ -66,7 +64,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
 
 
     const handleUpdate = async (field: 'payments' | 'fiscal' | 'logistics', data: any) => {
-        const updatedOrder = await supabaseService.updateOrder(order.id, { [field]: data });
+        const updatedOrder = await supabaseService.updateDocument('orders', order.id, { [field]: data });
         // No need for setOrder here, listener will catch the change. onUpdate is also redundant now but kept for compatibility.
         onUpdate();
         return updatedOrder;
@@ -166,7 +164,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                         <CardContent>
                             <p className="font-semibold">{order.customers?.name}</p>
                             <p className="text-sm text-textSecondary">{order.customers?.email}</p>
-                            <p className="text-sm text-textSecondary">{order.customers?.phones?.main}</p>
+                            <p className="text-sm text-textSecondary">{order.customers?.phone}</p>
                         </CardContent>
                     </Card>
                     <Card>

@@ -1,13 +1,7 @@
-
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
-
-// NOTE: Real-time functionality is disabled pending Supabase migration.
-// All Firebase-related imports and listeners have been removed.
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;
@@ -31,7 +25,7 @@ export function useOmnichannel(user: User) {
             setIsLoading(true);
             try {
                  const [contactsData, ordersData] = await Promise.all([
-                    supabaseService.getCollection<Contact>('customers'),
+                    supabaseService.getContacts(),
                     supabaseService.getOrders()
                  ]);
                  setAllContacts(contactsData);
@@ -67,7 +61,6 @@ export function useOmnichannel(user: User) {
     
     const customerOrders = useMemo(() => {
         if (!selectedConversation) return [];
-        // FIX: Property 'contact_id' does not exist on type 'Order'. Use 'customer_id' instead.
         return allOrders.filter(o => o.customer_id === selectedConversation.customerId)
             .sort((a, b) => safeGetTime(b.created_at) - safeGetTime(a.created_at));
     }, [selectedConversation, allOrders]);

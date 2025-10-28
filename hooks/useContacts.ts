@@ -1,8 +1,6 @@
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Contact, AnyContact } from '../types';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export function useContacts() {
@@ -18,7 +16,7 @@ export function useContacts() {
     const loadContacts = useCallback(async () => {
         setIsDataLoading(true);
         try {
-            const contacts = await supabaseService.getCollection<Contact>('customers');
+            const contacts = await supabaseService.getContacts();
             setAllContacts(contacts);
         } catch (error) {
              toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
@@ -39,12 +37,9 @@ export function useContacts() {
             contacts = contacts.filter(c =>
                 c.name.toLowerCase().includes(lowercasedQuery) ||
                 (c.email && c.email.toLowerCase().includes(lowercasedQuery)) ||
-                (c.phones?.main && c.phones.main.includes(lowercasedQuery))
+                (c.phone && c.phone.includes(lowercasedQuery))
             );
         }
-
-        // Birthday filter logic needs to be adapted since birth_date is not in the schema
-        // if (filter === 'birthdays') { ... }
         
         return contacts;
     }, [allContacts, searchQuery, filter]);
@@ -79,7 +74,6 @@ export function useContacts() {
         }
     };
 
-    // FIX: Added the missing return statement. This hook was previously returning void.
     return {
         isLoading: isDataLoading,
         isSaving: isMutationLoading,

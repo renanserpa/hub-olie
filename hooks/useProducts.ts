@@ -1,8 +1,6 @@
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct, AppData } from '../../types';
-import { supabaseService } from '../services/firestoreService';
+import { Product, ProductCategory, AnyProduct, AppData } from '../types';
+import { supabaseService } from '../services/supabaseService';
 import { toast } from './use-toast';
 
 export function useProducts() {
@@ -46,7 +44,6 @@ export function useProducts() {
             const lowercasedQuery = searchQuery.toLowerCase();
             products = products.filter(p =>
                 p.name.toLowerCase().includes(lowercasedQuery) ||
-                // FIX: Property 'sku' does not exist on type 'Product'. Use 'base_sku'.
                 p.base_sku.toLowerCase().includes(lowercasedQuery)
             );
         }
@@ -68,10 +65,10 @@ export function useProducts() {
         setIsSaving(true);
         try {
             if ('id' in productData && productData.id) {
-                await supabaseService.updateProduct(productData.id, productData);
+                await supabaseService.updateDocument('products', productData.id, productData);
                 toast({ title: "Sucesso!", description: "Produto atualizado." });
             } else {
-                await supabaseService.addProduct(productData as AnyProduct);
+                await supabaseService.addDocument('products', productData as AnyProduct);
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
             loadData(); // Reload data
