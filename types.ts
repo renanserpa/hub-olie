@@ -1,6 +1,7 @@
 
 
 
+
 export interface User {
   uid: string;
   email: string;
@@ -142,7 +143,7 @@ export interface ProductCategory extends BaseItem {
 }
 
 export interface Product extends BaseItem {
-  sku: string;
+  base_sku: string;
   basePrice: number;
   category_id: string;
   category?: ProductCategory;
@@ -191,6 +192,7 @@ export interface ConfigJson {
 
 export interface OrderItem {
   id: string;
+  order_id: string;
   product_id: string;
   product_name: string;
   quantity: number;
@@ -202,26 +204,35 @@ export interface OrderItem {
 export interface PaymentDetails { status: 'pending' | 'paid' | 'failed'; method: string; checkoutUrl?: string; transactionId?: string; }
 export interface FiscalDetails { status: 'pending' | 'authorized' | 'rejected'; nfeNumber?: string; serie?: string; pdfUrl?: string; xmlUrl?: string; }
 export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'shipped' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
-export interface Order { id: string; order_number: string; contact_id: string; contact?: Contact; status: OrderStatus; items: OrderItem[]; subtotal: number; discount: number; shipping_cost: number; total: number; payments?: PaymentDetails; fiscal?: FiscalDetails; logistics?: LogisticsDetails; notes?: string; source?: 'manual' | 'catalog' | 'whatsapp'; created_at: string; updated_at: string; }
+export interface Order { 
+  id: string; 
+  number: string; 
+  customer_id: string; 
+  customers?: Contact; // Joined data from 'customers' table
+  status: OrderStatus; 
+  items: OrderItem[]; 
+  subtotal: number; 
+  discounts: number; 
+  shipping_fee: number; 
+  total: number; 
+  payments?: PaymentDetails; 
+  fiscal?: FiscalDetails; 
+  logistics?: LogisticsDetails; 
+  notes?: string; 
+  origin?: 'manual' | 'catalog' | 'whatsapp' | 'admin'; 
+  created_at: string; 
+  updated_at: string; 
+}
 
 
 // --- Contacts Module Types ---
 export interface Contact extends BaseItem {
+  document: string; // Formerly cpf_cnpj
   email: string;
-  phone: string;
-  birth_date?: string;
-  cpf_cnpj?: string;
-  whatsapp?: string;
-  instagram?: string;
-  address: {
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
+  phones: any; // jsonb, can be an array of {type, number} or simple object
+  tags?: string[];
+  status?: string;
+  metadata?: any;
 }
 export type AnyContact = Omit<Contact, 'id'>;
 

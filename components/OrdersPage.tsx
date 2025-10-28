@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabaseService } from '../services/firestoreService';
 import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
@@ -82,7 +83,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         try {
             const updatedOrder = await supabaseService.updateOrderStatus(orderId, newStatus);
             // No need for setOrders here, the real-time listener will handle it.
-            toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.order_number.split('-')[1]} atualizado.` });
+            // FIX: The property is `number`, not `order_number` on the Order type.
+            toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.number.split('-')[1]} atualizado.` });
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível atualizar o status do pedido.', variant: 'destructive' });
         }

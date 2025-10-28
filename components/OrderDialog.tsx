@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
@@ -97,15 +98,15 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
         setIsSubmitting(true);
         try {
             await supabaseService.addOrder({
-                contact_id: contactId,
+                customer_id: contactId,
                 items: items.map(({ product, ...item }) => item) as OrderItem[], // Remove temporary product object before saving
                 status: 'pending_payment',
                 subtotal,
-                discount,
-                shipping_cost: shippingCost,
+                discounts: discount,
+                shipping_fee: shippingCost,
                 total,
                 notes,
-                source: 'manual',
+                origin: 'manual',
             });
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             onSave();

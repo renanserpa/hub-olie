@@ -1,4 +1,4 @@
-// services/supabaseService.ts
+// NOTE: This file has been refactored for Supabase and should be renamed to supabaseService.ts
 import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
@@ -17,7 +17,7 @@ import {
     InventoryMovement,
     LiningColor,
     MonogramFont,
-    Order, OrderStatus,
+    Order, OrderItem, OrderStatus,
     PackagingType,
     Product,
     ProductCategory,
@@ -71,15 +71,40 @@ const deleteDocument = async (table: string, id: string): Promise<void> => {
     if (error) handleError(error, `deleteDocument(${table}, ${id})`);
 };
 
-
-// --- App-specific Methods ---
-
-const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
-    if (subSubTab) return subSubTab;
-    if (subTab) return subTab;
-    return category;
+const settingsTableMap: Record<string, string> = {
+    'catalogs-paletas_cores': 'config_color_palettes',
+    'catalogs-cores_texturas-tecido': 'fabric_colors',
+    'catalogs-cores_texturas-ziper': 'zipper_colors',
+    'catalogs-cores_texturas-forro': 'lining_colors',
+    'catalogs-cores_texturas-puxador': 'puller_colors',
+    'catalogs-cores_texturas-vies': 'bias_colors',
+    'catalogs-cores_texturas-bordado': 'embroidery_colors',
+    'catalogs-cores_texturas-texturas': 'config_fabric_textures',
+    'catalogs-fontes_monogramas': 'config_fonts',
+    'materials-grupos_suprimento': 'config_supply_groups',
+    'materials-materiais_basicos': 'config_basic_materials',
+    'logistica-metodos_entrega': 'logistics_delivery_methods',
+    'logistica-calculo_frete': 'logistics_freight_params',
+    'logistica-tipos_embalagem': 'config_packaging_types',
+    'logistica-tipos_vinculo': 'config_bond_types',
+    'sistema': 'system_settings'
 };
 
+const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    let key = category;
+    if (subTab) key += `-${subTab}`;
+    if (subSubTab) key += `-${subSubTab}`;
+    
+    const tableName = settingsTableMap[key];
+    if (!tableName) {
+        console.error(`No table mapping found for key: ${key}`);
+        // Fallback or throw error
+        return subSubTab || subTab || category;
+    }
+    return tableName;
+};
+
+// --- App-specific Methods ---
 export const supabaseService = {
   getCollection,
   getDocument,
@@ -140,10 +165,22 @@ export const supabaseService = {
             metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo,
             sistema
         ] = await Promise.all([
-            getCollection<ColorPalette>('paletas_cores'), getCollection<FabricColor>('cores_tecido'), getCollection<ZipperColor>('cores_ziper'), getCollection<LiningColor>('cores_forro'), getCollection<PullerColor>('cores_puxador'), getCollection<BiasColor>('cores_vies'), getCollection<EmbroideryColor>('cores_bordado'), getCollection<FabricTexture>('texturas_tecido'), getCollection<MonogramFont>('fontes_monograma'),
-            getCollection<SupplyGroup>('grupos_suprimento'), getCollection<BasicMaterial>('materiais_basicos'),
-            getCollection<DeliveryMethod>('metodos_entrega'), getCollection<FreightParams>('calculo_frete'), getCollection<PackagingType>('tipos_embalagem'), getCollection<BondType>('tipos_vinculo'),
-            getCollection<SystemSetting>('sistema')
+            getCollection<ColorPalette>('config_color_palettes'), 
+            getCollection<FabricColor>('fabric_colors'), 
+            getCollection<ZipperColor>('zipper_colors'), 
+            getCollection<LiningColor>('lining_colors'), 
+            getCollection<PullerColor>('puller_colors'), 
+            getCollection<BiasColor>('bias_colors'), 
+            getCollection<EmbroideryColor>('embroidery_colors'), 
+            getCollection<FabricTexture>('config_fabric_textures'), 
+            getCollection<MonogramFont>('config_fonts'),
+            getCollection<SupplyGroup>('config_supply_groups'), 
+            getCollection<BasicMaterial>('config_basic_materials'),
+            getCollection<DeliveryMethod>('logistics_delivery_methods'), 
+            getCollection<FreightParams>('logistics_freight_params'), 
+            getCollection<PackagingType>('config_packaging_types'), 
+            getCollection<BondType>('config_bond_types'),
+            getCollection<SystemSetting>('system_settings')
         ]);
         
         return {
@@ -184,32 +221,67 @@ export const supabaseService = {
       return deleteDocument(table, id);
   },
   updateSystemSettings: async (settings: SystemSetting[]) => {
-      const updates = settings.map(s => updateDocument('sistema', s.id, { value: s.value }));
+      const updates = settings.map(s => updateDocument('system_settings', s.id, { value: s.value }));
       return Promise.all(updates);
   },
 
-  getOrders: (): Promise<Order[]> => getCollection<Order>('orders', '*, contacts(*)'),
+  getOrders: async (): Promise<Order[]> => {
+    const { data: ordersData, error: ordersError } = await supabase.from('orders').select('*, customers(*)');
+    if (ordersError) handleError(ordersError, 'getOrders');
+    if (!ordersData) return [];
+
+    // Fetch items for all orders
+    const orderIds = ordersData.map(o => o.id);
+    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').in('order_id', orderIds);
+    if (itemsError) handleError(itemsError, 'getOrders (items)');
+
+    // Map items to their orders
+    const itemsByOrderId = itemsData?.reduce((acc, item) => {
+        if (!acc[item.order_id]) acc[item.order_id] = [];
+        acc[item.order_id].push(item);
+        return acc;
+    }, {} as Record<string, OrderItem[]>) || {};
+
+    return ordersData.map(order => ({ ...order, items: itemsByOrderId[order.id] || [] })) as Order[];
+  },
   getOrder: async (id: string): Promise<Order | null> => {
-    const { data, error } = await supabase.from('orders').select('*, contacts(*)').eq('id', id).single();
+    const { data, error } = await supabase.from('orders').select('*, customers(*)').eq('id', id).single();
     if (error && error.code !== 'PGRST116') {
       handleError(error, `getOrder(${id})`);
     }
-    return data as Order | null;
+    if (!data) return null;
+    
+    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').eq('order_id', id);
+    if (itemsError) handleError(itemsError, `getOrder(${id}) (items)`);
+
+    return { ...data, items: itemsData || [] } as Order;
   },
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
       return updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
   },
   addOrder: async (orderData: Partial<Order>) => {
       const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+      const { items, ...orderToInsert } = orderData;
       const fullOrderData = {
-          ...orderData,
-          order_number: orderNumber,
+          ...orderToInsert,
+          number: orderNumber,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
       };
-      return addDocument('orders', fullOrderData);
+      const { data: newOrder, error } = await supabase.from('orders').insert(fullOrderData).select().single();
+      if (error) handleError(error, 'addOrder');
+      if (!newOrder) throw new Error("Failed to create order.");
+      
+      // Now add items if they exist
+      if (items && items.length > 0) {
+        const itemsToInsert = items.map(item => ({ ...item, order_id: newOrder.id }));
+        const { error: itemsError } = await supabase.from('order_items').insert(itemsToInsert);
+        if (itemsError) handleError(itemsError, 'addOrder (items)');
+      }
+      return newOrder;
   },
   updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => {
+        // Here we are only updating the main 'orders' table. Item updates would need separate logic.
         return updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() });
   },
 
@@ -218,8 +290,8 @@ export const supabaseService = {
   getTaskStatuses: (): Promise<TaskStatus[]> => getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>) => updateDocument('tasks', taskId, data),
 
-  getInventoryBalances: (): Promise<InventoryBalance[]> => getCollection('inventory_balances', '*, materials_basicos(*)'),
-  getAllBasicMaterials: (): Promise<BasicMaterial[]> => getCollection('materiais_basicos'),
+  getInventoryBalances: (): Promise<InventoryBalance[]> => getCollection('inventory_balances', '*, material:material_id(name, codigo, unit)'),
+  getAllBasicMaterials: (): Promise<BasicMaterial[]> => getCollection('config_basic_materials'),
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
     const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
     if (error) handleError(error, 'getInventoryMovements');
@@ -229,7 +301,7 @@ export const supabaseService = {
       return addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
   },
   
-  getProducts: (): Promise<Product[]> => getCollection('products', '*, product_categories(*)'),
+  getProducts: (): Promise<Product[]> => getCollection('products', '*, category:category_id(name)'),
   getProductCategories: (): Promise<ProductCategory[]> => getCollection('product_categories'),
   addProduct: (productData: AnyProduct) => addDocument('products', productData),
   updateProduct: (productId: string, productData: Product | AnyProduct) => {

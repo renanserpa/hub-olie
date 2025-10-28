@@ -1,5 +1,6 @@
 
 
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../types';
 import { supabaseService } from '../services/firestoreService';
@@ -22,7 +23,7 @@ export function useProductionOrders() {
             const data = await supabaseService.getProductionOrders();
             setAllOrders(data);
             if (data.length > 0 && !selectedOrderId) {
-                // Pre-select the first order on initial load
+                // Pre-select the first order on initial load if none is selected
                 setSelectedOrderId(data[0].id);
             }
         } catch (error) {
@@ -30,7 +31,7 @@ export function useProductionOrders() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrderId]);
+    }, [selectedOrderId]); // Dependency kept to re-evaluate initial selection logic if needed, but the inner condition prevents loops.
 
     useEffect(() => {
         loadOrders();

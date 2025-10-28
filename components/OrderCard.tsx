@@ -39,8 +39,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onClick, className }) => {
             <div className="p-4">
                 <div className="flex justify-between items-start mb-3">
                     <div>
-                        <h3 className="font-bold text-textPrimary">{order.order_number}</h3>
-                        <p className="text-sm text-textSecondary">{order.contact?.name}</p>
+                        <h3 className="font-bold text-textPrimary">{order.number}</h3>
+                        <p className="text-sm text-textSecondary">{order.customers?.name}</p>
                     </div>
                     <div className={cn("text-xs font-bold px-2 py-1 rounded-full", style.badge)}>
                         {style.label}

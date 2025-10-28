@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect } from 'react';
-import { Order, ConfigJson } from '../types';
+import { Order, ConfigJson, Contact } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
@@ -49,8 +50,9 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
     }, [initialOrder]);
 
     useEffect(() => {
-        const listener = supabaseService.listenToDocument<Order>('orders', initialOrder.id, async () => {
+        const listener = supabaseService.listenToDocument<Order>('orders', initialOrder.id, async (payload) => {
             // When an update is detected for this specific order, refetch it with the contact join
+            // The payload itself might not have the joined 'customers' data.
             const updatedOrderData = await supabaseService.getOrder(initialOrder.id);
             if (updatedOrderData) {
                 setOrder(updatedOrderData);
@@ -71,8 +73,8 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
     };
 
     const handleCreatePaymentLink = async () => {
-        if (!order.contact) return;
-        const result = await tinyApi.createPaymentLink(order.id, order.total, `Pedido ${order.order_number}`, order.contact);
+        if (!order.customers) return;
+        const result = await tinyApi.createPaymentLink(order.id, order.total, `Pedido ${order.number}`, order.customers as Contact);
         if (result) {
             await handleUpdate('payments', result.payments);
             toast({ title: "Sucesso!", description: "Link de pagamento gerado." });
@@ -111,7 +113,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                 <div className="md:col-span-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Detalhes do Pedido #{order.order_number}</CardTitle>
+                            <CardTitle>Detalhes do Pedido #{order.number}</CardTitle>
                         </CardHeader>
                         <CardContent>
                            <div className="border-b border-border">
@@ -162,9 +164,9 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                     <Card>
                         <CardHeader><CardTitle>Cliente</CardTitle></CardHeader>
                         <CardContent>
-                            <p className="font-semibold">{order.contact?.name}</p>
-                            <p className="text-sm text-textSecondary">{order.contact?.email}</p>
-                            <p className="text-sm text-textSecondary">{order.contact?.phone}</p>
+                            <p className="font-semibold">{order.customers?.name}</p>
+                            <p className="text-sm text-textSecondary">{order.customers?.email}</p>
+                            <p className="text-sm text-textSecondary">{order.customers?.phones?.main}</p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -179,7 +181,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ order: initialOrder, onClose,
                             ))}
                             <div className="border-t mt-2 pt-2 space-y-1 text-sm">
                                 <p className="flex justify-between"><span>Subtotal:</span> <span>R$ {order.subtotal.toFixed(2)}</span></p>
-                                <p className="flex justify-between"><span>Frete:</span> <span>R$ {order.shipping_cost.toFixed(2)}</span></p>
+                                <p className="flex justify-between"><span>Frete:</span> <span>R$ {order.shipping_fee.toFixed(2)}</span></p>
                                 <p className="flex justify-between font-bold text-base"><span>Total:</span> <span>R$ {order.total.toFixed(2)}</span></p>
                             </div>
                         </CardContent>
