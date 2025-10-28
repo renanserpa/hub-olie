@@ -140,7 +140,6 @@ export const supabaseService = {
             metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo,
             sistema
         ] = await Promise.all([
-// FIX: Added explicit generic types to `getCollection` calls to resolve type errors.
             getCollection<ColorPalette>('paletas_cores'), getCollection<FabricColor>('cores_tecido'), getCollection<ZipperColor>('cores_ziper'), getCollection<LiningColor>('cores_forro'), getCollection<PullerColor>('cores_puxador'), getCollection<BiasColor>('cores_vies'), getCollection<EmbroideryColor>('cores_bordado'), getCollection<FabricTexture>('texturas_tecido'), getCollection<MonogramFont>('fontes_monograma'),
             getCollection<SupplyGroup>('grupos_suprimento'), getCollection<BasicMaterial>('materiais_basicos'),
             getCollection<DeliveryMethod>('metodos_entrega'), getCollection<FreightParams>('calculo_frete'), getCollection<PackagingType>('tipos_embalagem'), getCollection<BondType>('tipos_vinculo'),
@@ -198,7 +197,6 @@ export const supabaseService = {
     return data as Order | null;
   },
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
-// FIX: Explicitly provided the generic type argument to `updateDocument` to ensure correct type inference for the return value.
       return updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
   },
   addOrder: async (orderData: Partial<Order>) => {
@@ -228,7 +226,6 @@ export const supabaseService = {
     return data || [];
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
-// FIX: Added `created_at` field to the movement data to match the expected type for `addDocument`.
       return addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
   },
   

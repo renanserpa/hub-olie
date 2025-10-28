@@ -1,4 +1,6 @@
 
+
+
 import React, {
   createContext,
   useContext,
@@ -35,7 +37,8 @@ const useResizable = () => {
 // --- Child Components ---
 
 interface ResizablePanelProps {
-  children: React.ReactNode;
+  // FIX: Made children optional to resolve incorrect TypeScript error in OmnichannelPage.
+  children?: React.ReactNode;
   className?: string;
   index?: number; // Injected by Resizable parent
 }
@@ -54,7 +57,6 @@ export function ResizablePanel({ children, className, index }: ResizablePanelPro
     </div>
   );
 }
-// FIX: Add displayName for robust component type checking, especially with HMR.
 ResizablePanel.displayName = "ResizablePanel";
 
 interface ResizableHandleProps {
@@ -83,7 +85,6 @@ export function ResizableHandle({ className, index }: ResizableHandleProps) {
     />
   );
 }
-// FIX: Add displayName for robust component type checking.
 ResizableHandle.displayName = "ResizableHandle";
 
 // --- Main Container and Provider ---
@@ -96,7 +97,8 @@ export function Resizable({
   className,
 }: {
   direction?: Direction;
-  children: React.ReactNode;
+  // FIX: Made children optional to resolve incorrect TypeScript error in OmnichannelPage.
+  children?: React.ReactNode;
   initialSizes: number[];
   minSizes?: number[];
   className?: string;

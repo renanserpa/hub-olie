@@ -35,29 +35,20 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getUserProfile = async (supabaseUser: SupabaseUser): Promise<AuthUser> => {
-    // CORREÇÃO: A tentativa anterior com 'user_roles' falhou.
-    // Vamos usar o padrão mais comum do Supabase: uma tabela 'profiles'
-    // com uma coluna 'id' que é uma chave estrangeira para 'auth.users.id'.
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', supabaseUser.id)
-      .single();
+    // TENTATIVA 4: As buscas por tabelas de perfil ('user_roles', 'profiles', 'users') falharam.
+    // A hipótese final é que a permissão (role) do usuário está armazenada nos metadados do objeto de usuário (app_metadata),
+    // uma prática comum e eficiente no Supabase que evita consultas extras ao banco.
+    const role = supabaseUser.app_metadata?.role as UserRole;
 
-    if (error) {
-        console.error("Error fetching user profile:", error);
-        throw new Error(`Falha ao buscar perfil de usuário: ${error.message}. Verifique as permissões (RLS) da tabela 'profiles'.`);
-    }
-    
-    if (!data) {
-        // Se não houver perfil, o usuário não pode acessar o sistema.
-        throw new Error("Perfil de usuário não encontrado no banco de dados. Acesso negado.");
+    if (!role) {
+        console.error("User role not found in app_metadata:", supabaseUser);
+        throw new Error("Não foi possível encontrar a permissão (role) do usuário. Acesso negado.");
     }
 
     return {
       uid: supabaseUser.id,
       email: supabaseUser.email || '',
-      role: data.role as UserRole,
+      role: role,
     };
 };
 
