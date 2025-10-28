@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
 import CustomizeItemDialog from './CustomizeItemDialog';

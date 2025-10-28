@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { User, Contact, Order } from '../types';
 import { useOmnichannel } from '../hooks/useOmnichannel';
@@ -40,8 +42,9 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
     
     return (
         <div className="h-[calc(100vh-10rem)] border border-border rounded-2xl bg-card overflow-hidden flex flex-col">
-            {/* FIX: The Resizable and ResizablePanel components require a `children` prop. This change ensures that the panel content is correctly passed as children, resolving errors caused by improper component structure. */}
+            {/* FIX: Correctly wrap ResizablePanel and ResizableHandle components inside Resizable to satisfy the 'children' prop requirement. */}
             <Resizable direction="horizontal" initialSizes={[24, 52, 24]} minSizes={[20, 30, 20]} className="flex-1">
+                {/* FIX: Wrap InboxList within ResizablePanel to provide the required 'children' prop. */}
                 <ResizablePanel>
                     <InboxList
                         conversations={filteredConversations}
@@ -52,6 +55,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
                     />
                 </ResizablePanel>
                 <ResizableHandle />
+                {/* FIX: Wrap ConversationThread/placeholder within ResizablePanel to provide the required 'children' prop. */}
                 <ResizablePanel>
                     {selectedConversation ? (
                         <ConversationThread
@@ -70,6 +74,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
                     )}
                 </ResizablePanel>
                 <ResizableHandle />
+                {/* FIX: Wrap CustomerPanel/placeholder within ResizablePanel to provide the required 'children' prop. */}
                 <ResizablePanel>
                      {selectedConversation ? (
                         <CustomerPanel

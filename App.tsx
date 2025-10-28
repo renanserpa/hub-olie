@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabaseService } from './services/supabaseService';
+import { supabaseService } from './services/firestoreService';
 import { AppData, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';

@@ -9,10 +9,22 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateEmail = (email: string): boolean => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    if (!validateEmail(email)) {
+        setError('Por favor, insira um formato de e-mail válido.');
+        setIsLoading(false);
+        return;
+    }
+
     try {
       await login(email, password);
       // The App.tsx component will handle the redirection automatically

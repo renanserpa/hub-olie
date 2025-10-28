@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useContext,
@@ -106,7 +107,6 @@ export function Resizable({
   const startSizes = useRef<number[]>([]);
   const startPosition = useRef(0);
 
-  // FIX: Use displayName for robust component counting.
   const panelCount = Children.toArray(children).filter(
     (child) => isValidElement(child) && (child.type as any).displayName === "ResizablePanel"
   ).length;
@@ -195,7 +195,6 @@ export function Resizable({
   return (
     <ResizableContext.Provider value={contextValue}>
       <div ref={containerRef} className={cn('flex w-full h-full', direction === 'vertical' && 'flex-col', className)}>
-        {/* FIX: Use displayName for robust component type checking inside Children.map, which resolves issues with cloneElement and HMR. */}
         {Children.map(children, (child) => {
           if (!isValidElement(child)) return child;
 

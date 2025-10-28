@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
 import { Button } from './ui/Button';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 

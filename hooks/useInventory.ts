@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
 export function useInventory() {

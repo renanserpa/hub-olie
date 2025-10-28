@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Order, ConfigJson } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
@@ -5,7 +6,7 @@ import { Button } from './ui/Button';
 import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
 import { useTinyApi } from '../hooks/useTinyApi';
 import { toast } from '../hooks/use-toast';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 
 interface OrderDetailProps {
   order: Order;
