@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabaseService } from '../services/firestoreService';
 import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
@@ -38,7 +39,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     const loadStaticData = useCallback(async () => {
         try {
             const [contactsData, productsData] = await Promise.all([
-                supabaseService.getCollection<Contact>('contacts'),
+                supabaseService.getCollection<Contact>('customers'),
                 supabaseService.getProducts()
             ]);
             setPageData({ contacts: contactsData, products: productsData });
@@ -55,7 +56,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     // Listen for real-time order updates
     useEffect(() => {
         setLoading(true);
-        const listener = supabaseService.listenToCollection<Order>('orders', '*, contacts(*)', (newOrders) => {
+        const listener = supabaseService.listenToCollection<Order>('orders', '*, customers(*)', (newOrders) => {
             setOrders(newOrders);
             if (loading) setLoading(false);
         });
