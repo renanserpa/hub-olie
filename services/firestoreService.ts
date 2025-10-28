@@ -72,22 +72,11 @@ const deleteDocument = async (table: string, id: string): Promise<void> => {
 };
 
 const settingsTableMap: Record<string, string> = {
-    'catalogs-paletas_cores': 'config_color_palettes',
     'catalogs-cores_texturas-tecido': 'fabric_colors',
     'catalogs-cores_texturas-ziper': 'zipper_colors',
-    'catalogs-cores_texturas-forro': 'lining_colors',
-    'catalogs-cores_texturas-puxador': 'puller_colors',
     'catalogs-cores_texturas-vies': 'bias_colors',
-    'catalogs-cores_texturas-bordado': 'embroidery_colors',
-    'catalogs-cores_texturas-texturas': 'config_fabric_textures',
     'catalogs-fontes_monogramas': 'config_fonts',
-    'materials-grupos_suprimento': 'config_supply_groups',
     'materials-materiais_basicos': 'config_basic_materials',
-    'logistica-metodos_entrega': 'logistics_delivery_methods',
-    'logistica-calculo_frete': 'logistics_freight_params',
-    'logistica-tipos_embalagem': 'config_packaging_types',
-    'logistica-tipos_vinculo': 'config_bond_types',
-    'sistema': 'system_settings'
 };
 
 const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
@@ -159,45 +148,54 @@ export const supabaseService = {
 
   getSettings: async (): Promise<AppData> => {
     try {
+        // Fetch only from tables that exist in the provided schema.json
         const [
-            paletas_cores, tecido, ziper, forro, puxador, vies, bordado, texturas, fontes_monogramas,
-            grupos_suprimento, materiais_basicos,
-            metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo,
-            sistema
+            tecido, 
+            ziper, 
+            vies, 
+            fontes_monogramas,
+            materiais_basicos,
         ] = await Promise.all([
-            getCollection<ColorPalette>('config_color_palettes'), 
             getCollection<FabricColor>('fabric_colors'), 
             getCollection<ZipperColor>('zipper_colors'), 
-            getCollection<LiningColor>('lining_colors'), 
-            getCollection<PullerColor>('puller_colors'), 
             getCollection<BiasColor>('bias_colors'), 
-            getCollection<EmbroideryColor>('embroidery_colors'), 
-            getCollection<FabricTexture>('config_fabric_textures'), 
             getCollection<MonogramFont>('config_fonts'),
-            getCollection<SupplyGroup>('config_supply_groups'), 
             getCollection<BasicMaterial>('config_basic_materials'),
-            getCollection<DeliveryMethod>('logistics_delivery_methods'), 
-            getCollection<FreightParams>('logistics_freight_params'), 
-            getCollection<PackagingType>('config_packaging_types'), 
-            getCollection<BondType>('config_bond_types'),
-            getCollection<SystemSetting>('system_settings')
         ]);
         
+        // Return a valid AppData structure with empty arrays for non-existent tables
+        // to prevent "Failed to fetch" errors and allow the app to load.
         return {
             catalogs: { 
-                paletas_cores, 
-                cores_texturas: { tecido, ziper, forro, puxador, vies, bordado, texturas }, 
+                paletas_cores: [], 
+                cores_texturas: { 
+                    tecido, 
+                    ziper, 
+                    forro: [], 
+                    puxador: [], 
+                    vies, 
+                    bordado: [], 
+                    texturas: [] 
+                }, 
                 fontes_monogramas 
             },
-            materials: { grupos_suprimento, materiais_basicos },
-            logistica: { metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo },
-            sistema,
+            materials: { 
+                grupos_suprimento: [], // config_supply_groups does not exist
+                materiais_basicos 
+            },
+            logistica: { 
+                metodos_entrega: [], 
+                calculo_frete: [], 
+                tipos_embalagem: [], 
+                tipos_vinculo: [] 
+            },
+            sistema: [], // system_settings does not exist
             // --- These are placeholders as they are fetched by their own modules ---
             midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
         };
     } catch (error) {
         handleError(error, 'getSettings');
-        // Return an empty structure on failure
+        // Return an empty structure on failure to prevent app crash
         return {
             catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
             materials: { grupos_suprimento: [], materiais_basicos: [] },
