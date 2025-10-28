@@ -1,13 +1,14 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabaseService } from './services/firestoreService';
-import { AppData, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
+import { AppData, SettingsCategory, AnySettingsItem, FieldConfig, User } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
 import TabLayout from './components/ui/TabLayout';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { SlidersHorizontal, Upload, Download, Palette, Layers, Truck, Image as ImageIcon, ShoppingCart, Settings, Workflow, MessagesSquare, Package, Search, Bell, Users } from 'lucide-react';
+import { SlidersHorizontal, Upload, Download, Palette, Layers, Truck, Image as ImageIcon, ShoppingCart, Settings, Workflow, MessagesSquare, Package, Search, Bell, Users, ShieldAlert } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import SystemTabContent from './components/SystemTabContent';
 import MediaTabContent from './components/MediaTabContent';
@@ -23,7 +24,7 @@ import { cn } from './lib/utils';
 // Auth Imports
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
-import type { AuthUser } from './services/authService';
+import type { AuthUser, UserRole } from './services/authService';
 import { logout } from './services/authService';
 
 
@@ -45,9 +46,40 @@ const SETTINGS_TABS = [
     { id: 'midia', label: 'Mídia', icon: ImageIcon }
 ];
 
+// --- RBAC & REDIRECT LOGIC ---
+const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
+    orders: ['AdminGeral', 'Vendas', 'Administrativo'],
+    production: ['AdminGeral', 'Producao'],
+    inventory: ['AdminGeral', 'Producao', 'Financeiro'],
+    omnichannel: ['AdminGeral', 'Vendas', 'Conteudo'],
+    contacts: ['AdminGeral', 'Vendas', 'Administrativo'],
+    products: ['AdminGeral', 'Producao', 'Vendas', 'Administrativo'],
+    settings: ['AdminGeral', 'Administrativo'],
+};
+
+const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
+    AdminGeral: 'orders',
+    Producao: 'production',
+    Vendas: 'orders',
+    Financeiro: 'inventory',
+    Administrativo: 'settings',
+    Conteudo: 'omnichannel',
+};
+
+const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-center">
+        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold text-textPrimary">Acesso Negado</h1>
+        <p className="text-textSecondary mt-2">
+            Seu perfil de <span className="font-semibold">{role.replace('AdminGeral', 'Admin')}</span> não tem permissão para acessar esta página.
+        </p>
+    </div>
+);
+
+
 const formatSubCategoryName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const SettingsPage: React.FC<{ settings: AppData; user: AuthUser | null; onDataChange: () => void }> = ({ settings, user, onDataChange }) => {
+const SettingsPage: React.FC<{ settings: AppData; user: AuthUser; onDataChange: () => void }> = ({ settings, user, onDataChange }) => {
     const [activeTab, setActiveTab] = useState<SettingsCategory>('catalogs');
     const [activeSubTab, setActiveSubTab] = useState<string | null>(null);
     const [activeSubSubTab, setActiveSubSubTab] = useState<string | null>(null);
@@ -90,7 +122,8 @@ const SettingsPage: React.FC<{ settings: AppData; user: AuthUser | null; onDataC
                 setActiveSubSubTab(subSubCategories[0]);
              }
         } else if (activeTab !== 'catalogs' || activeSubTab !== 'cores_texturas') {
-            setActiveSubSubTab(null);
+            // This was causing issues when switching tabs, let's remove it to allow state to persist correctly on tab switch
+            // setActiveSubSubTab(null);
         }
     }, [activeTab, activeSubTab, settings, activeSubSubTab]);
 
@@ -233,6 +266,21 @@ const App: React.FC = () => {
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activePage, setActivePage] = useState('orders');
+    const hasRedirected = useRef(false);
+
+    // Effect to handle post-login redirection
+    useEffect(() => {
+        if (user && !isAuthLoading && !hasRedirected.current) {
+            const defaultPage = DEFAULT_PAGE_BY_ROLE[user.role];
+            if (defaultPage) {
+                setActivePage(defaultPage);
+            }
+            hasRedirected.current = true;
+        }
+        if (!user && !isAuthLoading) {
+            hasRedirected.current = false;
+        }
+    }, [user, isAuthLoading]);
 
     const loadSettingsData = useCallback(async () => {
         if (!user) {
@@ -259,28 +307,13 @@ const App: React.FC = () => {
         loadSettingsData();
     }, [loadSettingsData]);
 
-    useEffect(() => {
-      console.clear();
-      console.group("🌌 Olie Hub — Pipeline Crew-Gemini (MIGRAÇÃO SUPABASE)");
-      
-      console.log("✅ FASE 1 CONCLUÍDA: ArquitetoSupremo - Base configurada.");
-      console.log("✅ FASE 2 CONCLUÍDA: SupaDataMaster - CRUD operacional.");
-      console.log("✅ FASE 3 CONCLUÍDA: SchemaArchitect - Banco sincronizado.");
-      console.log("STATUS: 🎨 INICIANDO FASE 4 — UIComposer");
-      console.log("   - Audit by ArquitetoSupremo: Conexão de dados validada.");
-      console.log("   - TASK: Refinar UI, implementar reatividade e corrigir bugs visuais.");
-      
-      console.groupCollapsed("🔎 Diagnóstico de Migração");
-      console.log("AUDITORIA:", "Conexão de dados ativa.", "STATUS: OK");
-      console.log("DÉBITO TÉCNICO:", "Renomeado firestoreService.ts -> supabaseService.ts.", "STATUS: CORRIGIDO");
-      console.log("CORREÇÃO CRÍTICA:", "API Keys do Supabase configuradas para restabelecer conexão.", "STATUS: CORRIGIDO");
-      console.log("NEXT_AGENT:", "UIComposer - pronto para conectar a UI aos dados.");
-      console.groupEnd();
-      console.groupEnd();
-    }, []);
-    
     const renderActivePage = () => {
         if (!user) return null;
+
+        const allowedRoles = PAGE_PERMISSIONS[activePage];
+        if (allowedRoles && !allowedRoles.includes(user.role)) {
+            return <AccessDeniedPage role={user.role} />;
+        }
 
         switch (activePage) {
             case 'settings':
@@ -290,14 +323,14 @@ const App: React.FC = () => {
             case 'inventory':
                 return <InventoryPage user={user} />;
             case 'omnichannel':
-                return <OmnichannelPage user={user} />;
+                return <OmnichannelPage user={user as User} />;
             case 'contacts':
-                return <ContactsPage user={user} />;
+                return <ContactsPage user={user as User} />;
             case 'products':
-                return <ProductsPage user={user} />;
+                return <ProductsPage user={user as User} />;
             case 'orders':
             default:
-                return <OrdersPage user={user} />;
+                return <OrdersPage user={user as User} />;
         }
     };
 
@@ -316,6 +349,12 @@ const App: React.FC = () => {
         return <LoginPage />;
     }
     
+    // Filter sidebar tabs based on user role
+    const visibleTabs = MAIN_TABS.filter(tab => {
+        const allowedRoles = PAGE_PERMISSIONS[tab.id];
+        return allowedRoles ? allowedRoles.includes(user.role) : false;
+    });
+    
     return (
         <div className="min-h-screen font-sans bg-background">
             <Toaster />
@@ -325,7 +364,7 @@ const App: React.FC = () => {
                         <h1 className="text-xl font-bold text-textPrimary">Olie Hub</h1>
                     </div>
                     <nav className="flex flex-col space-y-2">
-                        {MAIN_TABS.map(tab => (
+                        {visibleTabs.map(tab => (
                             <button key={tab.id} onClick={() => setActivePage(tab.id)}
                                 className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors',
                                     activePage === tab.id ? 'bg-primary text-white' : 'text-textSecondary hover:bg-accent hover:text-textPrimary')}>
