@@ -29,7 +29,16 @@ const LoginPage: React.FC = () => {
       // The App.tsx component will handle the redirection automatically
       toast({ title: 'Login bem-sucedido!', description: 'Bem-vindo(a) ao Olie Hub.' });
     } catch (err) {
-      toast({ title: 'Falha no Login', description: (err as Error).message, variant: 'destructive'});
+      const errorMessage = (err as Error).message;
+      if (errorMessage.includes('Supabase fetch failed catastrophically')) {
+        toast({ 
+            title: 'Erro de Conexão', 
+            description: 'Não foi possível conectar ao servidor. Verifique a configuração de CORS e sua rede.', 
+            variant: 'destructive'
+        });
+      } else {
+        toast({ title: 'Falha no Login', description: errorMessage, variant: 'destructive'});
+      }
     } finally {
       setIsLoading(false);
     }

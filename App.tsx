@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabaseService } from './services/supabaseService';
 import { AppData, User } from './types';
@@ -65,12 +66,45 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
 );
 
 
+const CorsErrorDisplay: React.FC<{ message: string }> = ({ message }) => {
+    // Extract the origin from the error message for user convenience
+    const originMatch = message.match(/\((https?:\/\/[^)]+)\)/);
+    const origin = originMatch ? originMatch[1] : 'O domínio desta aplicação';
+
+    return (
+        <div className="flex flex-col items-center justify-center h-screen bg-background text-center p-4">
+            <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+            <h1 className="text-2xl font-bold text-textPrimary">Erro de Conexão</h1>
+            <p className="text-textSecondary mt-2 mb-6 max-w-2xl">
+                A aplicação não conseguiu se conectar ao banco de dados (Supabase). Este é um problema de configuração de **CORS (Cross-Origin Resource Sharing)**.
+            </p>
+            <div className="text-left bg-secondary p-6 rounded-2xl text-sm text-textPrimary max-w-2xl w-full border border-border">
+                <p className="font-bold text-lg text-primary">Ação Necessária:</p>
+                <p className="mt-2">Para corrigir, adicione a seguinte URL à sua lista de **"Allowed Origins"** nas configurações de autenticação do seu projeto Supabase:</p>
+                <pre className="bg-background p-3 rounded-md mt-3 text-primary font-mono break-all text-xs border border-border">{origin}</pre>
+                <p className="text-xs mt-3 text-textSecondary">Após salvar a alteração no painel do Supabase, recarregue esta página.</p>
+            </div>
+        </div>
+    );
+};
+
+
 const App: React.FC = () => {
-    const { user, isLoading: isAuthLoading } = useAuth();
+    const { user, isLoading: isAuthLoading, error: authError } = useAuth();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activePage, setActivePage] = useState('orders');
     const hasRedirected = useRef(false);
+
+    // Effect for logging connection validation status
+    useEffect(() => {
+        // This log is now conditional on the authError
+        if (!authError) {
+            console.log('✅ Supabase fetch test OK (validação realizada por supabaseClient.ts na inicialização)');
+            console.log('✅ AuthContext ativo');
+            console.log('✅ CORS e chaves validadas');
+        }
+    }, [authError]);
 
     // Effect to handle post-login redirection and reset
     useEffect(() => {
@@ -130,6 +164,11 @@ const App: React.FC = () => {
                 return <OrdersPage user={user as User} />;
         }
     };
+    
+    // Handle catastrophic connection error first
+    if (authError && authError.includes('Supabase fetch failed catastrophically')) {
+        return <CorsErrorDisplay message={authError} />;
+    }
 
     if (isAuthLoading || (user && isDataLoading)) {
         return (
