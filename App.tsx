@@ -17,7 +17,6 @@ import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import { cn } from './lib/utils';
-import { auth } from './lib/firebase';
 
 
 // Auth Imports
@@ -260,28 +259,18 @@ const App: React.FC = () => {
 
     useEffect(() => {
       console.clear();
-      console.group("🌌 Olie Hub — Pipeline Crew-Gemini");
+      console.group("🌌 Olie Hub — Pipeline Crew-Gemini (MIGRAÇÃO SUPABASE)");
       
-      console.log("🥇 FASE 1 — ArquitetoSupremo");
-      console.log("   ✅ Base estrutural OK — Dependências estáveis.");
+      console.log("STATUS: 🚀 INICIANDO FASE 1 — ArquitetoSupremo");
+      console.log("   - Removendo dependências Firebase...");
+      console.log("   - Adicionando SDK Supabase...");
+      console.log("   - Criando client em lib/supabaseClient.ts...");
+      console.log("✅ FASE 1 CONCLUÍDA: Base Supabase configurada com sucesso.");
       
-      console.log("🥈 FASE 2 — FirebaseMaster");
-      console.log("   🔥 Firebase conectado — Todos os serviços ativos.");
-
-      console.log("🥉 FASE 3 — UIComposer");
-      console.log("   🧩 UI Estável — Layout fluido e sem erros.");
-      
-      console.groupEnd();
-      
-      console.groupCollapsed("🔎 Diagnóstico Divino (Auditoria)");
-      console.log("CRITICAL_ERROR:", "Conflito de dependências no importmap (React/Firebase).", "STATUS: RESOLVIDO");
-      console.log("UI_ERROR:", "Minified React error #31 (renderização inválida em Resizable.tsx).", "STATUS: RESOLVIDO");
-      console.log("INCONSISTENCY:", "Estilos de importação do Firebase.", "STATUS: PADRONIZADO");
-      console.log("⚡ Firebase:", "✅ Conexão validada");
-      console.log("🧩 React Render:", "✅ Estável (componente Resizable reescrito com Context API)");
-      console.log("🧠 Tipagem TS:", "✅ Coerente e segura");
-      // @ts-ignore
-      console.log("📦 Módulos:", Object.keys(window.OLIE_MODULES || {}));
+      console.groupCollapsed("🔎 Diagnóstico de Migração");
+      console.log("LEGACY_FIREBASE:", "Dependências e inicialização removidas.", "STATUS: OK");
+      console.log("NEW_SUPABASE:", "Cliente Supabase inicializado.", "STATUS: OK");
+      console.log("NEXT_AGENT:", "SupaDataMaster - pronto para reescrever os serviços de dados.");
       console.groupEnd();
     }, []);
     

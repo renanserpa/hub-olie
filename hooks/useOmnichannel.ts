@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
-import { db } from '../lib/firebase';
-import { collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+
+// NOTE: Real-time functionality is disabled pending Supabase migration.
+// All Firebase-related imports and listeners have been removed.
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;
@@ -23,7 +24,8 @@ export function useOmnichannel(user: User) {
     const [assigneeFilter, setAssigneeFilter] = useState<'all' | 'mine' | 'unassigned'>('all');
 
     useEffect(() => {
-        const fetchAuxData = async () => {
+        const fetchAllData = async () => {
+            setIsLoading(true);
             try {
                  const [contactsData, ordersData] = await Promise.all([
                     firebaseService.getCollection<Contact>('contacts'),
@@ -31,57 +33,18 @@ export function useOmnichannel(user: User) {
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);
+                 // Mock data load for now
+                 setConversations([]);
+                 setMessages([]);
             } catch(e) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
+            } finally {
+                setIsLoading(false);
             }
         };
-        fetchAuxData();
+        fetchAllData();
     }, []);
 
-    // Real-time listener for conversations
-    useEffect(() => {
-        setIsLoading(true);
-        const q = query(collection(db, 'omni_conversations'), orderBy('lastMessageAt', 'desc'));
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const convosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Conversation);
-            setConversations(convosData);
-
-            if (isLoading) { // On first load, select the first conversation
-                const firstConversation = convosData?.[0];
-                if (firstConversation && !selectedConversationId) {
-                    setSelectedConversationId(firstConversation.id);
-                }
-            }
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching conversations in real-time:", error);
-            toast({ title: 'Erro de Conexão!', description: 'Não foi possível carregar as conversas em tempo real.', variant: 'destructive' });
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe(); // Cleanup listener on unmount
-    }, []); // Empty dependency array to set up the listener only once
-
-    // Real-time listener for messages of the selected conversation
-    useEffect(() => {
-        if (!selectedConversationId) {
-            setMessages([]);
-            return;
-        }
-
-        const q = query(collection(db, `omni_conversations/${selectedConversationId}/messages`), orderBy('createdAt', 'asc'));
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Message);
-            setMessages(messagesData);
-        }, (error) => {
-            console.error(`Error fetching messages for convo ${selectedConversationId}:`, error);
-            toast({ title: 'Erro!', description: 'Não foi possível carregar as mensagens.', variant: 'destructive' });
-        });
-
-        return () => unsubscribe(); // Cleanup listener
-    }, [selectedConversationId]);
 
     const filteredConversations = useMemo(() => {
         let convos = [...conversations];
@@ -113,45 +76,14 @@ export function useOmnichannel(user: User) {
 
     const handleSelectConversation = async (conversationId: string) => {
         setSelectedConversationId(conversationId);
-        
-        const convoToUpdate = conversations.find(c => c.id === conversationId);
-        if (convoToUpdate && convoToUpdate.unreadCount > 0) {
-            // Optimistic update for faster UI response
-            setConversations(prev => prev.map(c =>
-                c.id === conversationId ? { ...c, unreadCount: 0 } : c
-            ));
-            await firebaseService.updateDocument('omni_conversations', conversationId, { unreadCount: 0 });
-        }
+        // Real-time update logic will be added by SupaDataMaster
     };
     
     const sendMessage = async (content: string, type: 'text' | 'note' = 'text') => {
         if (!selectedConversationId || !content.trim()) return;
 
-        const direction = type === 'note' ? 'note' : 'out';
-        const newMessage = {
-            conversationId: selectedConversationId,
-            direction,
-            type: 'text',
-            content,
-            status: 'sent',
-            authorId: user.uid,
-            authorName: user.role,
-            createdAt: serverTimestamp(),
-        };
-        
-        setIsSending(true);
-        try {
-            await firebaseService.addDocument(`omni_conversations/${selectedConversationId}/messages`, newMessage);
-            await firebaseService.updateDocument('omni_conversations', selectedConversationId, {
-                lastMessageAt: serverTimestamp(),
-                title: content, // Update the preview text of the conversation
-            });
-        } catch(error) {
-            console.error("Error sending message:", error);
-            toast({ title: "Erro", description: "Não foi possível enviar a mensagem.", variant: 'destructive' });
-        } finally {
-            setIsSending(false);
-        }
+        console.warn('sendMessage not implemented for Supabase yet.');
+        toast({ title: "Funcionalidade desabilitada", description: "O envio de mensagens será reativado após a migração para Supabase.", variant: "destructive"});
     };
 
     return {

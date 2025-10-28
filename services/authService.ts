@@ -1,6 +1,4 @@
-import { db, auth } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { supabase } from '../lib/supabaseClient';
 import type { User } from '../types';
 
 export type UserRole =
@@ -17,39 +15,45 @@ export interface AuthUser {
   role: UserRole;
 }
 
+// SupaDataMaster will implement this
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  if (!userCredential.user) {
-    throw new Error('User authentication failed.');
+  console.warn("authService.login is not implemented for Supabase yet.");
+  // Placeholder logic
+  if (email && password) {
+      // This is a temporary mock to allow UI to proceed.
+      // The real implementation will be done by the SupaDataMaster agent.
+      if (email === "demo@olie.com.br" && password === "demo") {
+         return { uid: 'mock-uid', email, role: 'AdminGeral' };
+      }
   }
-  return await getUserProfile(userCredential.user);
+  throw new Error('Login not implemented or invalid credentials.');
 };
 
+// SupaDataMaster will implement this
 export const logout = async (): Promise<void> => {
-  await signOut(auth);
+  console.warn("authService.logout is not implemented for Supabase yet.");
 };
 
-export const getUserProfile = async (firebaseUser: FirebaseUser): Promise<AuthUser> => {
-  const userDocRef = doc(db, 'users', firebaseUser.uid);
-  const userDocSnap = await getDoc(userDocRef);
-
-  // Default role is 'Vendas' if not found in Firestore
-  const role = userDocSnap.exists() ? (userDocSnap.data().role as UserRole) : 'Vendas';
-  
+// SupaDataMaster will implement this
+export const getUserProfile = async (supabaseUser: any): Promise<AuthUser> => {
+  console.warn("authService.getUserProfile is not implemented for Supabase yet.");
   return {
-    uid: firebaseUser.uid,
-    email: firebaseUser.email || '',
-    role: role,
+    uid: supabaseUser.id,
+    email: supabaseUser.email || '',
+    role: 'Vendas', // Default role
   };
 };
 
+// SupaDataMaster will implement this
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void) => {
-  return onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      const userProfile = await getUserProfile(firebaseUser);
-      callback(userProfile);
-    } else {
-      callback(null);
-    }
-  });
+  console.warn("authService.listenAuthChanges is not implemented for Supabase yet.");
+  // Immediately call with null to prevent app from hanging in loading state,
+  // then mock a login for development purposes.
+  // The real implementation will use supabase.auth.onAuthStateChange
+  setTimeout(() => {
+    callback({ uid: 'mock-uid', email: 'demo@olie.com.br', role: 'AdminGeral' });
+  }, 500);
+  
+  // Return a dummy unsubscribe function
+  return () => {};
 };

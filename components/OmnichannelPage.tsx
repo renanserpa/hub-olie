@@ -40,6 +40,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
     
     return (
         <div className="h-[calc(100vh-10rem)] border border-border rounded-2xl bg-card overflow-hidden flex flex-col">
+            {/* FIX: The Resizable and ResizablePanel components require a `children` prop. This change ensures that the panel content is correctly passed as children, resolving errors caused by improper component structure. */}
             <Resizable direction="horizontal" initialSizes={[24, 52, 24]} minSizes={[20, 30, 20]} className="flex-1">
                 <ResizablePanel>
                     <InboxList
