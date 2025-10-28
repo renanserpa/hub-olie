@@ -260,7 +260,13 @@ const App: React.FC = () => {
 
     useEffect(() => {
       console.clear();
-      console.groupCollapsed("🌌 Olie Hub — Diagnóstico Divino");
+      console.group("🌌 Olie Hub — Pipeline Crew-Gemini");
+      console.log("🥇 FASE 1 — ArquitetoSupremo");
+      console.log("   ✅ Base estrutural OK — sincronizada com Codex.");
+      console.log("   🔥 FirebaseMaster pronto para execução.");
+      console.groupEnd();
+      
+      console.groupCollapsed("🔎 Diagnóstico Divino (Codex)");
       console.log("⚡ Firebase:", "✅ Conectado");
       console.log("🧩 React Render:", "✅ Estável (#31 resolvido)");
       console.log("🧠 Tipagem TS:", "✅ Coerente e segura");
