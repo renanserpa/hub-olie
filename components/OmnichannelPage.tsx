@@ -4,7 +4,7 @@ import { useOmnichannel } from '../hooks/useOmnichannel';
 import InboxList from './omnichannel/InboxList';
 import ConversationThread from './omnichannel/ConversationThread';
 import CustomerPanel from './omnichannel/CustomerPanel';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/Resizable';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/Resizable';
 import { Inbox, MessageCircle, User as UserIcon } from 'lucide-react';
 
 interface OmnichannelPageProps {
@@ -43,7 +43,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
     return (
         <div className="h-[calc(100vh-10rem)] border border-border rounded-2xl bg-card overflow-hidden flex flex-col">
             <ResizablePanelGroup direction="horizontal" className="flex-1">
-                <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+                <ResizablePanel initialSize={24} minSize={20}>
                     <InboxList
                         conversations={filteredConversations}
                         selectedConversationId={selectedConversation?.id || null}
@@ -53,15 +53,15 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
                     />
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel defaultSize={50} minSize={30}>
+                <ResizablePanel initialSize={52} minSize={30}>
                     {selectedConversation ? (
-                         <ConversationThread
+                        <ConversationThread
                             key={selectedConversation.id}
                             conversation={selectedConversation}
                             messages={currentMessages}
                             onSendMessage={sendMessage}
                             isSending={isSending}
-                         />
+                        />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
                             <MessageCircle size={48} className="mb-4 text-gray-300" />
@@ -71,7 +71,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
                     )}
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+                <ResizablePanel initialSize={24} minSize={20}>
                      {selectedConversation ? (
                         <CustomerPanel
                             key={selectedConversation.id}
@@ -79,13 +79,13 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
                             orders={customerOrders}
                             quote={currentQuote}
                         />
-                     ) : (
+                    ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">
                             <UserIcon size={48} className="mb-4 text-gray-300" />
                             <h2 className="text-xl font-semibold text-textPrimary">Informações do Cliente</h2>
                             <p>Os detalhes do cliente aparecerão aqui.</p>
                         </div>
-                     )}
+                    )}
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>

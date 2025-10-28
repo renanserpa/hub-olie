@@ -1,8 +1,9 @@
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+// FIX: Switched to Firebase v9 compat libraries to resolve module export errors.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/storage';
+import 'firebase/compat/analytics';
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
-import { getAnalytics } from "firebase/analytics";
 
 // Configuração real do projeto Firebase "olie-hub"
 const firebaseConfig = {
@@ -15,12 +16,13 @@ const firebaseConfig = {
   measurementId: "G-C7N0BK5GKT"
 };
 
-// Evita múltiplas inicializações (útil em HMR - Hot Module Replacement)
-const app: FirebaseApp = getApps().length > 0 ? getApps()[0]! : initializeApp(firebaseConfig);
+// Evita múltiplas inicializações e garante que a instância do app seja capturada.
+const app = !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app();
 
 
-// Exporta os serviços do Firebase
+// Exporta os serviços do Firebase, passando a instância do app explicitamente.
+// Isso garante que tanto a API modular (Firestore) quanto a de compatibilidade (Auth, etc.) usem o mesmo app.
 export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
-export const analytics = getAnalytics(app);
+export const auth = firebase.auth(app);
+export const storage = firebase.storage(app);
+export const analytics = firebase.analytics(app);

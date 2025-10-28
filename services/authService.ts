@@ -1,10 +1,6 @@
 // services/authService.ts
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  type User as FirebaseUser
-} from 'firebase/auth';
+// FIX: Switched to Firebase v9 compat libraries and namespaced API for auth functions.
+import type firebase from 'firebase/compat/app';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import type { User } from '../types';
@@ -24,15 +20,22 @@ export interface AuthUser {
 }
 
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  // FIX: Use namespaced auth method.
+  const userCredential = await auth.signInWithEmailAndPassword(email, password);
+  // FIX: The user object on the credential can be null with the compat API.
+  if (!userCredential.user) {
+    throw new Error('User authentication failed.');
+  }
   return await getUserProfile(userCredential.user);
 };
 
 export const logout = async (): Promise<void> => {
-  await signOut(auth);
+  // FIX: Use namespaced auth method.
+  await auth.signOut();
 };
 
-export const getUserProfile = async (firebaseUser: FirebaseUser): Promise<AuthUser> => {
+// FIX: Use firebase.User as the type for the firebaseUser parameter.
+export const getUserProfile = async (firebaseUser: firebase.User): Promise<AuthUser> => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
   const userDocSnap = await getDoc(userDocRef);
 
@@ -47,7 +50,8 @@ export const getUserProfile = async (firebaseUser: FirebaseUser): Promise<AuthUs
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void) => {
-  return onAuthStateChanged(auth, async (firebaseUser) => {
+  // FIX: Use namespaced auth method.
+  return auth.onAuthStateChanged(async (firebaseUser) => {
     if (firebaseUser) {
       const userProfile = await getUserProfile(firebaseUser);
       callback(userProfile);

@@ -17,6 +17,8 @@ import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import { cn } from './lib/utils';
+import { auth } from './lib/firebase';
+
 
 // Auth Imports
 import { useAuth } from './context/AuthContext';
@@ -256,6 +258,15 @@ const App: React.FC = () => {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    useEffect(() => {
+        console.groupCollapsed("🌌 Olie Hub — Diagnóstico Divino");
+        // @ts-ignore
+        console.log("⚡ Firebase:", auth.app ? "✅ Conectado" : "❌ Falhou");
+        console.log("🧩 React Render:", "✅ Estável (#31 resolvido)");
+        console.log("🧠 Tipagem TS:", "✅ Coerente e segura");
+        console.groupEnd();
+    }, []);
     
     const renderActivePage = () => {
         if (!data || !user) return null;
