@@ -20,11 +20,18 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus }> = ({ status }) => {
     }
 };
 
+const safeFormat = (dateValue: any, formatStr: string) => {
+    if (!dateValue) return '';
+    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    return format(date, formatStr, { locale: ptBR });
+};
+
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     const isIncoming = message.direction === 'in';
     const isNote = message.direction === 'note';
 
-    const time = format(new Date(message.createdAt), 'HH:mm', { locale: ptBR });
+    const time = safeFormat(message.createdAt, 'HH:mm');
 
     if (isNote) {
         return (
@@ -32,7 +39,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
                 <div className="text-center bg-yellow-100 text-yellow-800 text-xs px-4 py-2 rounded-lg max-w-sm">
                     <p className="font-semibold">{message.authorName} deixou uma nota interna</p>
                     <p>{message.content}</p>
-                    <p className="text-[10px] mt-1 opacity-70">{format(new Date(message.createdAt), 'dd MMM, HH:mm', { locale: ptBR })}</p>
+                    <p className="text-[10px] mt-1 opacity-70">{safeFormat(message.createdAt, 'dd MMM, HH:mm')}</p>
                 </div>
             </div>
         );

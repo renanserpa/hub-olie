@@ -5,6 +5,12 @@ import { Conversation, Message, Quote, Contact, Order, User } from '../types';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
+const safeGetTime = (dateValue: any): number => {
+    if (!dateValue) return 0;
+    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+    if (isNaN(date.getTime())) return 0;
+    return date.getTime();
+};
 
 export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Order[]) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -78,7 +84,7 @@ export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Or
     const customerOrders = useMemo(() => {
         if (!selectedConversation) return [];
         return allOrders.filter(o => o.contact_id === selectedConversation.customerId)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            .sort((a, b) => safeGetTime(b.created_at) - safeGetTime(a.created_at));
     }, [selectedConversation, allOrders]);
 
     const currentQuote = useMemo(() => {

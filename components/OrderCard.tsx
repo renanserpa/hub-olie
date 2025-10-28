@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { Order, OrderStatus } from '../types';
 import { Card } from './ui/Card';
@@ -24,13 +21,15 @@ const statusStyles: Record<OrderStatus, { badge: string; text: string; label: st
   cancelled: { badge: 'bg-red-100 text-red-800', text: 'text-red-600', label: 'Cancelado' },
 };
 
-
 const OrderCard: React.FC<OrderCardProps> = ({ order, onClick, className }) => {
     const style = statusStyles[order.status];
     const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('pt-BR', {
+    const formatDate = (dateValue: any) => {
+        if (!dateValue) return '';
+        const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('pt-BR', {
             day: '2-digit', month: 'short', year: 'numeric'
         });
     }

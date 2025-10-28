@@ -43,9 +43,11 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
 
 const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder }> = ({ order }) => {
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleString('pt-BR', {
+    const formatDate = (dateValue?: any) => {
+        if (!dateValue) return '-';
+        const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleString('pt-BR', {
             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };

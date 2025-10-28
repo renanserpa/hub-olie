@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InventoryBalance, InventoryMovement, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
@@ -37,8 +36,11 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, mo
     const available = balance.quantity_on_hand - balance.quantity_reserved;
     const material = balance.material;
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString('pt-BR', {
+    const formatDate = (dateValue: any) => {
+        if (!dateValue) return '';
+        const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleString('pt-BR', {
             day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };

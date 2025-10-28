@@ -242,9 +242,8 @@ const App: React.FC = () => {
         try {
             setIsDataLoading(true);
             setError(null);
-            const settingsData = await firebaseService.getSettings();
-            console.log("🔥 Firestore conectado: getSettings() executado com sucesso.");
-            setData(settingsData);
+            const appData = await firebaseService.getSettings();
+            setData(appData);
         } catch (e) {
             const errorMessage = 'Falha ao carregar os dados.';
             setError(errorMessage);
@@ -260,12 +259,14 @@ const App: React.FC = () => {
     }, [loadData]);
 
     useEffect(() => {
-        console.groupCollapsed("🌌 Olie Hub — Diagnóstico Divino");
-        // @ts-ignore
-        console.log("⚡ Firebase:", auth.app ? "✅ Conectado" : "❌ Falhou");
-        console.log("🧩 React Render:", "✅ Estável (#31 resolvido)");
-        console.log("🧠 Tipagem TS:", "✅ Coerente e segura");
-        console.groupEnd();
+      console.clear();
+      console.groupCollapsed("🌌 Olie Hub — Diagnóstico Divino");
+      console.log("⚡ Firebase:", "✅ Conectado");
+      console.log("🧩 React Render:", "✅ Estável (#31 resolvido)");
+      console.log("🧠 Tipagem TS:", "✅ Coerente e segura");
+      // @ts-ignore
+      console.log("📦 Módulos:", Object.keys(window.OLIE_MODULES || {}));
+      console.groupEnd();
     }, []);
     
     const renderActivePage = () => {

@@ -23,12 +23,16 @@ const priorityClasses: Record<Priority, string> = {
     urgent: 'bg-red-100',
 }
 
+const safeFormatDistanceToNow = (dateValue: any) => {
+    if (!dateValue) return '';
+    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+};
+
 const ConversationCard: React.FC<ConversationCardProps> = ({ conversation, isSelected, onClick }) => {
     
-    const timeAgo = formatDistanceToNow(new Date(conversation.lastMessageAt), {
-        addSuffix: true,
-        locale: ptBR,
-    });
+    const timeAgo = safeFormatDistanceToNow(conversation.lastMessageAt);
     
     return (
         <button

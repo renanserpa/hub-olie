@@ -1,8 +1,7 @@
-// services/authService.ts
-// FIX: Switched to Firebase v9 compat libraries and namespaced API for auth functions.
-import type firebase from 'firebase/compat/app';
-import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+// FIX: Changed to namespace import to fix module resolution issues.
+import * as firebaseAuth from 'firebase/auth';
 import type { User } from '../types';
 
 export type UserRole =
@@ -20,9 +19,8 @@ export interface AuthUser {
 }
 
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  // FIX: Use namespaced auth method.
-  const userCredential = await auth.signInWithEmailAndPassword(email, password);
-  // FIX: The user object on the credential can be null with the compat API.
+  // FIX: Use function from the imported namespace.
+  const userCredential = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
   if (!userCredential.user) {
     throw new Error('User authentication failed.');
   }
@@ -30,12 +28,12 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
 };
 
 export const logout = async (): Promise<void> => {
-  // FIX: Use namespaced auth method.
-  await auth.signOut();
+  // FIX: Use function from the imported namespace.
+  await firebaseAuth.signOut(auth);
 };
 
-// FIX: Use firebase.User as the type for the firebaseUser parameter.
-export const getUserProfile = async (firebaseUser: firebase.User): Promise<AuthUser> => {
+// FIX: Use the User type from the imported namespace.
+export const getUserProfile = async (firebaseUser: firebaseAuth.User): Promise<AuthUser> => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
   const userDocSnap = await getDoc(userDocRef);
 
@@ -50,8 +48,8 @@ export const getUserProfile = async (firebaseUser: firebase.User): Promise<AuthU
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void) => {
-  // FIX: Use namespaced auth method.
-  return auth.onAuthStateChanged(async (firebaseUser) => {
+  // FIX: Use function from the imported namespace.
+  return firebaseAuth.onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       const userProfile = await getUserProfile(firebaseUser);
       callback(userProfile);
