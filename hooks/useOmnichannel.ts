@@ -12,13 +12,31 @@ const safeGetTime = (dateValue: any): number => {
     return date.getTime();
 };
 
-export function useOmnichannel(user: User, allContacts: Contact[], allOrders: Order[]) {
+export function useOmnichannel(user: User) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [allContacts, setAllContacts] = useState<Contact[]>([]);
+    const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [assigneeFilter, setAssigneeFilter] = useState<'all' | 'mine' | 'unassigned'>('all');
+
+    useEffect(() => {
+        const fetchAuxData = async () => {
+            try {
+                 const [contactsData, ordersData] = await Promise.all([
+                    firebaseService.getCollection<Contact>('contacts'),
+                    firebaseService.getOrders()
+                 ]);
+                 setAllContacts(contactsData);
+                 setAllOrders(ordersData);
+            } catch(e) {
+                 toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
+            }
+        };
+        fetchAuxData();
+    }, []);
 
     // Real-time listener for conversations
     useEffect(() => {

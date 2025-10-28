@@ -77,9 +77,9 @@ const getSettingsCollectionPath = (category: SettingsCategory, subTab: string | 
     return category;
 };
 
-const getProductCategories = (): Promise<ProductCategory[]> => getCollection<ProductCategory>('product_categories');
+export const getProductCategories = (): Promise<ProductCategory[]> => getCollection<ProductCategory>('product_categories');
 
-const getProducts = async (): Promise<Product[]> => {
+export const getProducts = async (): Promise<Product[]> => {
     const products = await getCollection<Product>('products');
     const categories = await getProductCategories();
     const categoryMap = new Map(categories.map(c => [c.id, c]));
@@ -90,7 +90,7 @@ const getProducts = async (): Promise<Product[]> => {
     }));
 };
 
-const getOrders = async (): Promise<Order[]> => {
+export const getOrders = async (): Promise<Order[]> => {
     const orders = await getCollection<Order>('orders');
     const contacts = await getCollection<Contact>('contacts');
     const contactsMap = new Map(contacts.map(c => [c.id, c]));
@@ -153,33 +153,17 @@ export const firebaseService = {
         tipos_embalagem,
         tipos_vinculo,
         sistema,
-        orders,
-        contacts,
-        products,
-        product_categories,
-        production_orders,
-        task_statuses,
-        tasks,
-        inventory_balances,
     ] = await Promise.all([
         getCollection('paletas_cores'),
         getCollection('tecido'), getCollection('ziper'), getCollection('forro'), getCollection('puxador'), getCollection('vies'), getCollection('bordado'), getCollection('texturas'),
         getCollection('fontes_monogramas'),
         getCollection('grupos_suprimento'),
-        getAllBasicMaterials(),
+        getAllBasicMaterials(), // Keep for settings dropdowns
         getCollection('metodos_entrega'),
         getCollection('calculo_frete'),
         getCollection('tipos_embalagem'),
         getCollection('tipos_vinculo'),
         getCollection<SystemSetting>('sistema'),
-        getOrders(),
-        getCollection<Contact>('contacts'),
-        getProducts(),
-        getProductCategories(),
-        getProductionOrders(),
-        getTaskStatuses(),
-        getTasks(),
-        getInventoryBalances(),
     ]);
 
     return {
@@ -200,15 +184,16 @@ export const firebaseService = {
         },
         sistema,
         midia: {},
-        orders,
-        contacts,
-        products,
-        product_categories,
-        production_orders,
-        task_statuses,
-        tasks,
+        // These are now fetched by their own modules
+        orders: [],
+        contacts: [],
+        products: [],
+        product_categories: [],
+        production_orders: [],
+        task_statuses: [],
+        tasks: [],
         omnichannel: { conversations: [], messages: [], quotes: [] },
-        inventory_balances,
+        inventory_balances: [],
         inventory_movements: [],
     } as AppData;
   },

@@ -3,18 +3,31 @@ import { Contact, AnyContact } from '../types';
 import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
-export function useContacts(initialContacts: Contact[], onDataChange: () => void) {
-    const [allContacts, setAllContacts] = useState<Contact[]>(initialContacts);
-    const [isLoading, setIsLoading] = useState(false);
+export function useContacts() {
+    const [allContacts, setAllContacts] = useState<Contact[]>([]);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+    const [isMutationLoading, setIsMutationLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<'all' | 'birthdays'>('all');
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
+    const loadContacts = useCallback(async () => {
+        setIsDataLoading(true);
+        try {
+            const contacts = await firebaseService.getCollection<Contact>('contacts');
+            setAllContacts(contacts);
+        } catch (error) {
+             toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
+        } finally {
+            setIsDataLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        setAllContacts(initialContacts);
-    }, [initialContacts])
+        loadContacts();
+    }, [loadContacts]);
 
     const filteredContacts = useMemo(() => {
         let contacts = allContacts;
@@ -52,7 +65,7 @@ export function useContacts(initialContacts: Contact[], onDataChange: () => void
     };
     
     const saveContact = async (contactData: AnyContact | Contact) => {
-        setIsLoading(true);
+        setIsMutationLoading(true);
         try {
             if ('id' in contactData) {
                 const { id, ...dataToUpdate } = contactData;
@@ -62,18 +75,19 @@ export function useContacts(initialContacts: Contact[], onDataChange: () => void
                 await firebaseService.addDocument('contacts', contactData);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
-            onDataChange();
+            loadContacts();
             closeDialog();
         } catch (error) {
             console.error(error);
             toast({ title: "Erro!", description: "Não foi possível salvar o contato.", variant: "destructive" });
         } finally {
-            setIsLoading(false);
+            setIsMutationLoading(false);
         }
     };
 
     return {
-        isLoading,
+        isLoading: isDataLoading,
+        isSaving: isMutationLoading,
         filteredContacts,
         searchQuery,
         setSearchQuery,

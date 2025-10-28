@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '../types';
 import { Package, Plus } from 'lucide-react';
@@ -11,10 +10,9 @@ import InventoryMovementDialog from './inventory/InventoryMovementDialog';
 
 interface InventoryPageProps {
   user: User;
-  onDataChange: () => void;
 }
 
-const InventoryPage: React.FC<InventoryPageProps> = ({ user, onDataChange }) => {
+const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
     const {
         isLoading,
         isLoadingMovements,
@@ -26,7 +24,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user, onDataChange }) => 
         movements,
         addInventoryMovement,
         allMaterials,
-    } = useInventory(onDataChange);
+    } = useInventory();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 

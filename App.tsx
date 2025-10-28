@@ -228,24 +228,24 @@ const SettingsPage: React.FC<{ settings: AppData; user: AuthUser | null; onDataC
 
 const App: React.FC = () => {
     const { user, isLoading: isAuthLoading } = useAuth();
-    const [data, setData] = useState<AppData | null>(null);
+    const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [activePage, setActivePage] = useState('orders');
 
-    const loadData = useCallback(async () => {
+    const loadSettingsData = useCallback(async () => {
         if (!user) {
             setIsDataLoading(false);
-            setData(null);
+            setSettingsData(null);
             return;
         }
         try {
             setIsDataLoading(true);
             setError(null);
             const appData = await firebaseService.getSettings();
-            setData(appData);
+            setSettingsData(appData);
         } catch (e) {
-            const errorMessage = 'Falha ao carregar os dados.';
+            const errorMessage = 'Falha ao carregar as configurações.';
             setError(errorMessage);
             toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
             console.error(e);
@@ -255,8 +255,8 @@ const App: React.FC = () => {
     }, [user]);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        loadSettingsData();
+    }, [loadSettingsData]);
 
     useEffect(() => {
       console.clear();
@@ -283,28 +283,28 @@ const App: React.FC = () => {
     }, []);
     
     const renderActivePage = () => {
-        if (!data || !user) return null;
+        if (!user) return null;
 
         switch (activePage) {
             case 'settings':
-                return <SettingsPage settings={data} user={user} onDataChange={loadData} />;
+                return settingsData ? <SettingsPage settings={settingsData} user={user} onDataChange={loadSettingsData} /> : null;
             case 'production':
                 return <ProductionPage />;
             case 'inventory':
-                return <InventoryPage user={user} onDataChange={loadData} />;
+                return <InventoryPage user={user} />;
             case 'omnichannel':
-                return <OmnichannelPage user={user} allContacts={data.contacts} allOrders={data.orders} />;
+                return <OmnichannelPage user={user} />;
             case 'contacts':
-                return <ContactsPage user={user} onDataChange={loadData} data={data} />;
+                return <ContactsPage user={user} />;
             case 'products':
-                return <ProductsPage user={user} data={data} onDataChange={loadData} />;
+                return <ProductsPage user={user} />;
             case 'orders':
             default:
-                return <OrdersPage user={user} data={data} />;
+                return <OrdersPage user={user} />;
         }
     };
 
-    if (isAuthLoading || isDataLoading) {
+    if (isAuthLoading || (user && isDataLoading)) {
         return (
             <div className="flex justify-center items-center h-screen bg-background">
                 <div className="text-center">

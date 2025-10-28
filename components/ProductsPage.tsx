@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { User, AppData } from '../types';
-import { Package, Plus, Search } from 'lucide-react';
+import { User } from '../types';
+import { Package, Plus, Search, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
@@ -9,15 +8,15 @@ import ProductDialog from './products/ProductDialog';
 
 interface ProductsPageProps {
   user: User;
-  data: AppData;
-  onDataChange: () => void;
 }
 
-const ProductsPage: React.FC<ProductsPageProps> = ({ user, data, onDataChange }) => {
+const ProductsPage: React.FC<ProductsPageProps> = ({ user }) => {
     const {
         isLoading,
+        isSaving,
         filteredProducts,
         categories,
+        settingsData,
         searchQuery,
         setSearchQuery,
         isDialogOpen,
@@ -25,7 +24,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ user, data, onDataChange })
         openDialog,
         closeDialog,
         saveProduct,
-    } = useProducts(data.products, data.product_categories, onDataChange);
+    } = useProducts();
 
     return (
         <div>
@@ -60,14 +59,22 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ user, data, onDataChange })
                 onEdit={openDialog}
             />
             
-            <ProductDialog
-                isOpen={isDialogOpen}
-                onClose={closeDialog}
-                onSave={saveProduct}
-                product={editingProduct}
-                categories={categories}
-                appData={data}
-            />
+            {isDialogOpen && settingsData && (
+                <ProductDialog
+                    isOpen={isDialogOpen}
+                    onClose={closeDialog}
+                    onSave={saveProduct}
+                    product={editingProduct}
+                    categories={categories}
+                    appData={settingsData}
+                />
+            )}
+            
+            {isSaving && (
+                 <div className="fixed inset-0 bg-black/20 z-50 flex justify-center items-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-white"/>
+                </div>
+            )}
         </div>
     );
 };

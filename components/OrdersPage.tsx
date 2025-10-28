@@ -1,10 +1,6 @@
-
-
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { firebaseService } from '../services/firestoreService';
-import { Order, User, OrderStatus, AppData } from '../types';
+import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -24,8 +20,9 @@ const ORDER_STATUS_TABS: { id: OrderStatus | 'all', label: string }[] = [
     { id: 'awaiting_shipping', label: 'Pronto para Envio' },
 ];
 
-const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => {
+const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [pageData, setPageData] = useState<{ contacts: Contact[], products: Product[] }>({ contacts: [], products: [] });
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>(
         (localStorage.getItem(VIEW_MODE_KEY) as 'list' | 'kanban') || 'list'
@@ -36,21 +33,26 @@ const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => 
 
     const isAdmin = user?.role === 'AdminGeral';
 
-    const loadOrders = useCallback(async () => {
+    const loadPageData = useCallback(async () => {
         setLoading(true);
         try {
-            const ordersData = await firebaseService.getOrders();
+            const [ordersData, contactsData, productsData] = await Promise.all([
+                firebaseService.getOrders(),
+                firebaseService.getCollection<Contact>('contacts'),
+                firebaseService.getProducts()
+            ]);
             setOrders(ordersData);
+            setPageData({ contacts: contactsData, products: productsData });
         } catch (error) {
-            toast({ title: 'Erro!', description: 'Não foi possível carregar os pedidos.', variant: 'destructive' });
+            toast({ title: 'Erro!', description: 'Não foi possível carregar os dados da página.', variant: 'destructive' });
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        loadOrders();
-    }, [loadOrders]);
+        loadPageData();
+    }, [loadPageData]);
 
     useEffect(() => {
         localStorage.setItem(VIEW_MODE_KEY, viewMode);
@@ -72,7 +74,7 @@ const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => 
 
     if (selectedOrderId) {
         const selectedOrder = orders.find(o => o.id === selectedOrderId);
-        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={loadOrders} /> : null;
+        return selectedOrder ? <OrderDetail order={selectedOrder} onClose={() => setSelectedOrderId(null)} onUpdate={loadPageData} /> : null;
     }
 
     return (
@@ -130,9 +132,10 @@ const OrdersPage: React.FC<{ user: User, data: AppData }> = ({ user, data }) => 
                 onClose={() => setIsDialogOpen(false)}
                 onSave={() => {
                     setIsDialogOpen(false);
-                    loadOrders();
+                    loadPageData();
                 }}
-                appData={data}
+                contacts={pageData.contacts}
+                products={pageData.products}
             />
         </div>
     );

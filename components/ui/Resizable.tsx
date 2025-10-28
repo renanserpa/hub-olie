@@ -146,11 +146,11 @@ export function Resizable({
 
               if (child.type === ResizablePanel) {
                   const index = panelIndex++;
-                  // FIX: Cast the child to a specifically typed ReactElement to fix type errors.
-                  // This allows passing 'style' and accessing 'child.props.className' safely.
+                  // FIX: Cast `child.props` to `ResizablePanelProps` to safely access `className`,
+                  // as TypeScript doesn't infer it from the `child.type` check.
                   return cloneElement(child as React.ReactElement<ResizablePanelProps>, {
                       style: { flexBasis: `${sizes[index]}%` },
-                      className: cn(child.props.className, "overflow-hidden flex flex-col min-w-0 min-h-0"),
+                      className: cn((child.props as ResizablePanelProps).className, "overflow-hidden flex flex-col min-w-0 min-h-0"),
                   });
               }
 

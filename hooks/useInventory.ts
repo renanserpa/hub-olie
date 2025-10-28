@@ -1,12 +1,9 @@
-
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
 import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
-export function useInventory(onDataChange: () => void) {
+export function useInventory() {
     const [allBalances, setAllBalances] = useState<InventoryBalance[]>([]);
     const [allMaterials, setAllMaterials] = useState<BasicMaterial[]>([]);
     const [movements, setMovements] = useState<InventoryMovement[]>([]);
@@ -37,7 +34,7 @@ export function useInventory(onDataChange: () => void) {
 
     useEffect(() => {
         loadData();
-    }, [onDataChange]); // Rely on parent to trigger reload
+    }, [loadData]);
 
     useEffect(() => {
         const fetchMovements = async () => {
@@ -76,7 +73,7 @@ export function useInventory(onDataChange: () => void) {
         try {
             await firebaseService.addInventoryMovement(movementData);
             toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
-            onDataChange(); // Trigger a full data refresh
+            loadData(); // Trigger a full data refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível registrar o movimento.", variant: "destructive" });
         }

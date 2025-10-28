@@ -1,22 +1,41 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct } from '../types';
+import { Product, ProductCategory, AnyProduct, AppData } from '../types';
 import { firebaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 
-export function useProducts(initialProducts: Product[], initialCategories: ProductCategory[], onDataChange: () => void) {
-    const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
-    const [categories, setCategories] = useState<ProductCategory[]>(initialCategories);
-    const [isLoading, setIsLoading] = useState(false); // No longer for loading, but for mutations
+export function useProducts() {
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<ProductCategory[]>([]);
+    const [settingsData, setSettingsData] = useState<AppData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-    // Sync state with props
+    const loadData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [productsData, categoriesData, settings] = await Promise.all([
+                firebaseService.getProducts(),
+                firebaseService.getProductCategories(),
+                firebaseService.getSettings(), // For catalogs needed in ProductDialog
+            ]);
+            setAllProducts(productsData);
+            setCategories(categoriesData);
+            setSettingsData(settings);
+        } catch (error) {
+             toast({ title: "Erro!", description: "Não foi possível carregar os produtos.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        setAllProducts(initialProducts);
-        setCategories(initialCategories);
-    }, [initialProducts, initialCategories]);
+        loadData();
+    }, [loadData]);
+
 
     const filteredProducts = useMemo(() => {
         let products = allProducts;
@@ -43,7 +62,7 @@ export function useProducts(initialProducts: Product[], initialCategories: Produ
     };
     
     const saveProduct = async (productData: AnyProduct | Product) => {
-        setIsLoading(true);
+        setIsSaving(true);
         try {
             if ('id' in productData) {
                 await firebaseService.updateProduct(productData.id, productData);
@@ -52,20 +71,22 @@ export function useProducts(initialProducts: Product[], initialCategories: Produ
                 await firebaseService.addProduct(productData as AnyProduct);
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
-            onDataChange();
+            loadData(); // Reload data
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o produto.", variant: "destructive" });
             throw error;
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
 
     return {
         isLoading,
+        isSaving,
         filteredProducts,
         categories,
+        settingsData,
         searchQuery,
         setSearchQuery,
         isDialogOpen,

@@ -5,6 +5,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
+// Explicitly import services for their side-effects to ensure registration
+import "firebase/auth";
+import "firebase/firestore";
+import "firebase/storage";
+import "firebase/analytics";
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyBTKL9uFL8mwruNSuFaeHQByjSQ6uU3cRA",
   authDomain: "olie-hub.firebaseapp.com",

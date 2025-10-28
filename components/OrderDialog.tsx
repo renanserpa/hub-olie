@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
@@ -15,12 +11,11 @@ interface OrderDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;
-    appData: AppData;
+    contacts: Contact[];
+    products: Product[];
 }
 
-const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, appData }) => {
-    const { contacts, products } = appData;
-    
+const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, contacts, products }) => {
     // Form state
     const [contactId, setContactId] = useState('');
     const [items, setItems] = useState<Partial<OrderItem>[]>([]);
@@ -31,6 +26,16 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, appD
 
     // Customization dialog state
     const [customizingItemIndex, setCustomizingItemIndex] = useState<number | null>(null);
+
+    // This is a temporary workaround to fetch full appData for customization.
+    // In a future refactor, CustomizeItemDialog should fetch its own needed data.
+    const [appData, setAppData] = useState<AppData | null>(null);
+    useEffect(() => {
+        if(isOpen) {
+            firebaseService.getSettings().then(setAppData);
+        }
+    }, [isOpen]);
+
 
     useEffect(() => {
         if (!isOpen) {
@@ -183,7 +188,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, appD
                 </div>
             </form>
         </Modal>
-        {itemToCustomize && itemToCustomize.product && (
+        {itemToCustomize && itemToCustomize.product && appData && (
              <CustomizeItemDialog
                 isOpen={customizingItemIndex !== null}
                 onClose={() => setCustomizingItemIndex(null)}

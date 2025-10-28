@@ -1,23 +1,21 @@
 import React from 'react';
 import { User } from '../types';
-import { Users, Plus, Search } from 'lucide-react';
+import { Users, Plus, Search, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useContacts } from '../hooks/useContacts';
 import ContactCard from './contacts/ContactCard';
 import ContactDialog from './contacts/ContactDialog';
 import { cn } from '../lib/utils';
-import { AppData } from '../types';
 
 
 interface ContactsPageProps {
   user: User;
-  onDataChange: () => void;
-  data: AppData;
 }
 
-const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange, data }) => {
+const ContactsPage: React.FC<ContactsPageProps> = ({ user }) => {
     const {
         isLoading,
+        isSaving,
         filteredContacts,
         searchQuery,
         setSearchQuery,
@@ -28,7 +26,7 @@ const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange, data })
         openDialog,
         closeDialog,
         saveContact,
-    } = useContacts(data.contacts, onDataChange);
+    } = useContacts();
     
     const TABS = [
         { id: 'all', label: `Todos (${filteredContacts.length})` },
@@ -79,7 +77,9 @@ const ContactsPage: React.FC<ContactsPageProps> = ({ user, onDataChange, data })
             </div>
 
             {isLoading ? (
-                <div className="text-center py-10">Carregando contatos...</div>
+                <div className="text-center py-10 flex items-center justify-center gap-2 text-textSecondary">
+                    <Loader2 className="h-5 w-5 animate-spin"/> Carregando contatos...
+                </div>
             ) : (
                 <div className="space-y-4">
                     {filteredContacts.map(contact => (

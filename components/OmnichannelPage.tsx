@@ -9,11 +9,9 @@ import { MessageCircle, User as UserIcon } from 'lucide-react';
 
 interface OmnichannelPageProps {
     user: User;
-    allContacts: Contact[];
-    allOrders: Order[];
 }
 
-const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, allOrders }) => {
+const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
     const {
         isLoading,
         isSending,
@@ -27,7 +25,7 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user, allContacts, al
         setAssigneeFilter,
         setSelectedConversation,
         sendMessage,
-    } = useOmnichannel(user, allContacts, allOrders);
+    } = useOmnichannel(user);
 
     if (isLoading) {
         return (
