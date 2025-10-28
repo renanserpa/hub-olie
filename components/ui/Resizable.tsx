@@ -1,54 +1,91 @@
-import React, { Children, cloneElement, useCallback, useEffect, useMemo, useRef, useState, isValidElement } from "react";
+import React, {
+  createContext,
+  useContext,
+  Children,
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { cn } from '../../lib/utils';
 
 type Direction = "horizontal" | "vertical";
 
-// Helper to normalize sizes to add up to 100
-const normalizeSizes = (sizes: number[]): number[] => {
-    const total = sizes.reduce((a, b) => a + b, 0);
-    if (total === 0 || Math.abs(total - 100) < 0.001) {
-        return sizes;
-    }
-    return sizes.map(s => (s / total) * 100);
+// 1. Context Definition
+interface ResizableContextType {
+  direction: Direction;
+  sizes: number[];
+  startResize: (index: number, event: React.MouseEvent<HTMLDivElement>) => void;
+}
+
+const ResizableContext = createContext<ResizableContextType | null>(null);
+
+const useResizable = () => {
+  const context = useContext(ResizableContext);
+  if (!context) {
+    throw new Error("Resizable components must be used within a Resizable provider.");
+  }
+  return context;
 };
 
 // --- Child Components ---
 
-// FIX: Define prop types for ResizablePanel to help TypeScript with cloneElement.
 interface ResizablePanelProps {
-    children: React.ReactNode;
-    className?: string;
-    style?: React.CSSProperties;
+  children: React.ReactNode;
+  className?: string;
+  index?: number; // Injected by Resizable parent
 }
 
-export function ResizablePanel({ children, className, style }: ResizablePanelProps) {
-    // This component is a wrapper. The parent Resizable injects style and className.
-    return <div className={className} style={style}>{children}</div>;
-}
+export function ResizablePanel({ children, className, index }: ResizablePanelProps) {
+  const { sizes } = useResizable();
+  // Ensure index is valid before accessing sizes array
+  const size = (index !== undefined && sizes[index]) ? sizes[index] : 0;
 
-// FIX: Define prop types for ResizableHandle to help TypeScript with cloneElement.
+  return (
+    <div
+      className={cn("overflow-hidden flex flex-col min-w-0 min-h-0", className)}
+      style={{ flexBasis: `${size}%` }}
+    >
+      {children}
+    </div>
+  );
+}
+// FIX: Add displayName for robust component type checking, especially with HMR.
+ResizablePanel.displayName = "ResizablePanel";
+
 interface ResizableHandleProps {
-    className?: string;
-    onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
-    direction?: Direction;
+  className?: string;
+  index?: number; // Injected by Resizable parent
 }
 
-export function ResizableHandle({ className, onMouseDown, direction }: ResizableHandleProps) {
-    // This component is the drag handle. The parent Resizable injects onMouseDown.
-    return (
-        <div
-            role="separator"
-            onMouseDown={onMouseDown}
-            className={cn(
-                'flex-shrink-0 bg-border transition-colors hover:bg-primary',
-                direction === 'horizontal' ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize',
-                className
-            )}
-        />
-    );
-}
+export function ResizableHandle({ className, index }: ResizableHandleProps) {
+  const { direction, startResize } = useResizable();
 
-// --- Main Container ---
+  const onMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (index !== undefined) {
+      startResize(index, event);
+    }
+  };
+
+  return (
+    <div
+      role="separator"
+      onMouseDown={onMouseDown}
+      className={cn(
+        'flex-shrink-0 bg-border transition-colors hover:bg-primary',
+        direction === 'horizontal' ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize',
+        className
+      )}
+    />
+  );
+}
+// FIX: Add displayName for robust component type checking.
+ResizableHandle.displayName = "ResizableHandle";
+
+// --- Main Container and Provider ---
 
 export function Resizable({
   direction = "horizontal",
@@ -69,104 +106,115 @@ export function Resizable({
   const startSizes = useRef<number[]>([]);
   const startPosition = useRef(0);
 
-  const panelCount = Children.toArray(children).filter(child => isValidElement(child) && child.type === ResizablePanel).length;
+  // FIX: Use displayName for robust component counting.
+  const panelCount = Children.toArray(children).filter(
+    (child) => isValidElement(child) && (child.type as any).displayName === "ResizablePanel"
+  ).length;
+
+  const normalizeSizes = useCallback((sizesToNormalize: number[]): number[] => {
+    const total = sizesToNormalize.reduce((a, b) => a + b, 0);
+    if (total === 0 || Math.abs(total - 100) < 0.001) return sizesToNormalize;
+    return sizesToNormalize.map((s) => (s / total) * 100);
+  }, []);
 
   const [sizes, setSizes] = useState(() => normalizeSizes(initialSizes));
   const safeMinSizes = useMemo(() => Array.from({ length: panelCount }, (_, i) => minSizes[i] ?? 0), [minSizes, panelCount]);
 
   const startResize = useCallback((index: number, event: React.MouseEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      isResizing.current = true;
-      activeHandleIndex.current = index;
-      startSizes.current = [...sizes];
-      startPosition.current = direction === 'horizontal' ? event.clientX : event.clientY;
-      document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
-      document.body.style.userSelect = 'none';
+    event.preventDefault();
+    event.stopPropagation();
+    isResizing.current = true;
+    activeHandleIndex.current = index;
+    startSizes.current = [...sizes];
+    startPosition.current = direction === 'horizontal' ? event.clientX : event.clientY;
+    document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
+    document.body.style.userSelect = 'none';
   }, [direction, sizes]);
-  
+
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-        if (!isResizing.current || activeHandleIndex.current === null) return;
-        
-        const container = containerRef.current;
-        if (!container) return;
+      if (!isResizing.current || activeHandleIndex.current === null) return;
 
-        const currentIndex = activeHandleIndex.current;
-        const nextIndex = currentIndex + 1;
-        
-        const delta = (direction === 'horizontal' ? event.clientX : event.clientY) - startPosition.current;
-        const totalSize = direction === 'horizontal' ? container.offsetWidth : container.offsetHeight;
-        if (totalSize === 0) return;
-        const deltaPercent = (delta / totalSize) * 100;
-        
-        let newSizeA = startSizes.current[currentIndex] + deltaPercent;
-        let newSizeB = startSizes.current[nextIndex] - deltaPercent;
+      const container = containerRef.current;
+      if (!container) return;
 
-        if (newSizeA < safeMinSizes[currentIndex]) {
-            const diff = safeMinSizes[currentIndex] - newSizeA;
-            newSizeA = safeMinSizes[currentIndex];
-            newSizeB -= diff;
-        }
-        if (newSizeB < safeMinSizes[nextIndex]) {
-            const diff = safeMinSizes[nextIndex] - newSizeB;
-            newSizeB = safeMinSizes[nextIndex];
-            newSizeA -= diff;
-        }
+      const currentIndex = activeHandleIndex.current;
+      const nextIndex = currentIndex + 1;
 
-        const newSizes = [...startSizes.current];
-        newSizes[currentIndex] = newSizeA;
-        newSizes[nextIndex] = newSizeB;
+      const delta = (direction === 'horizontal' ? event.clientX : event.clientY) - startPosition.current;
+      const totalSize = direction === 'horizontal' ? container.offsetWidth : container.offsetHeight;
+      if (totalSize === 0) return;
+      const deltaPercent = (delta / totalSize) * 100;
 
-        setSizes(normalizeSizes(newSizes));
+      let newSizeA = startSizes.current[currentIndex] + deltaPercent;
+      let newSizeB = startSizes.current[nextIndex] - deltaPercent;
+
+      if (newSizeA < safeMinSizes[currentIndex]) {
+        const diff = safeMinSizes[currentIndex] - newSizeA;
+        newSizeA = safeMinSizes[currentIndex];
+        newSizeB -= diff;
+      }
+      if (newSizeB < safeMinSizes[nextIndex]) {
+        const diff = safeMinSizes[nextIndex] - newSizeB;
+        newSizeB = safeMinSizes[nextIndex];
+        newSizeA -= diff;
+      }
+
+      const newSizes = [...startSizes.current];
+      newSizes[currentIndex] = newSizeA;
+      newSizes[nextIndex] = newSizeB;
+
+      setSizes(normalizeSizes(newSizes));
     };
 
     const handleMouseUp = () => {
-        if (!isResizing.current) return;
-        isResizing.current = false;
-        activeHandleIndex.current = null;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+      if (!isResizing.current) return;
+      isResizing.current = false;
+      activeHandleIndex.current = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
     };
-    
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [direction, safeMinSizes]);
+  }, [direction, safeMinSizes, normalizeSizes]);
+
+  const contextValue = useMemo(() => ({
+    direction,
+    sizes,
+    startResize,
+  }), [direction, sizes, startResize]);
 
   let panelIndex = 0;
-  
+
   return (
+    <ResizableContext.Provider value={contextValue}>
       <div ref={containerRef} className={cn('flex w-full h-full', direction === 'vertical' && 'flex-col', className)}>
-          {Children.map(children, (child) => {
-              if (!isValidElement(child)) return null;
+        {/* FIX: Use displayName for robust component type checking inside Children.map, which resolves issues with cloneElement and HMR. */}
+        {Children.map(children, (child) => {
+          if (!isValidElement(child)) return child;
 
-              if (child.type === ResizablePanel) {
-                  const index = panelIndex++;
-                  // FIX: Cast `child.props` to `ResizablePanelProps` to safely access `className`,
-                  // as TypeScript doesn't infer it from the `child.type` check.
-                  return cloneElement(child as React.ReactElement<ResizablePanelProps>, {
-                      style: { flexBasis: `${sizes[index]}%` },
-                      className: cn((child.props as ResizablePanelProps).className, "overflow-hidden flex flex-col min-w-0 min-h-0"),
-                  });
-              }
+          const childType = child.type as any;
 
-              if (child.type === ResizableHandle) {
-                  const index = panelIndex - 1; // The handle is associated with the panel before it
-                  // FIX: Cast the child to a specifically typed ReactElement to fix type errors.
-                  // This allows passing the 'onMouseDown' prop.
-                  return cloneElement(child as React.ReactElement<ResizableHandleProps>, {
-                      onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => startResize(index, e),
-                      direction,
-                  });
-              }
+          if (childType.displayName === 'ResizablePanel') {
+            return cloneElement(child as React.ReactElement<ResizablePanelProps>, { index: panelIndex++ });
+          }
 
-              // Render other children as is, though they won't be part of the resizing logic
-              return child;
-          })}
+          if (childType.displayName === 'ResizableHandle') {
+            // The handle resizes the panel before it and the panel after it.
+            // Its index corresponds to the panel before it.
+            const handleIndex = panelIndex - 1;
+            return cloneElement(child as React.ReactElement<ResizableHandleProps>, { index: handleIndex });
+          }
+
+          return child;
+        })}
       </div>
+    </ResizableContext.Provider>
   );
 }
