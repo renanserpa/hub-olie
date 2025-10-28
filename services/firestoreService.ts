@@ -1,20 +1,34 @@
-// services/supabaseService.ts
+// services/firestoreService.ts
 import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
     AppData,
     BasicMaterial,
+    BiasColor,
+    BondType,
+    ColorPalette,
     Contact,
+    DeliveryMethod,
+    EmbroideryColor,
+    FabricColor,
+    FabricTexture,
+    FreightParams,
     InventoryBalance,
     InventoryMovement,
+    LiningColor,
+    MonogramFont,
     Order, OrderStatus,
+    PackagingType,
     Product,
     ProductCategory,
     ProductionOrder,
+    PullerColor,
     SettingsCategory,
+    SupplyGroup,
     SystemSetting,
     Task,
     TaskStatus,
+    ZipperColor,
 } from "../types";
 
 
@@ -81,9 +95,10 @@ export const supabaseService = {
             metodos_entrega, calculo_frete, tipos_embalagem, tipos_vinculo,
             sistema
         ] = await Promise.all([
-            getCollection('paletas_cores'), getCollection('cores_tecido'), getCollection('cores_ziper'), getCollection('cores_forro'), getCollection('cores_puxador'), getCollection('cores_vies'), getCollection('cores_bordado'), getCollection('texturas_tecido'), getCollection('fontes_monograma'),
-            getCollection('grupos_suprimento'), getCollection('materiais_basicos'),
-            getCollection('metodos_entrega'), getCollection('calculo_frete'), getCollection('tipos_embalagem'), getCollection('tipos_vinculo'),
+// FIX: Added explicit generic types to `getCollection` calls to resolve type errors.
+            getCollection<ColorPalette>('paletas_cores'), getCollection<FabricColor>('cores_tecido'), getCollection<ZipperColor>('cores_ziper'), getCollection<LiningColor>('cores_forro'), getCollection<PullerColor>('cores_puxador'), getCollection<BiasColor>('cores_vies'), getCollection<EmbroideryColor>('cores_bordado'), getCollection<FabricTexture>('texturas_tecido'), getCollection<MonogramFont>('fontes_monograma'),
+            getCollection<SupplyGroup>('grupos_suprimento'), getCollection<BasicMaterial>('materiais_basicos'),
+            getCollection<DeliveryMethod>('metodos_entrega'), getCollection<FreightParams>('calculo_frete'), getCollection<PackagingType>('tipos_embalagem'), getCollection<BondType>('tipos_vinculo'),
             getCollection<SystemSetting>('sistema')
         ]);
         
@@ -131,7 +146,8 @@ export const supabaseService = {
 
   getOrders: (): Promise<Order[]> => getCollection<Order>('orders', '*, contacts(*)'),
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
-      return updateDocument('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
+// FIX: Explicitly provided the generic type argument to `updateDocument` to ensure correct type inference for the return value.
+      return updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
   },
   addOrder: async (orderData: Partial<Order>) => {
       const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
@@ -160,7 +176,8 @@ export const supabaseService = {
     return data || [];
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
-      return addDocument('inventory_movements', movementData);
+// FIX: Added `created_at` field to the movement data to match the expected type for `addDocument`.
+      return addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
   },
   
   getProducts: (): Promise<Product[]> => getCollection('products', '*, product_categories(*)'),

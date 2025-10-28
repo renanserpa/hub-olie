@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 import { Order, User, OrderStatus, AppData, Contact, Product } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart } from 'lucide-react';

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabaseService } from '../services/supabaseService';
+import { supabaseService } from '../services/firestoreService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
 
