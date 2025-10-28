@@ -17,7 +17,7 @@ const LoginPage: React.FC = () => {
       await login(email, password);
       // The App.tsx component will handle the redirection automatically
     } catch (err) {
-      setError('Credenciais inválidas. Verifique seu e-mail e senha.');
+      setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }

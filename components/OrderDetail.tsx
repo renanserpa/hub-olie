@@ -5,7 +5,7 @@ import { Button } from './ui/Button';
 import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type } from 'lucide-react';
 import { useTinyApi } from '../hooks/useTinyApi';
 import { toast } from '../hooks/use-toast';
-import { supabaseService } from '../services/firestoreService';
+import { supabaseService } from '../services/supabaseService';
 
 interface OrderDetailProps {
   order: Order;

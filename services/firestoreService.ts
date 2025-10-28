@@ -1,4 +1,3 @@
-// DEPRECATED FILENAME - TODO: Rename to supabaseService.ts
 // services/supabaseService.ts
 import { supabase } from '../lib/supabaseClient';
 import {

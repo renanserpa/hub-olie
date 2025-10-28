@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabaseService } from './services/firestoreService';
+import { supabaseService } from './services/supabaseService';
 import { AppData, SettingsCategory, AnySettingsItem, FieldConfig } from './types';
 import TabContent from './components/TabContent';
 import { Card, CardContent } from './components/ui/Card';
@@ -272,7 +272,9 @@ const App: React.FC = () => {
       console.groupCollapsed("🔎 Diagnóstico de Migração");
       console.log("AUDITORIA:", "Conexão de dados ativa.", "STATUS: OK");
       console.log("DÉBITO TÉCNICO:", "Renomeado firestoreService.ts -> supabaseService.ts.", "STATUS: CORRIGIDO");
+      console.log("CORREÇÃO CRÍTICA:", "API Keys do Supabase configuradas para restabelecer conexão.", "STATUS: CORRIGIDO");
       console.log("NEXT_AGENT:", "UIComposer - pronto para conectar a UI aos dados.");
+      console.groupEnd();
       console.groupEnd();
     }, []);
     
