@@ -66,10 +66,8 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
 );
 
 
-const CorsErrorDisplay: React.FC<{ message: string }> = ({ message }) => {
-    // Extract the origin from the error message for user convenience
-    const originMatch = message.match(/\((https?:\/\/[^)]+)\)/);
-    const origin = originMatch ? originMatch[1] : 'O domínio desta aplicação';
+const CorsErrorDisplay: React.FC = () => {
+    const origin = window.location.origin;
 
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background text-center p-4">
@@ -98,11 +96,9 @@ const App: React.FC = () => {
 
     // Effect for logging connection validation status
     useEffect(() => {
-        // This log is now conditional on the authError
         if (!authError) {
-            console.log('✅ Supabase fetch test OK (validação realizada por supabaseClient.ts na inicialização)');
-            console.log('✅ AuthContext ativo');
-            console.log('✅ CORS e chaves validadas');
+            console.log('🔌 Supabase reconectado: OK');
+            console.log('✅ Sessão persistente');
         }
     }, [authError]);
 
@@ -166,8 +162,8 @@ const App: React.FC = () => {
     };
     
     // Handle catastrophic connection error first
-    if (authError && authError.includes('Supabase fetch failed catastrophically')) {
-        return <CorsErrorDisplay message={authError} />;
+    if (authError && authError.includes('Failed to fetch')) {
+        return <CorsErrorDisplay />;
     }
 
     if (isAuthLoading || (user && isDataLoading)) {
