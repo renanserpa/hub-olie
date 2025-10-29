@@ -1,6 +1,7 @@
 
 
 
+
 import React, {
   createContext,
   useContext,
@@ -37,7 +38,6 @@ const useResizable = () => {
 // --- Child Components ---
 
 interface ResizablePanelProps {
-  // FIX: Made children optional to resolve incorrect TypeScript error in OmnichannelPage.
   children?: React.ReactNode;
   className?: string;
   index?: number; // Injected by Resizable parent
@@ -97,7 +97,6 @@ export function Resizable({
   className,
 }: {
   direction?: Direction;
-  // FIX: Made children optional to resolve incorrect TypeScript error in OmnichannelPage.
   children?: React.ReactNode;
   initialSizes: number[];
   minSizes?: number[];

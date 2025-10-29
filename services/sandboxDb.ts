@@ -1,18 +1,22 @@
+
+
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
-    FabricColor, ZipperColor, BiasColor, MonogramFont
+    FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
 const eventBus = new EventTarget();
 const emit = (path: string) => {
-    console.log(`📦 SANDBOX: Emitting update for path -> ${path}`);
+    console.log(`🧱 SANDBOX: Emitting update for path -> ${path}`);
     eventBus.dispatchEvent(new CustomEvent(path));
 };
 const subscribe = (path: string, handler: (items: any[]) => void) => {
-    const callback = () => handler(collections[path] || []);
+    const callback = () => handler(getCollection(path));
     eventBus.addEventListener(path, callback);
+    // Initial call to populate data
+    callback();
     return { unsubscribe: () => eventBus.removeEventListener(path, callback) };
 };
 
@@ -20,16 +24,15 @@ const subscribe = (path: string, handler: (items: any[]) => void) => {
 const generateId = () => crypto.randomUUID();
 
 const contacts: Contact[] = [
-    // FIX: Added missing 'phones' property to match the Contact type.
     { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {} },
     { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {} },
     { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {} },
 ];
 
 const products: Product[] = [
-    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
 ];
 
 const order_items: OrderItem[] = [
@@ -39,13 +42,12 @@ const order_items: OrderItem[] = [
 ];
 
 const orders: Order[] = [
-    // FIX: Renamed 'updatedAt' to 'updated_at' to match the Order type.
     { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', customers: contacts[0], status: 'in_production', items: [order_items[0]], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
     { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', customers: contacts[2], status: 'paid', items: [order_items[1], order_items[2]], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', customers: contacts[1], status: 'pending_payment', items: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
 ];
 
 const production_orders: ProductionOrder[] = [
-    // FIX: Renamed 'updatedAt' to 'updated_at' to match the ProductionOrder type.
     { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
     { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product: products[1], quantity: 10, status: 'planejado', priority: 'normal', due_date: new Date(Date.now() + 10 * 86400000).toISOString(), steps_completed: 0, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
@@ -70,36 +72,73 @@ const config_basic_materials: BasicMaterial[] = [
     { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50 },
     { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20 },
 ];
+const task_statuses: TaskStatus[] = [
+    {id: 'ts1', name: 'Corte', color: '#FFF2E5', position: 1},
+    {id: 'ts2', name: 'Costura', color: '#E6F7FF', position: 2},
+    {id: 'ts3', name: 'Acabamento', color: '#F6FFED', position: 3},
+];
+const tasks: Task[] = [
+    {id: 't1', title: 'OP-2024-001 - Bolsa Tote', status_id: 'ts1', client_name: 'Ana Silva', quantity: 5, position: 1},
+    {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1},
+];
+const inventory_balances: InventoryBalance[] = config_basic_materials.map((m, i) => ({ material_id: m.id, material: m, quantity_on_hand: 50 + i*10, quantity_reserved: 10, low_stock_threshold: 15, last_updated_at: new Date().toISOString() }));
+const inventory_movements: InventoryMovement[] = [
+    { id: 'im1', material_id: 'bm1', type: 'in', quantity: 100, reason: 'compra', created_at: new Date().toISOString() },
+    { id: 'im2', material_id: 'bm1', type: 'out', quantity: -20, reason: 'consumo_producao', created_at: new Date().toISOString() }
+];
+
+const system_settings: SystemSetting[] = [
+    { id: 'ss1', name: 'Parâmetros de Frete', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
+];
+const product_categories: ProductCategory[] = [
+    { id: 'pc1', name: 'Bolsas', description: 'Bolsas de diversos tamanhos e modelos.' },
+    { id: 'pc2', name: 'Nécessaires', description: 'Nécessaires para organização e viagem.' },
+];
+const conversations: Conversation[] = [
+    { id: 'convo1', channel: 'whatsapp', customerId: 'c1', customerHandle: '+55 11 98765-4321', customerName: 'Ana Silva', title: 'Preciso de ajuda com a cor do zíper!', status: 'open', priority: 'high', unreadCount: 2, lastMessageAt: new Date(Date.now() - 3600000).toISOString(), tags: ['dúvida', 'personalização'], createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
+    { id: 'convo2', channel: 'instagram', customerId: 'c2', customerHandle: '@brunocosta', customerName: 'Bruno Costa', title: 'Meu pedido ainda não chegou', status: 'pending', priority: 'normal', unreadCount: 0, lastMessageAt: new Date(Date.now() - 86400000).toISOString(), tags: ['entrega'], assigneeId: 'sandbox-user-01', createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+];
+const messages: Message[] = [
+    { id: 'msg1', conversationId: 'convo1', direction: 'in', type: 'text', content: 'Olá! Estou em dúvida sobre qual cor de zíper combina mais com o tecido Bege Claro. Dourado ou prateado?', status: 'read', createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
+    { id: 'msg2', conversationId: 'convo1', direction: 'out', type: 'text', content: 'Olá, Ana! Tudo bem? Ambas as opções ficam lindas! O dourado dá um toque mais clássico e sofisticado, enquanto o prateado é mais moderno. Qual o seu estilo?', authorName: 'Ateliê', status: 'delivered', createdAt: new Date(Date.now() - 1.5 * 3600000).toISOString() },
+    { id: 'msg3', conversationId: 'convo2', direction: 'in', type: 'text', content: 'Oi, fiz o pedido OLIE-2024-1003 e queria saber se já foi enviado.', status: 'read', createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+];
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
     customers: contacts,
     products,
+    product_categories,
     orders,
     order_items,
     production_orders,
+    tasks,
+    task_statuses,
+    inventory_balances,
+    inventory_movements,
     fabric_colors,
     zipper_colors,
     bias_colors,
     config_fonts,
     config_basic_materials,
+    system_settings,
+    conversations,
+    messages,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
 
 // --- GENERIC CRUD ---
-// FIX: Renamed 'list' to 'getCollection' to match the expected service interface.
-const getCollection = <T>(path: string): Promise<T[]> => Promise.resolve(collections[path] as T[] || []);
-const get = <T>(path: string, id: string): Promise<T | null> => Promise.resolve(collections[path]?.find(item => item.id === id) as T || null);
-// FIX: Renamed 'updatedAt' to 'updated_at' to match type definitions and resolve cast error.
-const create = <T extends {id?: string}>(path: string, data: Omit<T, 'id'>): Promise<T> => {
-    const newItem = { ...data, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as T;
+const getCollection = <T>(path: string): T[] => collections[path] as T[] || [];
+const get = <T>(path: string, id: string): T | null => collections[path]?.find(item => item.id === id) as T || null;
+const create = <T extends {id?: string}>(path: string, data: Omit<T, 'id'>): T => {
+    // FIX: Changed type assertion to 'as unknown as T' to satisfy stricter type checking.
+    const newItem = { ...data, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as unknown as T;
     collections[path] = [...(collections[path] || []), newItem];
     emit(path);
-    return Promise.resolve(newItem);
+    return newItem;
 };
-// FIX: Renamed 'updatedAt' to 'updated_at' to match type definitions.
-const update = <T extends {id: string}>(path: string, id: string, data: Partial<T>): Promise<T> => {
+const update = <T extends {id: string}>(path: string, id: string, data: Partial<T>): T => {
     let updatedItem: T | null = null;
     collections[path] = collections[path]?.map(item => {
         if (item.id === id) {
@@ -109,37 +148,46 @@ const update = <T extends {id: string}>(path: string, id: string, data: Partial<
         return item;
     });
     emit(path);
-    return Promise.resolve(updatedItem as T);
+    if (!updatedItem) throw new Error(`Item with id ${id} not found in ${path}`);
+    return updatedItem;
 };
+const remove = (path: string, id: string): void => {
+    collections[path] = collections[path]?.filter(item => item.id !== id);
+    emit(path);
+};
+
 
 // --- SERVICE FACADE ---
 // Mirrors the specific functions from supabaseService for compatibility
 export const sandboxService = {
-    // FIX: Correctly exposing the getCollection function.
-    getCollection,
+    getCollection: <T>(table: string) => Promise.resolve(getCollection<T>(table)),
+    getDocument: <T>(table: string, id: string) => Promise.resolve(get<T>(table, id)),
+    addDocument: <T extends {id?: string}>(table: string, data: Omit<T, 'id'>) => Promise.resolve(create<T>(table, data)),
+    updateDocument: <T extends {id: string}>(table: string, id: string, data: Partial<T>) => Promise.resolve(update<T>(table, id, data)),
+    deleteDocument: (table: string, id: string) => { remove(table, id); return Promise.resolve(); },
+
     listenToCollection: <T>(table: string, callback: (payload: T[]) => void) => subscribe(table, callback as (items: any[]) => void),
     listenToDocument: <T>(table: string, id: string, callback: (payload: T) => void) => {
-        const handler = () => { get(table, id).then(doc => doc && callback(doc as T)); };
+        const handler = () => { get(table, id) && callback(get(table, id) as T); };
         eventBus.addEventListener(table, handler);
+        handler(); // Initial call
         return { unsubscribe: () => eventBus.removeEventListener(table, handler) };
     },
-    getSettings: async (): Promise<AppData> => ({
+    getSettings: async (): Promise<AppData> => Promise.resolve({
         catalogs: { paletas_cores: [], cores_texturas: { tecido: fabric_colors, ziper: zipper_colors, vies: bias_colors, forro: [], puxador: [], bordado: [], texturas: [] }, fontes_monogramas: config_fonts },
         materials: { grupos_suprimento: [], materiais_basicos: config_basic_materials },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-        sistema: [], midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+        sistema: system_settings, midia: {}, orders, contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements
     }),
     getOrders: () => Promise.resolve(orders),
-    getOrder: (id: string) => get<Order>('orders', id),
-    addOrder: (orderData: Partial<Order>) => create<Order>('orders', orderData as any),
+    getOrder: (id: string) => Promise.resolve(get<Order>('orders', id)),
+    addOrder: (orderData: Partial<Order>) => Promise.resolve(create<Order>('orders', orderData as any)),
     getProductionOrders: () => Promise.resolve(production_orders),
-    getTasks: () => Promise.resolve([] as Task[]),
-    getTaskStatuses: () => Promise.resolve([] as TaskStatus[]),
-    getInventoryBalances: () => Promise.resolve(config_basic_materials.map(m => ({ material_id: m.id, material: m, quantity_on_hand: 50, quantity_reserved: 10, low_stock_threshold: 15, last_updated_at: new Date().toISOString() })) as InventoryBalance[]),
-    getInventoryMovements: (materialId: string) => Promise.resolve([] as InventoryMovement[]),
+    getTasks: () => Promise.resolve(tasks),
+    getTaskStatuses: () => Promise.resolve(task_statuses),
+    getInventoryBalances: () => Promise.resolve(inventory_balances),
+    getInventoryMovements: (materialId: string) => Promise.resolve(inventory_movements.filter(m => m.material_id === materialId)),
     getProducts: () => Promise.resolve(products),
-    getProductCategories: () => Promise.resolve([] as ProductCategory[]),
+    getProductCategories: () => Promise.resolve(product_categories),
     getContacts: () => Promise.resolve(contacts),
-    updateDocument: update,
-    addDocument: create,
 };

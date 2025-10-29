@@ -8,35 +8,37 @@ const SUPABASE_ANON_KEY =
 let supabaseInstance: any;
 
 if (!isSandbox()) {
-    console.log("🚀 SUPABASE mode active. Initializing Supabase client.");
+    console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");
     supabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { persistSession: true },
     });
 } else {
-    console.log("🧱 SANDBOX mode active. Supabase client is not initialized.");
-    // Create a mock client to prevent errors if it's ever called accidentally
-    const handler = {
-        get: (target: any, prop: string) => {
-            if (prop === 'from' || prop === 'channel' || prop === 'auth') {
-                return () => ({
-                    select: () => Promise.resolve({ data: [], error: null }),
-                    insert: () => Promise.resolve({ data: [], error: null }),
-                    update: () => Promise.resolve({ data: [], error: null }),
-                    delete: () => Promise.resolve({ data: [], error: null }),
-                    on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }),
-                    signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error("Cannot sign in in Sandbox mode.") }),
-                    signOut: () => Promise.resolve({ error: null }),
-                    getSession: () => Promise.resolve({ data: { session: null }, error: new Error("No session in Sandbox mode.") }),
-                    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-                });
-            }
-            return () => {
-                console.warn(`Supabase client method '${prop}' called in SANDBOX mode. This should not happen.`);
-                return null;
-            };
-        },
+    console.log("🧱 SANDBOX mode active. Supabase client is neutralized.");
+    // Create a mock client to prevent errors if it's ever called accidentally (e.g., in authService)
+    const mockSupabase = {
+      from: () => mockSupabase,
+      select: () => Promise.resolve({ data: [], error: null }),
+      insert: () => Promise.resolve({ data: [], error: null }),
+      update: () => Promise.resolve({ data: [], error: null }),
+      delete: () => Promise.resolve({ data: [], error: null }),
+      eq: () => mockSupabase,
+      in: () => mockSupabase,
+      single: () => Promise.resolve({ data: null, error: null }),
+      order: () => mockSupabase,
+      channel: () => ({
+        on: () => ({
+          subscribe: () => ({ unsubscribe: () => {} }),
+        }),
+      }),
+      removeChannel: () => {},
+      auth: {
+        signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error("Cannot sign in in Sandbox mode.") }),
+        signOut: () => Promise.resolve({ error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: new Error("No session in Sandbox mode.") }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      }
     };
-    supabaseInstance = new Proxy({}, handler);
+    supabaseInstance = mockSupabase;
 }
 
 export const supabase = supabaseInstance;

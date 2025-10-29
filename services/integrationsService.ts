@@ -5,6 +5,7 @@ import { isSandbox } from '../lib/runtime';
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+const generateId = () => Math.random().toString(36).substring(2, 10);
 
 const callGeminiWithSchema = async <T>(prompt: string, schema: any): Promise<T> => {
   try {
@@ -117,5 +118,3 @@ export const integrationsService = {
     return { logistics };
   }
 };
-
-const generateId = () => Math.random().toString(36).substring(2, 10);

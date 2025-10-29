@@ -5,7 +5,6 @@ import {
     BasicMaterial,
     BiasColor,
     Contact,
-    // FIX: Imported missing FabricColor type
     FabricColor,
     InventoryBalance,
     InventoryMovement,
@@ -15,19 +14,39 @@ import {
     ProductCategory,
     ProductionOrder,
     SettingsCategory,
+    SystemSetting,
     Task,
     TaskStatus,
     ZipperColor,
 } from "../types";
 
-// NOTE: This service is only active when RUNTIME is 'SUPABASE'
+// NOTE: This service is only active when RUNTIME is 'SUPABASE'.
+// Reativar quando voltarmos ao SUPABASE.
 
 const handleError = (error: any, context: string) => {
     console.error(`Error in ${context}:`, error);
-    // In a real app, you might want to throw a custom error
-    // or log to an external service.
     throw new Error(`Supabase operation failed in ${context}.`);
 };
+
+const settingsTableMap: Record<string, string> = {
+    'catalogs-cores_texturas-tecido': 'fabric_colors',
+    'catalogs-cores_texturas-ziper': 'zipper_colors',
+    'catalogs-cores_texturas-vies': 'bias_colors',
+    'catalogs-fontes_monogramas': 'config_fonts',
+    'materials-materiais_basicos': 'config_basic_materials',
+};
+
+const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    let key = category;
+    if (subTab) key += `-${subTab}`;
+    if (subSubTab) key += `-${subSubTab}`;
+    const tableName = settingsTableMap[key];
+    if (!tableName) {
+      throw new Error(`No table mapping found for key: ${key}`);
+    }
+    return tableName;
+};
+
 
 // --- Generic Helpers ---
 const getCollection = async <T>(table: string, join?: string): Promise<T[]> => {
@@ -51,17 +70,23 @@ const addDocument = async <T extends { id?: string }>(table: string, docData: Om
     return data as T;
 };
 
-// FIX: Added generic constraint to improve type safety for update operations.
 const updateDocument = async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
     const { data, error } = await supabase.from(table).update(docData).eq('id', id).select().single();
     if (error) handleError(error, `updateDocument(${table}, ${id})`);
     return data as T;
 };
 
+const deleteDocument = async (table: string, id: string): Promise<void> => {
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) handleError(error, `deleteDocument(${table}, ${id})`);
+};
+
 export const supabaseService = {
   getCollection,
+  getDocument,
   updateDocument,
   addDocument,
+  deleteDocument,
 
   listenToCollection: <T>(table: string, join: string | undefined, callback: (payload: T[]) => void) => {
       const channel = supabase.channel(`public:${table}`);
@@ -127,6 +152,13 @@ export const supabaseService = {
         };
     }
   },
+  
+  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getTableNameForSetting(category, subTab, subSubTab), id, data),
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getTableNameForSetting(category, subTab, subSubTab), id),
+  // FIX: Added explicit generic type <SystemSetting> to updateDocument call to ensure type safety.
+  updateSystemSettings: async (settings: SystemSetting[]) => Promise.all(settings.map(s => updateDocument<SystemSetting>('system_settings', s.id, { value: s.value }))),
+
 
   getOrders: async (): Promise<Order[]> => {
     const { data: ordersData, error: ordersError } = await supabase.from('orders').select('*, customers(*)');
@@ -158,6 +190,9 @@ export const supabaseService = {
 
     return { ...data, items: itemsData || [] } as Order;
   },
+  
+  updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() }),
+  updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() }),
 
   addOrder: async (orderData: Partial<Order>) => {
       const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
@@ -183,14 +218,21 @@ export const supabaseService = {
   getProductionOrders: (): Promise<ProductionOrder[]> => getCollection('production_orders', '*, products(*)'),
   getTasks: (): Promise<Task[]> => getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => getCollection('task_statuses'),
+  updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
+
   getInventoryBalances: (): Promise<InventoryBalance[]> => getCollection('inventory_balances', '*, material:config_basic_materials(*)'),
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
     const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
     if (error) handleError(error, 'getInventoryMovements');
     return data || [];
   },
+  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }),
   
   getProducts: (): Promise<Product[]> => getCollection('products'),
   getProductCategories: (): Promise<ProductCategory[]> => getCollection('product_categories'),
+  addProduct: (productData: AnyProduct) => addDocument('products', productData),
+  // FIX: Added explicit generic type <Product> to updateDocument call to ensure type safety.
+  updateProduct: (productId: string, productData: Product | AnyProduct) => updateDocument<Product>('products', productId, productData),
+
   getContacts: (): Promise<Contact[]> => getCollection('customers'),
 };

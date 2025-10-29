@@ -50,8 +50,8 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         }
         setIsSaving(true);
         try {
-            // This is a mock operation in sandbox mode.
-            await Promise.all(settings.map(s => dataService.updateDocument('system_settings', s.id, { value: s.value })));
+            // FIX: Added explicit generic type <SystemSetting> to updateDocument call to ensure type safety.
+            await Promise.all(settings.map(s => dataService.updateDocument<SystemSetting>('system_settings', s.id, { value: s.value })));
             toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas (simulado).' });
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar as configurações.', variant: 'destructive' });

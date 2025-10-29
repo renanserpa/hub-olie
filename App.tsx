@@ -84,15 +84,10 @@ const App: React.FC = () => {
           setIsDataLoading(false);
           return;
         }
+        // Data is now loaded per-page via hooks, so this global load can be removed or simplified.
+        // For now, it acts as a simple loading gate.
         setIsDataLoading(true);
-        dataService.getSettings()
-            .catch((e) => {
-                const errorMessage = 'Falha ao carregar as configurações da aplicação.';
-                setError(errorMessage);
-                toast({ title: "Erro de Carregamento", description: errorMessage, variant: 'destructive' });
-                console.error(e);
-            })
-            .finally(() => setIsDataLoading(false));
+        setTimeout(() => setIsDataLoading(false), 200); // Simulate quick load
     }, [user]);
 
     const renderActivePage = () => {
@@ -146,7 +141,7 @@ const App: React.FC = () => {
         <div className="min-h-screen font-sans bg-background">
             {isSandbox() && (
                 <div className="w-full text-center text-xs py-1 bg-amber-100 text-amber-800 border-b border-amber-200 sticky top-0 z-50">
-                    SANDBOX MODE (OFFLINE) — Nenhuma chamada de rede está sendo feita.
+                    SANDBOX MODE (offline) — sem chamadas de rede
                 </div>
             )}
             <Toaster />

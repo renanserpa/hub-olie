@@ -27,6 +27,10 @@ export function useContacts() {
 
     useEffect(() => {
         loadContacts();
+        const listener = dataService.listenToCollection<Contact>('customers', undefined, (newContacts) => {
+            setAllContacts(newContacts);
+        });
+        return () => listener.unsubscribe();
     }, [loadContacts]);
 
     const filteredContacts = useMemo(() => {
@@ -59,13 +63,15 @@ export function useContacts() {
         try {
             if ('id' in contactData && contactData.id) {
                 const { id, ...dataToUpdate } = contactData;
-                await dataService.updateDocument('customers', id, dataToUpdate);
+                // FIX: Added explicit generic type <Contact> to updateDocument call to ensure type safety.
+                await dataService.updateDocument<Contact>('customers', id, dataToUpdate);
                 toast({ title: "Sucesso!", description: "Contato atualizado." });
             } else {
-                await dataService.addDocument('customers', contactData);
+                // FIX: Added explicit generic type <Contact> to addDocument call to ensure type safety.
+                await dataService.addDocument<Contact>('customers', contactData as AnyContact);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
-            loadContacts();
+            // No need to call loadContacts() here, the listener will update the state.
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o contato.", variant: "destructive" });

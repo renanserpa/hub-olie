@@ -220,7 +220,8 @@ export const supabaseService = {
       return deleteDocument(table, id);
   },
   updateSystemSettings: async (settings: SystemSetting[]) => {
-      const updates = settings.map(s => updateDocument('system_settings', s.id, { value: s.value }));
+      // FIX: Added explicit generic type <SystemSetting> to updateDocument call to ensure type safety.
+      const updates = settings.map(s => updateDocument<SystemSetting>('system_settings', s.id, { value: s.value }));
       return Promise.all(updates);
   },
 
@@ -321,6 +322,7 @@ export const supabaseService = {
   addProduct: (productData: AnyProduct) => addDocument('products', productData),
   updateProduct: (productId: string, productData: Product | AnyProduct) => {
       const { id, category, ...updateData } = productData as Product;
-      return updateDocument('products', productId, updateData);
+      // FIX: Added explicit generic type <Product> to updateDocument call to ensure type safety.
+      return updateDocument<Product>('products', productId, updateData);
   },
 };
