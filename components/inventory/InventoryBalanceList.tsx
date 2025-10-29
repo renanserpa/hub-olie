@@ -5,6 +5,7 @@ import { Card, CardContent } from '../ui/Card';
 import { Search, PackageOpen } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../ui/Badge';
+import EmptyState from './EmptyState';
 
 interface InventoryBalanceListProps {
     balances: InventoryBalance[];
@@ -30,9 +31,10 @@ const InventoryBalanceList: React.FC<InventoryBalanceListProps> = ({
 }) => {
     
     const getStockStatus = (balance: InventoryBalance) => {
-        const available = balance.quantity_on_hand - balance.quantity_reserved;
+        const available = balance.current_stock - balance.reserved_stock;
         if (available <= 0) return { label: 'Sem Estoque', variant: 'inativo' as const };
-        if (available <= balance.low_stock_threshold) return { label: 'Estoque Baixo', variant: 'secondary' as const };
+        // Assuming a generic low stock logic for now
+        if (available <= 10) return { label: 'Estoque Baixo', variant: 'secondary' as const };
         return { label: 'Em Estoque', variant: 'ativo' as const };
     };
 
@@ -61,10 +63,11 @@ const InventoryBalanceList: React.FC<InventoryBalanceListProps> = ({
                         </tbody>
                     </table>
                 ) : balances.length === 0 ? (
-                    <div className="text-center text-textSecondary py-16">
-                        <PackageOpen className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhum material encontrado</h3>
-                        <p className="mt-1 text-sm">Nenhum material corresponde à sua busca.</p>
+                    <div className="p-6">
+                        <EmptyState 
+                            title="Nenhum Material em Estoque"
+                            message="Comece cadastrando materiais básicos na tela de Configurações para controlar o estoque."
+                        />
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -81,7 +84,7 @@ const InventoryBalanceList: React.FC<InventoryBalanceListProps> = ({
                             <tbody>
                                 {balances.map(balance => {
                                     const status = getStockStatus(balance);
-                                    const available = balance.quantity_on_hand - balance.quantity_reserved;
+                                    const available = balance.current_stock - balance.reserved_stock;
                                     return (
                                         <tr
                                             key={balance.material_id}
@@ -96,8 +99,8 @@ const InventoryBalanceList: React.FC<InventoryBalanceListProps> = ({
                                                 <span className="block text-xs text-textSecondary font-mono">{balance.material?.codigo}</span>
                                             </td>
                                             <td className="p-4 font-bold text-lg text-primary">{available.toFixed(2)} <span className="text-xs font-normal text-textSecondary">{balance.material?.unit}</span></td>
-                                            <td className="p-4">{balance.quantity_on_hand.toFixed(2)}</td>
-                                            <td className="p-4">{balance.quantity_reserved.toFixed(2)}</td>
+                                            <td className="p-4">{balance.current_stock.toFixed(2)}</td>
+                                            <td className="p-4">{balance.reserved_stock.toFixed(2)}</td>
                                             <td className="p-4"><Badge variant={status.variant}>{status.label}</Badge></td>
                                         </tr>
                                     );

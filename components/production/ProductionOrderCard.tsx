@@ -42,6 +42,7 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSele
     const statusInfo = STATUS_CONFIG[order.status];
     const progress = order.steps_total > 0 ? (order.steps_completed / order.steps_total) * 100 : 0;
     const isOverdue = new Date(order.due_date) < new Date() && order.status !== 'finalizado' && order.status !== 'cancelado';
+    const isUrgentInProgress = order.priority === 'urgente' && order.status === 'em_andamento';
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -52,7 +53,8 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSele
             onClick={onClick}
             className={cn(
                 'cursor-pointer transition-all duration-200 hover:shadow-md',
-                isSelected ? 'ring-2 ring-primary shadow-lg' : 'hover:border-primary/50'
+                isSelected ? 'ring-2 ring-primary shadow-lg' : 'hover:border-primary/50',
+                isUrgentInProgress && "border-red-500 ring-2 ring-red-200 animate-pulse"
             )}
         >
             <div className="p-4">

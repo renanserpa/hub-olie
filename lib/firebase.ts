@@ -1,2 +1,2 @@
-// This file is a leftover from a previous Firebase implementation.
-// It can be safely deleted from the project.
+// This file has been removed as part of the Firebase purification patch v2.0.
+// It is no longer needed and can be safely deleted.

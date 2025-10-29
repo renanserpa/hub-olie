@@ -12,20 +12,22 @@ interface InventoryMovementDialogProps {
     materials: BasicMaterial[];
 }
 
+// FIX: Corrected string literals to match type definitions.
 const REASON_OPTIONS: { value: InventoryMovementReason, label: string, types: InventoryMovementType[] }[] = [
-    { value: 'compra', label: 'Entrada por Compra', types: ['in'] },
-    { value: 'devolucao', label: 'Entrada por Devolução', types: ['in'] },
-    { value: 'consumo_producao', label: 'Saída para Produção', types: ['out'] },
-    { value: 'venda', label: 'Saída por Venda', types: ['out'] },
-    { value: 'perda', label: 'Saída por Perda/Dano', types: ['out'] },
-    { value: 'contagem', label: 'Ajuste de Contagem', types: ['adjustment'] },
+    { value: 'RECEBIMENTO_PO', label: 'Entrada por Compra', types: ['in'] },
+    { value: 'DEVOLUCAO_CLIENTE', label: 'Entrada por Devolução', types: ['in'] },
+    { value: 'CONSUMO_PRODUCAO', label: 'Saída para Produção', types: ['out'] },
+    { value: 'VENDA_DIRETA', label: 'Saída por Venda', types: ['out'] },
+    { value: 'PERDA_AVARIA', label: 'Saída por Perda/Dano', types: ['out'] },
+    { value: 'AJUSTE_CONTAGEM', label: 'Ajuste de Contagem', types: ['adjust'] },
+    { value: 'TRANSFERENCIA_INTERNA', label: 'Transferência Interna', types: ['transfer'] },
 ];
 
 const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpen, onClose, onSave, materials }) => {
     const [materialId, setMaterialId] = useState('');
     const [type, setType] = useState<InventoryMovementType>('in');
     const [quantity, setQuantity] = useState<number | ''>('');
-    const [reason, setReason] = useState<InventoryMovementReason>('compra');
+    const [reason, setReason] = useState<InventoryMovementReason>('RECEBIMENTO_PO');
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -33,7 +35,7 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
         setMaterialId('');
         setType('in');
         setQuantity('');
-        setReason('compra');
+        setReason('RECEBIMENTO_PO');
         setNotes('');
     };
     
@@ -49,7 +51,7 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!materialId || quantity === '' || (type !== 'adjustment' && Number(quantity) <= 0)) {
+        if (!materialId || quantity === '' || (type !== 'adjust' && Number(quantity) <= 0)) {
             toast({ title: "Atenção", description: "Preencha todos os campos obrigatórios. A quantidade deve ser positiva.", variant: 'destructive' });
             return;
         }
@@ -99,14 +101,15 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
                          <select value={type} onChange={e => setType(e.target.value as InventoryMovementType)} required className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50">
                             <option value="in">Entrada</option>
                             <option value="out">Saída</option>
-                            <option value="adjustment">Ajuste</option>
+                            <option value="adjust">Ajuste</option>
+                            <option value="transfer">Transferência</option>
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-textSecondary">Quantidade</label>
                         <input type="number" step="0.01" value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))} required className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                         {type !== 'adjustment' && <p className="text-xs text-textSecondary mt-1">Use apenas valores positivos.</p>}
-                         {type === 'adjustment' && <p className="text-xs text-textSecondary mt-1">Use valores +/- para ajustar.</p>}
+                         {type !== 'adjust' && <p className="text-xs text-textSecondary mt-1">Use apenas valores positivos.</p>}
+                         {type === 'adjust' && <p className="text-xs text-textSecondary mt-1">Use valores +/- para ajustar.</p>}
                     </div>
                 </div>
 

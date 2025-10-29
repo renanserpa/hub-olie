@@ -1,8 +1,9 @@
 import React from 'react';
 import { InventoryBalance, InventoryMovement, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { ArrowDownLeft, ArrowUpRight, History, Package, Edit, Loader2 } from 'lucide-react';
-import { Badge } from '../ui/Badge';
+import { ArrowDownLeft, ArrowUpRight, History, Package, Edit, RotateCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import EmptyState from './EmptyState';
 
 interface InventoryDetailPanelProps {
     balance: InventoryBalance;
@@ -13,16 +14,18 @@ interface InventoryDetailPanelProps {
 const movementTypeConfig: Record<InventoryMovementType, { icon: React.ElementType, color: string }> = {
     'in': { icon: ArrowDownLeft, color: 'text-green-600' },
     'out': { icon: ArrowUpRight, color: 'text-red-600' },
-    'adjustment': { icon: Edit, color: 'text-yellow-600' },
+    'adjust': { icon: Edit, color: 'text-yellow-600' },
+    'transfer': { icon: RotateCw, color: 'text-blue-600' },
 };
 
 const movementReasonLabels: Record<InventoryMovementReason, string> = {
-    'compra': 'Compra',
-    'consumo_producao': 'Consumo (Produção)',
-    'venda': 'Venda',
-    'contagem': 'Contagem/Ajuste',
-    'devolucao': 'Devolução',
-    'perda': 'Perda',
+    'RECEBIMENTO_PO': 'Recebimento de Compra',
+    'CONSUMO_PRODUCAO': 'Consumo (Produção)',
+    'VENDA_DIRETA': 'Venda Direta',
+    'AJUSTE_CONTAGEM': 'Ajuste de Contagem',
+    'DEVOLUCAO_CLIENTE': 'Devolução de Cliente',
+    'PERDA_AVARIA': 'Perda/Avaria',
+    'TRANSFERENCIA_INTERNA': 'Transferência Interna'
 };
 
 const StatCard: React.FC<{ title: string, value: string, unit: string }> = ({ title, value, unit }) => (
@@ -33,79 +36,67 @@ const StatCard: React.FC<{ title: string, value: string, unit: string }> = ({ ti
 );
 
 const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, movements, isLoading }) => {
-    const available = balance.quantity_on_hand - balance.quantity_reserved;
+    const available = balance.current_stock - balance.reserved_stock;
     const material = balance.material;
 
     const formatDate = (dateValue: any) => {
-        if (!dateValue) return '';
+        if (!dateValue) return '-';
         const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
-        if (isNaN(date.getTime())) return '';
-        return date.toLocaleString('pt-BR', {
-            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
 
     return (
         <Card className="sticky top-20 h-[calc(100vh-10rem)] overflow-y-auto">
             <CardHeader>
-                <CardTitle className="flex items-start gap-3">
-                    <Package size={24} className="text-primary mt-1" />
-                    <div>
-                        {material?.name}
-                        <span className="block text-sm font-normal text-textSecondary font-mono">{material?.codigo}</span>
-                    </div>
-                </CardTitle>
+                <CardTitle>{material?.name}</CardTitle>
+                <p className="text-sm text-textSecondary font-mono">{material?.codigo}</p>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-3 gap-2 mb-6">
                     <StatCard title="Disponível" value={available.toFixed(2)} unit={material?.unit || ''} />
-                    <StatCard title="Físico" value={balance.quantity_on_hand.toFixed(2)} unit={material?.unit || ''} />
-                    <StatCard title="Reservado" value={balance.quantity_reserved.toFixed(2)} unit={material?.unit || ''} />
+                    <StatCard title="Físico" value={balance.current_stock.toFixed(2)} unit={material?.unit || ''} />
+                    <StatCard title="Reservado" value={balance.reserved_stock.toFixed(2)} unit={material?.unit || ''} />
                 </div>
 
-                <div className="flex items-center gap-3 mb-4">
-                     <History size={16} className="text-textSecondary" />
-                     <h4 className="font-semibold text-textPrimary">Histórico de Movimentações</h4>
-                </div>
-
-                {isLoading ? (
-                    <div className="text-center py-10">
-                         <Loader2 className="mx-auto h-8 w-8 text-primary animate-spin" />
-                         <p className="mt-2 text-sm text-textSecondary">Carregando histórico...</p>
-                    </div>
-                ) : movements.length === 0 ? (
-                    <div className="text-center text-sm text-textSecondary p-6 bg-secondary rounded-lg">
-                        Nenhuma movimentação registrada para este item.
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {movements.map(move => {
-                            const config = movementTypeConfig[move.type];
-                            const Icon = config.icon;
-                            const isPositive = move.quantity > 0;
-
-                            return (
-                                <div key={move.id} className="flex items-start gap-3 p-3 bg-secondary/50 rounded-lg">
-                                    <div className={`p-1.5 rounded-full bg-background ${config.color}`}>
-                                        <Icon size={16} />
-                                    </div>
-                                    <div className="flex-1 text-sm">
-                                        <div className="flex justify-between">
-                                            <p className="font-medium text-textPrimary">{movementReasonLabels[move.reason]}</p>
-                                            <p className={`font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                                {isPositive ? '+' : ''}{move.quantity.toFixed(2)}
-                                            </p>
+                <div className="border-t pt-4">
+                    <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><History size={16}/> Histórico de Movimentos</h4>
+                     {isLoading ? (
+                        <div className="flex justify-center items-center h-48">
+                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                    ) : movements.length === 0 ? (
+                        <div className="p-6">
+                           <EmptyState 
+                                title="Sem Movimentos"
+                                message="Nenhum movimento de estoque foi registrado para este material."
+                                icon={History}
+                           />
+                        </div>
+                    ) : (
+                        <ul className="space-y-3">
+                            {movements.map(move => {
+                                const config = movementTypeConfig[move.type];
+                                const Icon = config.icon;
+                                const isPositive = move.type === 'in' || (move.type === 'adjust' && move.quantity > 0);
+                                return (
+                                    <li key={move.id} className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-full bg-secondary ${config.color}`}>
+                                            <Icon size={18} />
                                         </div>
-                                        <p className="text-xs text-textSecondary">
-                                            {formatDate(move.created_at)}
-                                            {move.reference_id && ` • Ref: ${move.reference_id}`}
+                                        <div className="flex-1">
+                                            <p className="font-medium text-sm">{movementReasonLabels[move.reason]}</p>
+                                            <p className="text-xs text-textSecondary">{formatDate(move.created_at)} {move.ref && `(${move.ref})`}</p>
+                                        </div>
+                                        <p className={`font-semibold text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                            {isPositive ? '+' : ''}{move.quantity.toFixed(2)}
                                         </p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );

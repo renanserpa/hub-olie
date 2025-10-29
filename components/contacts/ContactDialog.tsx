@@ -11,9 +11,10 @@ interface ContactDialogProps {
     onClose: () => void;
     onSave: (data: AnyContact | Contact) => Promise<void>;
     contact: Contact | null;
+    isSaving: boolean;
 }
 
-const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, contact }) => {
+const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, contact, isSaving }) => {
     const [formData, setFormData] = useState<Partial<Contact>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCepLoading, setIsCepLoading] = useState(false);
@@ -159,8 +160,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
 
                 <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="submit" disabled={isSubmitting || isSaving}>
+                        {(isSubmitting || isSaving) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Salvar Contato
                     </Button>
                 </div>

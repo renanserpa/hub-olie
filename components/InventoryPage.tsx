@@ -18,14 +18,15 @@ const InventoryPage: React.FC = () => {
         selectedBalance,
         setSelectedMaterialId,
         movements,
-        addInventoryMovement,
+// FIX: The hook returns `createMovement`, but the component was trying to use `addInventoryMovement`.
+        createMovement,
         allMaterials,
     } = useInventory();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleSaveMovement = async (data: any) => {
-        await addInventoryMovement(data);
+        await createMovement(data);
         setIsDialogOpen(false);
     };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { InventoryBalance, InventoryMovement, BasicMaterial } from '../types';
+import { InventoryBalance, InventoryMovement, BasicMaterial, InventoryMovementReason, InventoryMovementType } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -8,6 +8,7 @@ export function useInventory() {
     const [allMaterials, setAllMaterials] = useState<BasicMaterial[]>([]);
     const [movements, setMovements] = useState<InventoryMovement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [isLoadingMovements, setIsLoadingMovements] = useState(false);
     
     const [searchQuery, setSearchQuery] = useState('');
@@ -17,15 +18,17 @@ export function useInventory() {
         setIsLoading(true);
         try {
             const [balancesData, materialsData] = await Promise.all([
-                dataService.getInventoryBalances(),
+                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_basic_materials(*)'),
                 dataService.getCollection<BasicMaterial>('config_basic_materials')
             ]);
             
             setAllBalances(balancesData);
             setAllMaterials(materialsData);
             
-            if (balancesData.length > 0 && !selectedMaterialId) {
+            if (balancesData.length > 0 && selectedMaterialId === null) {
                 setSelectedMaterialId(balancesData[0].material_id);
+            } else if (balancesData.length === 0) {
+                setSelectedMaterialId(null);
             }
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar o estoque.", variant: "destructive" });
@@ -35,9 +38,13 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     useEffect(() => {
+        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_basic_materials(*)', (data) => {
+            setAllBalances(data);
+        });
         loadData();
+        return () => listener.unsubscribe();
     }, [loadData]);
-
+    
     useEffect(() => {
         const fetchMovements = async () => {
             if (!selectedMaterialId) {
@@ -55,50 +62,13 @@ export function useInventory() {
             }
         };
         fetchMovements();
+        
+        const listener = dataService.listenToCollection<InventoryMovement>(`inventory_movements?material_id=eq.${selectedMaterialId}`, undefined, (data) => {
+             setMovements(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        });
+        return () => listener.unsubscribe();
+
     }, [selectedMaterialId]);
 
-    const filteredBalances = useMemo(() => {
-        if (searchQuery === '') return allBalances;
-        return allBalances.filter(balance => {
-            const material = balance.material;
-            if (!material) return false;
-            const query = searchQuery.toLowerCase();
-            return material.name.toLowerCase().includes(query) || material.codigo.toLowerCase().includes(query);
-        });
-    }, [allBalances, searchQuery]);
-    
-    const selectedBalance = useMemo(() => {
-        return allBalances.find(b => b.material_id === selectedMaterialId) || null;
-    }, [allBalances, selectedMaterialId]);
-
-
-    const addInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
-        try {
-            // FIX: Added `created_at` to the payload to satisfy the type required by `addDocument`.
-            await dataService.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
-            toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
-            loadData();
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível registrar o movimento.", variant: "destructive" });
-        }
-    };
-    
-     useEffect(() => {
-        if(selectedMaterialId && filteredBalances.length > 0 && !filteredBalances.find(b => b.material_id === selectedMaterialId)) {
-             setSelectedMaterialId(filteredBalances[0]?.material_id || null);
-        }
-    }, [filteredBalances, selectedMaterialId]);
-
-    return {
-        isLoading,
-        isLoadingMovements,
-        filteredBalances,
-        searchQuery,
-        setSearchQuery,
-        selectedBalance,
-        setSelectedMaterialId,
-        movements,
-        addInventoryMovement,
-        allMaterials,
-    };
-}
+    const balancesWithMaterials = useMemo(() => {
+        return allBalances.map(balance

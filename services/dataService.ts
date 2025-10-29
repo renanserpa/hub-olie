@@ -1,5 +1,5 @@
 import { isSandbox } from '../lib/runtime';
-import { sandboxService } from './sandboxDb';
+import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
 import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI } from '../types';
 
@@ -57,80 +57,3 @@ export const dataService = {
   deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) =>
     isSandbox()
         ? Promise.reject("deleteSetting not implemented in sandbox")
-        : realSupabaseService.deleteSetting(category, id, subTab, subSubTab),
-        
-  updateSystemSettings: (settings: SystemSetting[]) =>
-    isSandbox()
-      ? Promise.all(settings.map(s => sandboxService.updateDocument('system_settings', s.id, s)))
-      : realSupabaseService.updateSystemSettings(settings),
-
-  getOrders: () => 
-    isSandbox() ? sandboxService.getOrders() : realSupabaseService.getOrders(),
-
-  getOrder: (id: string) => 
-    isSandbox() ? sandboxService.getOrder(id) : realSupabaseService.getOrder(id),
-
-  addOrder: (orderData: Partial<Order>) => 
-    isSandbox() ? sandboxService.addOrder(orderData) : realSupabaseService.addOrder(orderData),
-
-  updateOrder: (orderId: string, data: Partial<Order>) =>
-    isSandbox() ? sandboxService.updateDocument('orders', orderId, data) : realSupabaseService.updateOrder(orderId, data),
-    
-  updateOrderStatus: (orderId: string, newStatus: OrderStatus) =>
-    isSandbox() ? sandboxService.updateDocument<Order>('orders', orderId, { status: newStatus }) : realSupabaseService.updateOrderStatus(orderId, newStatus),
-
-  getProductionOrders: () => 
-    isSandbox() ? sandboxService.getProductionOrders() : realSupabaseService.getProductionOrders(),
-
-  getTasks: () => 
-    isSandbox() ? sandboxService.getTasks() : realSupabaseService.getTasks(),
-
-  getTaskStatuses: () => 
-    isSandbox() ? sandboxService.getTaskStatuses() : realSupabaseService.getTaskStatuses(),
-    
-  updateTask: (taskId: string, data: Partial<Task>) =>
-    isSandbox() ? sandboxService.updateDocument('tasks', taskId, data) : realSupabaseService.updateTask(taskId, data),
-
-  getInventoryBalances: () => 
-    isSandbox() ? sandboxService.getInventoryBalances() : realSupabaseService.getInventoryBalances(),
-
-  getInventoryMovements: (materialId: string) => 
-    isSandbox() ? sandboxService.getInventoryMovements(materialId) : realSupabaseService.getInventoryMovements(materialId),
-
-  addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) =>
-    isSandbox() ? sandboxService.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }) : realSupabaseService.addInventoryMovement(movementData),
-  
-  getProducts: () => 
-    isSandbox() ? sandboxService.getProducts() : realSupabaseService.getProducts(),
-
-  getProductCategories: () => 
-    isSandbox() ? sandboxService.getProductCategories() : realSupabaseService.getProductCategories(),
-
-  addProduct: (productData: AnyProduct) =>
-    isSandbox() ? sandboxService.addDocument('products', productData) : realSupabaseService.addProduct(productData),
-    
-  updateProduct: (productId: string, productData: Product | AnyProduct) =>
-    isSandbox() ? sandboxService.updateDocument<Product>('products', productId, productData) : realSupabaseService.updateProduct(productId, productData),
-
-  getContacts: () => 
-    isSandbox() ? sandboxService.getContacts() : realSupabaseService.getContacts(),
-    
-  getLogisticsData: (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> =>
-    isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
-
-  // Marketing
-  getMarketingCampaigns: (): Promise<MarketingCampaign[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),
-  getMarketingSegments: (): Promise<MarketingSegment[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_segments') : realSupabaseService.getMarketingSegments(),
-  getMarketingTemplates: (): Promise<MarketingTemplate[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_templates') : realSupabaseService.getMarketingTemplates(),
-
-  // Purchasing
-  getPurchasingData: (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> =>
-    isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
-    
-  // Analytics
-  getAnalyticsKpis: (): Promise<AnalyticsKPI[]> =>
-    isSandbox() ? sandboxService.getCollection('analytics_kpis') : realSupabaseService.getAnalyticsKpis(),
-};

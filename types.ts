@@ -207,6 +207,7 @@ export interface Task {
     client_name: string;
     quantity: number;
     position: number;
+    priority?: ProductionOrderPriority;
 }
 
 // --- INVENTORY ---
@@ -215,25 +216,26 @@ export interface BasicMaterial { id: string; codigo: string; name: string; suppl
 export interface SupplyGroup { id: string; codigo: string; name: string; is_active: boolean; }
 
 export interface InventoryBalance {
+    id: string;
     material_id: string;
     material?: BasicMaterial;
-    quantity_on_hand: number;
-    quantity_reserved: number;
-    low_stock_threshold: number;
-    last_updated_at: string;
+    current_stock: number;
+    reserved_stock: number;
+    location?: string;
+    updated_at: string;
 }
 
-export type InventoryMovementType = 'in' | 'out' | 'adjustment';
-export type InventoryMovementReason = 'compra' | 'consumo_producao' | 'venda' | 'contagem' | 'devolucao' | 'perda';
+export type InventoryMovementType = 'in' | 'out' | 'adjust' | 'transfer';
+export type InventoryMovementReason = 'RECEBIMENTO_PO' | 'CONSUMO_PRODUCAO' | 'VENDA_DIRETA' | 'AJUSTE_CONTAGEM' | 'DEVOLUCAO_CLIENTE' | 'PERDA_AVARIA' | 'TRANSFERENCIA_INTERNA';
+
 
 export interface InventoryMovement {
     id: string;
-    material_id: string;
     type: InventoryMovementType;
-    quantity: number;
     reason: InventoryMovementReason;
-    reference_id?: string;
     notes?: string;
+    material_id: string;
+    quantity: number;
     created_at: string;
 }
 

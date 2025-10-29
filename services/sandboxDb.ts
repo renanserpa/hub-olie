@@ -51,6 +51,7 @@ const orders: Omit<Order, 'items' | 'customers'>[] = [
 const production_orders: ProductionOrder[] = [
     { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
     { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product: products[1], quantity: 10, status: 'planejado', priority: 'normal', due_date: new Date(Date.now() + 10 * 86400000).toISOString(), steps_completed: 0, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'po3', po_number: 'OP-2024-003', product_id: 'p3', product: products[2], quantity: 2, status: 'em_andamento', priority: 'urgente', due_date: new Date(Date.now() + 2 * 86400000).toISOString(), steps_completed: 1, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const fabric_colors: FabricColor[] = [
@@ -77,16 +78,26 @@ const config_basic_materials: BasicMaterial[] = [
 const task_statuses: TaskStatus[] = [
     {id: 'ts1', name: 'Corte', color: '#FFF2E5', position: 1},
     {id: 'ts2', name: 'Costura', color: '#E6F7FF', position: 2},
-    {id: 'ts3', name: 'Acabamento', color: '#F6FFED', position: 3},
+    {id: 'ts4', name: 'Em Espera', color: '#F3E8FF', position: 3},
+    {id: 'ts3', name: 'Acabamento', color: '#F6FFED', position: 4},
 ];
 const tasks: Task[] = [
-    {id: 't1', title: 'OP-2024-001 - Bolsa Tote', status_id: 'ts1', client_name: 'Ana Silva', quantity: 5, position: 1},
-    {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1},
+    {id: 't1', title: 'OP-2024-001 - Bolsa Tote', status_id: 'ts1', client_name: 'Ana Silva', quantity: 5, position: 1, priority: 'alta'},
+    {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1, priority: 'normal'},
+    {id: 't3', title: 'OP-2024-003 - Mochila Urbana', status_id: 'ts2', client_name: 'Bruno Costa', quantity: 2, position: 2, priority: 'urgente'},
 ];
-const inventory_balances: InventoryBalance[] = config_basic_materials.map((m, i) => ({ material_id: m.id, material: m, quantity_on_hand: 50 + i*10, quantity_reserved: 10, low_stock_threshold: 15, last_updated_at: new Date().toISOString() }));
+const inventory_balances: InventoryBalance[] = config_basic_materials.map((m, i) => ({ 
+    id: `inv_bal_${i + 1}`,
+    material_id: m.id, 
+    material: m, 
+    current_stock: 50 + i * 10, 
+    reserved_stock: 10, 
+    location: `A${i+1}-S${i+1}`,
+    updated_at: new Date().toISOString() 
+}));
 const inventory_movements: InventoryMovement[] = [
-    { id: 'im1', material_id: 'bm1', type: 'in', quantity: 100, reason: 'compra', created_at: new Date().toISOString() },
-    { id: 'im2', material_id: 'bm1', type: 'out', quantity: -20, reason: 'consumo_producao', created_at: new Date().toISOString() }
+    { id: 'im1', material_id: 'bm1', type: 'in', quantity: 100, reason: 'RECEBIMENTO_PO', notes: 'PO-2024-001', created_at: new Date().toISOString() },
+    { id: 'im2', material_id: 'bm1', type: 'out', quantity: -20, reason: 'CONSUMO_PRODUCAO', notes: 'OP-2024-001', created_at: new Date().toISOString() }
 ];
 
 const system_settings: SystemSetting[] = [
@@ -222,87 +233,3 @@ const update = <T extends {id: string}>(path: string, id: string, data: Partial<
             return updatedItem;
         }
         return item;
-    });
-    emit(path);
-    if (!updatedItem) throw new Error(`Item with id ${id} not found in ${path}`);
-    return updatedItem;
-};
-const remove = (path: string, id: string): void => {
-    collections[path] = collections[path]?.filter(item => item.id !== id);
-    emit(path);
-};
-
-
-// --- SERVICE FACADE ---
-// Mirrors the specific functions from supabaseService for compatibility
-export const sandboxService = {
-    getCollection: <T>(table: string) => Promise.resolve(getCollection<T>(table)),
-    getDocument: <T>(table: string, id: string) => Promise.resolve(get<T>(table, id)),
-    addDocument: <T extends {id?: string}>(table: string, data: Omit<T, 'id'>) => Promise.resolve(create<T>(table, data)),
-    updateDocument: <T extends {id: string}>(table: string, id: string, data: Partial<T>) => Promise.resolve(update<T>(table, id, data)),
-    deleteDocument: (table: string, id: string) => { remove(table, id); return Promise.resolve(); },
-
-    listenToCollection: <T>(table: string, callback: (payload: T[]) => void) => subscribe(table, callback as (items: any[]) => void),
-    listenToDocument: <T>(table: string, id: string, callback: (payload: T) => void) => {
-        const handler = () => { get(table, id) && callback(get(table, id) as T); };
-        eventBus.addEventListener(table, handler);
-        handler(); // Initial call
-        return { unsubscribe: () => eventBus.removeEventListener(table, handler) };
-    },
-    getSettings: async (): Promise<AppData> => Promise.resolve({
-        catalogs: { paletas_cores: [], cores_texturas: { tecido: fabric_colors, ziper: zipper_colors, vies: bias_colors, forro: [], puxador: [], bordado: [], texturas: [] }, fontes_monogramas: config_fonts },
-        materials: { grupos_suprimento: [], materiais_basicos: config_basic_materials },
-        logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-        sistema: system_settings, midia: {}, orders: getCollection('orders'), contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates,
-        suppliers, purchase_orders, purchase_order_items, analytics_kpis, executive_kpis, executive_ai_insights
-    }),
-    getOrders: async (): Promise<Order[]> => {
-        const ordersData = getCollection<Omit<Order, 'items' | 'customers'>>('orders');
-        const itemsData = getCollection<OrderItem>('order_items');
-        const customersData = getCollection<Contact>('customers');
-
-        const itemsByOrderId = itemsData.reduce((acc, item) => {
-            if (!acc[item.order_id]) acc[item.order_id] = [];
-            acc[item.order_id].push(item);
-            return acc;
-        }, {} as Record<string, OrderItem[]>);
-
-        return ordersData.map(order => ({
-            ...order,
-            items: itemsByOrderId[order.id] || [],
-            customers: customersData.find(c => c.id === order.customer_id),
-        }));
-    },
-    getOrder: async (id: string): Promise<Order | null> => {
-        const order = get<Omit<Order, 'items' | 'customers'>>('orders', id);
-        if (!order) return null;
-
-        const items = getCollection<OrderItem>('order_items').filter(i => i.order_id === id);
-        const customer = get<Contact>('customers', order.customer_id);
-
-        return { ...order, items, customers: customer || undefined };
-    },
-    addOrder: (orderData: Partial<Order>) => Promise.resolve(create<Order>('orders', orderData as any)),
-    getProductionOrders: () => Promise.resolve(production_orders),
-    getTasks: () => Promise.resolve(tasks),
-    getTaskStatuses: () => Promise.resolve(task_statuses),
-    getInventoryBalances: () => Promise.resolve(inventory_balances),
-    getInventoryMovements: (materialId: string) => Promise.resolve(inventory_movements.filter(m => m.material_id === materialId)),
-    getProducts: () => Promise.resolve(products),
-    getProductCategories: () => Promise.resolve(product_categories),
-    getContacts: () => Promise.resolve(contacts),
-    getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
-        return Promise.resolve({
-            orders: await sandboxService.getOrders(),
-            waves: getCollection<LogisticsWave>('logistics_waves'),
-            shipments: getCollection<LogisticsShipment>('logistics_shipments'),
-        });
-    },
-    getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
-        return Promise.resolve({
-            suppliers: getCollection<Supplier>('suppliers'),
-            purchase_orders: getCollection<PurchaseOrder>('purchase_orders'),
-            purchase_order_items: getCollection<PurchaseOrderItem>('purchase_order_items'),
-        });
-    },
-};
