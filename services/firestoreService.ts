@@ -1,4 +1,4 @@
-// NOTE: This file has been refactored for Supabase and should be renamed to supabaseService.ts
+// NOTE: This file has been refacted for Supabase and should be renamed to supabaseService.ts
 import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
@@ -192,7 +192,11 @@ export const supabaseService = {
             },
             sistema: [], // system_settings does not exist
             // --- These are placeholders as they are fetched by their own modules ---
-            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+// FIX: Added missing marketing properties to align with the AppData type.
+marketing_campaigns: [],
+marketing_segments: [],
+marketing_templates: [],
         };
     } catch (error) {
         handleError(error, 'getSettings');
@@ -202,7 +206,11 @@ export const supabaseService = {
             materials: { grupos_suprimento: [], materiais_basicos: [] },
             logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
             sistema: [],
-            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+            midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+// FIX: Added missing marketing properties to align with the AppData type.
+marketing_campaigns: [],
+marketing_segments: [],
+marketing_templates: [],
         };
     }
   },

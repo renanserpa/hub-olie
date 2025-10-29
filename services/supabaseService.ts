@@ -1,5 +1,3 @@
-
-
 // NOTE: This file has been refactored for Supabase.
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -32,7 +30,13 @@ import {
     PackagingType,
     BondType,
     LogisticsWave,
-    LogisticsShipment
+    LogisticsShipment,
+    MarketingCampaign,
+    MarketingSegment,
+    MarketingTemplate,
+    Supplier,
+    PurchaseOrder,
+    PurchaseOrderItem,
 } from "../types";
 
 
@@ -49,7 +53,8 @@ const handleError = (error: any, context: string) => {
 
 // --- Generic Helpers ---
 
-const getCollection = async <T>(table: string, join?: string): Promise<T[] | Error> => {
+// This internal helper can return an Error object for specific handling
+const getCollectionInternal = async <T>(table: string, join?: string): Promise<T[] | Error> => {
     const query = join ? supabase.from(table).select(join) : supabase.from(table).select('*');
     const { data, error } = await query;
     if (error) {
@@ -107,7 +112,6 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
     const tableName = settingsTableMap[key];
     if (!tableName) {
         console.error(`No table mapping found for key: ${key}`);
-        // Fallback or throw error
         return subSubTab || subTab || category;
     }
     return tableName;
@@ -115,8 +119,9 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
 
 // --- App-specific Methods ---
 export const supabaseService = {
+  // Public-facing getCollection is resilient and returns empty array on failure
   getCollection: async <T>(table: string, join?: string): Promise<T[]> => {
-    const result = await getCollection<T>(table, join);
+    const result = await getCollectionInternal<T>(table, join);
     if (result instanceof Error) {
         console.warn(`[dataService] Could not fetch ${table}, returning empty array. Reason: ${result.message}`);
         return [];
@@ -174,177 +179,107 @@ export const supabaseService = {
   },
 
   getSettings: async (): Promise<AppData> => {
-    const tableFetchConfig = {
+    const tableFetchConfig: Record<string, { key: string; category: string | null; subCategory?: string }> = {
         'config_color_palettes': { key: 'paletas_cores', category: 'catalogs' },
-        'fabric_colors': { key: 'tecido', category: 'cores_texturas' },
-        'zipper_colors': { key: 'ziper', category: 'cores_texturas' },
-        'lining_colors': { key: 'forro', category: 'cores_texturas' },
-        'puller_colors': { key: 'puxador', category: 'cores_texturas' },
-        'bias_colors': { key: 'vies', category: 'cores_texturas' },
-        'embroidery_colors': { key: 'bordado', category: 'cores_texturas' },
-        'config_fabric_textures': { key: 'texturas', category: 'cores_texturas' },
+        'fabric_colors': { key: 'tecido', category: 'catalogs', subCategory: 'cores_texturas' },
+        'zipper_colors': { key: 'ziper', category: 'catalogs', subCategory: 'cores_texturas' },
+        'lining_colors': { key: 'forro', category: 'catalogs', subCategory: 'cores_texturas' },
+        'puller_colors': { key: 'puxador', category: 'catalogs', subCategory: 'cores_texturas' },
+        'bias_colors': { key: 'vies', category: 'catalogs', subCategory: 'cores_texturas' },
+        'embroidery_colors': { key: 'bordado', category: 'catalogs', subCategory: 'cores_texturas' },
+        'config_fabric_textures': { key: 'texturas', category: 'catalogs', subCategory: 'cores_texturas' },
         'config_fonts': { key: 'fontes_monogramas', category: 'catalogs' },
         'config_supply_groups': { key: 'grupos_suprimento', category: 'materials' },
         'config_basic_materials': { key: 'materiais_basicos', category: 'materials' },
-        'system_settings': { key: 'sistema', category: 'sistema' },
-        'logistics_delivery_methods': { key: 'metodos_entrega', category: 'logistica'},
-        'logistics_freight_params': { key: 'calculo_frete', category: 'logistica'},
-        'config_packaging_types': { key: 'tipos_embalagem', category: 'logistica'},
-        'config_bond_types': { key: 'tipos_vinculo', category: 'logistica'},
+        'logistics_delivery_methods': { key: 'metodos_entrega', category: 'logistica' },
+        'logistics_freight_params': { key: 'calculo_frete', category: 'logistica' },
+        'config_packaging_types': { key: 'tipos_embalagem', category: 'logistica' },
+        'config_bond_types': { key: 'tipos_vinculo', category: 'logistica' },
+        'system_settings': { key: 'sistema', category: null },
     };
 
-    const results = await Promise.all(
-      Object.keys(tableFetchConfig).map(tableName => getCollection(tableName))
-    );
-    
-    const loadedTables: string[] = [];
-    const missingTables: string[] = [];
-
-    const appData: AppData = {
+    const emptyAppData: AppData = {
         catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
         materials: { grupos_suprimento: [], materiais_basicos: [] },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: [],
-        midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: []
+        midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+        marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
+        suppliers: [], purchase_orders: [], purchase_order_items: [],
     };
-
-    results.forEach((result, index) => {
-        const tableName = Object.keys(tableFetchConfig)[index];
-        const config = tableFetchConfig[tableName as keyof typeof tableFetchConfig];
-
-        if (result instanceof Error) {
-            missingTables.push(tableName);
-        } else {
-            loadedTables.push(tableName);
-            if (config.category === 'catalogs') {
-                (appData.catalogs as any)[config.key] = result;
-            } else if (config.category === 'cores_texturas') {
-                (appData.catalogs.cores_texturas as any)[config.key] = result;
-            } else if (config.category === 'materials') {
-                (appData.materials as any)[config.key] = result;
-            } else if (config.category === 'logistica') {
-                (appData.logistica as any)[config.key] = result;
-            } else if (config.category === 'sistema') {
-                appData.sistema = result as SystemSetting[];
-            }
-        }
-    });
     
-    console.log(`[SETTINGS] Loaded tables: ${loadedTables.join(', ')}`);
-    if(missingTables.length > 0) {
-        console.warn(`[SETTINGS] Missing tables: ${missingTables.join(', ')}`);
+    try {
+        const fetchPromises = Object.keys(tableFetchConfig).map(table => getCollectionInternal(table));
+        const results = await Promise.all(fetchPromises);
+        
+        const data = results.reduce((acc, result, index) => {
+            const table = Object.keys(tableFetchConfig)[index];
+            const config = tableFetchConfig[table];
+            
+            if (result instanceof Error) {
+                console.warn(`[getSettings] Failed to fetch table '${table}'. Skipping. Reason: ${result.message}`);
+            } else if (config.category) {
+                if (config.subCategory) {
+                    (acc as any)[config.category][config.subCategory][config.key] = result;
+                } else {
+                    (acc as any)[config.category][config.key] = result;
+                }
+            } else {
+                (acc as any)[config.key] = result;
+            }
+            return acc;
+        }, JSON.parse(JSON.stringify(emptyAppData))); // Deep copy
+
+        return data;
+    } catch (error) {
+        handleError(error, 'getSettings');
+        return emptyAppData;
     }
-
-    return appData;
   },
 
-  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => {
-      const table = getTableNameForSetting(category, subTab, subSubTab);
-      return addDocument(table, data);
-  },
-  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => {
-      const table = getTableNameForSetting(category, subTab, subSubTab);
-      return updateDocument(table, id, data);
-  },
-  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => {
-      const table = getTableNameForSetting(category, subTab, subSubTab);
-      return deleteDocument(table, id);
-  },
+  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getTableNameForSetting(category, subTab, subSubTab), id, data),
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getTableNameForSetting(category, subTab, subSubTab), id),
   updateSystemSettings: async (settings: SystemSetting[]) => {
       const updates = settings.map(s => updateDocument<SystemSetting>('system_settings', s.id, { value: s.value }));
       return Promise.all(updates);
   },
 
   getOrders: async (): Promise<Order[]> => {
-    const { data: ordersData, error: ordersError } = await supabase.from('orders').select('*, customers(*)');
-    if (ordersError) { handleError(ordersError, 'getOrders'); return []; }
-    if (!ordersData) return [];
+    const ordersData = await supabaseService.getCollection<Order>('orders', '*, customers(*)');
+    if (!ordersData || ordersData.length === 0) return [];
 
     const orderIds = ordersData.map(o => o.id);
-    const relatedTables = {
-      order_items: supabase.from('order_items').select('*').in('order_id', orderIds),
-      order_payments: supabase.from('order_payments').select('*').in('order_id', orderIds),
-      order_timeline: supabase.from('order_timeline').select('*').in('order_id', orderIds),
-      order_notes: supabase.from('order_notes').select('*').in('order_id', orderIds),
-    };
-    
-    const [
-        itemsResult,
-        paymentsResult,
-        timelineResult,
-        notesResult,
-    ] = await Promise.all(Object.values(relatedTables));
-    
-    const loadedTables = ['orders'];
-    const missingTables = [];
+    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').in('order_id', orderIds);
+    if (itemsError) handleError(itemsError, 'getOrders (items)');
 
-    if (itemsResult.error) missingTables.push('order_items'); else loadedTables.push('order_items');
-    if (paymentsResult.error) missingTables.push('order_payments'); else loadedTables.push('order_payments');
-    if (timelineResult.error) missingTables.push('order_timeline'); else loadedTables.push('order_timeline');
-    if (notesResult.error) missingTables.push('order_notes'); else loadedTables.push('order_notes');
-    
-    console.log(`[ORDERS] Loaded: ${loadedTables.join(', ')}`);
-    if(missingTables.length > 0) {
-        console.warn(`[ORDERS] Missing: ${missingTables.join(', ')}`);
-    }
+    const itemsByOrderId = itemsData?.reduce((acc, item) => {
+        if (!acc[item.order_id]) acc[item.order_id] = [];
+        acc[item.order_id].push(item);
+        return acc;
+    }, {} as Record<string, OrderItem[]>) || {};
 
-    const groupById = <T extends { order_id: string }>(data: T[] | null) => 
-        (data || []).reduce((acc, item) => {
-            if (!acc[item.order_id]) acc[item.order_id] = [];
-            acc[item.order_id].push(item);
-            return acc;
-        }, {} as Record<string, T[]>);
-
-    const itemsByOrderId = groupById(itemsResult.data as OrderItem[]);
-    const paymentsByOrderId = groupById(paymentsResult.data as OrderPayment[]);
-    const timelineByOrderId = groupById(timelineResult.data as OrderTimelineEvent[]);
-    const notesByOrderId = groupById(notesResult.data as OrderNote[]);
-
-    return ordersData.map(order => ({
-        ...order,
-        items: itemsByOrderId[order.id] || [],
-        payments_history: paymentsByOrderId[order.id] || [],
-        timeline: timelineByOrderId[order.id] || [],
-        notes_internal: notesByOrderId[order.id] || [],
-    })) as Order[];
+    return ordersData.map(order => ({ ...order, items: itemsByOrderId[order.id] || [] }));
   },
-  
   getOrder: async (id: string): Promise<Order | null> => {
-    // This could be optimized to fetch related data as well, like in getOrders
-    const { data, error } = await supabase.from('orders').select('*, customers(*)').eq('id', id).single();
-    if (error && error.code !== 'PGRST116') {
-      handleError(error, `getOrder(${id})`);
-    }
+    const data = await getDocument<Order>('orders', id);
     if (!data) return null;
     
     const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').eq('order_id', id);
     if (itemsError) handleError(itemsError, `getOrder(${id}) (items)`);
 
-    // In a full v3 implementation, we would fetch payments, timeline, etc. here too.
-    return { 
-        ...data, 
-        items: itemsData || [],
-        payments_history: [],
-        timeline: [],
-        notes_internal: [],
-    } as Order;
+    return { ...data, items: itemsData || [] };
   },
-  
-  updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => {
-      return updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
-  },
+  updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() }),
   addOrder: async (orderData: Partial<Order>) => {
       const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
-      const { items, payments_history, timeline, notes_internal, ...orderToInsert } = orderData;
-      const fullOrderData = {
+      const { items, ...orderToInsert } = orderData;
+      const newOrder = await addDocument<Order>('orders', {
           ...orderToInsert,
           number: orderNumber,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-      };
-      const { data: newOrder, error } = await supabase.from('orders').insert(fullOrderData).select().single();
-      if (error) handleError(error, 'addOrder');
-      if (!newOrder) throw new Error("Failed to create order.");
+      } as any);
       
       if (items && items.length > 0) {
         const itemsToInsert = items.map(item => ({ ...item, order_id: newOrder.id }));
@@ -353,26 +288,18 @@ export const supabaseService = {
       }
       return newOrder;
   },
-  updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => {
-        return updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() });
-  },
-
+  updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() }),
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection('production_orders', '*, products(*)'),
   getTasks: (): Promise<Task[]> => supabaseService.getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
-
-  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances'),
-  getAllBasicMaterials: (): Promise<BasicMaterial[]> => supabaseService.getCollection('config_basic_materials'),
+  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_basic_materials(*)'),
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
     const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
-    if (error) handleError(error, 'getInventoryMovements');
+    if (error) { handleError(error, 'getInventoryMovements'); return []; }
     return data || [];
   },
-  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
-      return addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
-  },
-  
+  addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }),
   getProducts: (): Promise<Product[]> => supabaseService.getCollection('products'),
   getProductCategories: (): Promise<ProductCategory[]> => supabaseService.getCollection('product_categories'),
   addProduct: (productData: AnyProduct) => addDocument('products', productData),
@@ -381,30 +308,23 @@ export const supabaseService = {
       return updateDocument<Product>('products', productId, updateData);
   },
   getContacts: (): Promise<Contact[]> => supabaseService.getCollection('customers'),
-
   getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
-    const [ordersResult, wavesResult, shipmentsResult] = await Promise.all([
-      supabaseService.getOrders(),
-      supabaseService.getCollection<LogisticsWave>('logistics_waves'),
-      supabaseService.getCollection<LogisticsShipment>('logistics_shipments'),
+    const [orders, waves, shipments] = await Promise.all([
+        supabaseService.getCollection<Order>('orders', '*, customers(*)'),
+        supabaseService.getCollection<LogisticsWave>('logistics_waves'),
+        supabaseService.getCollection<LogisticsShipment>('logistics_shipments'),
     ]);
-
-    const loadedTables = [];
-    const missingTables = [];
-
-    if (Array.isArray(ordersResult) && ordersResult.length > 0) loadedTables.push('orders');
-    if (Array.isArray(wavesResult)) loadedTables.push('logistics_waves'); else missingTables.push('logistics_waves');
-    if (Array.isArray(shipmentsResult)) loadedTables.push('logistics_shipments'); else missingTables.push('logistics_shipments');
-    
-    console.log(`[LOGISTICS] Loaded tables: ${loadedTables.join(', ')}`);
-    if (missingTables.length > 0) {
-        console.warn(`[LOGISTICS] Missing tables: ${missingTables.join(', ')}`);
-    }
-
-    return {
-        orders: ordersResult,
-        waves: Array.isArray(wavesResult) ? wavesResult : [],
-        shipments: Array.isArray(shipmentsResult) ? shipmentsResult : [],
-    };
+    return { orders, waves, shipments };
+  },
+  getMarketingCampaigns: (): Promise<MarketingCampaign[]> => supabaseService.getCollection('marketing_campaigns'),
+  getMarketingSegments: (): Promise<MarketingSegment[]> => supabaseService.getCollection('marketing_segments'),
+  getMarketingTemplates: (): Promise<MarketingTemplate[]> => supabaseService.getCollection('marketing_templates'),
+  getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
+    const [suppliers, purchase_orders, purchase_order_items] = await Promise.all([
+        supabaseService.getCollection<Supplier>('suppliers'),
+        supabaseService.getCollection<PurchaseOrder>('purchase_orders'),
+        supabaseService.getCollection<PurchaseOrderItem>('purchase_order_items'),
+    ]);
+    return { suppliers, purchase_orders, purchase_order_items };
   },
 };

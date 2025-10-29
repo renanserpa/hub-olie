@@ -1,7 +1,8 @@
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
-    FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment
+    FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
+    MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -73,6 +74,7 @@ const config_fonts: MonogramFont[] = [
 const config_basic_materials: BasicMaterial[] = [
     { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50, is_active: true },
     { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20, is_active: true },
+    { id: 'bm3', name: 'Linha de Costura Branca', codigo: 'LIN-COS-BR', supply_group_id: 'sg3', unit: 'm', default_cost: 0.10, is_active: true },
 ];
 const task_statuses: TaskStatus[] = [
     {id: 'ts1', name: 'Corte', color: '#FFF2E5', position: 1},
@@ -109,6 +111,43 @@ const logistics_shipments: LogisticsShipment[] = [
     { id: 's2', order_id: 'o2', order_number: 'OLIE-2024-1002', customer_name: 'Carla Dias', status: 'pending', created_at: new Date().toISOString() },
 ];
 
+const marketing_campaigns: MarketingCampaign[] = [
+    { id: 'mc1', name: 'Lançamento Inverno 2024', status: 'active', channels: ['email', 'instagram'], budget: 5000, spent: 2345.67, kpis: { sent: 10000, delivered: 9850, read: 4500, clicked: 800, replies: 50, orders: 25, revenue: 7497.50 }, description: 'Lançamento da nova coleção de inverno com foco em bolsas de couro.', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), started_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+    { id: 'mc2', name: 'Promoção Dia das Mães', status: 'completed', channels: ['whatsapp', 'email'], budget: 3000, spent: 2980.00, kpis: { sent: 5000, delivered: 4900, read: 3200, clicked: 1200, replies: 150, orders: 80, revenue: 15000 }, description: 'Campanha promocional para o Dia das Mães com descontos progressivos.', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), started_at: new Date(Date.now() - 30 * 86400000).toISOString(), completed_at: new Date(Date.now() - 15 * 86400000).toISOString() },
+    { id: 'mc3', name: 'Black Friday 2025', status: 'scheduled', channels: ['email', 'instagram', 'sms'], budget: 10000, spent: 0, kpis: { sent: 0, delivered: 0, read: 0, clicked: 0, replies: 0, orders: 0, revenue: 0 }, description: 'Grande campanha de Black Friday com descontos em todo o site.', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), scheduled_at: new Date('2025-11-28T00:00:00Z').toISOString() },
+    { id: 'mc4', name: 'Newsletter de Conteúdo', status: 'draft', channels: ['email'], budget: 500, spent: 0, kpis: { sent: 0, delivered: 0, read: 0, clicked: 0, replies: 0, orders: 0, revenue: 0 }, description: 'Campanha recorrente de conteúdo para engajamento.', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
+const marketing_segments: MarketingSegment[] = [
+    { id: 'ms1', name: 'Clientes VIP', description: 'Clientes com mais de 5 compras.', rule_count: 2, audience_size: 42 },
+    { id: 'ms2', name: 'Inativos (6 meses)', description: 'Clientes que não compram há 6 meses.', rule_count: 1, audience_size: 215 },
+];
+
+const marketing_templates: MarketingTemplate[] = [
+    { id: 'mt1', name: 'Template Lançamento', channel: 'email', content_preview: '<h1>Nova Coleção Chegou!</h1><p>Confira as novidades...</p>' },
+    { id: 'mt2', name: 'Template Promo WhatsApp', channel: 'whatsapp', content_preview: 'Oi, {nome}! Temos uma oferta especial para você hoje! 🛍️' },
+];
+
+const suppliers: Supplier[] = [
+    { id: 'sup1', name: 'Fornecedor de Tecidos S.A.', document: '12.345.678/0001-99', email: 'contato@tecidos.com', phone: '(11) 2222-3333', payment_terms: '30D', lead_time_days: 15, rating: 5, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'sup2', name: 'Zíperes & Cia', document: '98.765.432/0001-11', email: 'vendas@ziperes.com.br', phone: '(47) 3333-4444', payment_terms: '45D', lead_time_days: 10, rating: 4, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
+const purchase_order_items: PurchaseOrderItem[] = [
+    { id: 'poi1', po_id: 'pc1', material_id: 'bm1', material_name: 'Tecido Linho Bege', quantity: 50, received_quantity: 50, unit_price: 42.00, total: 2100.00 },
+    { id: 'poi2', po_id: 'pc2', material_id: 'bm2', material_name: 'Zíper YKK Dourado', quantity: 200, received_quantity: 100, unit_price: 3.00, total: 600.00 },
+    { id: 'poi3', po_id: 'pc2', material_id: 'bm3', material_name: 'Linha de Costura Branca', quantity: 10, received_quantity: 0, unit_price: 15.00, total: 150.00 },
+    { id: 'poi4', po_id: 'pc3', material_id: 'bm1', material_name: 'Tecido Linho Bege', quantity: 20, received_quantity: 0, unit_price: 45.50, total: 910.00 },
+];
+
+const purchase_orders: PurchaseOrder[] = [
+    { id: 'pc1', po_number: 'PC-2024-001', supplier_id: 'sup1', supplier: suppliers[0], status: 'received', items: [purchase_order_items[0]], total: 2100.00, created_at: new Date(Date.now() - 10 * 86400000).toISOString(), updated_at: new Date(Date.now() - 5 * 86400000).toISOString(), issued_at: new Date(Date.now() - 9 * 86400000).toISOString(), received_at: new Date(Date.now() - 5 * 86400000).toISOString(), expected_delivery_date: new Date(Date.now() - 6 * 86400000).toISOString() },
+    { id: 'pc2', po_number: 'PC-2024-002', supplier_id: 'sup2', supplier: suppliers[1], status: 'partial', items: [purchase_order_items[1], purchase_order_items[2]], total: 750.00, created_at: new Date(Date.now() - 5 * 86400000).toISOString(), updated_at: new Date(Date.now() - 1 * 86400000).toISOString(), issued_at: new Date(Date.now() - 5 * 86400000).toISOString(), expected_delivery_date: new Date(Date.now() + 5 * 86400000).toISOString() },
+    { id: 'pc3', po_number: 'PC-2024-003', supplier_id: 'sup1', supplier: suppliers[0], status: 'issued', items: [purchase_order_items[3]], total: 910.00, created_at: new Date(Date.now() - 2 * 86400000).toISOString(), updated_at: new Date(Date.now() - 2 * 86400000).toISOString(), issued_at: new Date(Date.now() - 2 * 86400000).toISOString(), expected_delivery_date: new Date(Date.now() + 13 * 86400000).toISOString() },
+    { id: 'pc4', po_number: 'PC-2024-004', supplier_id: 'sup2', supplier: suppliers[1], status: 'draft', items: [], total: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
+
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
     customers: contacts,
@@ -131,6 +170,12 @@ let collections: Record<string, any[]> = {
     messages,
     logistics_waves,
     logistics_shipments,
+    marketing_campaigns,
+    marketing_segments,
+    marketing_templates,
+    suppliers,
+    purchase_orders,
+    purchase_order_items,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -184,7 +229,8 @@ export const sandboxService = {
         catalogs: { paletas_cores: [], cores_texturas: { tecido: fabric_colors, ziper: zipper_colors, vies: bias_colors, forro: [], puxador: [], bordado: [], texturas: [] }, fontes_monogramas: config_fonts },
         materials: { grupos_suprimento: [], materiais_basicos: config_basic_materials },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-        sistema: system_settings, midia: {}, orders, contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements
+        sistema: system_settings, midia: {}, orders, contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates,
+        suppliers, purchase_orders, purchase_order_items
     }),
     getOrders: () => Promise.resolve(orders),
     getOrder: (id: string) => Promise.resolve(get<Order>('orders', id)),
@@ -203,6 +249,13 @@ export const sandboxService = {
             orders: getCollection<Order>('orders'),
             waves: getCollection<LogisticsWave>('logistics_waves'),
             shipments: getCollection<LogisticsShipment>('logistics_shipments'),
+        });
+    },
+    getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
+        return Promise.resolve({
+            suppliers: getCollection<Supplier>('suppliers'),
+            purchase_orders: getCollection<PurchaseOrder>('purchase_orders'),
+            purchase_order_items: getCollection<PurchaseOrderItem>('purchase_order_items'),
         });
     },
 };

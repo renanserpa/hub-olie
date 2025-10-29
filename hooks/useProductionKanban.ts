@@ -54,13 +54,13 @@ export function useProductionKanban() {
         // Persist change to backend
         try {
             await dataService.updateTask(taskId, { status_id: newStatusId, position: newPosition });
-            // Success is implicit through the UI change
+            toast({ title: "Tarefa Movida!", description: "A nova posição foi salva com sucesso." });
         } catch (error) {
             // Revert on failure
-            toast({ title: "Erro de Sincronização", description: "Não foi possível mover a tarefa.", variant: "destructive" });
             setTasks(originalTasks);
+            toast({ title: "Erro ao Mover!", description: "Não foi possível salvar a alteração. A tarefa foi revertida.", variant: "destructive" });
         }
-    }, [tasks, isAuthorized]);
+    }, [isAuthorized, tasks]);
 
     return {
         tasks,

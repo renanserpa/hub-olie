@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -120,4 +120,16 @@ export const dataService = {
   // FIX: Exposed getLogisticsData through the data service facade to fix error in useLogistics hook.
   getLogisticsData: (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> =>
     isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
+
+  // Marketing
+  getMarketingCampaigns: (): Promise<MarketingCampaign[]> =>
+    isSandbox() ? sandboxService.getCollection('marketing_campaigns') : realSupabaseService.getCollection('marketing_campaigns'),
+  getMarketingSegments: (): Promise<MarketingSegment[]> =>
+    isSandbox() ? sandboxService.getCollection('marketing_segments') : realSupabaseService.getCollection('marketing_segments'),
+  getMarketingTemplates: (): Promise<MarketingTemplate[]> =>
+    isSandbox() ? sandboxService.getCollection('marketing_templates') : realSupabaseService.getCollection('marketing_templates'),
+
+  // Purchasing
+  getPurchasingData: (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> =>
+    isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
 };

@@ -24,4 +24,26 @@ Responda apenas com a descrição gerada, sem formatação extra ou frases como 
       throw new Error('Falha ao gerar descrição com a IA.');
     }
   },
+
+  generateCampaignDescription: async (campaignName: string, campaignObjective: string): Promise<string> => {
+    try {
+      const prompt = `Você é um especialista em marketing digital para uma marca de luxo.
+O nome da campanha é "${campaignName}".
+O objetivo é: "${campaignObjective}".
+
+Gere uma descrição interna curta, clara e profissional para esta campanha. A descrição será usada na plataforma de operações para contextualizar a equipe.
+Fale em Portugês do Brasil. A descrição deve ter no máximo 200 caracteres.
+Responda apenas com a descrição gerada, sem formatação extra ou frases como "Aqui está a descrição:".`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-flash-latest',
+        contents: prompt,
+      });
+
+      return response.text.trim();
+    } catch (error) {
+      console.error('Error generating campaign description with Gemini:', error);
+      throw new Error('Falha ao gerar descrição com a IA.');
+    }
+  },
 };

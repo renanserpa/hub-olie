@@ -1,14 +1,8 @@
-
-
-
-
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -18,6 +12,8 @@ import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import SettingsPage from './components/SettingsPage';
 import LogisticsPage from './components/LogisticsPage';
+import MarketingPage from './pages/MarketingPage';
+import PurchasesPage from './pages/PurchasesPage';
 import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
@@ -31,8 +27,10 @@ const MAIN_TABS = [
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
     { id: 'production', label: 'Produção', icon: Workflow },
     { id: 'inventory', label: 'Estoque', icon: Package },
+    { id: 'purchases', label: 'Compras', icon: ShoppingBasket },
     { id: 'logistics', label: 'Logística', icon: Truck },
     { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'contacts', label: 'Contatos', icon: Users },
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'settings', label: 'Configurações', icon: Settings },
@@ -42,8 +40,10 @@ const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
     orders: ['AdminGeral', 'Vendas', 'Administrativo'],
     production: ['AdminGeral', 'Producao'],
     inventory: ['AdminGeral', 'Producao', 'Financeiro'],
+    purchases: ['AdminGeral', 'Financeiro'],
     logistics: ['AdminGeral', 'Administrativo'],
     omnichannel: ['AdminGeral', 'Vendas', 'Conteudo'],
+    marketing: ['AdminGeral', 'Conteudo'],
     contacts: ['AdminGeral', 'Vendas', 'Administrativo'],
     products: ['AdminGeral', 'Producao', 'Vendas', 'Administrativo'],
     settings: ['AdminGeral', 'Administrativo'],
@@ -53,9 +53,9 @@ const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
     AdminGeral: 'orders',
     Producao: 'production',
     Vendas: 'orders',
-    Financeiro: 'inventory',
+    Financeiro: 'purchases',
     Administrativo: 'logistics',
-    Conteudo: 'omnichannel',
+    Conteudo: 'marketing',
 };
 
 const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
@@ -114,10 +114,14 @@ const App: React.FC = () => {
                 return <ProductionPage />;
             case 'inventory':
                 return <InventoryPage />;
+            case 'purchases':
+                return <PurchasesPage />;
             case 'logistics':
                 return <LogisticsPage />;
             case 'omnichannel':
                 return <OmnichannelPage user={user as User} />;
+            case 'marketing':
+                return <MarketingPage />;
             case 'contacts':
                 return <ContactsPage />;
             case 'products':

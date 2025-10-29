@@ -3,6 +3,8 @@ import { Conversation, Channel, Priority } from '../../types';
 import { cn } from '../../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
+import { UserPlus, Mail } from 'lucide-react';
+import { IconButton } from '../ui/IconButton';
 
 interface ConversationCardProps {
     conversation: Conversation;
@@ -38,7 +40,7 @@ const ConversationCard: React.FC<ConversationCardProps> = ({ conversation, isSel
         <button
             onClick={onClick}
             className={cn(
-                'w-full text-left p-3 rounded-lg transition-colors duration-150',
+                'w-full text-left p-3 rounded-lg transition-colors duration-150 relative group',
                 isSelected ? 'bg-accent' : 'hover:bg-accent/50',
                 priorityClasses[conversation.priority]
             )}
@@ -62,6 +64,24 @@ const ConversationCard: React.FC<ConversationCardProps> = ({ conversation, isSel
                         {conversation.unreadCount}
                      </div>
                 )}
+            </div>
+
+            {/* Hover actions */}
+            <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <IconButton 
+                    title="Atribuir a mim" 
+                    className="h-7 w-7 bg-white/50 hover:bg-white"
+                    onClick={(e) => { e.stopPropagation(); console.log('Assign to me clicked'); }}
+                >
+                    <UserPlus size={14} />
+                </IconButton>
+                <IconButton 
+                    title="Marcar como não lido" 
+                    className="h-7 w-7 bg-white/50 hover:bg-white"
+                    onClick={(e) => { e.stopPropagation(); console.log('Mark as unread clicked'); }}
+                >
+                    <Mail size={14} />
+                </IconButton>
             </div>
         </button>
     );
