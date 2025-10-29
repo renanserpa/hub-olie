@@ -13,6 +13,7 @@ interface ContactsPageProps {
 }
 
 const ContactsPage: React.FC<ContactsPageProps> = ({ user }) => {
+    // FIX: Destructuring the object returned by the useContacts hook, which was previously failing because the hook returned void.
     const {
         isLoading,
         isSaving,

@@ -5,33 +5,34 @@ import { toast } from './use-toast';
 
 export function useContacts() {
     const [allContacts, setAllContacts] = useState<Contact[]>([]);
-    const [isDataLoading, setIsDataLoading] = useState(true);
-    const [isMutationLoading, setIsMutationLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<'all' | 'birthdays'>('all');
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
-    const loadContacts = useCallback(async () => {
-        setIsDataLoading(true);
+    const loadData = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const contacts = await dataService.getContacts();
-            setAllContacts(contacts);
+            const data = await dataService.getContacts();
+            setAllContacts(data);
         } catch (error) {
-             toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
+            toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
         } finally {
-            setIsDataLoading(false);
+            setIsLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        loadContacts();
+        loadData();
         const listener = dataService.listenToCollection<Contact>('customers', undefined, (newContacts) => {
             setAllContacts(newContacts);
         });
         return () => listener.unsubscribe();
-    }, [loadContacts]);
+    }, [loadData]);
+
 
     const filteredContacts = useMemo(() => {
         let contacts = allContacts;
@@ -41,8 +42,19 @@ export function useContacts() {
             contacts = contacts.filter(c =>
                 c.name.toLowerCase().includes(lowercasedQuery) ||
                 (c.email && c.email.toLowerCase().includes(lowercasedQuery)) ||
-                (c.phone && c.phone.includes(lowercasedQuery))
+                (c.phone && c.phone.includes(lowercasedQuery)) ||
+                (c.document && c.document.includes(lowercasedQuery))
             );
+        }
+        
+        if (filter === 'birthdays') {
+            const currentMonth = new Date().getMonth();
+            contacts = contacts.filter(c => {
+                if (!c.birth_date) return false;
+                // Handles date strings like 'YYYY-MM-DD' correctly by adding a time to avoid timezone issues.
+                const birthDate = new Date(`${c.birth_date}T00:00:00`);
+                return birthDate.getMonth() === currentMonth;
+            });
         }
         
         return contacts;
@@ -59,30 +71,26 @@ export function useContacts() {
     };
     
     const saveContact = async (contactData: AnyContact | Contact) => {
-        setIsMutationLoading(true);
+        setIsSaving(true);
         try {
             if ('id' in contactData && contactData.id) {
-                const { id, ...dataToUpdate } = contactData;
-                // FIX: Added explicit generic type <Contact> to updateDocument call to ensure type safety.
-                await dataService.updateDocument<Contact>('customers', id, dataToUpdate);
+                await dataService.updateDocument('customers', contactData.id, contactData);
                 toast({ title: "Sucesso!", description: "Contato atualizado." });
             } else {
-                // FIX: Added explicit generic type <Contact> to addDocument call to ensure type safety.
-                await dataService.addDocument<Contact>('customers', contactData as AnyContact);
+                await dataService.addDocument('customers', contactData as AnyContact);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
-            // No need to call loadContacts() here, the listener will update the state.
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o contato.", variant: "destructive" });
         } finally {
-            setIsMutationLoading(false);
+            setIsSaving(false);
         }
     };
 
     return {
-        isLoading: isDataLoading,
-        isSaving: isMutationLoading,
+        isLoading,
+        isSaving,
         filteredContacts,
         searchQuery,
         setSearchQuery,

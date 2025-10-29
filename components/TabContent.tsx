@@ -12,8 +12,8 @@ interface TabContentProps {
   category: SettingsCategory;
   data: AnySettingsItem[];
   fields: FieldConfig[];
-  onAdd: (item: Omit<AnySettingsItem, 'id'>) => Promise<void>;
-  onUpdate: (item: AnySettingsItem) => Promise<void>;
+  onAdd: (item: Omit<AnySettingsItem, 'id'>, fileData?: Record<string, File | null>) => Promise<void>;
+  onUpdate: (item: AnySettingsItem, fileData?: Record<string, File | null>) => Promise<void>;
   onDelete: (itemId: string) => Promise<void>;
   isAdmin: boolean;
   title: string;
@@ -23,6 +23,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<AnySettingsItem | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [fileData, setFileData] = useState<Record<string, File | null>>({});
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -30,6 +31,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
   const openModal = (item: AnySettingsItem | null = null) => {
     setCurrentItem(item);
     setFormData(item ? { ...item } : fields.reduce((acc, field) => ({ ...acc, [field.key]: field.type === 'checkbox' ? false : '' }), {}));
+    setFileData({});
     setIsModalOpen(true);
   };
 
@@ -37,6 +39,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
     setIsModalOpen(false);
     setCurrentItem(null);
     setFormData({});
+    setFileData({});
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -44,6 +47,9 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
     const name = target.name;
     if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         setFormData(prev => ({ ...prev, [name]: target.checked }));
+    } else if (target instanceof HTMLInputElement && target.type === 'file') {
+        const file = target.files ? target.files[0] : null;
+        setFileData(prev => ({ ...prev, [name]: file }));
     } else {
         setFormData(prev => ({ ...prev, [name]: target.value }));
     }
@@ -68,9 +74,9 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
 
     try {
         if (currentItem) {
-          await onUpdate(submissionData as AnySettingsItem);
+          await onUpdate(submissionData as AnySettingsItem, fileData);
         } else {
-          await onAdd(submissionData as Omit<AnySettingsItem, 'id'>);
+          await onAdd(submissionData as Omit<AnySettingsItem, 'id'>, fileData);
         }
         closeModal();
     } catch (error) {
@@ -126,6 +132,11 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                          <Badge variant={item[field.key as keyof AnySettingsItem] ? 'ativo' : 'inativo'}>
                              {item[field.key as keyof AnySettingsItem] ? 'Ativo' : 'Inativo'}
                          </Badge>
+                      ) : field.type === 'file' ? (
+                          item[field.key as keyof AnySettingsItem] ? 
+                          <a href={item[field.key as keyof AnySettingsItem] as string} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate">
+                            {(item[field.key as keyof AnySettingsItem] as string).split('/').pop()}
+                          </a> : <span className="text-xs text-textSecondary/70">Nenhum arquivo</span>
                       ) : (
                         String(item[field.key as keyof AnySettingsItem] ?? '')
                       )}
@@ -199,6 +210,25 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             <option value="">Selecione</option>
                             {field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
+                    ) : field.type === 'file' ? (
+                        <div className="space-y-2">
+                            <input 
+                                type="file"
+                                id={field.key}
+                                name={field.key}
+                                onChange={handleInputChange}
+                                className="w-full text-sm text-textSecondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                accept=".ttf,.otf,.woff,.woff2"
+                            />
+                            {fileData[field.key] && (
+                                <p className="text-xs text-green-600">Novo arquivo selecionado: {fileData[field.key]?.name}</p>
+                            )}
+                            {!fileData[field.key] && formData[field.key] && (
+                                 <div className="text-xs text-textSecondary">
+                                    Arquivo atual: <a href={formData[field.key]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{formData[field.key].split('/').pop()}</a>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <input
                             type={field.type}

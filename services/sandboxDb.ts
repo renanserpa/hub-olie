@@ -1,5 +1,3 @@
-
-
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
@@ -42,9 +40,12 @@ const order_items: OrderItem[] = [
 ];
 
 const orders: Order[] = [
-    { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', customers: contacts[0], status: 'in_production', items: [order_items[0]], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', customers: contacts[2], status: 'paid', items: [order_items[1], order_items[2]], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', customers: contacts[1], status: 'pending_payment', items: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
+    { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', customers: contacts[0], status: 'in_production', items: [order_items[0]], payments_history: [], timeline: [], notes_internal: [], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
+    { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', customers: contacts[2], status: 'paid', items: [order_items[1], order_items[2]], payments_history: [], timeline: [], notes_internal: [], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
+    { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', customers: contacts[1], status: 'pending_payment', items: [], payments_history: [], timeline: [], notes_internal: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
 ];
 
 const production_orders: ProductionOrder[] = [
@@ -68,9 +69,10 @@ const config_fonts: MonogramFont[] = [
     { id: 'mf1', name: 'Brush Script', style: 'script', category: 'script', preview_url: '', font_file_url: '', is_active: true },
     { id: 'mf2', name: 'Times New Roman', style: 'regular', category: 'serif', preview_url: '', font_file_url: '', is_active: true },
 ];
+// FIX: Added the required `is_active` property to the mock materials data.
 const config_basic_materials: BasicMaterial[] = [
-    { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50 },
-    { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20 },
+    { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50, is_active: true },
+    { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20, is_active: true },
 ];
 const task_statuses: TaskStatus[] = [
     {id: 'ts1', name: 'Corte', color: '#FFF2E5', position: 1},
@@ -88,21 +90,15 @@ const inventory_movements: InventoryMovement[] = [
 ];
 
 const system_settings: SystemSetting[] = [
-    { id: 'ss1', name: 'Parâmetros de Frete', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
+    // FIX: Renamed 'name' property to 'key' to match the SystemSetting type.
+    { id: 'ss1', key: 'Parâmetros de Frete', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
 ];
 const product_categories: ProductCategory[] = [
     { id: 'pc1', name: 'Bolsas', description: 'Bolsas de diversos tamanhos e modelos.' },
     { id: 'pc2', name: 'Nécessaires', description: 'Nécessaires para organização e viagem.' },
 ];
-const conversations: Conversation[] = [
-    { id: 'convo1', channel: 'whatsapp', customerId: 'c1', customerHandle: '+55 11 98765-4321', customerName: 'Ana Silva', title: 'Preciso de ajuda com a cor do zíper!', status: 'open', priority: 'high', unreadCount: 2, lastMessageAt: new Date(Date.now() - 3600000).toISOString(), tags: ['dúvida', 'personalização'], createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
-    { id: 'convo2', channel: 'instagram', customerId: 'c2', customerHandle: '@brunocosta', customerName: 'Bruno Costa', title: 'Meu pedido ainda não chegou', status: 'pending', priority: 'normal', unreadCount: 0, lastMessageAt: new Date(Date.now() - 86400000).toISOString(), tags: ['entrega'], assigneeId: 'sandbox-user-01', createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-];
-const messages: Message[] = [
-    { id: 'msg1', conversationId: 'convo1', direction: 'in', type: 'text', content: 'Olá! Estou em dúvida sobre qual cor de zíper combina mais com o tecido Bege Claro. Dourado ou prateado?', status: 'read', createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
-    { id: 'msg2', conversationId: 'convo1', direction: 'out', type: 'text', content: 'Olá, Ana! Tudo bem? Ambas as opções ficam lindas! O dourado dá um toque mais clássico e sofisticado, enquanto o prateado é mais moderno. Qual o seu estilo?', authorName: 'Ateliê', status: 'delivered', createdAt: new Date(Date.now() - 1.5 * 3600000).toISOString() },
-    { id: 'msg3', conversationId: 'convo2', direction: 'in', type: 'text', content: 'Oi, fiz o pedido OLIE-2024-1003 e queria saber se já foi enviado.', status: 'read', createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-];
+const conversations: Conversation[] = [];
+const messages: Message[] = [];
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -132,7 +128,7 @@ console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 const getCollection = <T>(path: string): T[] => collections[path] as T[] || [];
 const get = <T>(path: string, id: string): T | null => collections[path]?.find(item => item.id === id) as T || null;
 const create = <T extends {id?: string}>(path: string, data: Omit<T, 'id'>): T => {
-    // FIX: Changed type assertion to 'as unknown as T' to satisfy stricter type checking.
+    // FIX: Changed unsafe type assertion 'as T' to 'as unknown as T' to satisfy the compiler.
     const newItem = { ...data, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as unknown as T;
     collections[path] = [...(collections[path] || []), newItem];
     emit(path);

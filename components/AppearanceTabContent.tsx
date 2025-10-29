@@ -1,18 +1,18 @@
-
 import React from 'react';
-import { Card, CardContent } from './ui/Card';
-import { Paintbrush } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
+import PlaceholderContent from './PlaceholderContent';
 
 const AppearanceTabContent: React.FC = () => (
-    <Card>
-        <CardContent>
-            <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
-                <Paintbrush className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-4 text-lg font-medium text-textPrimary">Personalização da Aparência</h3>
-                <p className="mt-1 text-sm text-textSecondary">Funcionalidades como upload de logo e biblioteca de mídia estarão disponíveis em breve.</p>
-            </div>
-        </CardContent>
-    </Card>
+    <PlaceholderContent 
+        title="Aparência e Mídia"
+        requiredTable="media_assets & storage buckets"
+        icon={ImageIcon}
+        children={
+            <p className="mt-1 text-sm text-textSecondary">
+                Personalize a aparência do sistema com seu logo e tema, e gerencie a biblioteca de mídias para produtos e materiais.
+            </p>
+        }
+    />
 );
 
 export default AppearanceTabContent;

@@ -1,9 +1,7 @@
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
-import { Conversation, Message, Quote, Contact, Order, User, MessageType } from '../types';
+import { Conversation, Message, Quote, Contact, Order, User } from '../types';
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;
@@ -26,16 +24,15 @@ export function useOmnichannel(user: User) {
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
-                 const [contactsData, ordersData, convosData, messagesData] = await Promise.all([
-                    dataService.getCollection<Contact>('customers'),
-                    dataService.getCollection<Order>('orders'),
-                    dataService.getCollection<Conversation>('conversations'),
-                    dataService.getCollection<Message>('messages'),
+                 const [contactsData, ordersData] = await Promise.all([
+                    dataService.getContacts(),
+                    dataService.getOrders()
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);
-                 setConversations(convosData);
-                 setMessages(messagesData);
+                 // Mock data load for now
+                 setConversations([]);
+                 setMessages([]);
             } catch(e) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
             } finally {
@@ -45,19 +42,9 @@ export function useOmnichannel(user: User) {
         fetchAllData();
     }, []);
 
-    useEffect(() => {
-        const convosListener = dataService.listenToCollection<Conversation>('conversations', undefined, setConversations);
-        const messagesListener = dataService.listenToCollection<Message>('messages', undefined, setMessages);
-
-        return () => {
-            convosListener.unsubscribe();
-            messagesListener.unsubscribe();
-        };
-    }, []);
-
 
     const filteredConversations = useMemo(() => {
-        let convos = [...conversations].sort((a,b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt));
+        let convos = [...conversations];
         if (assigneeFilter === 'mine') return convos.filter(c => c.assigneeId === user.uid);
         if (assigneeFilter === 'unassigned') return convos.filter(c => !c.assigneeId);
         return convos;
@@ -77,54 +64,20 @@ export function useOmnichannel(user: User) {
         return allOrders.filter(o => o.customer_id === selectedConversation.customerId)
             .sort((a, b) => safeGetTime(b.created_at) - safeGetTime(a.created_at));
     }, [selectedConversation, allOrders]);
-    
-    const currentMessages = useMemo(() => {
-        if (!selectedConversationId) return [];
-        return messages
-            .filter(m => m.conversationId === selectedConversationId)
-            .sort((a,b) => safeGetTime(a.createdAt) - safeGetTime(b.createdAt));
-    }, [messages, selectedConversationId]);
 
     const currentQuote = useMemo(() => {
         if (!selectedConversation?.quoteId) return null;
-        // In a real implementation, you would fetch the quote by its ID.
-        // For sandbox, we can assume no quote exists for simplicity.
         return null;
     }, [selectedConversation]);
 
-    const setSelectedConversation = (conversationId: string) => {
+    const handleSelectConversation = async (conversationId: string) => {
         setSelectedConversationId(conversationId);
-        // Mark conversation as read
-        // FIX: Added explicit generic type <Conversation> to updateDocument call to ensure type safety.
-        dataService.updateDocument<Conversation>('conversations', conversationId, { unreadCount: 0 });
     };
-
-    const sendMessage = async (content: string, type: 'text' | 'note') => {
-        if (!selectedConversation) return;
-
-        setIsSending(true);
-        try {
-            const messagePayload = {
-                conversationId: selectedConversation.id,
-                direction: type === 'note' ? 'note' : 'out',
-                type: type as MessageType,
-                content,
-                status: 'sent',
-                authorId: user.uid,
-                authorName: user.email.split('@')[0],
-                createdAt: new Date().toISOString()
-            };
-            await dataService.addDocument('messages', messagePayload as Omit<Message, 'id'>);
-            // FIX: Added explicit generic type <Conversation> to updateDocument call to ensure type safety.
-            await dataService.updateDocument<Conversation>('conversations', selectedConversation.id, {
-                lastMessageAt: new Date().toISOString(),
-                title: content,
-            });
-        } catch(e) {
-            toast({ title: "Erro", description: "Falha ao enviar mensagem.", variant: 'destructive' });
-        } finally {
-            setIsSending(false);
-        }
+    
+    const sendMessage = async (content: string, type: 'text' | 'note' = 'text') => {
+        if (!selectedConversationId || !content.trim()) return;
+        console.warn('sendMessage not implemented yet.');
+        toast({ title: "Funcionalidade desabilitada", description: "O envio de mensagens será implementado em breve.", variant: "destructive"});
     };
 
     return {
@@ -132,13 +85,13 @@ export function useOmnichannel(user: User) {
         isSending,
         filteredConversations,
         selectedConversation,
-        currentMessages,
+        currentMessages: messages,
         customerInfo,
         customerOrders,
         currentQuote,
         assigneeFilter,
         setAssigneeFilter,
-        setSelectedConversation,
+        setSelectedConversation: handleSelectConversation,
         sendMessage,
     };
 }

@@ -1,6 +1,11 @@
 
 
 
+
+
+
+
+
 // FIX: Added ContactAddress interface to be used in the Contact type.
 export interface ContactAddress {
     zip?: string;
@@ -85,6 +90,7 @@ export interface CatalogData {
 export interface SupplyGroup extends BaseItem {
     codigo: string;
     descricao?: string;
+    is_active: boolean;
 }
 export interface BasicMaterial extends BaseItem {
     codigo: string;
@@ -92,6 +98,7 @@ export interface BasicMaterial extends BaseItem {
     unit: 'm' | 'kg' | 'un';
     default_cost?: number;
     metadata?: Record<string, any>;
+    is_active: boolean;
 }
 export interface MaterialData {
     grupos_suprimento: SupplyGroup[];
@@ -99,8 +106,7 @@ export interface MaterialData {
 }
 
 // 3. Logística
-export interface DeliveryMethod {
-    id: string;
+export interface DeliveryMethod extends BaseItem {
     type: 'correios' | 'motoboy' | 'retirada';
     enabled: boolean;
     notes?: string;
@@ -133,8 +139,8 @@ export interface LogisticaData {
 // 4. Sistema
 export interface SystemSetting {
   id: string; 
-  name: string;
-  value: string;
+  key: string; // Renamed from name to key
+  value: string; // Stored as JSON string
   category: string;
   description: string;
 }
@@ -173,7 +179,7 @@ export interface Product extends BaseItem {
 export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 
 
-// --- Orders Module Types ---
+// --- Orders Module Types (v3 Consolidated) ---
 
 export type OrderStatus = 'pending_payment' | 'paid' | 'in_production' | 'awaiting_shipping' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -184,7 +190,6 @@ export interface ConfigJson {
   text?: string;
   width?: number;
   height?: number;
-  thickness?: number;
   notes?: string;
   
   // New structured personalization fields
@@ -210,24 +215,68 @@ export interface OrderItem {
   config_json?: ConfigJson;
   product?: Product;
 }
+
+// v1 Integration Data (stored in JSONB fields)
 export interface PaymentDetails { status: 'pending' | 'paid' | 'failed'; method: string; checkoutUrl?: string; transactionId?: string; }
 export interface FiscalDetails { status: 'pending' | 'authorized' | 'rejected'; nfeNumber?: string; serie?: string; pdfUrl?: string; xmlUrl?: string; }
 export interface LogisticsDetails { status: 'pending' | 'in_transit' | 'shipped' | 'delivered'; carrier: string; service: string; tracking?: string; labelUrl?: string; }
+
+// v2 Normalized Data (stored in separate tables)
+export interface OrderPayment {
+    id: string;
+    order_id: string;
+    amount: number;
+    method: 'pix' | 'credit_card' | 'boleto' | 'link';
+    status: 'pending' | 'completed' | 'failed';
+    transaction_id?: string;
+    gateway_response?: Record<string, any>;
+    paid_at?: string;
+}
+
+export interface OrderTimelineEvent {
+    id: string;
+    order_id: string;
+    event_type: 'status_change' | 'payment' | 'note' | 'integration' | 'creation';
+    description: string;
+    metadata?: Record<string, any>;
+    created_by?: string; // User ID
+    created_at: string;
+}
+
+export interface OrderNote {
+    id: string;
+    order_id: string;
+    content: string;
+    is_pinned: boolean;
+    created_by: string; // User ID
+    created_at: string;
+}
+
+// Consolidated Order type for v3
 export interface Order { 
   id: string; 
   number: string; 
   customer_id: string; 
   customers?: Contact; // Joined data from 'customers' table
   status: OrderStatus; 
+  
+  // v2 Normalized Data
   items: OrderItem[]; 
+  payments_history: OrderPayment[]; // from order_payments table
+  timeline: OrderTimelineEvent[]; // from order_timeline table
+  notes_internal: OrderNote[]; // from order_notes table
+  
   subtotal: number; 
   discounts: number; 
   shipping_fee: number; 
   total: number; 
+  
+  // v1 Integration Data (JSONB) - acts as a cache/summary
   payments?: PaymentDetails; 
   fiscal?: FiscalDetails; 
   logistics?: LogisticsDetails; 
-  notes?: string; 
+  
+  notes?: string; // General notes field
   origin?: 'manual' | 'catalog' | 'whatsapp' | 'admin'; 
   created_at: string; 
   updated_at: string; 
@@ -428,6 +477,6 @@ export type SettingsCategory = keyof Omit<AppData, 'orders' | 'contacts' | 'prod
 export type FieldConfig = {
     key: string;
     label: string;
-    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select' | 'date' | 'multiselect';
+    type: 'text' | 'color' | 'checkbox' | 'textarea' | 'number' | 'select' | 'date' | 'multiselect' | 'file';
     options?: { value: string; label: string }[];
 };

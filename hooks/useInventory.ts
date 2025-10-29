@@ -36,14 +36,7 @@ export function useInventory() {
 
     useEffect(() => {
         loadData();
-        const balancesListener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_basic_materials(*)', setAllBalances);
-        const materialsListener = dataService.listenToCollection<BasicMaterial>('config_basic_materials', undefined, setAllMaterials);
-
-        return () => {
-            balancesListener.unsubscribe();
-            materialsListener.unsubscribe();
-        };
-    }, []); // Only run once
+    }, [loadData]);
 
     useEffect(() => {
         const fetchMovements = async () => {
@@ -62,14 +55,6 @@ export function useInventory() {
             }
         };
         fetchMovements();
-        const movementsListener = dataService.listenToCollection<InventoryMovement>('inventory_movements', undefined, (allMovements) => {
-            if(selectedMaterialId) {
-                setMovements(allMovements.filter(m => m.material_id === selectedMaterialId));
-            }
-        });
-
-        return () => movementsListener.unsubscribe();
-
     }, [selectedMaterialId]);
 
     const filteredBalances = useMemo(() => {
@@ -89,9 +74,10 @@ export function useInventory() {
 
     const addInventoryMovement = async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
         try {
-            await dataService.addInventoryMovement(movementData);
+            // FIX: Added `created_at` to the payload to satisfy the type required by `addDocument`.
+            await dataService.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
             toast({ title: "Sucesso!", description: "Movimento de estoque registrado." });
-            // Data will be reloaded by the listener
+            loadData();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível registrar o movimento.", variant: "destructive" });
         }

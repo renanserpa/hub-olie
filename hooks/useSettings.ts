@@ -1,0 +1,103 @@
+import { useState, useEffect, useCallback } from 'react';
+import { AppData, AnySettingsItem, SettingsCategory } from '../types';
+import { dataService } from '../services/dataService';
+import { toast } from './use-toast';
+import { useAuth } from '../context/AuthContext';
+import { storageService } from '../services/storageService';
+
+export function useSettings() {
+    const { user } = useAuth();
+    const [settingsData, setSettingsData] = useState<AppData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const isAdmin = user?.role === 'AdminGeral' || user?.role === 'Administrativo';
+
+    const loadSettings = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await dataService.getSettings();
+            setSettingsData(data);
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível carregar as configurações.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadSettings();
+    }, [loadSettings]);
+    
+    const performMutation = async (
+        mutationFn: Promise<any>,
+        successMessage: string,
+        errorMessage: string
+    ) => {
+        if (!isAdmin) {
+            toast({ title: 'Acesso Negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+            throw new Error('Permission denied');
+        }
+        try {
+            await mutationFn;
+            toast({ title: 'Sucesso!', description: successMessage });
+            await loadSettings();
+        } catch (error) {
+            console.error(errorMessage, error);
+            const errorMsg = (error as Error).message || errorMessage;
+            toast({ title: 'Erro!', description: errorMsg, variant: 'destructive' });
+            throw error; // Re-throw so components know the submission failed
+        }
+    };
+
+    const uploadFilesAndUpdateItem = async (item: any, fileData?: Record<string, File | null>) => {
+        const itemToSubmit = { ...item };
+        if (!fileData) return itemToSubmit;
+
+        for (const key in fileData) {
+            const file = fileData[key];
+            if (file) {
+                toast({ title: "Enviando arquivo...", description: `Enviando ${file.name}` });
+                const { url } = await storageService.uploadFile(file); 
+                itemToSubmit[key] = url;
+            }
+        }
+        return itemToSubmit;
+    };
+
+    const handleAdd = async (category: SettingsCategory, item: Omit<AnySettingsItem, 'id'>, subTab: string | null, subSubTab: string | null, fileData?: Record<string, File | null>) => {
+        const processedItem = await uploadFilesAndUpdateItem(item, fileData);
+        return performMutation(
+            dataService.addSetting(category, processedItem, subTab, subSubTab),
+            'Item adicionado com sucesso.',
+            'Falha ao adicionar o item.'
+        );
+    };
+
+    const handleUpdate = async (category: SettingsCategory, item: AnySettingsItem, subTab: string | null, subSubTab: string | null, fileData?: Record<string, File | null>) => {
+        const processedItem = await uploadFilesAndUpdateItem(item, fileData);
+        return performMutation(
+            dataService.updateSetting(category, processedItem.id, processedItem, subTab, subSubTab),
+            'Item atualizado com sucesso.',
+            'Falha ao atualizar o item.'
+        );
+    };
+    
+    const handleDelete = (category: SettingsCategory, itemId: string, subTab: string | null, subSubTab: string | null) => {
+         return performMutation(
+            dataService.deleteSetting(category, itemId, subTab, subSubTab),
+            'Item excluído com sucesso.',
+            'Falha ao excluir o item.'
+         );
+    };
+
+
+    return {
+        settingsData,
+        isLoading,
+        isAdmin,
+        handleAdd,
+        handleUpdate,
+        handleDelete,
+        refresh: loadSettings
+    };
+}

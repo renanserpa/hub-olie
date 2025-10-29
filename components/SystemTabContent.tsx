@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import PlaceholderContent from './PlaceholderContent';
 
 interface SystemTabContentProps {
   initialSettings: SystemSetting[];
@@ -50,9 +51,8 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         }
         setIsSaving(true);
         try {
-            // FIX: Added explicit generic type <SystemSetting> to updateDocument call to ensure type safety.
-            await Promise.all(settings.map(s => dataService.updateDocument<SystemSetting>('system_settings', s.id, { value: s.value })));
-            toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas (simulado).' });
+            await dataService.updateSystemSettings(settings);
+            toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas.' });
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar as configurações.', variant: 'destructive' });
         } finally {
@@ -78,6 +78,10 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
     };
 
     const formatCategoryName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    if (initialSettings.length === 0) {
+        return <PlaceholderContent title="Configurações Globais do Sistema" requiredTable="system_settings" />;
+    }
 
     return (
         <div className="space-y-6">
@@ -89,8 +93,8 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {Array.isArray(settingsInCategory) && settingsInCategory.map(setting => (
                             <div key={setting.id} className="p-4 border rounded-xl bg-secondary/50">
-                                <h4 className="font-semibold text-textPrimary">{setting.name}</h4>
-                                <p className="text-sm text-textSecondary mb-4">{setting.description}</p>
+                                <h4 className="font-semibold text-textPrimary">{setting.description}</h4>
+                                <p className="text-sm text-textSecondary mb-4 font-mono">{setting.key}</p>
                                 <div className="space-y-3">
                                     {(() => {
                                         try {

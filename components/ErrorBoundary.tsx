@@ -6,9 +6,11 @@ type Props = { children: React.ReactNode };
 type State = { hasError: boolean; error?: any };
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Switched to class property for state initialization to resolve typing issues with `this.state`, `this.props`, etc.
-  public state: State = { hasError: false, error: undefined };
-  
+  // FIX: Reverted to class property for state initialization.
+  // The constructor-based approach was causing type errors where `this.state` and `this.props`
+  // were not being recognized on the component instance in this environment.
+  state: State = { hasError: false };
+
   static getDerivedStateFromError(error: any): State {
     return { hasError: true, error };
   }
