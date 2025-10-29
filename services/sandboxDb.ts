@@ -42,11 +42,8 @@ const order_items: OrderItem[] = [
 ];
 
 const orders: Order[] = [
-    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
     { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', customers: contacts[0], status: 'in_production', items: [order_items[0]], payments_history: [], timeline: [], notes_internal: [], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
     { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', customers: contacts[2], status: 'paid', items: [order_items[1], order_items[2]], payments_history: [], timeline: [], notes_internal: [], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    // FIX: Added missing properties (payments_history, timeline, notes_internal) to align with the Order type.
     { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', customers: contacts[1], status: 'pending_payment', items: [], payments_history: [], timeline: [], notes_internal: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
 ];
 
@@ -71,7 +68,6 @@ const config_fonts: MonogramFont[] = [
     { id: 'mf1', name: 'Brush Script', style: 'script', category: 'script', preview_url: '', font_file_url: '', is_active: true },
     { id: 'mf2', name: 'Times New Roman', style: 'regular', category: 'serif', preview_url: '', font_file_url: '', is_active: true },
 ];
-// FIX: Added the required `is_active` property to the mock materials data.
 const config_basic_materials: BasicMaterial[] = [
     { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50, is_active: true },
     { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20, is_active: true },
@@ -93,8 +89,7 @@ const inventory_movements: InventoryMovement[] = [
 ];
 
 const system_settings: SystemSetting[] = [
-    // FIX: Renamed 'name' property to 'key' to match the SystemSetting type.
-    { id: 'ss1', key: 'Parâmetros de Frete', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
+    { id: 'ss1', key: 'freight_params', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
 ];
 const product_categories: ProductCategory[] = [
     { id: 'pc1', name: 'Bolsas', description: 'Bolsas de diversos tamanhos e modelos.' },
@@ -185,7 +180,6 @@ console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 const getCollection = <T>(path: string): T[] => collections[path] as T[] || [];
 const get = <T>(path: string, id: string): T | null => collections[path]?.find(item => item.id === id) as T || null;
 const create = <T extends {id?: string}>(path: string, data: Omit<T, 'id'>): T => {
-    // FIX: Changed unsafe type assertion 'as T' to 'as unknown as T' to satisfy the compiler.
     const newItem = { ...data, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as unknown as T;
     collections[path] = [...(collections[path] || []), newItem];
     emit(path);
@@ -244,7 +238,6 @@ export const sandboxService = {
     getProducts: () => Promise.resolve(products),
     getProductCategories: () => Promise.resolve(product_categories),
     getContacts: () => Promise.resolve(contacts),
-    // FIX: Added getLogisticsData to sandbox service to match real service.
     getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
         return Promise.resolve({
             orders: getCollection<Order>('orders'),

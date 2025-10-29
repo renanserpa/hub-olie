@@ -51,7 +51,6 @@ export function useLogistics() {
         }
         try {
             const waveNumber = `WAVE-${new Date().getFullYear()}-${String(allWaves.length + 1).padStart(4, '0')}`;
-            // FIX: Added `created_at` to satisfy the type required by addDocument and changed the explicit type to match.
             const newWave: Omit<LogisticsWave, 'id'> = {
                 wave_number: waveNumber,
                 status: 'pending',

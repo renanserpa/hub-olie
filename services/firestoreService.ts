@@ -197,6 +197,10 @@ export const supabaseService = {
 marketing_campaigns: [],
 marketing_segments: [],
 marketing_templates: [],
+// FIX: Added missing purchasing properties to align with the AppData type.
+suppliers: [],
+purchase_orders: [],
+purchase_order_items: [],
         };
     } catch (error) {
         handleError(error, 'getSettings');
@@ -211,6 +215,10 @@ marketing_templates: [],
 marketing_campaigns: [],
 marketing_segments: [],
 marketing_templates: [],
+// FIX: Added missing purchasing properties to align with the AppData type.
+suppliers: [],
+purchase_orders: [],
+purchase_order_items: [],
         };
     }
   },

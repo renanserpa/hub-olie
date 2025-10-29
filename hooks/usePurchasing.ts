@@ -70,7 +70,14 @@ export function usePurchasing() {
                 await dataService.updateDocument('suppliers', supplierData.id, supplierData);
                 toast({ title: "Sucesso!", description: "Fornecedor atualizado." });
             } else {
-                await dataService.addDocument('suppliers', supplierData);
+                // FIX: Add created_at and updated_at to satisfy the type for `addDocument`.
+                // These values will be overwritten by the database/sandbox, but are needed for type safety.
+                const newSupplierData = {
+                    ...supplierData,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                };
+                await dataService.addDocument('suppliers', newSupplierData);
                 toast({ title: "Sucesso!", description: "Novo fornecedor criado." });
             }
             loadData();

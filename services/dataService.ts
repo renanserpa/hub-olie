@@ -98,7 +98,6 @@ export const dataService = {
     isSandbox() ? sandboxService.getInventoryMovements(materialId) : realSupabaseService.getInventoryMovements(materialId),
 
   addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) =>
-    // FIX: The sandbox `addDocument` expects a `created_at` property, which `movementData` lacks. This aligns the sandbox call with the expected type.
     isSandbox() ? sandboxService.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }) : realSupabaseService.addInventoryMovement(movementData),
   
   getProducts: () => 
@@ -111,13 +110,11 @@ export const dataService = {
     isSandbox() ? sandboxService.addDocument('products', productData) : realSupabaseService.addProduct(productData),
     
   updateProduct: (productId: string, productData: Product | AnyProduct) =>
-    // FIX: Explicitly pass the generic type to `updateDocument` for the sandbox case to fix type error.
     isSandbox() ? sandboxService.updateDocument<Product>('products', productId, productData) : realSupabaseService.updateProduct(productId, productData),
 
   getContacts: () => 
     isSandbox() ? sandboxService.getContacts() : realSupabaseService.getContacts(),
     
-  // FIX: Exposed getLogisticsData through the data service facade to fix error in useLogistics hook.
   getLogisticsData: (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> =>
     isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 

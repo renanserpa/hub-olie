@@ -10,7 +10,7 @@ import {
     InventoryBalance,
     InventoryMovement,
     MonogramFont,
-    Order, OrderItem, OrderStatus, OrderPayment, OrderTimelineEvent, OrderNote,
+    Order, OrderItem, OrderStatus,
     Product,
     ProductCategory,
     ProductionOrder,
@@ -19,16 +19,6 @@ import {
     Task,
     TaskStatus,
     ZipperColor,
-    ColorPalette,
-    LiningColor,
-    PullerColor,
-    EmbroideryColor,
-    FabricTexture,
-    SupplyGroup,
-    DeliveryMethod,
-    FreightParams,
-    PackagingType,
-    BondType,
     LogisticsWave,
     LogisticsShipment,
     MarketingCampaign,
@@ -43,8 +33,7 @@ import {
 const handleError = (error: any, context: string) => {
     // Gracefully handle non-existent tables by logging a warning instead of throwing an error.
     if (error?.code === '42P01') {
-        // This is a special case handled by getSettings to log missing tables.
-        // Returning a specific error allows the caller to identify this case.
+        console.warn(`[dataService] Supabase query failed because table for "${context}" does not exist.`);
         return new Error(`Missing Table: ${context}`);
     }
     console.error(`Error in ${context}:`, error);
@@ -89,18 +78,10 @@ const deleteDocument = async (table: string, id: string): Promise<void> => {
 };
 
 const settingsTableMap: Record<string, string> = {
-    // Catalogs
-    'catalogs-paletas_cores': 'config_color_palettes',
     'catalogs-cores_texturas-tecido': 'fabric_colors',
     'catalogs-cores_texturas-ziper': 'zipper_colors',
-    'catalogs-cores_texturas-forro': 'lining_colors',
-    'catalogs-cores_texturas-puxador': 'puller_colors',
     'catalogs-cores_texturas-vies': 'bias_colors',
-    'catalogs-cores_texturas-bordado': 'embroidery_colors',
-    'catalogs-cores_texturas-texturas': 'config_fabric_textures',
     'catalogs-fontes_monogramas': 'config_fonts',
-    // Materials
-    'materials-grupos_suprimento': 'config_supply_groups',
     'materials-materiais_basicos': 'config_basic_materials',
 };
 
@@ -123,7 +104,6 @@ export const supabaseService = {
   getCollection: async <T>(table: string, join?: string): Promise<T[]> => {
     const result = await getCollectionInternal<T>(table, join);
     if (result instanceof Error) {
-        console.warn(`[dataService] Could not fetch ${table}, returning empty array. Reason: ${result.message}`);
         return [];
     }
     return result;
@@ -179,25 +159,6 @@ export const supabaseService = {
   },
 
   getSettings: async (): Promise<AppData> => {
-    const tableFetchConfig: Record<string, { key: string; category: string | null; subCategory?: string }> = {
-        'config_color_palettes': { key: 'paletas_cores', category: 'catalogs' },
-        'fabric_colors': { key: 'tecido', category: 'catalogs', subCategory: 'cores_texturas' },
-        'zipper_colors': { key: 'ziper', category: 'catalogs', subCategory: 'cores_texturas' },
-        'lining_colors': { key: 'forro', category: 'catalogs', subCategory: 'cores_texturas' },
-        'puller_colors': { key: 'puxador', category: 'catalogs', subCategory: 'cores_texturas' },
-        'bias_colors': { key: 'vies', category: 'catalogs', subCategory: 'cores_texturas' },
-        'embroidery_colors': { key: 'bordado', category: 'catalogs', subCategory: 'cores_texturas' },
-        'config_fabric_textures': { key: 'texturas', category: 'catalogs', subCategory: 'cores_texturas' },
-        'config_fonts': { key: 'fontes_monogramas', category: 'catalogs' },
-        'config_supply_groups': { key: 'grupos_suprimento', category: 'materials' },
-        'config_basic_materials': { key: 'materiais_basicos', category: 'materials' },
-        'logistics_delivery_methods': { key: 'metodos_entrega', category: 'logistica' },
-        'logistics_freight_params': { key: 'calculo_frete', category: 'logistica' },
-        'config_packaging_types': { key: 'tipos_embalagem', category: 'logistica' },
-        'config_bond_types': { key: 'tipos_vinculo', category: 'logistica' },
-        'system_settings': { key: 'sistema', category: null },
-    };
-
     const emptyAppData: AppData = {
         catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
         materials: { grupos_suprimento: [], materiais_basicos: [] },
@@ -207,30 +168,35 @@ export const supabaseService = {
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
     };
-    
-    try {
-        const fetchPromises = Object.keys(tableFetchConfig).map(table => getCollectionInternal(table));
-        const results = await Promise.all(fetchPromises);
-        
-        const data = results.reduce((acc, result, index) => {
-            const table = Object.keys(tableFetchConfig)[index];
-            const config = tableFetchConfig[table];
-            
-            if (result instanceof Error) {
-                console.warn(`[getSettings] Failed to fetch table '${table}'. Skipping. Reason: ${result.message}`);
-            } else if (config.category) {
-                if (config.subCategory) {
-                    (acc as any)[config.category][config.subCategory][config.key] = result;
-                } else {
-                    (acc as any)[config.category][config.key] = result;
-                }
-            } else {
-                (acc as any)[config.key] = result;
-            }
-            return acc;
-        }, JSON.parse(JSON.stringify(emptyAppData))); // Deep copy
 
-        return data;
+    try {
+        const [
+            tecido, ziper, vies, fontes_monogramas, materiais_basicos,
+        ] = await Promise.all([
+            supabaseService.getCollection<FabricColor>('fabric_colors'), 
+            supabaseService.getCollection<ZipperColor>('zipper_colors'), 
+            supabaseService.getCollection<BiasColor>('bias_colors'), 
+            supabaseService.getCollection<MonogramFont>('config_fonts'),
+            supabaseService.getCollection<BasicMaterial>('config_basic_materials'),
+        ]);
+        
+        return {
+            ...emptyAppData,
+            catalogs: { 
+                ...emptyAppData.catalogs,
+                cores_texturas: { 
+                    ...emptyAppData.catalogs.cores_texturas,
+                    tecido, 
+                    ziper, 
+                    vies, 
+                }, 
+                fontes_monogramas 
+            },
+            materials: { 
+                ...emptyAppData.materials,
+                materiais_basicos 
+            },
+        };
     } catch (error) {
         handleError(error, 'getSettings');
         return emptyAppData;
@@ -251,7 +217,7 @@ export const supabaseService = {
 
     const orderIds = ordersData.map(o => o.id);
     const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').in('order_id', orderIds);
-    if (itemsError) handleError(itemsError, 'getOrders (items)');
+    if (itemsError) { handleError(itemsError, 'getOrders (items)'); return ordersData; }
 
     const itemsByOrderId = itemsData?.reduce((acc, item) => {
         if (!acc[item.order_id]) acc[item.order_id] = [];
@@ -322,7 +288,7 @@ export const supabaseService = {
   getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
     const [suppliers, purchase_orders, purchase_order_items] = await Promise.all([
         supabaseService.getCollection<Supplier>('suppliers'),
-        supabaseService.getCollection<PurchaseOrder>('purchase_orders'),
+        supabaseService.getCollection<PurchaseOrder>('purchase_orders', '*, supplier:suppliers(*)'),
         supabaseService.getCollection<PurchaseOrderItem>('purchase_order_items'),
     ]);
     return { suppliers, purchase_orders, purchase_order_items };

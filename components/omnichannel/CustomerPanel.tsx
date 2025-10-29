@@ -45,9 +45,7 @@ const CustomerPanel: React.FC<CustomerPanelProps> = ({ customer, orders, quote }
                     <div className="space-y-1">
                         <p className="font-bold text-textPrimary">{customer.name}</p>
                         <p>{customer.email}</p>
-                        {/* FIX: Property 'phone' does not exist on type 'Contact'. Used optional chaining after updating types.ts. */}
                         <p>{customer?.phone}</p>
-                        {/* FIX: Property 'address' does not exist on type 'Contact'. Used optional chaining after updating types.ts. */}
                         <p>{customer?.address?.street}, {customer?.address?.city}</p>
                     </div>
                 </CollapsibleSection>
@@ -82,7 +80,6 @@ const CustomerPanel: React.FC<CustomerPanelProps> = ({ customer, orders, quote }
                         {orders.slice(0, 3).map(order => (
                              <div key={order.id} className="p-2 bg-background rounded-lg text-xs">
                                 <div className="flex justify-between font-medium">
-                                    {/* FIX: Property 'order_number' does not exist on type 'Order'. Use 'number'. */}
                                     <span>{order.number}</span>
                                     <span>R$ {order.total.toFixed(2)}</span>
                                 </div>
@@ -98,7 +95,6 @@ const CustomerPanel: React.FC<CustomerPanelProps> = ({ customer, orders, quote }
 
              <CollapsibleSection title="Endereços" icon={MapPin}>
                 <div className="p-4 bg-background rounded-lg">
-                    {/* FIX: Property 'address' does not exist on type 'Contact'. Used optional chaining after updating types.ts. */}
                     <p className="font-medium text-textPrimary">{customer?.address?.street}</p>
                     <p>{customer?.address?.city}, {customer?.address?.state} - {customer?.address?.zip}</p>
                 </div>

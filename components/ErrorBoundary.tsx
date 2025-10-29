@@ -2,22 +2,15 @@ import React, { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
-// FIX: Renamed Props to be specific to this component to avoid potential global name conflicts.
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
-// FIX: Renamed State to be specific to this component.
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
 }
 
-// FIX: Changed from 'extends Component' to 'extends React.Component' to resolve an issue
-// where TypeScript could not find the 'props' property on the component instance. This avoids
-// potential naming conflicts with the destructured 'Component' import.
-// FIX: Changed from a named export to a default export to match its usage in index.tsx.
-// This resolves the error where 'props' was not found on the component instance.
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = {
     hasError: false,

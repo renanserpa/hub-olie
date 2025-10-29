@@ -102,7 +102,6 @@ export function useMarketing() {
                 toast({ title: "Sucesso!", description: `Campanha "${campaignData.name}" atualizada.` });
                  console.log(`[MARKETING] Campaign updated: ${campaignData.name} → ${campaignData.status}`);
             } else {
-                // FIX: Add missing required fields for a new campaign to match the 'MarketingCampaign' type expected by addDocument.
                 const newCampaignData: Omit<MarketingCampaign, 'id'> = {
                     ...(campaignData as Omit<MarketingCampaign, 'id' | 'created_at' | 'updated_at' | 'spent' | 'kpis'>),
                     spent: 0,
