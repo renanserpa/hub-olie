@@ -70,5 +70,45 @@ export function useInventory() {
 
     }, [selectedMaterialId]);
 
-    const balancesWithMaterials = useMemo(() => {
-        return allBalances.map(balance
+    const filteredBalances = useMemo(() => {
+        if (!searchQuery) {
+            return allBalances;
+        }
+        const lowercasedQuery = searchQuery.toLowerCase();
+        return allBalances.filter(balance =>
+            balance.material?.name.toLowerCase().includes(lowercasedQuery) ||
+            balance.material?.codigo.toLowerCase().includes(lowercasedQuery)
+        );
+    }, [allBalances, searchQuery]);
+
+    const selectedBalance = useMemo(() => {
+        return allBalances.find(b => b.material_id === selectedMaterialId) || null;
+    }, [allBalances, selectedMaterialId]);
+
+    const createMovement = useCallback(async (movementData: any) => {
+        setIsSaving(true);
+        try {
+            await dataService.addInventoryMovement(movementData);
+            toast({ title: 'Sucesso!', description: 'Movimento de estoque registrado.' });
+        } catch (error) {
+            toast({ title: 'Erro!', description: 'Não foi possível registrar o movimento.', variant: 'destructive' });
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    }, []);
+
+    return {
+        isLoading,
+        isLoadingMovements,
+        isSaving,
+        filteredBalances,
+        searchQuery,
+        setSearchQuery,
+        selectedBalance,
+        setSelectedMaterialId,
+        movements,
+        createMovement,
+        allMaterials,
+    };
+}

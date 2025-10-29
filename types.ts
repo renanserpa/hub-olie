@@ -234,6 +234,7 @@ export interface InventoryMovement {
     type: InventoryMovementType;
     reason: InventoryMovementReason;
     notes?: string;
+    ref?: string;
     material_id: string;
     quantity: number;
     created_at: string;

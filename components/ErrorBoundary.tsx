@@ -11,7 +11,6 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-// FIX: Correctly implemented the ErrorBoundary as a React Class Component. It now extends React.Component and initializes state in the constructor, resolving errors related to missing 'props' and 'state'.
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);

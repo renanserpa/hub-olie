@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -233,3 +233,141 @@ const update = <T extends {id: string}>(path: string, id: string, data: Partial<
             return updatedItem;
         }
         return item;
+    });
+    emit(path);
+    if (!updatedItem) throw new Error(`Item with id ${id} not found in ${path}`);
+    return updatedItem;
+};
+const del = (path: string, id: string): void => {
+    const initialLength = collections[path]?.length || 0;
+    collections[path] = collections[path]?.filter(item => item.id !== id);
+    if ((collections[path]?.length || 0) < initialLength) {
+        emit(path);
+    }
+};
+
+const settingsTableMap: Record<string, string> = {
+    'catalogs-cores_texturas-tecido': 'fabric_colors',
+    'catalogs-cores_texturas-ziper': 'zipper_colors',
+    'catalogs-cores_texturas-vies': 'bias_colors',
+    'catalogs-fontes_monogramas': 'config_fonts',
+    'materials-materiais_basicos': 'config_basic_materials',
+};
+
+const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    let key = category;
+    if (subTab) key += `-${subTab}`;
+    if (subSubTab) key += `-${subSubTab}`;
+    const tableName = settingsTableMap[key];
+    if (!tableName) throw new Error(`No table mapping found for key: ${key}`);
+    return tableName;
+};
+
+
+// --- EXPORTED SERVICE OBJECT ---
+export const sandboxDb = {
+    getCollection,
+    getDocument: get,
+    addDocument: create,
+    updateDocument: update,
+    deleteDocument: del,
+    listenToCollection: subscribe,
+    listenToDocument: <T extends { id: string }>(path: string, id: string, callback: (payload: T) => void) => {
+        const handler = () => {
+            const doc = get<T>(path, id);
+            if (doc) callback(doc);
+        };
+        eventBus.addEventListener(path, handler);
+        return { unsubscribe: () => eventBus.removeEventListener(path, handler) };
+    },
+    getSettings: async (): Promise<AppData> => ({
+        ...collections,
+        catalogs: {
+            paletas_cores: [],
+            cores_texturas: {
+                tecido: collections.fabric_colors,
+                ziper: collections.zipper_colors,
+                forro: [],
+                puxador: [],
+                vies: collections.bias_colors,
+                bordado: [],
+                texturas: [],
+            },
+            fontes_monogramas: collections.config_fonts,
+        },
+        materials: {
+            grupos_suprimento: [],
+            materiais_basicos: collections.config_basic_materials,
+        },
+        logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
+        sistema: collections.system_settings,
+        contacts: collections.customers,
+    } as AppData),
+    addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => 
+        Promise.resolve(create(getTableNameForSetting(category, subTab, subSubTab), data)),
+    updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) =>
+        Promise.resolve(update(getTableNameForSetting(category, subTab, subSubTab), id, data)),
+    deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) =>
+        Promise.resolve(del(getTableNameForSetting(category, subTab, subSubTab), id)),
+    updateSystemSettings: (settings: SystemSetting[]) => {
+        // FIX: Explicitly type the generic `update` function to ensure `value` is a known property.
+        settings.forEach(s => update<SystemSetting>('system_settings', s.id, { value: s.value }));
+        return Promise.resolve();
+    },
+    getOrders: async (): Promise<Order[]> => {
+        const allOrders = getCollection<Order>('orders');
+        const allItems = getCollection<OrderItem>('order_items');
+        const allContacts = getCollection<Contact>('customers');
+        return allOrders.map(o => ({
+            ...o,
+            items: allItems.filter(item => item.order_id === o.id),
+            customers: allContacts.find(c => c.id === o.customer_id),
+        }));
+    },
+    getOrder: async (id: string): Promise<Order | null> => {
+        const order = get<Order>('orders', id);
+        if (!order) return null;
+        return {
+            ...order,
+            items: getCollection<OrderItem>('order_items').filter(i => i.order_id === id),
+            customers: get<Contact>('customers', order.customer_id),
+        }
+    },
+    updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => 
+        Promise.resolve(update<Order>('orders', orderId, { status: newStatus })),
+    addOrder: async (orderData: Partial<Order>) => {
+        const orderNumber = `OLIE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+        const { items, ...orderToInsert } = orderData;
+        const newOrder = create<Order>('orders', {
+            ...orderToInsert,
+            number: orderNumber,
+        } as any);
+        if (items && items.length > 0) {
+            items.forEach(item => create<OrderItem>('order_items', { ...item, order_id: newOrder.id }));
+        }
+        return Promise.resolve(newOrder);
+    },
+    updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> =>
+        Promise.resolve(update<Order>('orders', orderId, data)),
+    getInventoryMovements: async (materialId: string) => 
+        Promise.resolve(getCollection<InventoryMovement>('inventory_movements').filter(m => m.material_id === materialId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())),
+    addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
+        const movement = create<InventoryMovement>('inventory_movements', movementData as any);
+        const balance = getCollection<InventoryBalance>('inventory_balances').find(b => b.material_id === movement.material_id);
+        if (balance) {
+            const newStock = balance.current_stock + movement.quantity;
+            update<InventoryBalance>('inventory_balances', balance.id, { current_stock: newStock });
+        }
+        return Promise.resolve(movement);
+    },
+    getLogisticsData: async () => Promise.resolve({
+        orders: getCollection<Order>('orders').map(o => ({...o, customers: get('customers', o.customer_id)})),
+        waves: getCollection<LogisticsWave>('logistics_waves'),
+        shipments: getCollection<LogisticsShipment>('logistics_shipments'),
+    }),
+    getPurchasingData: async () => Promise.resolve({
+        suppliers: getCollection<Supplier>('suppliers'),
+        purchase_orders: getCollection<PurchaseOrder>('purchase_orders'),
+        purchase_order_items: getCollection<PurchaseOrderItem>('purchase_order_items'),
+    }),
+};
