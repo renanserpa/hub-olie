@@ -7,7 +7,8 @@ export function useOrders() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [allContacts, setAllContacts] = useState<Contact[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [settingsData, setSettingsData] = useState<AppData | null>([]);
+    // FIX: Initial state for settingsData should be `null` to match the type `AppData | null`.
+    const [settingsData, setSettingsData] = useState<AppData | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
