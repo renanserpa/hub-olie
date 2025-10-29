@@ -6,10 +6,15 @@ type Props = { children: React.ReactNode };
 type State = { hasError: boolean; error?: any };
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Reverted to class property for state initialization.
-  // The constructor-based approach was causing type errors where `this.state` and `this.props`
-  // were not being recognized on the component instance in this environment.
-  state: State = { hasError: false };
+  // FIX: Refactored to use a constructor for state initialization and method binding.
+  // This classic approach avoids reliance on class field syntax, which might not be
+  // correctly configured in the project's build environment, causing TypeScript
+  // to fail to recognize `this.props` and `this.setState`.
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+    this.handleReload = this.handleReload.bind(this);
+  }
 
   static getDerivedStateFromError(error: any): State {
     return { hasError: true, error };
@@ -18,12 +23,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
     console.error('💥 UI ErrorBoundary caught:', error, info);
   }
 
-  handleReload = () => {
+  handleReload() {
     this.setState({ hasError: false, error: undefined });
     // In a real app, you might try to re-render or navigate
     // For now, a reload is a simple and effective solution.
     window.location.reload();
-  };
+  }
 
   render() {
     if (this.state.hasError) {

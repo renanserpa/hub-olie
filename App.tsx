@@ -1,11 +1,12 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
 import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert } from 'lucide-react';
 import { Button } from './components/ui/Button';
-import OrdersPage from './pages/OrdersPage';
+import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
