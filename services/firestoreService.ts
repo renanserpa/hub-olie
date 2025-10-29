@@ -201,6 +201,8 @@ marketing_templates: [],
 suppliers: [],
 purchase_orders: [],
 purchase_order_items: [],
+// FIX: Add missing 'analytics_kpis' property to satisfy AppData type.
+analytics_kpis: [],
         };
     } catch (error) {
         handleError(error, 'getSettings');
@@ -219,6 +221,8 @@ marketing_templates: [],
 suppliers: [],
 purchase_orders: [],
 purchase_order_items: [],
+// FIX: Add missing 'analytics_kpis' property to satisfy AppData type.
+analytics_kpis: [],
         };
     }
   },

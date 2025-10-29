@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -143,6 +143,17 @@ const purchase_orders: PurchaseOrder[] = [
     { id: 'pc4', po_number: 'PC-2024-004', supplier_id: 'sup2', supplier: suppliers[1], status: 'draft', items: [], total: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
+const analytics_kpis: AnalyticsKPI[] = [
+    { id: 'kpi1', module: 'orders', name: 'Total de Pedidos', value: orders.length, trend: 0.1, unit: '', description: 'Número total de pedidos no período.' },
+    { id: 'kpi2', module: 'orders', name: 'Faturamento Total', value: orders.reduce((s, o) => s + o.total, 0), trend: 0.15, unit: 'R$', description: 'Receita total gerada pelos pedidos.' },
+    { id: 'kpi3', module: 'orders', name: 'Ticket Médio', value: orders.length > 0 ? (orders.reduce((s, o) => s + o.total, 0) / orders.length) : 0, trend: -0.05, unit: 'R$', description: 'Valor médio por pedido.' },
+    { id: 'kpi4', module: 'production', name: 'Eficiência da Produção', value: 87, trend: 0.02, unit: '%', description: 'Percentual de eficiência das ordens de produção.' },
+    { id: 'kpi5', module: 'inventory', name: 'Giro de Estoque', value: 4.2, trend: 0.1, unit: 'x', description: 'Quantas vezes o estoque foi renovado no período.' },
+    { id: 'kpi6', module: 'logistics', name: 'Entregas no Prazo (OTIF)', value: 96, trend: -0.01, unit: '%', description: 'Percentual de pedidos entregues dentro do prazo prometido.' },
+    { id: 'kpi7', module: 'marketing', name: 'ROI de Campanhas', value: 250, trend: 0.2, unit: '%', description: 'Retorno sobre o investimento das campanhas de marketing ativas.' },
+    { id: 'kpi8', module: 'financial', name: 'Lucro Líquido (Simulado)', value: 12540.50, trend: 0.08, unit: 'R$', description: 'Lucro líquido estimado para o período.' },
+];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -172,6 +183,7 @@ let collections: Record<string, any[]> = {
     suppliers,
     purchase_orders,
     purchase_order_items,
+    analytics_kpis,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -225,7 +237,7 @@ export const sandboxService = {
         materials: { grupos_suprimento: [], materiais_basicos: config_basic_materials },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: system_settings, midia: {}, orders, contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates,
-        suppliers, purchase_orders, purchase_order_items
+        suppliers, purchase_orders, purchase_order_items, analytics_kpis
     }),
     getOrders: () => Promise.resolve(orders),
     getOrder: (id: string) => Promise.resolve(get<Order>('orders', id)),

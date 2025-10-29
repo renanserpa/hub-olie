@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2 } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -14,6 +14,7 @@ import SettingsPage from './components/SettingsPage';
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
@@ -24,6 +25,7 @@ import { dataService } from './services/dataService';
 
 
 const MAIN_TABS = [
+    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
     { id: 'production', label: 'Produção', icon: Workflow },
     { id: 'inventory', label: 'Estoque', icon: Package },
@@ -37,6 +39,7 @@ const MAIN_TABS = [
 ];
 
 const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
+    analytics: ['AdminGeral', 'Financeiro', 'Administrativo'],
     orders: ['AdminGeral', 'Vendas', 'Administrativo'],
     production: ['AdminGeral', 'Producao'],
     inventory: ['AdminGeral', 'Producao', 'Financeiro'],
@@ -53,7 +56,7 @@ const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
     AdminGeral: 'orders',
     Producao: 'production',
     Vendas: 'orders',
-    Financeiro: 'purchases',
+    Financeiro: 'analytics',
     Administrativo: 'logistics',
     Conteudo: 'marketing',
 };
@@ -108,6 +111,8 @@ const App: React.FC = () => {
         }
 
         switch (activePage) {
+            case 'analytics':
+                return <AnalyticsPage />;
             case 'settings':
                 return <SettingsPage />;
             case 'production':

@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -129,4 +129,8 @@ export const dataService = {
   // Purchasing
   getPurchasingData: (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> =>
     isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
+    
+  // Analytics
+  getAnalyticsKpis: (): Promise<AnalyticsKPI[]> =>
+    isSandbox() ? sandboxService.getCollection('analytics_kpis') : realSupabaseService.getAnalyticsKpis(),
 };

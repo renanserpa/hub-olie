@@ -12,10 +12,14 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: undefined,
-  };
+  // FIX: Refactored state initialization into a constructor. This older pattern improves compatibility with build toolchains that may not fully support modern class field syntax, which could be the underlying cause of the misleading error about 'props' not existing.
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: undefined,
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };

@@ -27,6 +27,7 @@ import {
     Supplier,
     PurchaseOrder,
     PurchaseOrderItem,
+    AnalyticsKPI,
 } from "../types";
 
 
@@ -167,6 +168,7 @@ export const supabaseService = {
         midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
+        analytics_kpis: [],
     };
 
     try {
@@ -293,4 +295,5 @@ export const supabaseService = {
     ]);
     return { suppliers, purchase_orders, purchase_order_items };
   },
+  getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => supabaseService.getCollection('analytics_kpis'),
 };

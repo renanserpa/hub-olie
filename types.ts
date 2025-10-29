@@ -446,6 +446,19 @@ export interface PurchaseOrder {
     expected_delivery_date?: string;
 }
 
+// --- ANALYTICS ---
+export type AnalyticsModule = 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing' | 'overview';
+
+export interface AnalyticsKPI {
+    id: string;
+    module: AnalyticsModule;
+    name: string;
+    value: string | number;
+    trend?: number; // e.g., 0.15 for +15%
+    unit?: string; // e.g., '%', 'R$', 'dias'
+    description: string;
+}
+
 
 // --- AppData ---
 export interface AppData {
@@ -495,4 +508,5 @@ export interface AppData {
     suppliers: Supplier[];
     purchase_orders: PurchaseOrder[];
     purchase_order_items: PurchaseOrderItem[];
+    analytics_kpis: AnalyticsKPI[];
 }
