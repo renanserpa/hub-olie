@@ -123,11 +123,11 @@ export const dataService = {
 
   // Marketing
   getMarketingCampaigns: (): Promise<MarketingCampaign[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_campaigns') : realSupabaseService.getCollection('marketing_campaigns'),
+    isSandbox() ? sandboxService.getCollection('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),
   getMarketingSegments: (): Promise<MarketingSegment[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_segments') : realSupabaseService.getCollection('marketing_segments'),
+    isSandbox() ? sandboxService.getCollection('marketing_segments') : realSupabaseService.getMarketingSegments(),
   getMarketingTemplates: (): Promise<MarketingTemplate[]> =>
-    isSandbox() ? sandboxService.getCollection('marketing_templates') : realSupabaseService.getCollection('marketing_templates'),
+    isSandbox() ? sandboxService.getCollection('marketing_templates') : realSupabaseService.getMarketingTemplates(),
 
   // Purchasing
   getPurchasingData: (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> =>

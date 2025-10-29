@@ -7,12 +7,11 @@ const AppearanceTabContent: React.FC = () => (
         title="Aparência e Mídia"
         requiredTable="media_assets & storage buckets"
         icon={ImageIcon}
-        children={
-            <p className="mt-1 text-sm text-textSecondary">
-                Personalize a aparência do sistema com seu logo e tema, e gerencie a biblioteca de mídias para produtos e materiais.
-            </p>
-        }
-    />
+    >
+        <p className="mt-1 text-sm text-textSecondary">
+            Personalize a aparência do sistema com seu logo e tema, e gerencie a biblioteca de mídias para produtos e materiais.
+        </p>
+    </PlaceholderContent>
 );
 
 export default AppearanceTabContent;

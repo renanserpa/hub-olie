@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, LogisticsWave, LogisticsShipment } from '../types';
+import { Order, LogisticsWave, LogisticsShipment, LogisticsTab } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 export function useLogistics() {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('queue');
+    const [activeTab, setActiveTab] = useState<LogisticsTab>('queue');
     
     // Data states
     const [allOrders, setAllOrders] = useState<Order[]>([]);

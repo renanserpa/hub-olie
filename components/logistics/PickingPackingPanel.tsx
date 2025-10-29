@@ -7,12 +7,11 @@ const PickingPackingPanel: React.FC = () => (
         title="Picking & Packing"
         requiredTable="logistics_pick_tasks & logistics_packages"
         icon={Boxes}
-        children={
-            <p className="mt-1 text-sm text-textSecondary">
-                Gerencie as tarefas de separação e o processo de embalagem dos pedidos aqui.
-            </p>
-        }
-    />
+    >
+        <p className="mt-1 text-sm text-textSecondary">
+            Gerencie as tarefas de separação e o processo de embalagem dos pedidos aqui.
+        </p>
+    </PlaceholderContent>
 );
 
 export default PickingPackingPanel;

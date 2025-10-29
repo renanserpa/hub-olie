@@ -7,12 +7,11 @@ const SettingsPanel: React.FC = () => (
         title="Configurações de Logística"
         requiredTable="logistics_delivery_methods, etc."
         icon={Settings}
-        children={
-            <p className="mt-1 text-sm text-textSecondary">
-                Configure métodos de entrega, parâmetros de frete e tipos de embalagem.
-            </p>
-        }
-    />
+    >
+        <p className="mt-1 text-sm text-textSecondary">
+            Configure métodos de entrega, parâmetros de frete e tipos de embalagem.
+        </p>
+    </PlaceholderContent>
 );
 
 export default SettingsPanel;
