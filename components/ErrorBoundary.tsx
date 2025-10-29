@@ -1,34 +1,35 @@
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
-type Props = { children: React.ReactNode };
-type State = { hasError: boolean; error?: any };
+// FIX: Renamed Props to be specific to this component to avoid potential global name conflicts.
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
 
-export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Refactored to use a constructor for state initialization and method binding.
-  // This classic approach avoids reliance on class field syntax, which might not be
-  // correctly configured in the project's build environment, causing TypeScript
-  // to fail to recognize `this.props` and `this.setState`.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-    this.handleReload = this.handleReload.bind(this);
-  }
+// FIX: Renamed State to be specific to this component.
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
 
-  static getDerivedStateFromError(error: any): State {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: undefined,
+  };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
-  componentDidCatch(error: any, info: any) {
-    console.error('💥 UI ErrorBoundary caught:', error, info);
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('💥 UI ErrorBoundary caught:', error, errorInfo);
   }
 
-  handleReload() {
-    this.setState({ hasError: false, error: undefined });
-    // In a real app, you might try to re-render or navigate
-    // For now, a reload is a simple and effective solution.
+  handleReload = () => {
     window.location.reload();
-  }
+  };
 
   render() {
     if (this.state.hasError) {
@@ -51,6 +52,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
         </div>
       );
     }
+    // FIX: Accessing props via `this.props` is standard for React class components. The previous error was likely due to a type name conflict.
     return this.props.children;
   }
 }

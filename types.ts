@@ -6,6 +6,8 @@
 
 
 
+
+
 // FIX: Added ContactAddress interface to be used in the Contact type.
 export interface ContactAddress {
     zip?: string;
@@ -105,7 +107,7 @@ export interface MaterialData {
     materiais_basicos: BasicMaterial[];
 }
 
-// 3. Logística
+// 3. Logística (Settings)
 export interface DeliveryMethod extends BaseItem {
     type: 'correios' | 'motoboy' | 'retirada';
     enabled: boolean;
@@ -129,7 +131,7 @@ export interface BondType extends BaseItem {
     codigo: string;
     payroll_effects_json: string; // "{}"
 }
-export interface LogisticaData {
+export interface LogisticaSettingsData {
     metodos_entrega: DeliveryMethod[];
     calculo_frete: FreightParams[];
     tipos_embalagem: PackagingType[];
@@ -446,12 +448,34 @@ export interface InventoryMovement {
   created_at: string;
 }
 
+// --- Logistics v3 Module Types ---
+export interface LogisticsWave {
+    id: string;
+    wave_number: string; // e.g., "WAVE-2024-001"
+    status: 'pending' | 'in_progress' | 'completed';
+    order_ids: string[];
+    created_by: string; // user id
+    created_at: string;
+}
+
+export type ShipmentStatus = 'pending' | 'quoted' | 'label_created' | 'in_transit' | 'delivered';
+
+export interface LogisticsShipment {
+    id: string;
+    order_id: string;
+    order_number: string;
+    customer_name: string;
+    status: ShipmentStatus;
+    tracking_code?: string;
+    created_at: string;
+}
+
 
 // --- Main Data Structure ---
 export interface AppData {
   catalogs: CatalogData;
   materials: MaterialData;
-  logistica: LogisticaData;
+  logistica: LogisticaSettingsData;
   sistema: SystemSetting[];
   midia: {}; // Placeholder for Media Library
   // Data for Orders module

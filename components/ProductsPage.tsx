@@ -6,11 +6,7 @@ import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
 import ProductDialog from './products/ProductDialog';
 
-interface ProductsPageProps {
-  user: User;
-}
-
-const ProductsPage: React.FC<ProductsPageProps> = ({ user }) => {
+const ProductsPage: React.FC = () => {
     const {
         isLoading,
         isSaving,

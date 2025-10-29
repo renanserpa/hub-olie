@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -116,4 +116,8 @@ export const dataService = {
 
   getContacts: () => 
     isSandbox() ? sandboxService.getContacts() : realSupabaseService.getContacts(),
+    
+  // FIX: Exposed getLogisticsData through the data service facade to fix error in useLogistics hook.
+  getLogisticsData: (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> =>
+    isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 };

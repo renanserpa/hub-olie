@@ -1,4 +1,5 @@
 
+
 // NOTE: This file has been refactored for Supabase.
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -30,6 +31,8 @@ import {
     FreightParams,
     PackagingType,
     BondType,
+    LogisticsWave,
+    LogisticsShipment
 } from "../types";
 
 
@@ -377,5 +380,31 @@ export const supabaseService = {
       const { id, category, ...updateData } = productData as Product;
       return updateDocument<Product>('products', productId, updateData);
   },
-   getContacts: (): Promise<Contact[]> => supabaseService.getCollection('customers'),
+  getContacts: (): Promise<Contact[]> => supabaseService.getCollection('customers'),
+
+  getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
+    const [ordersResult, wavesResult, shipmentsResult] = await Promise.all([
+      supabaseService.getOrders(),
+      supabaseService.getCollection<LogisticsWave>('logistics_waves'),
+      supabaseService.getCollection<LogisticsShipment>('logistics_shipments'),
+    ]);
+
+    const loadedTables = [];
+    const missingTables = [];
+
+    if (Array.isArray(ordersResult) && ordersResult.length > 0) loadedTables.push('orders');
+    if (Array.isArray(wavesResult)) loadedTables.push('logistics_waves'); else missingTables.push('logistics_waves');
+    if (Array.isArray(shipmentsResult)) loadedTables.push('logistics_shipments'); else missingTables.push('logistics_shipments');
+    
+    console.log(`[LOGISTICS] Loaded tables: ${loadedTables.join(', ')}`);
+    if (missingTables.length > 0) {
+        console.warn(`[LOGISTICS] Missing tables: ${missingTables.join(', ')}`);
+    }
+
+    return {
+        orders: ordersResult,
+        waves: Array.isArray(wavesResult) ? wavesResult : [],
+        shipments: Array.isArray(shipmentsResult) ? shipmentsResult : [],
+    };
+  },
 };

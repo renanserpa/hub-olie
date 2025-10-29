@@ -7,12 +7,7 @@ import ContactCard from './contacts/ContactCard';
 import ContactDialog from './contacts/ContactDialog';
 import { cn } from '../lib/utils';
 
-
-interface ContactsPageProps {
-  user: User;
-}
-
-const ContactsPage: React.FC<ContactsPageProps> = ({ user }) => {
+const ContactsPage: React.FC = () => {
     // FIX: Destructuring the object returned by the useContacts hook, which was previously failing because the hook returned void.
     const {
         isLoading,

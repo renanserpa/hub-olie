@@ -8,11 +8,7 @@ import InventoryDetailPanel from './inventory/InventoryDetailPanel';
 import { Card } from './ui/Card';
 import InventoryMovementDialog from './inventory/InventoryMovementDialog';
 
-interface InventoryPageProps {
-  user: User;
-}
-
-const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
+const InventoryPage: React.FC = () => {
     const {
         isLoading,
         isLoadingMovements,

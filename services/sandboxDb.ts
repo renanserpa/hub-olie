@@ -1,7 +1,7 @@
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
-    FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting
+    FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -100,6 +100,15 @@ const product_categories: ProductCategory[] = [
 const conversations: Conversation[] = [];
 const messages: Message[] = [];
 
+const logistics_waves: LogisticsWave[] = [
+    { id: 'w1', wave_number: 'WAVE-2024-001', status: 'completed', order_ids: ['o1'], created_by: 'sandbox-user-01', created_at: new Date(Date.now() - 86400000).toISOString() },
+];
+
+const logistics_shipments: LogisticsShipment[] = [
+    { id: 's1', order_id: 'o1', order_number: 'OLIE-2024-1001', customer_name: 'Ana Silva', status: 'in_transit', tracking_code: 'QB123456789BR', created_at: new Date().toISOString() },
+    { id: 's2', order_id: 'o2', order_number: 'OLIE-2024-1002', customer_name: 'Carla Dias', status: 'pending', created_at: new Date().toISOString() },
+];
+
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
     customers: contacts,
@@ -120,6 +129,8 @@ let collections: Record<string, any[]> = {
     system_settings,
     conversations,
     messages,
+    logistics_waves,
+    logistics_shipments,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -186,4 +197,12 @@ export const sandboxService = {
     getProducts: () => Promise.resolve(products),
     getProductCategories: () => Promise.resolve(product_categories),
     getContacts: () => Promise.resolve(contacts),
+    // FIX: Added getLogisticsData to sandbox service to match real service.
+    getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
+        return Promise.resolve({
+            orders: getCollection<Order>('orders'),
+            waves: getCollection<LogisticsWave>('logistics_waves'),
+            shipments: getCollection<LogisticsShipment>('logistics_shipments'),
+        });
+    },
 };

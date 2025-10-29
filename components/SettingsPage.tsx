@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Settings, Puzzle, Palette, Wrench, Truck, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Box, Users } from 'lucide-react';
+import { Settings, Puzzle, Palette, Wrench, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Box, Users } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import IntegrationsTabContent from './IntegrationsTabContent';
 import TabContent from './TabContent';
-import LogisticsTabContent from './LogisticsTabContent';
 import SystemTabContent from './SystemTabContent';
 import AppearanceTabContent from './AppearanceTabContent';
 import SecurityTabContent from './SecurityTabContent';
@@ -16,7 +15,6 @@ const SETTINGS_TABS = [
   { id: 'integrations', label: 'Integrações', icon: Puzzle },
   { id: 'catalogs', label: 'Catálogos', icon: Palette },
   { id: 'materials', label: 'Materiais', icon: Wrench },
-  { id: 'logistics', label: 'Logística', icon: Truck },
   { id: 'system', label: 'Sistema', icon: Monitor },
   { id: 'appearance', label: 'Aparência', icon: ImageIcon },
   { id: 'security', label: 'Segurança', icon: Shield },
@@ -153,7 +151,6 @@ const SettingsPage: React.FC = () => {
                     <div className="col-span-9">{renderMaterialsContent()}</div>
                 </div>
             );
-            case 'logistics': return <LogisticsTabContent />;
             case 'system': return <SystemTabContent initialSettings={settingsData.sistema} isAdmin={isAdmin} />;
             case 'appearance': return <AppearanceTabContent />;
             case 'security': return <SecurityTabContent />;
