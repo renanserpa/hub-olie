@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabaseService } from './services/supabaseService';
 import { AppData, User } from './types';
@@ -94,13 +95,17 @@ const App: React.FC = () => {
     const [activePage, setActivePage] = useState('orders');
     const hasRedirected = useRef(false);
 
-    // Effect for logging connection validation status
+    // Effect for logging domain status
     useEffect(() => {
-        if (!authError) {
-            console.log('🔌 Supabase reconectado: OK');
-            console.log('✅ Sessão persistente');
-        }
-    }, [authError]);
+        const origin = window.location.origin;
+        console.groupCollapsed("🌍 Olie Hub Domain Status");
+        console.log("✅ Current origin:", origin);
+        console.log(
+            "💡 If 'Failed to fetch' appears, add this origin to Supabase CORS list."
+        );
+        console.groupEnd();
+    }, []);
+
 
     // Effect to handle post-login redirection and reset
     useEffect(() => {
@@ -163,6 +168,7 @@ const App: React.FC = () => {
     
     // Handle catastrophic connection error first
     if (authError && authError.includes('Failed to fetch')) {
+        console.error("CORS or network error detected. Displaying guidance screen.");
         return <CorsErrorDisplay />;
     }
 

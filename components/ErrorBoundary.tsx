@@ -12,8 +12,9 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Initialize state as a class property to satisfy TypeScript.
-  // This resolves errors where `this.state` and `this.props` were not recognized.
+  // FIX: Initialized state as a class property.
+  // This is a more modern and concise syntax that resolves the underlying TypeScript
+  // errors where `this.state` and `this.props` were not being correctly identified.
   public state: State = {
     hasError: false,
     error: undefined

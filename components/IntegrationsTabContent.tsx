@@ -1,30 +1,34 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+import { Card } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { Info } from 'lucide-react';
+import { Info, Cpu } from 'lucide-react';
 
 const integrations = [
     {
-        title: 'Pagamentos',
-        description: 'Integração com Mercado Pago/Stripe em breve',
-        status: 'Em breve',
+        title: 'Pagamentos (Stripe/Mercado Pago)',
+        description: 'Gere links de pagamento dinâmicos para seus pedidos.',
+        status: 'Ativo (Simulado com IA)',
+        variant: 'ativo' as const,
     },
     {
-        title: 'Envios',
-        description: 'Integração com Correios/Melhor Envio em breve',
-        status: 'Em breve',
+        title: 'Emissão Fiscal (NFe)',
+        description: 'Simule a emissão de Notas Fiscais para seus pedidos.',
+        status: 'Ativo (Simulado com IA)',
+        variant: 'ativo' as const,
+    },
+    {
+        title: 'Envios (Correios/Melhor Envio)',
+        description: 'Crie etiquetas de envio com códigos de rastreio.',
+        status: 'Ativo (Simulado com IA)',
+        variant: 'ativo' as const,
     },
     {
         title: 'WhatsApp Business',
-        description: 'Conecte sua conta WhatsApp para enviar mensagens',
+        description: 'Conecte sua conta para automações e atendimento.',
         status: 'Em breve',
+        variant: 'secondary' as const,
     },
-    {
-        title: 'Instagram',
-        description: 'Integre com Instagram Direct para atendimento',
-        status: 'Em breve',
-    },
-]
+];
 
 const IntegrationsTabContent: React.FC = () => {
     return (
@@ -34,12 +38,18 @@ const IntegrationsTabContent: React.FC = () => {
                     <div className="p-6">
                         <div className="flex justify-between items-start">
                              <h3 className="text-lg font-bold text-textPrimary">{integration.title}</h3>
-                             {integration.status && <Badge variant="secondary">{integration.status}</Badge>}
+                             {integration.status && <Badge variant={integration.variant}>{integration.status}</Badge>}
                         </div>
-                        <div className="flex items-center text-sm text-textSecondary mt-4">
-                          <Info className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <div className="flex items-start text-sm text-textSecondary mt-4">
+                          <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
                           <p>{integration.description}</p>
                         </div>
+                         {integration.variant === 'ativo' && (
+                            <div className="flex items-center text-xs text-primary mt-3 p-2 bg-primary/10 rounded-md">
+                                <Cpu className="w-3 h-3 mr-2" />
+                                <p>Esta integração é simulada dinamicamente via Gemini API.</p>
+                            </div>
+                         )}
                     </div>
                 </Card>
             ))}
