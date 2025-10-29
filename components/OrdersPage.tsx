@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     const {
         isLoading,
+        isSaving,
         filteredOrders,
         allContacts,
         allProducts,
@@ -21,6 +22,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         setIsCreateDialogOpen,
         updateOrderStatus,
         createOrder,
+        addItemToOrder,
         refresh,
     } = useOrders();
 
@@ -53,6 +55,9 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                 order={selectedOrder}
                 isOpen={!!selectedOrder}
                 onClose={() => setSelectedOrderId(null)}
+                allProducts={allProducts}
+                addItemToOrder={addItemToOrder}
+                isSaving={isSaving}
             />
 
             <OrderDialog

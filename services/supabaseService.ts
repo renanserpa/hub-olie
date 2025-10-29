@@ -169,6 +169,9 @@ export const supabaseService = {
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],
+// FIX: Added missing executive dashboard properties to satisfy the AppData type.
+executive_kpis: [],
+executive_ai_insights: [],
     };
 
     try {

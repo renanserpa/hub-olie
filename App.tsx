@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2 } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -15,6 +15,7 @@ import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
@@ -25,6 +26,7 @@ import { dataService } from './services/dataService';
 
 
 const MAIN_TABS = [
+    { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal },
     { id: 'analytics', label: 'Analytics', icon: BarChart2 },
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
     { id: 'production', label: 'Produção', icon: Workflow },
@@ -39,6 +41,7 @@ const MAIN_TABS = [
 ];
 
 const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
+    executive: ['AdminGeral'],
     analytics: ['AdminGeral', 'Financeiro', 'Administrativo'],
     orders: ['AdminGeral', 'Vendas', 'Administrativo'],
     production: ['AdminGeral', 'Producao'],
@@ -53,7 +56,7 @@ const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
 };
 
 const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
-    AdminGeral: 'orders',
+    AdminGeral: 'executive',
     Producao: 'production',
     Vendas: 'orders',
     Financeiro: 'analytics',
@@ -111,6 +114,8 @@ const App: React.FC = () => {
         }
 
         switch (activePage) {
+            case 'executive':
+                return <ExecutiveDashboardPage />;
             case 'analytics':
                 return <AnalyticsPage />;
             case 'settings':
@@ -133,7 +138,6 @@ const App: React.FC = () => {
                 return <ProductsPage />;
             case 'orders':
             default:
-                // FIX: Passed the required `user` prop to the OrdersPage component.
                 return <OrdersPage user={user} />;
         }
     };

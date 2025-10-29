@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, Contact, Product, OrderStatus, AppData } from '../types';
+import { Order, Contact, Product, OrderStatus, AppData, OrderItem } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -7,7 +7,7 @@ export function useOrders() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [allContacts, setAllContacts] = useState<Contact[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [settingsData, setSettingsData] = useState<AppData | null>(null);
+    const [settingsData, setSettingsData] = useState<AppData | null>([]);
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -85,6 +85,49 @@ export function useOrders() {
             setIsSaving(false);
         }
     }, [loadData]);
+
+    const addItemToOrder = useCallback(async (orderId: string, itemData: { product_id: string; quantity: number }) => {
+        setIsSaving(true);
+        try {
+            const product = allProducts.find(p => p.id === itemData.product_id);
+            if (!product) {
+                toast({ title: "Erro", description: "Produto não encontrado.", variant: "destructive" });
+                return;
+            }
+    
+            const newItem: Omit<OrderItem, 'id'> = {
+                order_id: orderId,
+                product_id: itemData.product_id,
+                product_name: product.name,
+                quantity: itemData.quantity,
+                unit_price: product.base_price,
+                total: product.base_price * itemData.quantity,
+            };
+    
+            const addedItem = await dataService.addDocument('order_items', newItem);
+    
+            const order = allOrders.find(o => o.id === orderId);
+            if (order) {
+                const updatedItems = [...order.items, addedItem as OrderItem];
+                const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0);
+                const newTotal = newSubtotal - order.discounts + order.shipping_fee;
+    
+                // FIX: Explicitly provide the generic type for updateDocument to ensure correct type checking.
+                await dataService.updateDocument<Order>('orders', orderId, {
+                    subtotal: newSubtotal,
+                    total: newTotal,
+                });
+            }
+            
+            toast({ title: "Sucesso!", description: "Item adicionado ao pedido." });
+            await loadData();
+    
+        } catch (error) {
+            toast({ title: "Erro", description: "Não foi possível adicionar o item.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    }, [allProducts, allOrders, loadData]);
     
     return {
         isLoading,
@@ -108,6 +151,7 @@ export function useOrders() {
         // Mutations
         updateOrderStatus,
         createOrder,
+        addItemToOrder,
         refresh: loadData,
     };
 }

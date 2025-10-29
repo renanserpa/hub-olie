@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -41,11 +41,12 @@ const order_items: OrderItem[] = [
     { id: 'oi3', order_id: 'o2', product_id: 'p3', product_name: 'Mochila Urbana', quantity: 1, unit_price: 450.00, total: 450.00 },
 ];
 
-const orders: Order[] = [
-    { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', customers: contacts[0], status: 'in_production', items: [order_items[0]], payments_history: [], timeline: [], notes_internal: [], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', customers: contacts[2], status: 'paid', items: [order_items[1], order_items[2]], payments_history: [], timeline: [], notes_internal: [], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', customers: contacts[1], status: 'pending_payment', items: [], payments_history: [], timeline: [], notes_internal: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+const orders: Omit<Order, 'items' | 'customers'>[] = [
+    { id: 'o1', number: 'OLIE-2024-1001', customer_id: 'c1', status: 'in_production', payments_history: [], timeline: [], notes_internal: [], subtotal: 299.90, discounts: 0, shipping_fee: 25.00, total: 324.90, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    { id: 'o2', number: 'OLIE-2024-1002', customer_id: 'c3', status: 'paid', payments_history: [], timeline: [], notes_internal: [], subtotal: 709.80, discounts: 10.00, shipping_fee: 0.00, total: 699.80, created_at: new Date(Date.now() - 1 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', status: 'pending_payment', payments_history: [], timeline: [], notes_internal: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
 ];
+
 
 const production_orders: ProductionOrder[] = [
     { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
@@ -154,6 +155,20 @@ const analytics_kpis: AnalyticsKPI[] = [
     { id: 'kpi8', module: 'financial', name: 'Lucro Líquido (Simulado)', value: 12540.50, trend: 0.08, unit: 'R$', description: 'Lucro líquido estimado para o período.' },
 ];
 
+const executive_kpis: ExecutiveKPI[] = [
+    { id: 'ekpi1', module: 'sales', name: 'Faturamento Total', value: 1250000, trend: 0.12, unit: 'R$', period: 'Q4 2024', description: 'Soma de vendas do período.' },
+    { id: 'ekpi2', module: 'financial', name: 'Lucro Líquido', value: 375000, trend: 0.08, unit: 'R$', period: 'Q4 2024', description: 'Receita - Despesas.' },
+    { id: 'ekpi3', module: 'production', name: 'Eficiência Produtiva', value: 92, trend: -0.03, unit: '%', period: 'Q4 2024', description: '% de tarefas concluídas no prazo.' },
+    { id: 'ekpi4', module: 'logistics', name: 'OTIF (On Time In Full)', value: 96, trend: 0.01, unit: '%', period: 'Q4 2024', description: '% de entregas dentro do SLA.' },
+    { id: 'ekpi5', module: 'purchasing', name: 'Custo Matéria-Prima', value: 450000, trend: 0.05, unit: 'R$', period: 'Q4 2024', description: 'Total de POs recebidas.' }
+];
+
+const executive_ai_insights: AIInsight[] = [
+    { id: 'ai1', module: 'production', type: 'risk', insight: 'A eficiência produtiva caiu 3% neste trimestre. Investigar possíveis gargalos na etapa de costura, que apresentou maior número de atrasos.', period: 'Q4 2024', generated_at: new Date().toISOString() },
+    { id: 'ai2', module: 'sales', type: 'positive', insight: 'O faturamento cresceu 12%, superando a meta. A campanha de "Inverno 2024" foi a principal impulsionadora, representando 40% das vendas.', period: 'Q4 2024', generated_at: new Date().toISOString() },
+    { id: 'ai3', module: 'logistics', type: 'opportunity', insight: 'O custo médio de frete se manteve estável. Avaliar a renegociação com transportadoras para otimizar custos em rotas de maior volume pode gerar economia de até 5%.', period: 'Q4 2024', generated_at: new Date().toISOString() }
+];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -184,6 +199,8 @@ let collections: Record<string, any[]> = {
     purchase_orders,
     purchase_order_items,
     analytics_kpis,
+    executive_kpis,
+    executive_ai_insights,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -236,11 +253,35 @@ export const sandboxService = {
         catalogs: { paletas_cores: [], cores_texturas: { tecido: fabric_colors, ziper: zipper_colors, vies: bias_colors, forro: [], puxador: [], bordado: [], texturas: [] }, fontes_monogramas: config_fonts },
         materials: { grupos_suprimento: [], materiais_basicos: config_basic_materials },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-        sistema: system_settings, midia: {}, orders, contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates,
-        suppliers, purchase_orders, purchase_order_items, analytics_kpis
+        sistema: system_settings, midia: {}, orders: getCollection('orders'), contacts, products, product_categories, production_orders, task_statuses, tasks, omnichannel: { conversations, messages, quotes: [] }, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates,
+        suppliers, purchase_orders, purchase_order_items, analytics_kpis, executive_kpis, executive_ai_insights
     }),
-    getOrders: () => Promise.resolve(orders),
-    getOrder: (id: string) => Promise.resolve(get<Order>('orders', id)),
+    getOrders: async (): Promise<Order[]> => {
+        const ordersData = getCollection<Omit<Order, 'items' | 'customers'>>('orders');
+        const itemsData = getCollection<OrderItem>('order_items');
+        const customersData = getCollection<Contact>('customers');
+
+        const itemsByOrderId = itemsData.reduce((acc, item) => {
+            if (!acc[item.order_id]) acc[item.order_id] = [];
+            acc[item.order_id].push(item);
+            return acc;
+        }, {} as Record<string, OrderItem[]>);
+
+        return ordersData.map(order => ({
+            ...order,
+            items: itemsByOrderId[order.id] || [],
+            customers: customersData.find(c => c.id === order.customer_id),
+        }));
+    },
+    getOrder: async (id: string): Promise<Order | null> => {
+        const order = get<Omit<Order, 'items' | 'customers'>>('orders', id);
+        if (!order) return null;
+
+        const items = getCollection<OrderItem>('order_items').filter(i => i.order_id === id);
+        const customer = get<Contact>('customers', order.customer_id);
+
+        return { ...order, items, customers: customer || undefined };
+    },
     addOrder: (orderData: Partial<Order>) => Promise.resolve(create<Order>('orders', orderData as any)),
     getProductionOrders: () => Promise.resolve(production_orders),
     getTasks: () => Promise.resolve(tasks),
@@ -252,7 +293,7 @@ export const sandboxService = {
     getContacts: () => Promise.resolve(contacts),
     getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
         return Promise.resolve({
-            orders: getCollection<Order>('orders'),
+            orders: await sandboxService.getOrders(),
             waves: getCollection<LogisticsWave>('logistics_waves'),
             shipments: getCollection<LogisticsShipment>('logistics_shipments'),
         });

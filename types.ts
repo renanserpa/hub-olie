@@ -459,6 +459,31 @@ export interface AnalyticsKPI {
     description: string;
 }
 
+// --- EXECUTIVE DASHBOARD ---
+export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
+
+export interface ExecutiveKPI {
+    id: string;
+    module: ExecutiveModule;
+    name: string;
+    value: string | number;
+    trend: number; // e.g., 0.15 for +15%
+    unit?: string;
+    period: string; // e.g., 'Q4 2024'
+    description: string;
+}
+
+export type AIInsightType = 'opportunity' | 'positive' | 'risk';
+
+export interface AIInsight {
+    id: string;
+    module: ExecutiveModule;
+    type: AIInsightType;
+    insight: string;
+    period: string;
+    generated_at: string;
+}
+
 
 // --- AppData ---
 export interface AppData {
@@ -509,4 +534,6 @@ export interface AppData {
     purchase_orders: PurchaseOrder[];
     purchase_order_items: PurchaseOrderItem[];
     analytics_kpis: AnalyticsKPI[];
+    executive_kpis: ExecutiveKPI[];
+    executive_ai_insights: AIInsight[];
 }

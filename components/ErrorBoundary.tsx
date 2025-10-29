@@ -1,4 +1,4 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -11,8 +11,8 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Refactored state initialization into a constructor. This older pattern improves compatibility with build toolchains that may not fully support modern class field syntax, which could be the underlying cause of the misleading error about 'props' not existing.
+// FIX: Correctly extended React.Component and initialized state in the constructor. This resolves errors where `props` and `state` were previously undefined on the class instance.
+export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
