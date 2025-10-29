@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { BasicMaterial, InventoryMovementReason, InventoryMovementType } from '../../types';
@@ -36,16 +36,21 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
         setReason('compra');
         setNotes('');
     };
+    
+    useEffect(() => {
+        if (!isOpen) {
+            resetForm();
+        }
+    }, [isOpen]);
 
     const handleClose = () => {
-        resetForm();
         onClose();
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!materialId || quantity === '' || (type !== 'adjustment' && quantity <= 0)) {
-            toast({ title: "Atenção", description: "Preencha todos os campos obrigatórios e a quantidade deve ser positiva.", variant: 'destructive' });
+        if (!materialId || quantity === '' || (type !== 'adjustment' && Number(quantity) <= 0)) {
+            toast({ title: "Atenção", description: "Preencha todos os campos obrigatórios. A quantidade deve ser positiva.", variant: 'destructive' });
             return;
         }
 
@@ -71,8 +76,7 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
         return REASON_OPTIONS.filter(opt => opt.types.includes(type));
     }, [type]);
     
-    // Auto-select first valid reason when type changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (!reasonOptionsForType.find(opt => opt.value === reason)) {
             setReason(reasonOptionsForType[0].value);
         }
@@ -102,7 +106,7 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
                         <label className="block text-sm font-medium text-textSecondary">Quantidade</label>
                         <input type="number" step="0.01" value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : parseFloat(e.target.value))} required className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
                          {type !== 'adjustment' && <p className="text-xs text-textSecondary mt-1">Use apenas valores positivos.</p>}
-                         {type === 'adjustment' && <p className="text-xs text-textSecondary mt-1">Use valores negativos para saídas.</p>}
+                         {type === 'adjustment' && <p className="text-xs text-textSecondary mt-1">Use valores +/- para ajustar.</p>}
                     </div>
                 </div>
 

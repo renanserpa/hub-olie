@@ -1,7 +1,5 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { Order, User, OrderStatus, Contact, Product } from '../types';
 import { toast } from '../hooks/use-toast';
 import { Plus, LayoutGrid, List, ShoppingCart, Loader2 } from 'lucide-react';
@@ -39,9 +37,9 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         setLoading(true);
         try {
             const [contactsData, productsData, initialOrders] = await Promise.all([
-                supabaseService.getContacts(),
-                supabaseService.getProducts(),
-                supabaseService.getOrders()
+                dataService.getContacts(),
+                dataService.getProducts(),
+                dataService.getOrders()
             ]);
             setPageData({ contacts: contactsData, products: productsData });
             setOrders(initialOrders);
@@ -56,10 +54,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         loadPageData();
     }, [loadPageData]);
     
-    // Listen for real-time order updates (optional, initial load is now more robust)
     useEffect(() => {
-        const listener = supabaseService.listenToCollection<Order>('orders', '*, customers(*)', (newOrders) => {
-            // This is a simple implementation. For production, you might want more sophisticated merging.
+        const listener = dataService.listenToCollection<Order>('orders', '*, customers(*)', (newOrders) => {
             loadPageData();
         });
 
@@ -75,21 +71,18 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
 
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
-            // Optimistic update
             setOrders(prev => prev.map(o => o.id === orderId ? {...o, status: newStatus} : o));
-            // FIX: Explicitly specify the generic type for updateDocument to ensure correct return type.
-            const updatedOrder = await supabaseService.updateDocument<Order>('orders', orderId, { status: newStatus });
+            const updatedOrder = await dataService.updateDocument<Order>('orders', orderId, { status: newStatus });
             toast({ title: 'Sucesso!', description: `Pedido #${updatedOrder.number.split('-')[1]} atualizado.` });
-            // The listener will trigger a full reload, ensuring data consistency
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível atualizar o status do pedido.', variant: 'destructive' });
-            loadPageData(); // Revert optimistic update on error
+            loadPageData();
         }
     };
     
     const handleSaveOrder = () => {
         setIsDialogOpen(false);
-        // The real-time listener will pick up the change, no need for manual reload.
+        loadPageData();
     };
 
     const filteredOrders = activeListTab === 'all'

@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { AnySettingsItem, SettingsCategory, FieldConfig } from '../types';
 import { Pencil, Trash2, Plus, Loader2, PackageOpen } from 'lucide-react';
@@ -10,8 +7,6 @@ import { IconButton } from './ui/IconButton';
 import Modal from './ui/Modal';
 import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
-import { supabaseService } from '../services/supabaseService'; // Corrected import
-
 
 interface TabContentProps {
   category: SettingsCategory;

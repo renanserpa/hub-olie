@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { Conversation, Message, Quote, Contact, Order, User } from '../types';
 
@@ -25,8 +25,8 @@ export function useOmnichannel(user: User) {
             setIsLoading(true);
             try {
                  const [contactsData, ordersData] = await Promise.all([
-                    supabaseService.getContacts(),
-                    supabaseService.getOrders()
+                    dataService.getContacts(),
+                    dataService.getOrders()
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);
@@ -67,20 +67,17 @@ export function useOmnichannel(user: User) {
 
     const currentQuote = useMemo(() => {
         if (!selectedConversation?.quoteId) return null;
-        // This would fetch from 'omni_quotes' in a full implementation
         return null;
     }, [selectedConversation]);
 
     const handleSelectConversation = async (conversationId: string) => {
         setSelectedConversationId(conversationId);
-        // Real-time update logic will be added by SupaDataMaster
     };
     
     const sendMessage = async (content: string, type: 'text' | 'note' = 'text') => {
         if (!selectedConversationId || !content.trim()) return;
-
-        console.warn('sendMessage not implemented for Supabase yet.');
-        toast({ title: "Funcionalidade desabilitada", description: "O envio de mensagens será reativado após a migração para Supabase.", variant: "destructive"});
+        console.warn('sendMessage not implemented yet.');
+        toast({ title: "Funcionalidade desabilitada", description: "O envio de mensagens será implementado em breve.", variant: "destructive"});
     };
 
     return {

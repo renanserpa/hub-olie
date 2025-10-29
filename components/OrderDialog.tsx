@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
 import CustomizeItemDialog from './CustomizeItemDialog';
@@ -16,30 +16,23 @@ interface OrderDialogProps {
 }
 
 const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, contacts, products }) => {
-    // Form state
     const [contactId, setContactId] = useState('');
     const [items, setItems] = useState<Partial<OrderItem>[]>([]);
     const [discount, setDiscount] = useState(0);
     const [shippingCost, setShippingCost] = useState(0);
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Customization dialog state
     const [customizingItemIndex, setCustomizingItemIndex] = useState<number | null>(null);
-
-    // This is a temporary workaround to fetch full appData for customization.
-    // In a future refactor, CustomizeItemDialog should fetch its own needed data.
     const [appData, setAppData] = useState<AppData | null>(null);
+    
     useEffect(() => {
         if(isOpen) {
-            supabaseService.getSettings().then(setAppData);
+            dataService.getSettings().then(setAppData);
         }
     }, [isOpen]);
 
-
     useEffect(() => {
         if (!isOpen) {
-            // Reset form on close
             setContactId('');
             setItems([]);
             setDiscount(0);
@@ -95,9 +88,9 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
         }
         setIsSubmitting(true);
         try {
-            await supabaseService.addOrder({
+            await dataService.addOrder({
                 customer_id: contactId,
-                items: items.map(({ product, ...item }) => item) as OrderItem[], // Remove temporary product object before saving
+                items: items.map(({ product, ...item }) => item) as OrderItem[],
                 status: 'pending_payment',
                 subtotal,
                 discounts: discount,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Contact, AnyContact } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export function useContacts() {
@@ -16,7 +16,7 @@ export function useContacts() {
     const loadContacts = useCallback(async () => {
         setIsDataLoading(true);
         try {
-            const contacts = await supabaseService.getContacts();
+            const contacts = await dataService.getContacts();
             setAllContacts(contacts);
         } catch (error) {
              toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
@@ -59,10 +59,10 @@ export function useContacts() {
         try {
             if ('id' in contactData && contactData.id) {
                 const { id, ...dataToUpdate } = contactData;
-                await supabaseService.updateDocument('customers', id, dataToUpdate);
+                await dataService.updateDocument('customers', id, dataToUpdate);
                 toast({ title: "Sucesso!", description: "Contato atualizado." });
             } else {
-                await supabaseService.addDocument('customers', contactData);
+                await dataService.addDocument('customers', contactData);
                 toast({ title: "Sucesso!", description: "Novo contato criado." });
             }
             loadContacts();

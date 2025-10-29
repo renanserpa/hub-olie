@@ -1,7 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from "../types";
+import { isSandbox } from '../lib/runtime';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const callGeminiWithSchema = async <T>(prompt: string, schema: any): Promise<T> => {
   try {
@@ -59,20 +62,60 @@ const logisticsSchema = {
 
 export const integrationsService = {
   generatePaymentLink: async (order: Order): Promise<{ payments: PaymentDetails }> => {
+    if (isSandbox()) {
+        await delay(600);
+        console.log(`🧱 SANDBOX: Mocking payment link for order #${order.number}`);
+        return {
+            payments: {
+                status: 'pending',
+                method: 'link',
+                checkoutUrl: `https://sandbox.olie.com/pay/${generateId()}`,
+                transactionId: `txn_sb_${generateId()}`
+            }
+        };
+    }
     const prompt = `Simule a criação de um link de pagamento para o pedido ${order.number} no valor de R$ ${order.total.toFixed(2)}. Gere os dados no formato JSON especificado.`;
     const payments = await callGeminiWithSchema<PaymentDetails>(prompt, paymentSchema);
     return { payments };
   },
 
   issueNFe: async (order: Order): Promise<{ fiscal: FiscalDetails }> => {
+    if (isSandbox()) {
+        await delay(800);
+        console.log(`🧱 SANDBOX: Mocking NFe for order #${order.number}`);
+        return {
+            fiscal: {
+                status: 'authorized',
+                nfeNumber: String(Math.floor(100000 + Math.random() * 900000)),
+                serie: '1',
+                pdfUrl: '#mock-danfe',
+                xmlUrl: '#mock-xml'
+            }
+        };
+    }
     const prompt = `Simule a emissão de uma Nota Fiscal Eletrônica (NFe) para o pedido ${order.number} para o cliente ${order.customers?.name}. Gere os dados no formato JSON especificado.`;
     const fiscal = await callGeminiWithSchema<FiscalDetails>(prompt, fiscalSchema);
     return { fiscal };
   },
 
   createShippingLabel: async (order: Order): Promise<{ logistics: LogisticsDetails }> => {
+    if (isSandbox()) {
+        await delay(500);
+        console.log(`🧱 SANDBOX: Mocking shipping label for order #${order.number}`);
+        return {
+            logistics: {
+                status: 'shipped',
+                carrier: 'Correios (Sandbox)',
+                service: 'SEDEX',
+                tracking: `SB${Date.now()}BR`,
+                labelUrl: '#mock-label'
+            }
+        };
+    }
     const prompt = `Simule a criação de uma etiqueta de envio para o pedido ${order.number}. O cliente é ${order.customers?.name}. Gere os dados no formato JSON especificado.`;
     const logistics = await callGeminiWithSchema<LogisticsDetails>(prompt, logisticsSchema);
     return { logistics };
   }
 };
+
+const generateId = () => Math.random().toString(36).substring(2, 10);

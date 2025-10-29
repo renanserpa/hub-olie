@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SystemSetting } from '../types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/Card';
 import { Button } from './ui/Button';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -35,8 +35,6 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                         parsedValue[field] = value;
                         return { ...setting, value: JSON.stringify(parsedValue) };
                     } catch (e) {
-                        // This case handles non-JSON values, which shouldn't happen based on the data structure
-                        // but it's a safe fallback.
                         return { ...setting, value: value };
                     }
                 }
@@ -52,9 +50,9 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         }
         setIsSaving(true);
         try {
-            // This will fail silently as system_settings doesn't exist, which is the intended behavior for now.
-            // await supabaseService.updateSystemSettings(settings);
-            toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas.' });
+            // This is a mock operation in sandbox mode.
+            await Promise.all(settings.map(s => dataService.updateDocument('system_settings', s.id, { value: s.value })));
+            toast({ title: 'Sucesso!', description: 'Configurações do sistema salvas (simulado).' });
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar as configurações.', variant: 'destructive' });
         } finally {
@@ -104,7 +102,6 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
                                                 });
                                             }
                                         } catch (e) {
-                                            // Silently ignore if value is not valid JSON, or render a simple text input for it
                                             return renderField(setting, 'value', setting.value);
                                         }
                                         return null;

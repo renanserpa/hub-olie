@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Product, ProductCategory, AnyProduct, AppData } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export function useProducts() {
@@ -18,9 +18,9 @@ export function useProducts() {
         setIsLoading(true);
         try {
             const [productsData, categoriesData, settings] = await Promise.all([
-                supabaseService.getProducts(),
-                supabaseService.getProductCategories(),
-                supabaseService.getSettings(), // For catalogs needed in ProductDialog
+                dataService.getProducts(),
+                dataService.getProductCategories(),
+                dataService.getSettings(),
             ]);
             setAllProducts(productsData);
             setCategories(categoriesData);
@@ -65,13 +65,13 @@ export function useProducts() {
         setIsSaving(true);
         try {
             if ('id' in productData && productData.id) {
-                await supabaseService.updateDocument('products', productData.id, productData);
+                await dataService.updateDocument('products', productData.id, productData);
                 toast({ title: "Sucesso!", description: "Produto atualizado." });
             } else {
-                await supabaseService.addDocument('products', productData as AnyProduct);
+                await dataService.addDocument('products', productData as AnyProduct);
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
-            loadData(); // Reload data
+            loadData();
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o produto.", variant: "destructive" });

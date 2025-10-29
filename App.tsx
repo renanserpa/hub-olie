@@ -1,9 +1,4 @@
-
-
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { supabaseService } from './services/supabaseService';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
@@ -15,15 +10,14 @@ import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
-import SettingsPage from './components/SettingsPage'; // Placeholder page
+import SettingsPage from './components/SettingsPage';
 import { cn } from './lib/utils';
-
-
-// Auth Imports
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
 import type { UserRole } from './services/authService';
 import { logout } from './services/authService';
+import { isSandbox } from './lib/runtime';
+import { dataService } from './services/dataService';
 
 
 const MAIN_TABS = [
@@ -36,7 +30,6 @@ const MAIN_TABS = [
     { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
-// --- RBAC & REDIRECT LOGIC ---
 const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
     orders: ['AdminGeral', 'Vendas', 'Administrativo'],
     production: ['AdminGeral', 'Producao'],
@@ -66,28 +59,6 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
     </div>
 );
 
-
-const CorsErrorDisplay: React.FC = () => {
-    const origin = window.location.origin;
-
-    return (
-        <div className="flex flex-col items-center justify-center h-screen bg-background text-center p-4">
-            <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
-            <h1 className="text-2xl font-bold text-textPrimary">Erro de Conexão</h1>
-            <p className="text-textSecondary mt-2 mb-6 max-w-2xl">
-                A aplicação não conseguiu se conectar ao banco de dados (Supabase). Este é um problema de configuração de **CORS (Cross-Origin Resource Sharing)**.
-            </p>
-            <div className="text-left bg-secondary p-6 rounded-2xl text-sm text-textPrimary max-w-2xl w-full border border-border">
-                <p className="font-bold text-lg text-primary">Ação Necessária:</p>
-                <p className="mt-2">Para corrigir, adicione a seguinte URL à sua lista de **"Allowed Origins"** nas configurações de autenticação do seu projeto Supabase:</p>
-                <pre className="bg-background p-3 rounded-md mt-3 text-primary font-mono break-all text-xs border border-border">{origin}</pre>
-                <p className="text-xs mt-3 text-textSecondary">Após salvar a alteração no painel do Supabase, recarregue esta página.</p>
-            </div>
-        </div>
-    );
-};
-
-
 const App: React.FC = () => {
     const { user, isLoading: isAuthLoading, error: authError } = useAuth();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
@@ -95,19 +66,6 @@ const App: React.FC = () => {
     const [activePage, setActivePage] = useState('orders');
     const hasRedirected = useRef(false);
 
-    // Effect for logging domain status
-    useEffect(() => {
-        const origin = window.location.origin;
-        console.groupCollapsed("🌍 Olie Hub Domain Status");
-        console.log("✅ Current origin:", origin);
-        console.log(
-            "💡 If 'Failed to fetch' appears, add this origin to Supabase CORS list."
-        );
-        console.groupEnd();
-    }, []);
-
-
-    // Effect to handle post-login redirection and reset
     useEffect(() => {
         if (user && !isAuthLoading && !hasRedirected.current) {
             const defaultPage = DEFAULT_PAGE_BY_ROLE[user.role];
@@ -117,19 +75,17 @@ const App: React.FC = () => {
             hasRedirected.current = true;
         }
         if (!user && !isAuthLoading) {
-            hasRedirected.current = false; // Reset on logout
+            hasRedirected.current = false;
         }
     }, [user, isAuthLoading]);
 
-    // Data loading is now simplified as settings are the only global load.
-    // Module-specific data is fetched within its own page/hook.
     useEffect(() => {
         if (!user) {
           setIsDataLoading(false);
           return;
         }
         setIsDataLoading(true);
-        supabaseService.getSettings()
+        dataService.getSettings()
             .catch((e) => {
                 const errorMessage = 'Falha ao carregar as configurações da aplicação.';
                 setError(errorMessage);
@@ -166,12 +122,6 @@ const App: React.FC = () => {
         }
     };
     
-    // Handle catastrophic connection error first
-    if (authError && authError.includes('Failed to fetch')) {
-        console.error("CORS or network error detected. Displaying guidance screen.");
-        return <CorsErrorDisplay />;
-    }
-
     if (isAuthLoading || (user && isDataLoading)) {
         return (
             <div className="flex justify-center items-center h-screen bg-background">
@@ -194,9 +144,14 @@ const App: React.FC = () => {
     
     return (
         <div className="min-h-screen font-sans bg-background">
+            {isSandbox() && (
+                <div className="w-full text-center text-xs py-1 bg-amber-100 text-amber-800 border-b border-amber-200 sticky top-0 z-50">
+                    SANDBOX MODE (OFFLINE) — Nenhuma chamada de rede está sendo feita.
+                </div>
+            )}
             <Toaster />
             <div className="flex">
-                <aside className="w-64 bg-secondary border-r border-border h-screen sticky top-0 flex flex-col p-4">
+                <aside className={cn("w-64 bg-secondary border-r border-border h-screen flex flex-col p-4 sticky", isSandbox() ? "top-[25px]" : "top-0")}>
                     <div className="px-2 mb-8">
                         <h1 className="text-xl font-bold text-textPrimary">Olie Hub</h1>
                     </div>
@@ -216,10 +171,9 @@ const App: React.FC = () => {
                 </aside>
 
                 <main className="flex-1">
-                     <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+                     <header className={cn("bg-background/80 backdrop-blur-sm border-b border-border z-10 sticky", isSandbox() ? "top-[25px]" : "top-0")}>
                         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
                            <div className="relative w-full max-w-md">
-                                {/* Search bar functionality can be implemented here */}
                            </div>
                             <div className="flex items-center gap-4">
                                 <button className="relative text-textSecondary hover:text-textPrimary">

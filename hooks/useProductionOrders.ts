@@ -1,8 +1,6 @@
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../types';
-import { supabaseService } from '../services/supabaseService';
+import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export type ProductionOrderFiltersState = {
@@ -19,9 +17,8 @@ export function useProductionOrders() {
     const loadOrders = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await supabaseService.getProductionOrders();
+            const data = await dataService.getProductionOrders();
             setAllOrders(data);
-            // Set initial selection only if there's no selection yet and data is available
             if (data.length > 0 && selectedOrderId === null) {
                 setSelectedOrderId(data[0].id);
             }
@@ -30,7 +27,7 @@ export function useProductionOrders() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrderId]); // Dependency on selectedOrderId is intentional for initial selection logic
+    }, [selectedOrderId]);
 
     useEffect(() => {
         loadOrders();

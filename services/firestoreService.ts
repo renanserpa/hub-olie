@@ -60,7 +60,8 @@ const addDocument = async <T extends { id?: string }>(table: string, docData: Om
     return data as T;
 };
 
-const updateDocument = async <T>(table: string, id: string, docData: Partial<T>): Promise<T> => {
+// FIX: Added generic constraint to improve type safety for update operations.
+const updateDocument = async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
     const { data, error } = await supabase.from(table).update(docData).eq('id', id).select().single();
     if (error) handleError(error, `updateDocument(${table}, ${id})`);
     return data as T;
