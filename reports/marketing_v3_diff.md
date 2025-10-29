@@ -1,51 +1,205 @@
-# Relatório de Migração e Análise Comparativa: Marketing v3.0
+# Documentação Técnica do Módulo: Marketing v3.0
 
-**Executor:** Arquiteto-Executor Sênior (Crew-Gemini)
-**Data:** 2024-07-30
+**Versão:** 3.0 (Implantação Base)
+**Data:** 2024-07-31
+**Responsável:** 🧠 ArquitetoSupremo (Crew-Gemini)
+**Arquivo Fonte:** `/reports/marketing_v3_diff.md`
 
-## 1. Objetivo
+---
 
-Este documento detalha a implementação do Módulo de Marketing v3.0, consolidando a gestão de campanhas, segmentação de público e templates de comunicação em uma única interface modular e integrada ao ecossistema Olie Hub.
+## 1. Visão Geral
 
-## 2. Arquitetura e Estrutura
+O Módulo de Marketing é a plataforma de automação e engajamento do cliente do Olie Hub. Ele capacita a equipe de conteúdo e vendas a criar, gerenciar e analisar campanhas de comunicação em múltiplos canais (Email, SMS, WhatsApp, Instagram). O módulo é estruturado em torno de três pilares: **Segmentação** (definir o público), **Templates** (criar a mensagem) e **Campanhas** (executar e medir).
 
-A v3 introduz uma arquitetura completa, baseada em abas, para organizar as diferentes facetas do marketing:
+-   **Objetivo Operacional:** Aumentar o engajamento do cliente, impulsionar vendas através de comunicações direcionadas, automatizar o marketing e fornecer métricas claras sobre o Retorno sobre o Investimento (ROI) de cada iniciativa.
+-   **Papéis Envolvidos:**
+    -   `Conteudo`: Criação e gerenciamento de campanhas, templates e segmentos.
+    -   `AdminGeral`: Acesso total para supervisão, análise de performance e configuração de integrações.
+    -   `Vendas`: Consulta de campanhas para alinhamento com as estratégias de abordagem.
 
--   **Campanhas:** O coração do módulo. Permite a criação, gerenciamento e visualização de campanhas multicanal (Email, SMS, WhatsApp, Instagram).
--   **Segmentos:** Gerenciador de público-alvo, permitindo a criação de regras para segmentar a base de contatos (clientes).
--   **Templates:** Editor de conteúdo e mensagens reutilizáveis para as campanhas.
--   **Dashboard:** Painel de métricas e KPIs para análise de performance.
+---
 
-## 3. Principais Componentes e Funcionalidades
+## 2. Estrutura de Dados
 
--   **`CampaignCard`:** Exibe um resumo visual de cada campanha, incluindo status, canais, e KPIs principais (taxa de abertura, cliques, ROI).
--   **`CampaignDialog`:** Formulário modal para criação e edição de campanhas, com validação de dados via Zod, agendamento, e definição de orçamento.
--   **Integração com IA (Gemini):** O `CampaignDialog` inclui uma funcionalidade para gerar descrições de campanha automaticamente, agilizando o processo criativo.
--   **Hook Central (`useMarketing`):** Orquestra todos os dados do módulo, gerenciando o estado de campanhas, segmentos e templates, além da lógica de filtros e mutações.
--   **Resiliência Sandbox:** O módulo é totalmente funcional no modo sandbox, utilizando dados mock e emitindo logs claros no console sobre o status das tabelas (`marketing_campaigns`, `marketing_segments`, etc.).
+A arquitetura de dados da v3.0 é modular e projetada para um sistema de marketing robusto. **Nenhuma das tabelas a seguir existe no schema de produção; elas foram implementadas no sandbox para guiar o desenvolvimento da UI.**
 
-## 4. Integração com o Ecossistema Olie Hub
+### Tabelas Principais (Implementadas no Sandbox)
 
--   **Contatos (`Customers`):** O módulo de Segmentos se integrará diretamente com a base de contatos para criar públicos dinâmicos.
--   **Pedidos (`Orders`):** As campanhas poderão rastrear conversões (pedidos gerados) através de parâmetros UTM.
--   **Omnichannel:** No futuro, o envio real das mensagens (WhatsApp, etc.) será delegado ao módulo Omnichannel.
--   **Financeiro:** Os dados de `budget` e `spent` das campanhas serão integrados ao módulo Financeiro para cálculo preciso de ROI, CPA e CPC.
+| Tabela | Descrição |
+| :--- | :--- |
+| `marketing_campaigns` | Tabela central que armazena os dados de cada campanha de marketing. |
+| `marketing_segments`| Define os públicos-alvo com base em regras aplicadas à base de clientes. |
+| `marketing_templates`| Armazena os modelos de mensagem reutilizáveis para os diferentes canais. |
 
-## 5. Próximos Passos: Migração Incremental
+### Campos-Chave
 
-A v3 foi implementada com uma base sólida para as campanhas. Os próximos passos envolvem a implementação completa das funcionalidades de Segmentos, Templates e Dashboard:
+#### `marketing_campaigns`
+| Coluna | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `id` | `uuid` | Chave primária. |
+| `name` | `text` | Nome da campanha. |
+| `status` | `text` | Status da campanha (FSM): 'draft', 'scheduled', 'active', 'completed'. |
+| `channels` | `array`| Canais a serem utilizados (ex: {'email', 'whatsapp'}). |
+| `segment_id`| `uuid` | FK para `marketing_segments.id`. |
+| `template_id`| `uuid` | FK para `marketing_templates.id`. |
+| `budget` | `numeric`| Orçamento alocado para a campanha. |
+| `spent` | `numeric` | Valor gasto até o momento. |
+| `kpis` | `jsonb` | Objeto JSON para armazenar métricas (enviados, aberturas, cliques, conversões). |
 
-1.  **Habilitar Tabelas no Supabase:**
-    -   `CREATE TABLE public.marketing_campaigns (...)`
-    -   `CREATE TABLE public.marketing_segments (...)`
-    -   `CREATE TABLE public.marketing_templates (...)`
-    -   `CREATE TABLE public.marketing_events (...)` (para tracking de métricas)
+#### `marketing_segments` e `marketing_templates`
+| Tabela | Coluna | Descrição |
+| :--- | :--- | :--- |
+| `segments` | `name` | Nome do segmento (ex: "Clientes VIP"). |
+| `segments` | `rules_json` | (Proposto) JSON com as regras de filtragem. |
+| `templates`| `name` | Nome do template (ex: "Boas-vindas Inverno 2024"). |
+| `templates`| `channel`| Canal ao qual o template se aplica. |
+| `templates`| `content` | Conteúdo da mensagem (HTML, texto). |
 
-2.  **Desenvolver UI de Segmentação:**
-    -   Implementar o construtor de regras de segmentação no componente `SegmentManager`.
+### Diagrama de Relacionamento (ERD) Proposto
 
-3.  **Desenvolver UI de Templates:**
-    -   Implementar o editor de templates no componente `TemplateEditor`, possivelmente com um editor visual (WYSIWYG).
+```mermaid
+erDiagram
+    marketing_segments ||--o{ marketing_campaigns : "direciona"
+    marketing_templates ||--o{ marketing_campaigns : "usa"
+    customers }o--|| marketing_segments : "é agrupado em"
+    marketing_campaigns }o--o{ orders : "gera"
 
-4.  **Desenvolver Dashboard:**
-    -   Implementar os gráficos e métricas no `DashboardPanel`, buscando dados de `marketing_events`.
+    marketing_segments {
+        uuid id PK
+        text name
+        jsonb rules
+    }
+    marketing_templates {
+        uuid id PK
+        text name
+        text channel
+    }
+    marketing_campaigns {
+        uuid id PK
+        text name
+        uuid segment_id FK
+        uuid template_id FK
+        text status
+        jsonb kpis
+    }
+    customers {
+        uuid id PK
+        text name
+        text email
+    }
+    orders {
+        uuid id PK
+        text number
+    }
+```
+
+---
+
+## 3. Regras de Negócio & RLS (Propostos)
+
+### Políticas de Acesso (RLS)
+| Papel | Permissões em `marketing_*` |
+| :--- | :--- |
+| `AdminGeral` | CRUD completo. |
+| `Conteudo` | `SELECT`, `INSERT`, `UPDATE`. |
+| Outros | Acesso de leitura (`SELECT`). |
+
+### Máquina de Estados Finitos (FSM) - `marketing_campaigns.status`
+```mermaid
+stateDiagram-v2
+    [*] --> draft: Criação
+    draft --> scheduled: Agendamento
+    draft --> active: Início Imediato
+    draft --> cancelled: Cancelada
+    
+    scheduled --> active: Data/Hora Atingida
+    scheduled --> draft: Edição
+    scheduled --> cancelled: Cancelada
+    
+    active --> paused: Pausada
+    active --> completed: Fim da Campanha
+    
+    paused --> active: Retomada
+    paused --> completed: Encerrada
+    
+    completed --> [*]
+    cancelled --> [*]
+```
+
+### Lógica Central
+- **Execução e Tracking:** A execução real de uma campanha (envio de emails/mensagens) e o rastreamento de eventos (aberturas, cliques) devem ser gerenciados por processos de backend (Supabase Edge Functions), acionados por um agendador (`cron job`) para campanhas agendadas ou por um gatilho para campanhas de início imediato.
+
+---
+
+## 4. Fluxos Operacionais
+
+O fluxo de marketing é proativo, iniciando com a estratégia e terminando com a análise de resultados.
+
+```mermaid
+graph TD
+    subgraph Módulo de Marketing (UI)
+        A[Cria Segmento de Clientes] --> B[Cria Template de Mensagem];
+        B --> C{Cria Campanha};
+        C --"Associa Segmento e Template"--> D[Campanha Status: 'draft'];
+        D --"Agenda/Inicia"--> E[Campanha Status: 'scheduled' ou 'active'];
+    end
+
+    subgraph Backend (Edge Functions)
+        E --"Scheduler/Trigger"--> F{Processa Fila de Envio};
+        F --"Chama APIs Externas"--> G[Envia Mensagens];
+    end
+    
+    subgraph Tracking
+        H[Cliente Abre/Clica] --"Webhook/Pixel"--> I{Registra Evento};
+    end
+
+    subgraph Módulo de Analytics (DB)
+        I --"Atualiza JSON de KPIs"--> J[Atualiza `marketing_campaigns.kpis`];
+    end
+```
+
+---
+
+## 5. KPIs & Métricas
+
+| KPI | Descrição |
+| :--- | :--- |
+| **Open Rate** | % de destinatários que abriram a mensagem. |
+| **Click-Through Rate (CTR)** | % de destinatários que clicaram em um link na mensagem. |
+| **Conversion Rate** | % de destinatários que completaram uma ação desejada (ex: compra). |
+| **Return On Investment (ROI)** | (Receita Gerada - Custo) / Custo. |
+| **Custo por Aquisição (CPA)** | Custo total da campanha / Número de conversões. |
+| **Taxa de Unsubscribe** | % de usuários que se descadastraram da lista. |
+
+---
+
+## 6. Critérios de Aceite
+
+-   [✅] A UI do módulo exibe abas para Campanhas, Segmentos, Templates e Dashboard.
+-   [✅] O `CampaignDialog` permite a criação e edição de campanhas, incluindo a geração de descrição com IA.
+-   [✅] A lista de campanhas (`CampaignList`) exibe os `CampaignCard`s com os dados do sandbox.
+-   [✅] Os componentes `SegmentManager` e `TemplateEditor` exibem placeholders informativos, pois suas funcionalidades completas estão em desenvolvimento.
+-   [ ] **Pendente:** As tabelas `marketing_campaigns`, `marketing_segments` e `marketing_templates` existem no ambiente de produção.
+-   [ ] **Pendente:** A lógica de envio de mensagens está implementada no backend.
+-   [ ] **Pendente:** O mecanismo de rastreamento de eventos e atualização de KPIs está funcional.
+-   [ ] **Pendente:** A UI para criação de regras de segmento e edição de templates está implementada.
+
+---
+
+## 7. Auditoria Técnica (Diff) - Implantação v3.0
+
+Esta é a primeira implementação formal do Módulo de Marketing, estabelecendo a arquitetura base para o gerenciamento de comunicações.
+
+-   **Abordagem "UI-First":** A v3.0 foi desenvolvida com foco na experiência do usuário. Toda a interface de gerenciamento de campanhas foi construída e validada utilizando dados do `sandboxDb.ts`. Isso permitiu a criação de componentes robustos como `CampaignCard` e `CampaignDialog` antes mesmo da existência das tabelas no banco de dados de produção.
+-   **Hook Centralizador (`useMarketing`):** Toda a complexidade de estado, filtros e interações com o `dataService` é encapsulada neste hook. Ele foi projetado para ser resiliente, emitindo logs claros sobre quais tabelas (`marketing_campaigns`, `marketing_segments`, etc.) foram carregadas com sucesso e quais estão ausentes.
+-   **Integração com IA:** A funcionalidade de gerar descrição de campanha com Gemini (`geminiService`) foi integrada diretamente no fluxo de criação, demonstrando o potencial de IA para agilizar tarefas criativas e repetitivas.
+-   **Placeholders Estratégicos:** As abas de Segmentos, Templates e Dashboard foram implementadas com componentes de placeholder (`EmptyState`, `SegmentManager`, etc.), o que permite ao usuário entender o escopo completo do módulo e sinaliza claramente quais funcionalidades estão em desenvolvimento.
+
+---
+
+## 8. Ações Recomendadas / Pendentes
+
+1.  **[ALTA] Criar Schema no Supabase:** Criar as tabelas `public.marketing_campaigns`, `public.marketing_segments` e `public.marketing_templates` no ambiente de produção.
+2.  **[MÉDIA] Implementar UI de Segmentos e Templates:** Desenvolver a lógica e a interface do usuário para o construtor de regras de segmentação (`SegmentManager`) e para o editor de conteúdo de mensagens (`TemplateEditor`).
+3.  **[MÉDIA] Desenvolver Backend de Envio:** Criar as Supabase Edge Functions responsáveis por processar as campanhas ativas, buscar os destinatários nos segmentos e enviar as mensagens através de APIs de terceiros (ex: SendGrid para email, Twilio para SMS).
+4.  **[BAIXA] Implementar Tracking e Dashboard:** Desenvolver o endpoint de webhook para receber eventos de tracking e a lógica para agregar esses dados e exibi-los nos gráficos do `DashboardPanel`.
