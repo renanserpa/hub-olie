@@ -487,6 +487,60 @@ export interface AIInsight {
     generated_at: string;
 }
 
+// --- FINANCE ---
+export type FinanceAccountType = 'checking' | 'savings' | 'investment' | 'credit_card' | 'cash';
+export type FinanceTransactionType = 'income' | 'expense' | 'transfer';
+
+export interface FinanceAccount {
+    id: string;
+    name: string;
+    type: FinanceAccountType;
+    institution: string; // e.g., 'Bradesco', 'NuBank'
+    balance: number;
+    currency: 'BRL';
+    is_active: boolean;
+}
+
+export interface FinanceCategory {
+    id: string;
+    name: string;
+    type: 'income' | 'expense';
+    parent_category_id?: string;
+}
+
+export interface FinanceTransaction {
+    id: string;
+    account_id: string;
+    account?: FinanceAccount;
+    category_id?: string;
+    category?: FinanceCategory;
+    description: string;
+    amount: number; // positive for income, negative for expense
+    type: FinanceTransactionType;
+    transaction_date: string; // ISO string
+    status: 'pending' | 'cleared' | 'cancelled';
+    notes?: string;
+    created_at: string;
+}
+
+export interface FinancePayable {
+    id: string;
+    due_date: string;
+    amount: number;
+    supplier_id: string;
+    purchase_order_id?: string;
+    status: 'pending' | 'paid' | 'overdue';
+}
+
+export interface FinanceReceivable {
+    id: string;
+    due_date: string;
+    amount: number;
+    customer_id: string;
+    order_id?: string;
+    status: 'pending' | 'paid' | 'overdue';
+}
+
 
 // --- AppData ---
 export interface AppData {
@@ -539,4 +593,9 @@ export interface AppData {
     analytics_kpis: AnalyticsKPI[];
     executive_kpis: ExecutiveKPI[];
     executive_ai_insights: AIInsight[];
+    finance_accounts: FinanceAccount[];
+    finance_categories: FinanceCategory[];
+    finance_transactions: FinanceTransaction[];
+    finance_payables: FinancePayable[];
+    finance_receivables: FinanceReceivable[];
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -16,6 +16,7 @@ import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
+import FinancePage from './pages/FinancePage';
 import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
@@ -33,6 +34,7 @@ const MAIN_TABS = [
     { id: 'inventory', label: 'Estoque', icon: Package },
     { id: 'purchases', label: 'Compras', icon: ShoppingBasket },
     { id: 'logistics', label: 'Logística', icon: Truck },
+    { id: 'finance', label: 'Financeiro', icon: DollarSign },
     { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare },
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'contacts', label: 'Contatos', icon: Users },
@@ -48,6 +50,7 @@ const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
     inventory: ['AdminGeral', 'Producao', 'Financeiro'],
     purchases: ['AdminGeral', 'Financeiro'],
     logistics: ['AdminGeral', 'Administrativo'],
+    finance: ['AdminGeral', 'Financeiro'],
     omnichannel: ['AdminGeral', 'Vendas', 'Conteudo'],
     marketing: ['AdminGeral', 'Conteudo'],
     contacts: ['AdminGeral', 'Vendas', 'Administrativo'],
@@ -128,6 +131,8 @@ const App: React.FC = () => {
                 return <PurchasesPage />;
             case 'logistics':
                 return <LogisticsPage />;
+            case 'finance':
+                return <FinancePage />;
             case 'omnichannel':
                 return <OmnichannelPage user={user as User} />;
             case 'marketing':
