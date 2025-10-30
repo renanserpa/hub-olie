@@ -4,7 +4,6 @@ import { useAgentSync } from '../hooks/useAgentSync';
 import { useSystemHealth } from '../hooks/useSystemHealth';
 import SystemHealthCard from '../components/SystemHealthCard';
 import ExecutionPanel from '../components/ExecutionPanel';
-import PipelineLog from '../components/PipelineLog';
 import AgentStatusCard from '../components/AgentStatusCard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Cpu } from 'lucide-react';
@@ -12,7 +11,7 @@ import { Cpu } from 'lucide-react';
 const InitializerPage: React.FC = () => {
   const { agents } = useAgentSync();
   const { healthScore, healthStatus } = useSystemHealth(agents);
-  const { logs, status, runPipeline, stopPipeline, currentStep, isProcessing, handleUpload } = useInitializer();
+  const { logs, isProcessing, handleUpload } = useInitializer();
 
   return (
     <div>
@@ -30,24 +29,21 @@ const InitializerPage: React.FC = () => {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <SystemHealthCard score={healthScore} status={healthStatus} />
+        {/* Left Column (Main Panel) */}
+        <div className="lg:col-span-2">
           <ExecutionPanel 
-            status={status} 
-            onRun={runPipeline} 
-            onStop={stopPipeline}
             isProcessing={isProcessing}
             onUpload={handleUpload}
+            logs={logs}
           />
         </div>
 
-        {/* Center & Right Column */}
-        <div className="lg:col-span-2 space-y-6">
-          <PipelineLog logs={logs} currentStep={currentStep} />
+        {/* Right Column (Status) */}
+        <div className="lg:col-span-1 space-y-6">
+          <SystemHealthCard score={healthScore} status={healthStatus} />
           <Card>
-            <CardHeader><CardTitle>Status dos Agentes</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardHeader><CardTitle className="text-lg">Status dos Agentes</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-1 gap-4 max-h-[450px] overflow-y-auto">
               {agents.map(agent => (
                 <AgentStatusCard key={agent.id} agent={agent} />
               ))}
