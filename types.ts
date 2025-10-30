@@ -627,6 +627,35 @@ export interface FinanceReceivable {
     status: 'pending' | 'paid' | 'overdue';
 }
 
+// --- INITIALIZER ---
+
+export interface InitializerLog {
+  id: string;
+  agent_name: string;
+  module?: string;
+  action: string;
+  status: 'running' | 'success' | 'error' | 'info';
+  timestamp: string;
+  metadata?: any;
+}
+
+export interface InitializerSyncState {
+  id: string;
+  module: string;
+  last_commit?: string;
+  last_diff?: string;
+  updated_at: string;
+}
+
+export interface InitializerAgent {
+  id: string;
+  name: string;
+  role: string;
+  status: 'idle' | 'working' | 'error' | 'offline';
+  last_heartbeat: string;
+  health_score: number;
+}
+
 
 // --- AppData ---
 export interface AppData {
@@ -688,4 +717,7 @@ export interface AppData {
     finance_transactions: FinanceTransaction[];
     finance_payables: FinancePayable[];
     finance_receivables: FinanceReceivable[];
+    initializer_logs: InitializerLog[];
+    initializer_sync_state: InitializerSyncState[];
+    initializer_agents: InitializerAgent[];
 }

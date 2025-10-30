@@ -38,6 +38,9 @@ import {
     IntegrationLog,
     Material,
     MaterialGroup,
+    InitializerAgent,
+    InitializerLog,
+    InitializerSyncState,
 } from "../types";
 
 
@@ -192,11 +195,15 @@ export const supabaseService = {
         finance_receivables: [],
         config_integrations: [],
         integration_logs: [],
+        initializer_agents: [],
+        initializer_logs: [],
+        initializer_sync_state: [],
     };
 
     try {
         const [
-            tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials
+            tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials,
+            initializer_agents, initializer_logs, initializer_sync_state
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
@@ -205,6 +212,9 @@ export const supabaseService = {
             supabaseService.getCollection<SystemSettingsLog>('system_settings_logs'),
             supabaseService.getMaterialGroups(),
             supabaseService.getMaterials(),
+            supabaseService.getCollection<InitializerAgent>('initializer_agents'),
+            supabaseService.getCollection<InitializerLog>('initializer_logs'),
+            supabaseService.getCollection<InitializerSyncState>('initializer_sync_state'),
         ]);
         
         return {
@@ -222,6 +232,9 @@ export const supabaseService = {
             system_settings_logs,
             config_supply_groups,
             config_materials,
+            initializer_agents,
+            initializer_logs,
+            initializer_sync_state,
         };
     } catch (error) {
         handleError(error, 'getSettings');

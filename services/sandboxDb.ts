@@ -4,7 +4,7 @@ import {
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
-    MaterialGroup, Material
+    MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -217,6 +217,18 @@ const integration_logs: IntegrationLog[] = [
 
 const media_assets: MediaAsset[] = [];
 
+const initializer_agents: InitializerAgent[] = [
+    { id: 'agent1', name: 'ArquitetoSupremo', role: 'Coordenação Global', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent2', name: 'AtlasAI', role: 'Roteamento de Tarefas', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent3', name: 'CatalisadorAI', role: 'Estruturação de Projetos', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent4', name: 'WebAppDevAI', role: 'Desenvolvimento Frontend', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent5', name: 'EngenheiroDeDados', role: 'Gestão de Schema e Dados', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent6', name: 'AuditorDeSistema', role: 'Auditoria e Validação', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+];
+
+const initializer_logs: InitializerLog[] = [];
+const initializer_sync_state: InitializerSyncState[] = [];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -259,6 +271,9 @@ let collections: Record<string, any[]> = {
     finance_transactions,
     finance_payables: [],
     finance_receivables: [],
+    initializer_logs,
+    initializer_sync_state,
+    initializer_agents,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
