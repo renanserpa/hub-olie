@@ -1,11 +1,11 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import KpiCard from './KpiCard';
+import KpiCard from '../analytics/KpiCard';
 import EmptyState from './EmptyState';
-import ChartCard from './ChartCard';
-import ChartCardForecast from './ChartCardForecast';
+import ChartCard from '../analytics/ChartCard';
+import ChartCardForecast from '../analytics/ChartCardForecast';
 import { AnomalyData, PredictionData } from '../../hooks/useAnalyticsAI';
-import HeatmapPanel from './HeatmapPanel';
+import HeatmapPanel from '../analytics/HeatmapPanel';
 
 interface AnalyticsDashboardProps {
     kpis: AnalyticsKPI[];

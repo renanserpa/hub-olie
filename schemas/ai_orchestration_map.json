@@ -11,6 +11,12 @@
     "action": "audit_flow",
     "report": "/reports/audit_production_command_v3.md"
   },
+  "auditoria cognitiva geral": {
+    "route": ["SYSTEM_AUDIT_START", "AtlasAI_AUDIT", "GeminiAI_AUDIT", "EngenheiroDeDados_AUDIT", "Vercel_AUDIT", "ArquitetoSupremo_Finalizador"],
+    "context": "system_wide",
+    "action": "full_cognitive_audit",
+    "report": "/reports/system_orchestration_audit_v3.md"
+  },
   "integração google fullstack": {
     "route": ["ArquitetoSupremo", "GeminiHubAI", "ArquitetoSupremo_Finalizador"],
     "context": "integrations",

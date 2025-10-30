@@ -112,7 +112,11 @@ export async function executeAgent(agent: string, payload: any) {
         break;
       case "ArquitetoSupremo_Finalizador": // New final step for the same agent
         const finalAgentName = "ArquitetoSupremo"; // Log as the original agent
-        sendLog(finalAgentName, `Auditoria concluída — relatório salvo em ${payload.report}.`);
+        if (payload.context === 'system_wide') {
+            sendLog(finalAgentName, `Relatório consolidado.`);
+        } else {
+            sendLog(finalAgentName, `Auditoria concluída — relatório salvo em ${payload.report}.`);
+        }
         await generateReport(payload.report);
         await reportGenerator.writeAuditLog(`[SUCCESS] Módulo ${payload.context} finalizado.`);
         break;
@@ -122,9 +126,25 @@ export async function executeAgent(agent: string, payload: any) {
         await delay(500);
         break;
       
-      // New Audit Flow Agents
+      // General Cognitive Audit Agents
+      case "AtlasAI_AUDIT":
+        sendLog('AtlasAI', 'Roteamento validado.');
+        await delay(500);
+        break;
+      case "GeminiAI_AUDIT":
+        sendLog('GeminiAI', 'Enviando prompt de diagnóstico...');
+        await delay(1000);
+        sendLog('GeminiAI', 'Status 200 — Conexão estável.');
+        break;
+      case "Vercel_AUDIT":
+        sendLog('Vercel', 'Testando status do último build...');
+        await delay(600);
+        sendLog('Vercel', 'Build ativo (último commit: main).');
+        break;
+      
+      // Existing Audit Flow Agents
       case "SYSTEM_AUDIT_START":
-        sendLog('SYSTEM', 'Auditoria iniciada — comando “finalizar módulo Produção”.');
+        sendLog('SYSTEM', 'Auditoria iniciada.');
         await delay(1000);
         break;
       case "ArquitetoSupremo_AUDIT":
@@ -136,7 +156,11 @@ export async function executeAgent(agent: string, payload: any) {
         await delay(1000);
         break;
       case "EngenheiroDeDados_AUDIT":
-        sendLog('EngenheiroDeDados', 'Validação RLS e roles Supabase OK.');
+        if (payload.context === 'system_wide') {
+            sendLog('Supabase', 'Trigger audit_production() validado.');
+        } else {
+            sendLog('EngenheiroDeDados', 'Validação RLS e roles Supabase OK.');
+        }
         await delay(2000);
         break;
       case "IntegratorAI_AUDIT":

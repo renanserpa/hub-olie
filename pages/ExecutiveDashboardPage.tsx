@@ -8,7 +8,7 @@ import ExecutiveProductionPanel from '../components/executive/ExecutiveProductio
 import ExecutiveSalesPanel from '../components/executive/ExecutiveSalesPanel';
 import ExecutiveLogisticsPanel from '../components/executive/ExecutiveLogisticsPanel';
 import ExecutivePurchasingPanel from '../components/executive/ExecutivePurchasingPanel';
-import ExecutiveAIInsights from '../components/executive/ExecutiveAIInsights';
+import ExecutiveAIInsights from '../components/analytics/ExecutiveAIInsights';
 
 const ExecutiveDashboardPage: React.FC = () => {
     const { isLoading, kpis, insights, activeTab, setActiveTab } = useExecutiveDashboard();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import AnalyticsDashboard from './AnalyticsDashboard';
+import AnalyticsDashboard from '../executive/AnalyticsDashboard';
 
 interface MarketingMetricsProps {
     kpis: AnalyticsKPI[];
