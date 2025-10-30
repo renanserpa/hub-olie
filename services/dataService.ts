@@ -35,7 +35,6 @@ export const dataService = {
       ? sandboxService.listenToCollection(table, callback)
       : realSupabaseService.listenToCollection(table, join, callback),
 
-  // FIX: Added a generic constraint to ensure type compatibility between the sandbox and real services.
   listenToDocument: <T extends { id: string }>(table: string, id: string, callback: (payload: T) => void) =>
     isSandbox()
       ? sandboxService.listenToDocument(table, id, callback)
@@ -64,6 +63,16 @@ export const dataService = {
     isSandbox()
         ? sandboxService.updateSystemSettings(settings)
         : realSupabaseService.updateSystemSettings(settings),
+
+  getSystemSettingsLogs: () =>
+    isSandbox()
+        ? sandboxService.getCollection('system_settings_logs')
+        : realSupabaseService.getCollection('system_settings_logs'),
+
+  updateSystemSetting: (key: string, newValue: any, source: string, confidence: number, explanation: string) =>
+    isSandbox()
+        ? sandboxService.updateSystemSetting(key, newValue, source, confidence, explanation)
+        : Promise.resolve(), // In real mode, this would be an RPC call or complex transaction.
 
   getOrders: () => isSandbox() ? sandboxService.getOrders() : realSupabaseService.getOrders(),
   getOrder: (id: string) => isSandbox() ? sandboxService.getOrder(id) : realSupabaseService.getOrder(id),

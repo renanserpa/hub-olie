@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -215,6 +215,7 @@ let collections: Record<string, any[]> = {
     config_fonts,
     config_basic_materials,
     system_settings,
+    system_settings_logs: [],
     conversations,
     messages,
     logistics_waves,
@@ -331,9 +332,43 @@ export const sandboxDb = {
     deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) =>
         Promise.resolve(del(getTableNameForSetting(category, subTab, subSubTab), id)),
     updateSystemSettings: (settings: SystemSetting[]) => {
-        // FIX: Explicitly type the generic `update` function to ensure `value` is a known property.
-        settings.forEach(s => update<SystemSetting>('system_settings', s.id, { value: s.value }));
+        settings.forEach(s => {
+            const oldSetting = get<SystemSetting>('system_settings', s.id);
+            if (oldSetting && oldSetting.value !== s.value) {
+                create<SystemSettingsLog>('system_settings_logs', {
+                    key: oldSetting.key,
+                    old_value: oldSetting.value,
+                    new_value: s.value,
+                    source_module: 'SettingsEngine',
+                    confidence: 1.0,
+                    explanation: 'Alteração manual registrada pelo admin.',
+                } as any);
+            }
+            update<SystemSetting>('system_settings', s.id, { value: s.value });
+        });
         return Promise.resolve();
+    },
+    updateSystemSetting: async (key: string, newValue: any, source: string, confidence: number, explanation: string) => {
+         const setting = getCollection<SystemSetting>('system_settings').find(s => s.key === key);
+         if (!setting) throw new Error(`Setting not found: ${key}`);
+         
+         const oldValue = setting.value;
+         const stringifiedValue = typeof newValue === 'string' ? newValue : JSON.stringify(newValue);
+         
+         // Log first
+         create<SystemSettingsLog>('system_settings_logs', {
+             key,
+             old_value: oldValue,
+             new_value: stringifiedValue,
+             source_module: source,
+             confidence,
+             explanation,
+         } as any);
+         
+         // Then update setting (this will not trigger a manual log)
+         update<SystemSetting>('system_settings', setting.id, { value: stringifiedValue });
+         
+         return Promise.resolve();
     },
     getOrders: async (): Promise<Order[]> => {
         const allOrders = getCollection<Order>('orders');

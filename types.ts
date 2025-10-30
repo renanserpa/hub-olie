@@ -273,9 +273,20 @@ export type AnySettingsItem =
 export interface SystemSetting {
     id: string;
     key: string;
-    value: string;
+    value: any;
     category: string;
     description: string;
+}
+
+export interface SystemSettingsLog {
+  id: string;
+  key: string;
+  old_value: any;
+  new_value: any;
+  source_module: string;
+  confidence: number;
+  explanation: string;
+  created_at: string;
 }
 
 // --- OMNICHANNEL ---
@@ -568,6 +579,7 @@ export interface AppData {
         tipos_vinculo: BondType[];
     };
     sistema: SystemSetting[];
+    system_settings_logs: SystemSettingsLog[];
     
     midia: any;
     orders: Order[];

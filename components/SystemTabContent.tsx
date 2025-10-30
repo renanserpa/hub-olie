@@ -6,6 +6,7 @@ import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import PlaceholderContent from './PlaceholderContent';
+import { GovernancePanel } from './settings/GovernancePanel';
 
 interface SystemTabContentProps {
   initialSettings: SystemSetting[];
@@ -64,13 +65,13 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
         const inputId = `${setting.id}-${key}`;
         return (
             <div key={key}>
-                <label htmlFor={inputId} className="block text-sm font-medium text-textSecondary capitalize">{key.replace(/_/g, ' ')}</label>
+                <label htmlFor={inputId} className="block text-sm font-medium text-textSecondary dark:text-dark-textSecondary capitalize">{key.replace(/_/g, ' ')}</label>
                 <input
                     type={typeof value === 'number' ? 'number' : 'text'}
                     id={inputId}
                     value={value}
                     onChange={(e) => handleInputChange(setting.id, key, typeof value === 'number' ? parseFloat(e.target.value) : e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:bg-gray-100"
+                    className="mt-1 w-full px-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:bg-gray-100"
                     disabled={!isAdmin}
                 />
             </div>
@@ -84,46 +85,51 @@ const SystemTabContent: React.FC<SystemTabContentProps> = ({ initialSettings, is
     }
 
     return (
-        <div className="space-y-6">
-            {Object.entries(groupedSettings).map(([category, settingsInCategory]) => (
-                <Card key={category}>
-                    <CardHeader>
-                        <CardTitle>{formatCategoryName(category)}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {Array.isArray(settingsInCategory) && settingsInCategory.map(setting => (
-                            <div key={setting.id} className="p-4 border rounded-xl bg-secondary/50">
-                                <h4 className="font-semibold text-textPrimary">{setting.description}</h4>
-                                <p className="text-sm text-textSecondary mb-4 font-mono">{setting.key}</p>
-                                <div className="space-y-3">
-                                    {(() => {
-                                        try {
-                                            const parsed = JSON.parse(setting.value) as Record<string, any>;
-                                            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                                                return Object.keys(parsed).map((key) => {
-                                                    const value = parsed[key];
-                                                    return renderField(setting, key, value);
-                                                });
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="space-y-6 lg:col-span-1">
+                {Object.entries(groupedSettings).map(([category, settingsInCategory]) => (
+                    <Card key={category}>
+                        <CardHeader>
+                            <CardTitle>{formatCategoryName(category)}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {Array.isArray(settingsInCategory) && settingsInCategory.map(setting => (
+                                <div key={setting.id} className="p-4 border rounded-xl bg-secondary/50 dark:bg-dark-secondary/50">
+                                    <h4 className="font-semibold text-textPrimary dark:text-dark-textPrimary">{setting.description}</h4>
+                                    <p className="text-sm text-textSecondary dark:text-dark-textSecondary mb-4 font-mono">{setting.key}</p>
+                                    <div className="space-y-3">
+                                        {(() => {
+                                            try {
+                                                const parsed = JSON.parse(setting.value) as Record<string, any>;
+                                                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                                                    return Object.keys(parsed).map((key) => {
+                                                        const value = parsed[key];
+                                                        return renderField(setting, key, value);
+                                                    });
+                                                }
+                                                return renderField(setting, 'value', setting.value);
+                                            } catch (e) {
+                                                return renderField(setting, 'value', setting.value);
                                             }
-                                        } catch (e) {
-                                            return renderField(setting, 'value', setting.value);
-                                        }
-                                        return null;
-                                    })()}
+                                        })()}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            ))}
-            {isAdmin && (
-                <div className="flex justify-end sticky bottom-6">
-                    <Button onClick={handleSave} disabled={isSaving} size="lg" className="shadow-lg">
-                       {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                       Salvar Todas as Alterações
-                    </Button>
-                </div>
-            )}
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+                {isAdmin && (
+                    <div className="flex justify-end sticky bottom-6">
+                        <Button onClick={handleSave} disabled={isSaving} size="lg" className="shadow-lg">
+                           {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                           Salvar Alterações Manuais
+                        </Button>
+                    </div>
+                )}
+            </div>
+             <div className="lg:col-span-1 sticky top-24">
+                <GovernancePanel />
+            </div>
         </div>
     );
 };

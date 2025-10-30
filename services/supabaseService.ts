@@ -33,6 +33,7 @@ import {
     FinanceTransaction,
     FinancePayable,
     FinanceReceivable,
+    SystemSettingsLog,
 } from "../types";
 
 
@@ -170,6 +171,8 @@ export const supabaseService = {
         materials: { grupos_suprimento: [], materiais_basicos: [] },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: [],
+// FIX: Added missing system_settings_logs property to satisfy the AppData type.
+        system_settings_logs: [],
         midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
@@ -186,13 +189,14 @@ export const supabaseService = {
 
     try {
         const [
-            tecido, ziper, vies, fontes_monogramas, materiais_basicos,
+            tecido, ziper, vies, fontes_monogramas, materiais_basicos, system_settings_logs
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
             supabaseService.getCollection<BiasColor>('bias_colors'), 
             supabaseService.getCollection<MonogramFont>('config_fonts'),
             supabaseService.getCollection<BasicMaterial>('config_basic_materials'),
+            supabaseService.getCollection<SystemSettingsLog>('system_settings_logs'),
         ]);
         
         return {
@@ -211,6 +215,7 @@ export const supabaseService = {
                 ...emptyAppData.materials,
                 materiais_basicos 
             },
+            system_settings_logs
         };
     } catch (error) {
         handleError(error, 'getSettings');

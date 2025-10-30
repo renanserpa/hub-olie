@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AppData, AnySettingsItem, SettingsCategory } from '../types';
+import { AppData, AnySettingsItem, SettingsCategory, SystemSetting } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +26,17 @@ export function useSettings() {
 
     useEffect(() => {
         loadSettings();
+        
+        const listener = dataService.listenToCollection<SystemSetting>('system_settings', undefined, (updatedSettings) => {
+            console.log("Realtime update for system_settings received!");
+            setSettingsData(prevData => {
+                if (!prevData) return null;
+                return { ...prevData, sistema: updatedSettings };
+            });
+        });
+        
+        return () => listener.unsubscribe();
+
     }, [loadSettings]);
     
     const performMutation = async (
