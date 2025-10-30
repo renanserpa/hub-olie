@@ -5,6 +5,12 @@
     "action": "generate_diff",
     "report": "/reports/production_v3_diff.md"
   },
+  "auditoria completa do fluxo": {
+    "route": ["SYSTEM_AUDIT_START", "ArquitetoSupremo_AUDIT", "PromptArchitectAI_AUDIT", "EngenheiroDeDados_AUDIT", "IntegratorAI_AUDIT", "ArquitetoSupremo_AUDIT_FINISH", "SYSTEM_AUDIT_END"],
+    "context": "production",
+    "action": "audit_flow",
+    "report": "/reports/audit_production_command_v3.md"
+  },
   "gerar relatório diretoria": {
     "route": ["AnalyticsAI", "ExecutiveAI", "ArquitetoSupremo"],
     "context": "executive",

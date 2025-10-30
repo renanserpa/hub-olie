@@ -12,13 +12,15 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Refactored to use a public class field for state initialization.
-  // The constructor was causing type inference issues, leading to errors where `this.state` and `this.props` were not recognized.
-  // This is a more modern and concise approach that resolves the problem.
-  state: ErrorBoundaryState = {
-    hasError: false,
-    error: undefined,
-  };
+  // FIX: The error "Property 'props' does not exist" in a class component is typically due to a missing constructor that calls super(props).
+  // Re-introducing a standard constructor fixes the type inference for `this.props` and `this.state`.
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: undefined,
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };

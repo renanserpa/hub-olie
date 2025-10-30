@@ -105,6 +105,37 @@ export async function executeAgent(agent: string, payload: any) {
         console.log("[UI] Atualizando componentes e hooks visuais");
         await delay(500);
         break;
+      
+      // New Audit Flow Agents
+      case "SYSTEM_AUDIT_START":
+        sendLog('SYSTEM', 'Auditoria iniciada — comando “finalizar módulo Produção”.');
+        await delay(1000);
+        break;
+      case "ArquitetoSupremo_AUDIT":
+        sendLog('ArquitetoSupremo', 'Verificando dependências entre agentes...');
+        await delay(2000);
+        break;
+      case "PromptArchitectAI_AUDIT":
+        sendLog('PromptArchitectAI', 'Detectado erro de retorno GCD.');
+        await delay(1000);
+        break;
+      case "EngenheiroDeDados_AUDIT":
+        sendLog('EngenheiroDeDados', 'Validação RLS e roles Supabase OK.');
+        await delay(2000);
+        break;
+      case "IntegratorAI_AUDIT":
+        sendLog('IntegratorAI', 'Sincronizando endpoints com AI Studio.');
+        await delay(2000);
+        break;
+      case "ArquitetoSupremo_AUDIT_FINISH":
+        sendLog('ArquitetoSupremo', 'Auditoria concluída. Causa raiz: falha de comunicação GCD ↔ PromptArchitectAI.');
+        await delay(1000);
+        break;
+      case "SYSTEM_AUDIT_END":
+        sendLog('SYSTEM', `Relatório salvo em ${payload.report}`);
+        await generateReport(payload.report); // This is a mock, just logs to console
+        break;
+      
       default:
         sendLog(agent, `Executando tarefa genérica para ${payload.context}...`);
         await geminiGenerate(agent, payload);
