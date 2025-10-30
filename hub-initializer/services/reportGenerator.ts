@@ -5,6 +5,12 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+export async function generateReport(reportPath: string) {
+    console.log(`[REPORT] Simulating generation for: ${reportPath}`);
+    await delay(500);
+    console.log(`[REPORT] Report for ${reportPath} generated.`);
+    return `# Report for ${reportPath}\n\nThis is a simulated report.`;
+}
 
 export const reportGenerator = {
   async generateSyncReport(syncState: InitializerSyncState): Promise<string> {

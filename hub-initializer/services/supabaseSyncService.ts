@@ -1,4 +1,5 @@
 import { dataService } from '../../services/dataService';
+import { supabase } from '../../lib/supabaseClient';
 
 // This service simulates interactions with Supabase for the initializer module.
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -42,4 +43,12 @@ export async function registerAgent(name: string, role: string, category: string
     // Here you would find or create the agent in `initializer_agents` table
     await delay(150);
     console.log(`[DB] Agent ${name} registered/updated.`);
+}
+
+export async function pushLogs(context: string) {
+  const { data, error } = await supabase
+    .from("ai_logs")
+    .insert({ context, timestamp: new Date().toISOString() });
+  if (error) console.error("[SUPABASE] Erro ao salvar log:", error);
+  else console.log("[SUPABASE] Log sincronizado:", data);
 }

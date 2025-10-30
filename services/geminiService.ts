@@ -48,3 +48,25 @@ Responda apenas com a descrição gerada, sem formatação extra ou frases como 
     }
   },
 };
+
+export async function geminiGenerate(context: string, payload: any) {
+  const prompt = `
+  Gere o relatório completo do módulo ${context}.
+  Ação: ${payload.action}.
+  Incluir estrutura técnica, SQL, hooks e recomendações.
+  Fonte: ${payload.report}.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    const data = response.text;
+    console.log(`[GEMINI] 📄 Resposta gerada para ${context}:`, data);
+    return data;
+  } catch(e) {
+      console.error(`[GEMINI] Erro ao gerar resposta para ${context}:`, e);
+      return `Erro ao gerar conteúdo para ${context}.`;
+  }
+}
