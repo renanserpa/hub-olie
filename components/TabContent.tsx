@@ -8,6 +8,7 @@ import Modal from './ui/Modal';
 import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
 import { toast } from '../hooks/use-toast';
+import { ColorSwatch } from './ui/ColorSwatch';
 
 interface TabContentProps {
   category: SettingsCategory;
@@ -54,6 +55,10 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
     } else {
         setFormData(prev => ({ ...prev, [name]: target.value }));
     }
+  };
+
+  const handleFieldChange = (name: string, value: any) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,27 +249,10 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             )}
                         </div>
                     ) : field.type === 'color' ? (
-                         <div className="relative flex items-center">
-                            <input
-                                type="text"
-                                id={field.key}
-                                name={field.key}
-                                value={(formData[field.key] || '').toUpperCase()}
-                                onChange={handleInputChange}
-                                placeholder="#RRGGBB"
-                                className="w-full pl-14 pr-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
-                                required
-                            />
-                            <label htmlFor={`${field.key}-picker`} className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-9 rounded-md cursor-pointer border dark:border-dark-border" style={{ backgroundColor: formData[field.key] || '#ffffff' }}></label>
-                            <input
-                                type="color"
-                                id={`${field.key}-picker`}
-                                value={formData[field.key] || '#ffffff'}
-                                onChange={handleInputChange}
-                                name={field.key}
-                                className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-9 cursor-pointer opacity-0"
-                            />
-                        </div>
+                         <ColorSwatch
+                            color={formData[field.key] || '#ffffff'}
+                            onChange={(value) => handleFieldChange(field.key, value)}
+                         />
                     ) : (
                         <input
                             type={field.type}

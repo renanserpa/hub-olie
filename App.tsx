@@ -24,6 +24,7 @@ import type { UserRole } from './services/authService';
 import { logout } from './services/authService';
 import { isSandbox } from './lib/runtime';
 import { dataService } from './services/dataService';
+import { ThemeToggle } from './components/ui/ThemeToggle';
 
 
 const MAIN_TABS = [
@@ -201,6 +202,7 @@ const App: React.FC = () => {
                            <div className="relative w-full max-w-md">
                            </div>
                             <div className="flex items-center gap-4">
+                                <ThemeToggle />
                                 <button className="relative text-textSecondary dark:text-dark-textSecondary hover:text-textPrimary dark:hover:text-dark-textPrimary">
                                     <Bell size={20} />
                                 </button>
