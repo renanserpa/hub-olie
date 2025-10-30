@@ -26,7 +26,7 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onClose, onConfirm, t
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-textSecondary">{description}</p>
+          <p className="text-sm text-textSecondary dark:text-dark-textSecondary">{description}</p>
         </CardContent>
         <CardFooter className="flex justify-end gap-3">
             <Button variant="outline" onClick={onClose}>

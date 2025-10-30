@@ -33,23 +33,23 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, onDragStart }) =>
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
-                "bg-card p-3 rounded-lg shadow-sm border border-border cursor-grab active:cursor-grabbing",
+                "bg-card dark:bg-dark-background p-3 rounded-lg shadow-sm border border-border dark:border-dark-border cursor-grab active:cursor-grabbing",
                 isUrgentInProgress && "border-red-500 ring-2 ring-red-200"
             )}
         >
             <div className="flex items-start">
                 <div className="flex-1">
-                    <p className="font-semibold text-sm text-textPrimary">{task.title}</p>
-                    <p className="text-xs text-textSecondary mt-1">{task.client_name}</p>
+                    <p className="font-semibold text-sm text-textPrimary dark:text-dark-textPrimary">{task.title}</p>
+                    <p className="text-xs text-textSecondary dark:text-dark-textSecondary mt-1">{task.client_name}</p>
                 </div>
                 <div className="flex items-center gap-1">
                     {task.priority && PRIORITY_ICONS[task.priority]}
-                    <button className="text-textSecondary/50 hover:text-textSecondary">
+                    <button className="text-textSecondary/50 dark:text-dark-textSecondary/50 hover:text-textSecondary dark:hover:text-dark-textSecondary">
                         <GripVertical size={18} />
                     </button>
                 </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-textSecondary">
+            <div className="mt-3 flex items-center text-xs text-textSecondary dark:text-dark-textSecondary">
                 <Clock size={12} className="mr-1.5" />
                 <span>Qtd: {task.quantity}</span>
             </div>

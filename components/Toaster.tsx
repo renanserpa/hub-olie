@@ -45,7 +45,7 @@ const Toaster: React.FC = () => {
           className={cn(
             'relative w-full p-4 pr-10 rounded-xl shadow-lg flex items-start gap-3 animate-toast-in',
             {
-              'bg-card border': toast.variant !== 'destructive',
+              'bg-card border dark:bg-dark-card dark:border-dark-border': toast.variant !== 'destructive',
               'bg-red-500 border-red-600 text-white': toast.variant === 'destructive',
             }
           )}
@@ -61,7 +61,7 @@ const Toaster: React.FC = () => {
           </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="absolute top-3 right-3 p-1 rounded-full hover:bg-black/10 transition-colors"
+            className="absolute top-3 right-3 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
           >
             <X size={16} />
           </button>

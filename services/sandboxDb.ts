@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -76,10 +76,10 @@ const config_basic_materials: BasicMaterial[] = [
     { id: 'bm3', name: 'Linha de Costura Branca', codigo: 'LIN-COS-BR', supply_group_id: 'sg3', unit: 'm', default_cost: 0.10, is_active: true },
 ];
 const task_statuses: TaskStatus[] = [
-    {id: 'ts1', name: 'Corte', color: '#FFF2E5', position: 1},
-    {id: 'ts2', name: 'Costura', color: '#E6F7FF', position: 2},
-    {id: 'ts4', name: 'Em Espera', color: '#F3E8FF', position: 3},
-    {id: 'ts3', name: 'Acabamento', color: '#F6FFED', position: 4},
+    {id: 'ts1', name: 'Corte', color: 'orange', position: 1},
+    {id: 'ts2', name: 'Costura', color: 'sky', position: 2},
+    {id: 'ts4', name: 'Em Espera', color: 'purple', position: 3},
+    {id: 'ts3', name: 'Acabamento', color: 'green', position: 4},
 ];
 const tasks: Task[] = [
     {id: 't1', title: 'OP-2024-001 - Bolsa Tote', status_id: 'ts1', client_name: 'Ana Silva', quantity: 5, position: 1, priority: 'alta'},
@@ -212,6 +212,12 @@ let collections: Record<string, any[]> = {
     analytics_kpis,
     executive_kpis,
     executive_ai_insights,
+    // FIX: Added missing finance collections to conform to the AppData type.
+    finance_accounts: [],
+    finance_categories: [],
+    finance_transactions: [],
+    finance_payables: [],
+    finance_receivables: [],
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 

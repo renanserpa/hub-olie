@@ -3,10 +3,10 @@ import { cn } from '../../lib/utils';
 
 const badgeVariants = {
     variant: {
-      default: 'border-transparent bg-secondary text-secondary-foreground',
-      ativo: 'border-transparent bg-green-100 text-green-800',
-      inativo: 'border-transparent bg-red-100 text-red-800',
-      secondary: 'border-transparent bg-gray-100 text-gray-800',
+      default: 'border-transparent bg-secondary text-secondary-foreground dark:bg-dark-secondary dark:text-dark-textPrimary',
+      ativo: 'border-transparent bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
+      inativo: 'border-transparent bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300',
+      secondary: 'border-transparent bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-300',
     }
 };
 

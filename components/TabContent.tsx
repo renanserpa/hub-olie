@@ -7,6 +7,7 @@ import { IconButton } from './ui/IconButton';
 import Modal from './ui/Modal';
 import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
+import { toast } from '../hooks/use-toast';
 
 interface TabContentProps {
   category: SettingsCategory;
@@ -100,7 +101,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
   return (
     <div className="p-0">
       <div className="flex justify-between items-center mb-6 pt-6">
-        <h2 className="text-2xl font-bold text-textPrimary">{title}</h2>
+        <h2 className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary">{title}</h2>
         {isAdmin && (
           <Button onClick={() => openModal()}>
             <Plus className="w-4 h-4 mr-2" />
@@ -112,21 +113,34 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
       {data.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-secondary">
+            <thead className="bg-secondary dark:bg-dark-secondary">
               <tr>
-                {fields.map(field => field.key !== 'id' && <th key={field.key} className="p-4 font-semibold text-textSecondary">{field.label}</th>)}
-                {isAdmin && <th className="p-4 font-semibold text-textSecondary text-right">Ações</th>}
+                {fields.map(field => field.key !== 'id' && <th key={field.key} className="p-4 font-semibold text-textSecondary dark:text-dark-textSecondary">{field.label}</th>)}
+                {isAdmin && <th className="p-4 font-semibold text-textSecondary dark:text-dark-textSecondary text-right">Ações</th>}
               </tr>
             </thead>
             <tbody>
               {data.map(item => (
-                <tr key={item.id} className="border-b border-border hover:bg-accent/50">
+                <tr key={item.id} className="border-b border-border dark:border-dark-border hover:bg-accent/50 dark:hover:bg-dark-accent/50">
                   {fields.map(field => field.key !== 'id' && (
-                    <td key={field.key} className="p-4 text-textPrimary">
+                    <td key={field.key} className="p-4 text-textPrimary dark:text-dark-textPrimary">
                       {field.type === 'color' ? (
-                        <div className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: item[field.key as keyof AnySettingsItem] as string }}></div>
-                          <span>{item[field.key as keyof AnySettingsItem] as string}</span>
+                        <div
+                          className="flex items-center gap-3 cursor-pointer group"
+                          title="Clique para copiar"
+                          onClick={() => {
+                            const hex = item[field.key as keyof AnySettingsItem] as string;
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(hex);
+                              toast({ title: "Copiado!", description: `A cor ${hex} foi copiada.` });
+                            }
+                          }}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-md border-2 border-white dark:border-dark-card shadow-md group-hover:scale-110 transition-transform"
+                            style={{ backgroundColor: item[field.key as keyof AnySettingsItem] as string }}
+                          ></div>
+                          <span className="font-mono text-sm group-hover:text-primary transition-colors">{(item[field.key as keyof AnySettingsItem] as string || '').toUpperCase()}</span>
                         </div>
                       ) : field.type === 'checkbox' ? (
                          <Badge variant={item[field.key as keyof AnySettingsItem] ? 'ativo' : 'inativo'}>
@@ -136,7 +150,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                           item[field.key as keyof AnySettingsItem] ? 
                           <a href={item[field.key as keyof AnySettingsItem] as string} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate">
                             {(item[field.key as keyof AnySettingsItem] as string).split('/').pop()}
-                          </a> : <span className="text-xs text-textSecondary/70">Nenhum arquivo</span>
+                          </a> : <span className="text-xs text-textSecondary/70 dark:text-dark-textSecondary/70">Nenhum arquivo</span>
                       ) : (
                         String(item[field.key as keyof AnySettingsItem] ?? '')
                       )}
@@ -156,10 +170,10 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
           </table>
         </div>
       ) : (
-         <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
-            <PackageOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhum item encontrado</h3>
-            <p className="mt-1 text-sm text-textSecondary">Comece adicionando um novo item para esta categoria.</p>
+         <div className="text-center text-textSecondary dark:text-dark-textSecondary py-16 border-2 border-dashed border-border dark:border-dark-border rounded-xl">
+            <PackageOpen className="mx-auto h-12 w-12 text-textSecondary/60 dark:text-dark-textSecondary/60" />
+            <h3 className="mt-4 text-lg font-medium text-textPrimary dark:text-dark-textPrimary">Nenhum item encontrado</h3>
+            <p className="mt-1 text-sm text-textSecondary dark:text-dark-textSecondary">Comece adicionando um novo item para esta categoria.</p>
             {isAdmin && (
                 <div className="mt-6">
                     <Button onClick={() => openModal()}>
@@ -176,17 +190,17 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
             <div className="space-y-4">
             {fields.map(field => field.key !== 'id' && (
                 <div key={field.key}>
-                    <label htmlFor={field.key} className="block text-sm font-medium text-textSecondary mb-1">{field.label}</label>
+                    <label htmlFor={field.key} className="block text-sm font-medium text-textSecondary dark:text-dark-textSecondary mb-1">{field.label}</label>
 
                     {field.type === 'checkbox' ? (
-                         <label className="flex items-center gap-2 text-sm text-textPrimary cursor-pointer">
+                         <label className="flex items-center gap-2 text-sm text-textPrimary dark:text-dark-textPrimary cursor-pointer">
                             <input 
                                 type="checkbox" 
                                 id={field.key} 
                                 name={field.key}
                                 checked={!!formData[field.key]} 
                                 onChange={handleInputChange}
-                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary"
                             />
                             {formData[field.key] ? 'Ativo' : 'Inativo'}
                          </label>
@@ -197,7 +211,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             value={formData[field.key] || ''}
                             onChange={handleInputChange}
                             rows={4}
-                            className="w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full px-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
                     ) : field.type === 'select' ? (
                         <select
@@ -205,7 +219,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             name={field.key}
                             value={formData[field.key] || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full px-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                             <option value="">Selecione</option>
                             {field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -217,17 +231,39 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                                 id={field.key}
                                 name={field.key}
                                 onChange={handleInputChange}
-                                className="w-full text-sm text-textSecondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                className="w-full text-sm text-textSecondary dark:text-dark-textSecondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                                 accept=".ttf,.otf,.woff,.woff2"
                             />
                             {fileData[field.key] && (
                                 <p className="text-xs text-green-600">Novo arquivo selecionado: {fileData[field.key]?.name}</p>
                             )}
                             {!fileData[field.key] && formData[field.key] && (
-                                 <div className="text-xs text-textSecondary">
+                                 <div className="text-xs text-textSecondary dark:text-dark-textSecondary">
                                     Arquivo atual: <a href={formData[field.key]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{formData[field.key].split('/').pop()}</a>
                                 </div>
                             )}
+                        </div>
+                    ) : field.type === 'color' ? (
+                         <div className="relative flex items-center">
+                            <input
+                                type="text"
+                                id={field.key}
+                                name={field.key}
+                                value={(formData[field.key] || '').toUpperCase()}
+                                onChange={handleInputChange}
+                                placeholder="#RRGGBB"
+                                className="w-full pl-14 pr-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
+                                required
+                            />
+                            <label htmlFor={`${field.key}-picker`} className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-9 rounded-md cursor-pointer border dark:border-dark-border" style={{ backgroundColor: formData[field.key] || '#ffffff' }}></label>
+                            <input
+                                type="color"
+                                id={`${field.key}-picker`}
+                                value={formData[field.key] || '#ffffff'}
+                                onChange={handleInputChange}
+                                name={field.key}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-9 cursor-pointer opacity-0"
+                            />
                         </div>
                     ) : (
                         <input
@@ -236,7 +272,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             name={field.key}
                             value={formData[field.key] || ''}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full px-3 py-2 border border-border dark:border-dark-border rounded-xl shadow-sm bg-background dark:bg-dark-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                             required={field.key === 'name' || field.key === 'codigo'}
                         />
                     )}

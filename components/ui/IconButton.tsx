@@ -10,7 +10,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         variant="ghost"
         size="icon"
-        className={cn('h-8 w-8 text-textSecondary hover:text-textPrimary', className)}
+        className={cn('h-8 w-8 text-textSecondary hover:text-textPrimary dark:text-dark-textSecondary dark:hover:text-dark-textPrimary', className)}
         {...props}
       />
     );

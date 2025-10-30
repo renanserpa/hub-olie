@@ -45,19 +45,19 @@ const LoginPage: React.FC = () => {
   };
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-secondary p-4">
-      <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+    <div className="flex items-center justify-center min-h-screen bg-secondary dark:bg-dark-background p-4">
+      <div className="w-full max-w-4xl mx-auto bg-card dark:bg-dark-card rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
         
         {/* Left Panel: Form */}
-        <div className="p-8 md:p-12 flex flex-col justify-center bg-[#FDFBF7] opacity-0 animate-fade-in-up">
+        <div className="p-8 md:p-12 flex flex-col justify-center bg-background dark:bg-dark-background opacity-0 animate-fade-in-up">
             <div className="mb-8 text-center">
                 <img src="/Olie.png" alt="Olie Logo" className="w-32 h-auto inline-block" />
-                <p className="text-xl font-light text-gray-400 tracking-widest -mt-2">Hub</p>
+                <p className="text-xl font-light text-textSecondary dark:text-dark-textSecondary tracking-widest -mt-2">Hub</p>
             </div>
             
             <form onSubmit={handleLogin} className="space-y-6">
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-[#AE8B59] mb-1">Email</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-primary mb-1">Email</label>
                     <input 
                         type="email" 
                         id="email" 
@@ -65,11 +65,11 @@ const LoginPage: React.FC = () => {
                         onChange={(e) => setEmail(e.target.value)} 
                         required 
                         placeholder="admin@admin"
-                        className="w-full px-4 py-2 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
                     />
                 </div>
                 <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-[#AE8B59] mb-1">Senha</label>
+                    <label htmlFor="password" className="block text-sm font-medium text-primary mb-1">Senha</label>
                     <input 
                         type="password" 
                         id="password" 
@@ -77,7 +77,7 @@ const LoginPage: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)} 
                         required 
                         placeholder="••••••"
-                        className="w-full px-4 py-2 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
                     />
                 </div>
 
@@ -85,7 +85,7 @@ const LoginPage: React.FC = () => {
                     <Button 
                         type="submit" 
                         disabled={isLoading} 
-                        className="w-full bg-[#AE8B59] text-[#FDFBF7] hover:bg-[#a17c4a] h-12 text-base font-semibold rounded-lg"
+                        className="w-full bg-primary text-white hover:bg-primary/90 h-12 text-base font-semibold rounded-lg"
                     >
                         {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         Entrar
@@ -96,7 +96,7 @@ const LoginPage: React.FC = () => {
 
         {/* Right Panel: Image */}
         <div 
-            className="hidden md:flex items-center justify-center bg-[#6C7A89] p-12 opacity-0 animate-fade-in-up"
+            className="hidden md:flex items-center justify-center bg-secondary dark:bg-dark-secondary p-12 opacity-0 animate-fade-in-up"
             style={{ animationDelay: '0.2s' }}
         >
             <img src="/elephant.png" alt="Mascote Elefante" className="w-48 h-auto" />

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,6 +19,7 @@
     <!-- Tema Tailwind personalizado -->
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -30,6 +31,16 @@
               border: "#EAE7E1",
               background: "#FCFAF8",
               card: "#ffffff",
+              dark: {
+                primary: "#D2A66D",
+                secondary: "#161b22",
+                accent: "#21262d",
+                textPrimary: "#e6edf3",
+                textSecondary: "#7d8590",
+                border: "#30363d",
+                background: "#0d1117",
+                card: "#161b22",
+              }
             },
             borderRadius: {
               xl: "12px",
@@ -85,7 +96,7 @@
 </script>
   </head>
 
-  <body class="bg-background text-textPrimary font-[Inter,sans-serif]">
+  <body class="bg-background text-textPrimary dark:bg-dark-background dark:text-dark-textPrimary font-[Inter,sans-serif]">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

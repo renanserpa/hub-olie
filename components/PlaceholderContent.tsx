@@ -13,11 +13,11 @@ const PlaceholderContent: React.FC<PlaceholderContentProps> = ({ title, required
     return (
         <Card>
             <CardContent>
-                <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
-                    <Icon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-4 text-lg font-medium text-textPrimary">{title}</h3>
-                    {children || <p className="mt-1 text-sm text-textSecondary">Esta funcionalidade está em desenvolvimento.</p>}
-                    <p className="mt-1 text-xs text-textSecondary font-mono bg-secondary px-2 py-1 rounded">
+                <div className="text-center text-textSecondary dark:text-dark-textSecondary py-16 border-2 border-dashed border-border dark:border-dark-border rounded-xl">
+                    <Icon className="mx-auto h-12 w-12 text-textSecondary/60 dark:text-dark-textSecondary/60" />
+                    <h3 className="mt-4 text-lg font-medium text-textPrimary dark:text-dark-textPrimary">{title}</h3>
+                    {children || <p className="mt-1 text-sm text-textSecondary dark:text-dark-textSecondary">Esta funcionalidade está em desenvolvimento.</p>}
+                    <p className="mt-1 text-xs text-textSecondary dark:text-dark-textSecondary font-mono bg-secondary dark:bg-dark-secondary px-2 py-1 rounded">
                         (Requer a criação da tabela: `{requiredTable}`)
                     </p>
                 </div>

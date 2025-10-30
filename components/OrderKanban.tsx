@@ -53,11 +53,11 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({ orders, onStatusChange, onCar
                     key={column.id}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, column.id)}
-                    className="w-80 flex-shrink-0 bg-secondary p-3 rounded-xl"
+                    className="w-80 flex-shrink-0 bg-secondary dark:bg-dark-secondary p-3 rounded-xl"
                 >
                     <div className="flex justify-between items-center mb-4 px-1">
-                        <h3 className="font-semibold text-sm text-textPrimary">{column.label}</h3>
-                        <span className="text-xs font-medium text-textSecondary bg-background px-2 py-1 rounded-full">
+                        <h3 className="font-semibold text-sm text-textPrimary dark:text-dark-textPrimary">{column.label}</h3>
+                        <span className="text-xs font-medium text-textSecondary dark:text-dark-textSecondary bg-background dark:bg-dark-background px-2 py-1 rounded-full">
                             {orders.filter(o => o.status === column.id).length}
                         </span>
                     </div>

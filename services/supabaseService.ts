@@ -28,6 +28,11 @@ import {
     PurchaseOrder,
     PurchaseOrderItem,
     AnalyticsKPI,
+    FinanceAccount,
+    FinanceCategory,
+    FinanceTransaction,
+    FinancePayable,
+    FinanceReceivable,
 } from "../types";
 
 
@@ -171,6 +176,12 @@ export const supabaseService = {
         analytics_kpis: [],
         executive_kpis: [],
         executive_ai_insights: [],
+        // FIX: Added missing finance properties to satisfy the AppData type.
+        finance_accounts: [],
+        finance_categories: [],
+        finance_transactions: [],
+        finance_payables: [],
+        finance_receivables: [],
     };
 
     try {

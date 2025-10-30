@@ -30,8 +30,8 @@ const TabLayout: React.FC<TabLayoutProps> = ({
                     className={cn(
                         'flex items-center gap-2 whitespace-nowrap py-2 px-4 rounded-xl font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                         tab.id === activeTab
-                        ? 'bg-card text-primary shadow-sm'
-                        : 'border-transparent text-textSecondary hover:text-textPrimary hover:bg-white/60'
+                        ? 'bg-card text-primary shadow-sm dark:bg-dark-card'
+                        : 'border-transparent text-textSecondary dark:text-dark-textSecondary hover:text-textPrimary dark:hover:text-dark-textPrimary hover:bg-white/60 dark:hover:bg-dark-card/60'
                     )}
                     >
                     <Icon className="w-4 h-4"/>
