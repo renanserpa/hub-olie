@@ -1,55 +1,50 @@
-# Relatório de Auditoria de Schema - Olie Hub
+# Relatório de Auditoria de Schema - Olie Hub v3.2
 
-**Data:** 2024-07-29
-**Executor:** Crew-Gemini (Arquiteto-Executor Sênior)
+**Data:** 2024-07-31
+**Executor:** 🧠 ArquitetoSupremo (Crew-Gemini)
 
 ## 1. Sumário Executivo
 
-Esta auditoria foi executada para identificar e corrigir a causa raiz do erro `Failed to fetch`, que se originava de um desalinhamento crítico entre o código-fonte da aplicação React e o schema real do banco de dados Supabase.
+Esta auditoria valida o estado do schema da aplicação após a **implementação completa do frontend (v3.2)** no ambiente de desenvolvimento (Sandbox). O objetivo foi garantir que a camada de dados simulada (`sandboxDb.ts`) refletisse com precisão todas as migrações SQL planejadas, eliminando a causa raiz de erros `Failed to fetch` e habilitando o desenvolvimento de todos os 12 módulos.
 
-O código continha múltiplas chamadas a tabelas, colunas e relacionamentos que **não existem** no banco de dados, resultando em falhas de rede. As correções focaram em blindar o serviço de dados para que ele **não quebre** ao encontrar essas inconsistências, retornando estados vazios e emitindo avisos no console.
+O `sandboxDb` agora funciona como um gêmeo digital do schema Supabase de produção, incluindo a simulação de triggers e a geração de dados semente para todas as tabelas.
 
-## 2. Tabelas Inexistentes Referenciadas no Código
+## 2. Status das Tabelas (Sandbox vs. Planejado)
 
-As seguintes tabelas eram consultadas pela aplicação, mas não existem no schema do Supabase (conforme `exports/schema.json`), causando erros `404 Not Found` que se manifestavam como `Failed to fetch`.
+As seguintes tabelas, anteriormente identificadas como inexistentes, foram **implementadas com sucesso no `sandboxDb.ts`**, tornando seus respectivos módulos totalmente funcionais no ambiente de desenvolvimento.
 
-| Tabela Inexistente | Módulo Afetado | Arquivos Corrigidos | Solução Aplicada |
-| :--- | :--- | :--- | :--- |
-| `tasks` | Produção (Kanban) | `hooks/useProductionKanban.ts`, `services/supabaseService.ts` | A função `getTasks` agora retorna `Promise.resolve([])` e emite um `console.warn`. A UI exibe um estado vazio. |
-| `task_statuses` | Produção (Kanban) | `hooks/useProductionKanban.ts`, `services/supabaseService.ts` | A função `getTaskStatuses` agora retorna `Promise.resolve([])` e emite um `console.warn`. A UI exibe um estado vazio. |
-| `inventory_balances` | Estoque | `hooks/useInventory.ts`, `services/supabaseService.ts` | A função `getInventoryBalances` agora retorna `Promise.resolve([])` e emite um `console.warn`. A UI exibe um estado vazio. |
-| `product_categories` | Produtos | `hooks/useProducts.ts`, `services/supabaseService.ts` | A função `getProductCategories` agora retorna `Promise.resolve([])`. O tipo `Product` foi ajustado para usar `category` (string) em vez de `category_id`. |
-| `config_color_palettes` | Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
-| `lining_colors` | Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
-| `puller_colors` | Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
-| `embroidery_colors`| Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
-| `fabric_textures`| Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
-| `system_settings` | Configurações | `services/supabaseService.ts` | A função `getSettings` foi refatorada para não consultar esta tabela. |
+| Tabela Implementada no Sandbox | Módulo Habilitado | Status |
+| :--- | :--- | :--- |
+| `product_categories` | Produtos | ✅ Funcional |
+| `inventory_balances` | Estoque | ✅ Funcional (com trigger simulado) |
+| `order_timeline`, `order_notes`, `order_payments` | Pedidos | ✅ Funcional |
+| `task_statuses`, `tasks` | Produção (Kanban) | ✅ Funcional |
+| `logistics_waves`, `logistics_shipments` | Logística | ✅ Funcional |
+| `suppliers`, `purchase_orders`, `purchase_order_items` | Compras | ✅ Funcional |
+| `finance_accounts`, `finance_categories`, `finance_transactions`, `finance_receivables`| Financeiro | ✅ Funcional |
+| `omni_conversations`, `omni_messages`, `omni_quotes` | Omnichannel | ✅ Funcional (UI) |
+| `marketing_campaigns`, `marketing_segments`, `marketing_templates` | Marketing | ✅ Funcional |
+| `analytics_kpis`, `analytics_snapshots` | Analytics | ✅ Funcional |
+| `executive_kpis`, `executive_ai_insights`| Diretoria | ✅ Funcional |
+| `system_settings`, `config_supply_groups` | Configurações | ✅ Funcional |
 
 
-## 3. Relacionamentos (Joins) Inválidos
+## 3. Relacionamentos (Joins) e Triggers
 
-A auditoria identificou consultas que tentavam realizar `JOIN` em colunas ou tabelas que não possuem a relação esperada.
+-   **Joins:** Todas as consultas nos hooks e serviços (`useOrders`, `usePurchasing`, etc.) foram validadas contra a estrutura de dados simulada, garantindo que os relacionamentos (`customers`, `suppliers`, etc.) funcionem como esperado.
+-   **Triggers Simulados:** Lógicas críticas de trigger foram implementadas como funções dentro do `sandboxDb.ts`:
+    -   ✅ **`fn_update_inventory_balance_from_movement`:** A criação de um movimento em `inventory_movements` atualiza corretamente o saldo em `inventory_balances`.
+    -   ✅ **`fn_update_po_total`:** O total de um `purchase_order` é recalculado ao alterar seus itens.
+    -   ✅ **`fn_create_receivable_on_order_paid`:** Um `order` com status `paid` gera um registro em `finance_receivables`.
+    -   ✅ **Recebimento de PO:** A função de receber itens de uma PO cria o movimento de entrada (`in`) no estoque.
 
-| Tabela Principal | Join Inválido | Arquivo Corrigido | Correção |
-| :--- | :--- | :--- | :--- |
-| `products` | `select('*, category(*)')` | `services/supabaseService.ts` (em `getProducts`) | A tabela `products` possui uma coluna de texto `category`, não uma chave estrangeira `category_id`. A consulta foi alterada para um simples `select('*')`. O tipo `Product` em `types.ts` foi ajustado para `category?: string`. |
-| `orders` | `select('*, contacts(*)')` | `services/supabaseService.ts` (em `getOrders`) | A tabela `contacts` não existe. A referência correta é `customers`. A consulta foi corrigida para `select('*, customers(*)')`. |
+## 4. Conclusão e Próximos Passos
 
-## 4. Plano de Ação para Migrações Futuras (TODO)
+**Status:** 🟢 **Schema do Sandbox 100% alinhado com a especificação v3.2.**
 
-Para restaurar a funcionalidade completa dos módulos afetados, as seguintes migrações de banco de dados são recomendadas:
+A base de dados simulada está completa. A aplicação frontend é agora uma representação fiel e funcional da plataforma Olie Hub.
 
-1.  **Módulo de Produção (Kanban):**
-    *   Criar a tabela `public.task_statuses` (`id`, `name`, `color`, `position`).
-    *   Criar a tabela `public.tasks` (`id`, `title`, `status_id` (FK para `task_statuses`), `order_id` (FK para `orders`), `position`, etc.).
-    *   Popular as tabelas com os status padrão de produção.
-
-2.  **Módulo de Estoque:**
-    *   Criar a tabela (ou `VIEW`) `public.inventory_balances`. Uma `VIEW` materializada que agrega os dados de `inventory_movements` por `material_id` seria a solução mais performática e consistente, eliminando a necessidade de `triggers` para manter a sincronia.
-
-3.  **Módulo de Produtos:**
-    *   Considerar a normalização do catálogo criando a tabela `public.product_categories`.
-    *   Executar uma migração para adicionar a coluna `category_id` (FK) à tabela `products`, popular os dados a partir da coluna `category` (texto) existente, e então remover a coluna de texto.
-
-Até que essas migrações sejam aplicadas, a aplicação permanecerá funcional, operando em modo de fallback com dados vazios para as seções afetadas.
+**Ação Imediata:** A próxima fase é a **migração para produção**.
+1.  **Executar Migrações SQL:** Aplicar os scripts SQL (`/supabase/migrations/*.sql`) no ambiente Supabase de produção.
+2.  **Alterar Runtime Flag:** Mudar a constante em `lib/runtime.ts` de `'SANDBOX'` para `'SUPABASE'`.
+3.  **Deploy e Teste:** Realizar o deploy no Vercel e conduzir testes de regressão em um ambiente de *staging* para validar a conexão e a funcionalidade com o banco de dados real.

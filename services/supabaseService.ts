@@ -360,7 +360,8 @@ export const supabaseService = {
             const item = po.items.find((i: any) => i.id === received.itemId);
             if (item) {
                 const newQty = item.received_quantity + received.receivedQty;
-                await updateDocument('purchase_order_items', item.id, { received_quantity: newQty });
+                // FIX: Explicitly provide the generic type to ensure the update payload is correctly typed.
+                await updateDocument<PurchaseOrderItem>('purchase_order_items', item.id, { received_quantity: newQty });
 
                 if (newQty < item.quantity) {
                     allReceived = false;
@@ -369,7 +370,8 @@ export const supabaseService = {
         }
         
         const newStatus = allReceived ? 'received' : 'partial';
-        await updateDocument('purchase_orders', poId, { status: newStatus });
+        // FIX: Explicitly provide the generic type to ensure the update payload is correctly typed.
+        await updateDocument<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
     },
   getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => supabaseService.getCollection('analytics_kpis'),
   getFinanceData: async () => {
