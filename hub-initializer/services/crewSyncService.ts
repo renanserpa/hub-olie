@@ -5,6 +5,7 @@ import { reportGenerator } from './reportGenerator'
 import { geminiGenerate } from '../../services/geminiService';
 import { generateReport } from './reportGenerator';
 import { dataService } from '../../services/dataService';
+import { sendLog } from './logStreamService';
 
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -61,7 +62,8 @@ export async function ingestModuleMarkdown(file: File, addLog: (log: Omit<Initia
 export async function executeAgent(agent: string, payload: any) {
   const actionDescription = `${payload.action} no contexto ${payload.context}`;
   
-  await dataService.addDocument<Omit<InitializerLog, 'id'>>('initializer_logs', {
+  // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+  await dataService.addDocument<InitializerLog>('initializer_logs', {
     agent_name: agent,
     action: actionDescription,
     status: 'running',
@@ -74,27 +76,45 @@ export async function executeAgent(agent: string, payload: any) {
   try {
     switch (agent) {
       case "ArquitetoSupremo":
-        await generateReport(payload.report);
+        sendLog(agent, `Iniciando auditoria do módulo ${payload.context}.`);
+        await delay(1200);
         break;
       case "PromptArchitectAI":
+        sendLog(agent, `Gerando prompt técnico e SQL migration (${payload.action})...`);
         await geminiGenerate(payload.context, payload);
+        await delay(1500);
         break;
       case "EngenheiroDeDados":
-        console.log("[DB] Aplicando migrações e validação RLS");
-        await delay(500);
+        sendLog(agent, `Validando schema ${payload.context}_* e tasks_*...`);
+        console.log("[DB] Simulating RLS validation and trigger checks.");
+        await delay(2000);
+        break;
+      case "IntegratorAI": // New agent
+        sendLog(agent, `Sincronizando conexões com Orders, Inventory e Finance.`);
+        console.log("[INTEGRATOR] Simulating API connection sync.");
+        await delay(1800);
+        break;
+      case "ArquitetoSupremo_Finalizador": // New final step for the same agent
+        const finalAgentName = "ArquitetoSupremo"; // Log as the original agent
+        sendLog(finalAgentName, `Relatório finalizado em ${payload.report}.`);
+        await generateReport(payload.report);
+        await reportGenerator.writeAuditLog(`[SUCCESS] Módulo ${payload.context} finalizado.`);
         break;
       case "WebAppDevAI":
+        sendLog(agent, `Atualizando componentes UI para ${payload.context}...`);
         console.log("[UI] Atualizando componentes e hooks visuais");
         await delay(500);
         break;
       default:
+        sendLog(agent, `Executando tarefa genérica para ${payload.context}...`);
         await geminiGenerate(agent, payload);
     }
     
     const agents = await dataService.getCollection<InitializerAgent>('initializer_agents');
     const agentData = agents.find(a => a.name === agent);
 
-    await dataService.addDocument<Omit<InitializerLog, 'id'>>('initializer_logs', {
+    // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+    await dataService.addDocument<InitializerLog>('initializer_logs', {
       agent_name: agent,
       action: actionDescription,
       status: 'success',
@@ -108,7 +128,9 @@ export async function executeAgent(agent: string, payload: any) {
 
   } catch (error) {
     console.error(`[AGENT] Erro ao executar ${agent}:`, error);
-    await dataService.addDocument<Omit<InitializerLog, 'id'>>('initializer_logs', {
+    sendLog(agent, `ERRO: ${actionDescription} - ${(error as Error).message}`);
+    // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+    await dataService.addDocument<InitializerLog>('initializer_logs', {
       agent_name: agent,
       action: actionDescription,
       status: 'error',

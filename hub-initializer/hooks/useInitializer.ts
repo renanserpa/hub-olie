@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { ingestAgentMarkdown, ingestModuleMarkdown } from '../services/crewSyncService'
 import { InitializerLog } from '../../types';
+import { sendLog } from '../services/logStreamService';
 
 export function useInitializer() {
   const [isProcessing, setProcessing] = useState(false)
-  const [logs, setLogs] = useState<string[]>([])
 
   const log = (msg: string) => {
     console.log(msg)
-    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`])
+    sendLog('INITIALIZER', msg.replace('[INITIALIZER] ', ''));
   }
   
   const addLog = (logData: Omit<InitializerLog, 'id' | 'timestamp'>) => {
       const { agent_name, action, status } = logData;
-      log(`[${agent_name}] [${status.toUpperCase()}] ${action}`);
+      sendLog(agent_name, `[${status.toUpperCase()}] ${action}`);
   };
 
 
@@ -25,9 +25,9 @@ export function useInitializer() {
       if (file.name.includes('_v')) await ingestModuleMarkdown(file, addLog)
       else await ingestAgentMarkdown(file, addLog)
     }
-    log('[SYSTEM] Ingestão concluída.')
+    log('[INITIALIZER] Ingestão concluída.')
     setProcessing(false)
   }
 
-  return { handleUpload, isProcessing, logs }
+  return { handleUpload, isProcessing }
 }

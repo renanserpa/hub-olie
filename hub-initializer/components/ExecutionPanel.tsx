@@ -3,7 +3,7 @@ import { useInitializer } from '../hooks/useInitializer';
 import SupremeCommandBox from './SupremeCommandBox';
 
 export default function ExecutionPanel() {
-  const { handleUpload, isProcessing, logs } = useInitializer()
+  const { handleUpload, isProcessing } = useInitializer()
 
   return (
     <div className="bg-card p-6 rounded-2xl shadow-lg dark:bg-dark-card">
@@ -20,11 +20,6 @@ export default function ExecutionPanel() {
         Envie arquivos `.md` dos agentes e módulos (v2 / v3_diff). O sistema sincroniza automaticamente com Supabase e Crew.
       </p>
       {isProcessing && <p className="text-green-500 mt-3">⏳ Processando...</p>}
-      <div className="mt-6 bg-secondary dark:bg-dark-secondary rounded-lg p-3 h-48 overflow-y-auto text-sm font-mono">
-        {logs.map((l, i) => (
-          <div key={i}>{l}</div>
-        ))}
-      </div>
       <SupremeCommandBox />
     </div>
   )

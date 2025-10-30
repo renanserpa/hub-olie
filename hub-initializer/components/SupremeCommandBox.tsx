@@ -4,20 +4,28 @@ import { Loader2 } from 'lucide-react';
 
 export default function SupremeCommandBox() {
   const [command, setCommand] = useState('')
-  const { sendCommand, isProcessing, logs } = useSupremeCommand()
+  const { sendCommand, isProcessing } = useSupremeCommand()
 
   const handleSend = () => {
       sendCommand(command);
       setCommand('');
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+    }
+  };
+
   return (
-    <div className="bg-card p-4 mt-4 rounded-2xl shadow dark:bg-dark-card border-t dark:border-dark-border">
+    <div className="bg-secondary dark:bg-dark-secondary p-4 mt-4 rounded-xl border border-border/50 dark:border-dark-border/50">
       <h3 className="text-lg font-semibold mb-3">🧠 Enviar Comando ao ArquitetoSupremo</h3>
       <textarea
         value={command}
         onChange={(e) => setCommand(e.target.value)}
-        placeholder="Descreva la alteración técnica o auditoría deseada..."
+        onKeyDown={handleKeyDown}
+        placeholder="Descreva a alteração técnica ou auditoria desejada..."
         className="w-full p-3 rounded-lg border border-border dark:border-dark-border text-sm mb-3 bg-background dark:bg-dark-background"
         rows={3}
       />
@@ -28,11 +36,6 @@ export default function SupremeCommandBox() {
       >
         {isProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/> Enviando...</> : '🚀 Enviar Comando'}
       </button>
-      <div className="mt-3 bg-secondary dark:bg-dark-secondary p-3 rounded-lg text-sm h-48 overflow-y-auto font-mono">
-        {logs.map((l, i) => (
-          <div key={i}>{l}</div>
-        ))}
-      </div>
     </div>
   )
 }

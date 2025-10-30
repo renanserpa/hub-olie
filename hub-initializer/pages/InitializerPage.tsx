@@ -6,6 +6,7 @@ import ExecutionPanel from '../components/ExecutionPanel';
 import AgentStatusCard from '../components/AgentStatusCard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Cpu } from 'lucide-react';
+import SystemMonitor from '../components/SystemMonitor';
 
 const InitializerPage: React.FC = () => {
   const { agents } = useAgentSync();
@@ -28,8 +29,9 @@ const InitializerPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         {/* Left Column (Main Panel) */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <ExecutionPanel />
+          <SystemMonitor />
         </div>
 
         {/* Right Column (Status) */}

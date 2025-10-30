@@ -1,19 +1,20 @@
-import { uploadFileToSupabase } from './supabaseSyncService'
+import { orchestrateCommand } from '../../services/atlasOrchestrator';
+import { sendLog } from './logStreamService';
 
 export async function sendToSupreme(text: string) {
   try {
-    console.log(`[SUPREME] Dispatching command: ${text}`)
-    await new Promise(res => setTimeout(res, 800)) // simulação de chamada
-    const result = `[OK] ArquitetoSupremo processou: "${text.slice(0, 80)}..."`
+    sendLog('ArquitetoSupremo', `Recebendo solicitação: "${text}"`);
+    console.log(`[SUPREME] Dispatching command: ${text}`);
+
+    await orchestrateCommand(text); // This triggers the whole agent flow
+
+    const result = `[OK] Rota de execução para "${text.slice(0, 80)}..." concluída.`;
+    sendLog('ArquitetoSupremo', `Solicitação concluída.`);
     
-    // In a real scenario, this path might be different, but we follow the user's intent.
-    // Note: The supabaseSyncService.uploadFile is a sandbox simulation.
-    await uploadFileToSupabase(
-      new File([text], 'supreme_command.txt', { type: 'text/plain' }),
-      `/reports/supreme_commands/${Date.now()}_command.txt`
-    )
-    return { status: result }
+    return { status: result };
   } catch (err) {
-    return { status: `[ERROR] Falha ao enviar comando: ${(err as Error).message}` }
+    const errorMessage = `[ERROR] Falha ao processar comando: ${(err as Error).message}`;
+    sendLog('ArquitetoSupremo', errorMessage);
+    return { status: errorMessage };
   }
 }

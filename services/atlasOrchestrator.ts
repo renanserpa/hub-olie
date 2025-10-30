@@ -1,23 +1,38 @@
-import orchestration from '../schemas/ai_orchestration_map.json';
 import { executeAgent } from '../hub-initializer/services/crewSyncService';
 import { geminiGenerate } from './geminiService';
 import { pushLogs } from '../hub-initializer/services/supabaseSyncService';
+import { sendLog } from '../hub-initializer/services/logStreamService';
+
+const orchestrationPromise = fetch('/schemas/ai_orchestration_map.json').then(res => {
+    if (!res.ok) {
+        throw new Error(`Failed to fetch orchestration map: ${res.statusText}`);
+    }
+    return res.json();
+});
 
 export async function orchestrateCommand(command: string) {
+  const orchestration = await orchestrationPromise;
   const match = Object.keys(orchestration).find(k => command.toLowerCase().includes(k));
-  if (!match) return console.warn(`[ATLASAI] Comando não reconhecido: ${command}`);
+  if (!match) {
+    const errorMsg = `Comando não reconhecido: ${command}`;
+    sendLog('AtlasAI', `[WARN] ${errorMsg}`);
+    console.warn(`[ATLASAI] ${errorMsg}`);
+    return;
+  }
 
   const config = (orchestration as any)[match];
   const { route, context, action, report } = config;
 
-  console.log(`[ATLASAI] 🚀 Executando rota: ${route.join(" → ")}`);
+  const routeText = `Rota identificada: ${route.join(" → ")}`;
+  console.log(`[ATLASAI] 🚀 Executando rota: ${routeText}`);
+  sendLog('AtlasAI', routeText);
+
 
   for (const agent of route) {
     await executeAgent(agent, { context, action, report });
   }
 
-  await geminiGenerate(context, { action, report });
-  await pushLogs(context);
-
-  console.log(`[ATLASAI] ✅ Execução concluída: ${command}`);
+  const completionMessage = `Execução concluída para comando: "${command}"`;
+  console.log(`[ATLASAI] ✅ ${completionMessage}`);
+  sendLog('SYSTEM', `Execução encerrada com status OK.`);
 }
