@@ -335,7 +335,7 @@ export const supabaseService = {
     ]);
     return { suppliers, purchase_orders, purchase_order_items };
   },
-// FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
+  // FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
   createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material_name' | 'material'>[] }) => {
         const po_number = `PC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
         const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);

@@ -33,11 +33,11 @@ const ReceivePODialog: React.FC<ReceivePODialogProps> = ({ isOpen, onClose, onSa
 
     const handleSubmit = async () => {
         const receivedItems = Object.entries(receivedQuantities)
-// FIX: Explicitly type the filter parameters to resolve the 'unknown' type error.
+            // FIX: Explicitly type the filter parameters to resolve the 'unknown' type error.
             .filter(([, qty]: [string, number]) => qty > 0)
             .map(([itemId, receivedQty]) => ({ itemId, receivedQty }));
         
-// FIX: Corrected logic to check if no items were received.
+        // FIX: Corrected logic to check if no items were received.
         if (receivedItems.length === 0) {
             toast({ title: 'Atenção', description: 'Nenhuma quantidade foi informada para recebimento.', variant: 'destructive' });
             return;

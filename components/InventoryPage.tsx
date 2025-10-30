@@ -18,7 +18,7 @@ const InventoryPage: React.FC = () => {
         selectedBalance,
         setSelectedMaterialId,
         movements,
-// FIX: The hook returns `createMovement`, but the component was trying to use `addInventoryMovement`.
+        // FIX: The hook returns `createMovement`, but the component was trying to use `addInventoryMovement`.
         createMovement,
         allMaterials,
     } = useInventory();

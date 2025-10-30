@@ -12,7 +12,7 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Fix: Added constructor to initialize state and ensure `this.props` and `this.state` are available throughout the component.
+  // Fix: Refactored state initialization to use a constructor for wider compatibility.
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
