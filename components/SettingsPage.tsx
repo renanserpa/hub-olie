@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Puzzle, Palette, Wrench, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Box, Users } from 'lucide-react';
+import { Settings, Puzzle, Palette, Wrench, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Users } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import IntegrationsTabContent from './IntegrationsTabContent';
 import TabContent from './TabContent';
@@ -7,9 +7,10 @@ import SystemTabContent from './SystemTabContent';
 import AppearanceTabContent from './AppearanceTabContent';
 import SecurityTabContent from './SecurityTabContent';
 import { useSettings } from '../hooks/useSettings';
-import { AnySettingsItem, FieldConfig, SettingsCategory, SupplyGroup } from '../types';
+import { AnySettingsItem, FieldConfig, SettingsCategory } from '../types';
 import PlaceholderContent from './PlaceholderContent';
 import { cn } from '../lib/utils';
+import { MaterialTabs } from './settings/materials/MaterialTabs';
 
 const SETTINGS_TABS = [
   { id: 'integrations', label: 'Integrações', icon: Puzzle },
@@ -32,24 +33,16 @@ const CORES_SUB_TABS = [
     { id: 'texturas', label: 'Texturas' },
 ];
 
-const MATERIALS_SUB_TABS = [
-    { id: 'grupos_suprimento', label: 'Grupos de Insumo', icon: Box },
-    { id: 'materiais_basicos', label: 'Materiais Básicos', icon: Wrench },
-];
-
 // --- Field Configurations ---
 const paletteFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const colorFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor (Hex)', type: 'color' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [ {value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}, {value: 'cotton', label: 'Algodão'}, {value: 'metallic', label: 'Metálica'}]} ];
 const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'select', options: [ {value: 'script', label: 'Script'}, {value: 'serif', label: 'Serif'}, {value: 'sans-serif', label: 'Sans-serif'}, {value: 'decorative', label: 'Decorativa'}, {value: 'handwritten', label: 'Manuscrita'}]}, { key: 'style', label: 'Estilo', type: 'select', options: [ {value: 'regular', label: 'Regular'}, {value: 'bold', label: 'Bold'}, {value: 'italic', label: 'Italic'}, {value: 'script', label: 'Script'}]}, { key: 'font_file_url', label: 'Arquivo da Fonte (.ttf, .otf)', type: 'file' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
-const supplyGroupFieldConfig: FieldConfig[] = [ { key: 'codigo', label: 'Código', type: 'text' }, { key: 'name', label: 'Nome', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
-const materialFieldConfig = (supplyGroups: SupplyGroup[]): FieldConfig[] => [ { key: 'codigo', label: 'Código', type: 'text' }, { key: 'name', label: 'Nome', type: 'text' }, { key: 'supply_group_id', label: 'Grupo de Insumo', type: 'select', options: supplyGroups.map(sg => ({ value: sg.id, label: sg.name })) }, { key: 'unit', label: 'Unidade', type: 'select', options: [ {value: 'm', label: 'Metro (m)'}, {value: 'un', label: 'Unidade (un)'}, {value: 'kg', label: 'Quilo (kg)'} ] }, { key: 'default_cost', label: 'Custo Padrão', type: 'number' }, { key: 'is_active', label: 'Status', type: 'checkbox'} ];
 
 const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('integrations');
     const [activeCatalogsSubTab, setActiveCatalogsSubTab] = useState(CATALOGS_SUB_TABS[0].id);
     const [activeCoresSubTab, setActiveCoresSubTab] = useState(CORES_SUB_TABS[0].id);
-    const [activeMaterialsSubTab, setActiveMaterialsSubTab] = useState(MATERIALS_SUB_TABS[0].id);
 
     const { settingsData, isLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
 
@@ -104,25 +97,6 @@ const SettingsPage: React.FC = () => {
             default: return null;
         }
     };
-    
-    const renderMaterialsContent = () => {
-        if (!settingsData) return null;
-        const dataExists = (key: keyof typeof settingsData.materials) => settingsData.materials[key].length > 0;
-
-        switch (activeMaterialsSubTab) {
-            case 'grupos_suprimento': {
-                 return dataExists('grupos_suprimento') 
-                    ? <TabContent category="materials" data={settingsData.materials.grupos_suprimento} fields={supplyGroupFieldConfig} {...createCrudHandlers('materials', 'grupos_suprimento')} isAdmin={isAdmin} title="Grupos de Suprimento" />
-                    : <PlaceholderContent title="Grupos de Suprimento" requiredTable="config_supply_groups" />;
-            }
-            case 'materiais_basicos': {
-                 return dataExists('materiais_basicos')
-                    ? <TabContent category="materials" data={settingsData.materials.materiais_basicos} fields={materialFieldConfig(settingsData.materials.grupos_suprimento)} {...createCrudHandlers('materials', 'materiais_basicos')} isAdmin={isAdmin} title="Materiais Básicos" />
-                    : <PlaceholderContent title="Materiais Básicos" requiredTable="config_basic_materials" />;
-            }
-            default: return null;
-        }
-    };
 
     const renderMainContent = () => {
         if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -145,12 +119,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </div>
             );
-            case 'materials': return (
-                <div className="grid grid-cols-12 gap-6 items-start">
-                    <div className="col-span-3"><TabLayoutVertical tabs={MATERIALS_SUB_TABS} activeTab={activeMaterialsSubTab} onTabChange={setActiveMaterialsSubTab} /></div>
-                    <div className="col-span-9">{renderMaterialsContent()}</div>
-                </div>
-            );
+            case 'materials': return <MaterialTabs />;
             case 'system': return <SystemTabContent initialSettings={settingsData.sistema} isAdmin={isAdmin} />;
             case 'appearance': return <AppearanceTabContent />;
             case 'security': return <SecurityTabContent />;

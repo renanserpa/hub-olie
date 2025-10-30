@@ -4,23 +4,31 @@ import { UploadCloud, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from '../../hooks/use-toast';
 
-export function MediaUploadCard({ module, category }: { module: string; category?: string }) {
+interface MediaUploadCardProps {
+  module: string;
+  category?: string;
+  onUploadSuccess?: (result: { drive_file_id: string; url_public: string }) => void;
+}
+
+export function MediaUploadCard({ module, category, onUploadSuccess }: MediaUploadCardProps) {
   const { handleUpload, uploading } = useMedia(module, category);
   const [isDragging, setIsDragging] = useState(false);
 
+  const processFile = (file: File | null) => {
+      if (file) {
+          handleUpload(file, onUploadSuccess);
+      }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleUpload(e.target.files[0]);
-    }
+    processFile(e.target.files ? e.target.files[0] : null);
   };
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleUpload(e.dataTransfer.files[0]);
-    }
+    processFile(e.dataTransfer.files ? e.dataTransfer.files[0] : null);
   }, [handleUpload]);
 
   const handleDragEvents = (e: React.DragEvent<HTMLDivElement>, isEntering: boolean) => {

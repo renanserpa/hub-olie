@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Supplier, PurchaseOrder, PurchaseOrderItem, BasicMaterial } from '../types';
+// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
+import { Supplier, PurchaseOrder, PurchaseOrderItem, Material } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +14,7 @@ export function usePurchasing() {
     const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
     const [allPOs, setAllPOs] = useState<PurchaseOrder[]>([]);
     const [allPOItems, setAllPOItems] = useState<PurchaseOrderItem[]>([]);
-    const [allMaterials, setAllMaterials] = useState<BasicMaterial[]>([]);
+    const [allMaterials, setAllMaterials] = useState<Material[]>([]);
 
     const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
 
@@ -24,7 +25,7 @@ export function usePurchasing() {
         try {
             console.log("[PURCHASING] Loading tables...");
             const { suppliers, purchase_orders, purchase_order_items } = await dataService.getPurchasingData();
-            const materials = await dataService.getCollection<BasicMaterial>('config_basic_materials');
+            const materials = await dataService.getCollection<Material>('config_materials');
 
             const loadedTables: string[] = [];
             const missingTables: string[] = [];

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { InventoryBalance, InventoryMovement, BasicMaterial, InventoryMovementReason, InventoryMovementType } from '../types';
+// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
+import { InventoryBalance, InventoryMovement, Material, InventoryMovementReason, InventoryMovementType } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export function useInventory() {
     const [allBalances, setAllBalances] = useState<InventoryBalance[]>([]);
-    const [allMaterials, setAllMaterials] = useState<BasicMaterial[]>([]);
+    const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [movements, setMovements] = useState<InventoryMovement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -18,8 +19,8 @@ export function useInventory() {
         setIsLoading(true);
         try {
             const [balancesData, materialsData] = await Promise.all([
-                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_basic_materials(*)'),
-                dataService.getCollection<BasicMaterial>('config_basic_materials')
+                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),
+                dataService.getCollection<Material>('config_materials')
             ]);
             
             setAllBalances(balancesData);
@@ -38,7 +39,8 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     useEffect(() => {
-        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_basic_materials(*)', (data) => {
+        // In sandboxDB, this joins on config_materials which is what BasicMaterial represented.
+        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)', (data) => {
             setAllBalances(data);
         });
         loadData();
@@ -77,7 +79,7 @@ export function useInventory() {
         const lowercasedQuery = searchQuery.toLowerCase();
         return allBalances.filter(balance =>
             balance.material?.name.toLowerCase().includes(lowercasedQuery) ||
-            balance.material?.codigo.toLowerCase().includes(lowercasedQuery)
+            balance.material?.sku?.toLowerCase().includes(lowercasedQuery)
         );
     }, [allBalances, searchQuery]);
 

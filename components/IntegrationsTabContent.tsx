@@ -6,7 +6,7 @@ import { RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function IntegrationsTabContent() {
-  const { integrations, logs, loading, testingId, refresh, handleTestConnection } = useIntegrations();
+  const { integrations, logs, loading, refresh } = useIntegrations();
 
   if (loading && integrations.length === 0) {
       return (
@@ -32,8 +32,6 @@ export function IntegrationsTabContent() {
                 key={integration.id}
                 integration={integration}
                 allLogs={logs}
-                onTestConnection={handleTestConnection}
-                isTesting={testingId === integration.id}
           />
         ))}
       </div>

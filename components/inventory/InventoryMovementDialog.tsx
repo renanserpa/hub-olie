@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { BasicMaterial, InventoryMovementReason, InventoryMovementType } from '../../types';
+// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
+import { Material, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { toast } from '../../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -9,7 +10,7 @@ interface InventoryMovementDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (data: any) => Promise<void>;
-    materials: BasicMaterial[];
+    materials: Material[];
 }
 
 // FIX: Corrected string literals to match type definitions.
@@ -91,7 +92,7 @@ const InventoryMovementDialog: React.FC<InventoryMovementDialogProps> = ({ isOpe
                     <label className="block text-sm font-medium text-textSecondary">Material</label>
                     <select value={materialId} onChange={e => setMaterialId(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50">
                         <option value="">Selecione um material</option>
-                        {materials.map(m => <option key={m.id} value={m.id}>{m.name} ({m.codigo})</option>)}
+                        {materials.map(m => <option key={m.id} value={m.id}>{m.name} ({m.sku})</option>)}
                     </select>
                 </div>
 

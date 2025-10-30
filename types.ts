@@ -212,13 +212,10 @@ export interface Task {
 
 // --- INVENTORY ---
 
-export interface BasicMaterial { id: string; codigo: string; name: string; supply_group_id: string; unit: string; default_cost: number; is_active: boolean; }
-export interface SupplyGroup { id: string; codigo: string; name: string; is_active: boolean; }
-
 export interface InventoryBalance {
     id: string;
     material_id: string;
-    material?: BasicMaterial;
+    material?: Material; // Changed from BasicMaterial
     current_stock: number;
     reserved_stock: number;
     location?: string;
@@ -255,6 +252,34 @@ export interface MediaAsset {
   created_at: string;
 }
 
+// --- MATERIALS (NEW) ---
+export interface MaterialGroup {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  sku?: string;
+  group_id: string;
+  config_supply_groups?: { name: string }; // For joins
+  color_id?: string;
+  config_color_palettes?: { hex_value: string };
+  texture_id?: string;
+  config_textures?: { url_public: string };
+  unit: string;
+  drive_file_id?: string;
+  url_public?: string;
+  ai_tags?: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+
 // --- SETTINGS ---
 export type SettingsCategory = 'integrations' | 'catalogs' | 'materials' | 'system' | 'appearance' | 'security';
 
@@ -274,6 +299,7 @@ export interface BiasColor { id: string; name: string; hex: string; palette_id?:
 export interface EmbroideryColor { id: string; name: string; hex: string; palette_id?: string; thread_type: string; is_active: boolean; }
 export interface FabricTexture { id: string; name: string; description?: string; image_url?: string; is_active: boolean; }
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
+export interface SupplyGroup { id: string; name: string; is_active: boolean; } // Simplified for old compatibility if needed
 
 export interface DeliveryMethod { id: string; name: string; description?: string; is_active: boolean; }
 export interface FreightParams { id: string; name: string; value: string; }
@@ -282,8 +308,8 @@ export interface BondType { id: string; name: string; description: string; }
 
 export type AnySettingsItem =
   | ColorPalette | FabricColor | ZipperColor | LiningColor | PullerColor | BiasColor
-  | EmbroideryColor | FabricTexture | MonogramFont | SupplyGroup | BasicMaterial
-  | DeliveryMethod | FreightParams | PackagingType | BondType;
+  | EmbroideryColor | FabricTexture | MonogramFont | SupplyGroup
+  | MaterialGroup | Material;
 
 export interface SystemSetting {
     id: string;
@@ -616,10 +642,6 @@ export interface AppData {
         };
         fontes_monogramas: MonogramFont[];
     };
-    materials: {
-        grupos_suprimento: SupplyGroup[];
-        materiais_basicos: BasicMaterial[];
-    };
     logistica: {
         metodos_entrega: DeliveryMethod[];
         calculo_frete: FreightParams[];
@@ -631,6 +653,10 @@ export interface AppData {
     config_integrations: Integration[];
     integration_logs: IntegrationLog[];
     
+    // New Materials Structure
+    config_supply_groups: MaterialGroup[];
+    config_materials: Material[];
+
     media_assets: MediaAsset[];
     orders: Order[];
     contacts: Contact[];

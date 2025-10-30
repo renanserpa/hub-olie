@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, BasicMaterial, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -79,6 +79,12 @@ export const dataService = {
         ? sandboxService.updateSystemSetting(key, newValue, source, confidence, explanation)
         : Promise.resolve(), // In real mode, this would be an RPC call or complex transaction.
 
+  // Materials
+  getMaterials: (): Promise<Material[]> => isSandbox() ? sandboxService.getMaterials() : realSupabaseService.getMaterials(),
+  getMaterialGroups: (): Promise<MaterialGroup[]> => isSandbox() ? sandboxService.getMaterialGroups() : realSupabaseService.getMaterialGroups(),
+  addMaterial: (material: any): Promise<Material> => isSandbox() ? sandboxService.addMaterial(material) : realSupabaseService.addDocument('config_materials', material),
+  addMaterialGroup: (group: any): Promise<MaterialGroup> => isSandbox() ? sandboxService.addMaterialGroup(group) : realSupabaseService.addDocument('config_supply_groups', group),
+  
   getOrders: () => isSandbox() ? sandboxService.getOrders() : realSupabaseService.getOrders(),
   getOrder: (id: string) => isSandbox() ? sandboxService.getOrder(id) : realSupabaseService.getOrder(id),
   updateOrderStatus: (orderId: string, newStatus: OrderStatus) => isSandbox() ? sandboxService.updateOrderStatus(orderId, newStatus) : realSupabaseService.updateOrderStatus(orderId, newStatus),

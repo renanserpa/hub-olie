@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,
     AppData,
-    BasicMaterial,
     BiasColor,
     Contact,
     FabricColor,
@@ -37,6 +36,8 @@ import {
     AnalyticsSnapshot,
     Integration,
     IntegrationLog,
+    Material,
+    MaterialGroup,
 } from "../types";
 
 
@@ -92,7 +93,8 @@ const settingsTableMap: Record<string, string> = {
     'catalogs-cores_texturas-ziper': 'zipper_colors',
     'catalogs-cores_texturas-vies': 'bias_colors',
     'catalogs-fontes_monogramas': 'config_fonts',
-    'materials-materiais_basicos': 'config_basic_materials',
+    'materials-grupos_suprimento': 'config_supply_groups',
+    'materials-materiais_basicos': 'config_materials',
 };
 
 const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
@@ -171,11 +173,11 @@ export const supabaseService = {
   getSettings: async (): Promise<AppData> => {
     const emptyAppData: AppData = {
         catalogs: { paletas_cores: [], cores_texturas: { tecido: [], ziper: [], forro: [], puxador: [], vies: [], bordado: [], texturas: [] }, fontes_monogramas: [] },
-        materials: { grupos_suprimento: [], materiais_basicos: [] },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: [],
         system_settings_logs: [],
-// FIX: Corrected 'midia: {}' to 'media_assets: []' to match the AppData type definition.
+        config_supply_groups: [],
+        config_materials: [],
         media_assets: [], orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
@@ -194,14 +196,15 @@ export const supabaseService = {
 
     try {
         const [
-            tecido, ziper, vies, fontes_monogramas, materiais_basicos, system_settings_logs
+            tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
             supabaseService.getCollection<BiasColor>('bias_colors'), 
             supabaseService.getCollection<MonogramFont>('config_fonts'),
-            supabaseService.getCollection<BasicMaterial>('config_basic_materials'),
             supabaseService.getCollection<SystemSettingsLog>('system_settings_logs'),
+            supabaseService.getMaterialGroups(),
+            supabaseService.getMaterials(),
         ]);
         
         return {
@@ -216,11 +219,9 @@ export const supabaseService = {
                 }, 
                 fontes_monogramas 
             },
-            materials: { 
-                ...emptyAppData.materials,
-                materiais_basicos 
-            },
-            system_settings_logs
+            system_settings_logs,
+            config_supply_groups,
+            config_materials,
         };
     } catch (error) {
         handleError(error, 'getSettings');
@@ -235,6 +236,9 @@ export const supabaseService = {
       const updates = settings.map(s => updateDocument<SystemSetting>('system_settings', s.id, { value: s.value }));
       return Promise.all(updates);
   },
+
+  getMaterials: (): Promise<Material[]> => supabaseService.getCollection('config_materials', '*, config_supply_groups(name)'),
+  getMaterialGroups: (): Promise<MaterialGroup[]> => supabaseService.getCollection('config_supply_groups'),
 
   getOrders: async (): Promise<Order[]> => {
     const ordersData = await supabaseService.getCollection<Order>('orders', '*, customers(*)');

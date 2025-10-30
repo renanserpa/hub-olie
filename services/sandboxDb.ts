@@ -1,9 +1,10 @@
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
-    BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
+    InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
+    MaterialGroup, Material
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -70,11 +71,17 @@ const config_fonts: MonogramFont[] = [
     { id: 'mf1', name: 'Brush Script', style: 'script', category: 'script', preview_url: '', font_file_url: '', is_active: true },
     { id: 'mf2', name: 'Times New Roman', style: 'regular', category: 'serif', preview_url: '', font_file_url: '', is_active: true },
 ];
-const config_basic_materials: BasicMaterial[] = [
-    { id: 'bm1', name: 'Tecido Linho Bege', codigo: 'TEC-LIN-BG', supply_group_id: 'sg1', unit: 'm', default_cost: 45.50, is_active: true },
-    { id: 'bm2', name: 'Zíper YKK Dourado', codigo: 'ZIP-YKK-DO', supply_group_id: 'sg2', unit: 'un', default_cost: 3.20, is_active: true },
-    { id: 'bm3', name: 'Linha de Costura Branca', codigo: 'LIN-COS-BR', supply_group_id: 'sg3', unit: 'm', default_cost: 0.10, is_active: true },
+const config_supply_groups: MaterialGroup[] = [
+    { id: 'sg1', name: 'Tecidos', description: 'Tecidos principais para bolsas e nécessaires.', is_active: true, created_at: new Date().toISOString() },
+    { id: 'sg2', name: 'Fechamentos', description: 'Zíperes, botões, etc.', is_active: true, created_at: new Date().toISOString() },
+    { id: 'sg3', name: 'Aviamentos', description: 'Linhas, agulhas, etc.', is_active: true, created_at: new Date().toISOString() },
 ];
+const config_materials: Material[] = [
+    { id: 'mat1', name: 'Linho Bege Cru', sku: 'TEC-LNH-BG-01', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1624833914853-33e4f7a7587a?q=80&w=2070&auto=format&fit=crop' },
+    { id: 'mat2', name: 'Zíper YKK #5 Dourado', sku: 'ZIP-YKK-5-DO', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1588185969094-1525a435d1d3?q=80&w=2070&auto=format&fit=crop' },
+    { id: 'mat3', name: 'Linha de Costura Branca', sku: 'LIN-COS-BR-01', group_id: 'sg3', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1599837563122-6b60012bd2b6?q=80&w=1974&auto=format&fit=crop' },
+];
+
 const task_statuses: TaskStatus[] = [
     {id: 'ts1', name: 'Corte', color: 'orange', position: 1},
     {id: 'ts2', name: 'Costura', color: 'sky', position: 2},
@@ -86,7 +93,7 @@ const tasks: Task[] = [
     {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1, priority: 'normal'},
     {id: 't3', title: 'OP-2024-003 - Mochila Urbana', status_id: 'ts2', client_name: 'Bruno Costa', quantity: 2, position: 2, priority: 'urgente'},
 ];
-const inventory_balances: InventoryBalance[] = config_basic_materials.map((m, i) => ({ 
+const inventory_balances: InventoryBalance[] = config_materials.map((m, i) => ({ 
     id: `inv_bal_${i + 1}`,
     material_id: m.id, 
     material: m, 
@@ -96,8 +103,8 @@ const inventory_balances: InventoryBalance[] = config_basic_materials.map((m, i)
     updated_at: new Date().toISOString() 
 }));
 const inventory_movements: InventoryMovement[] = [
-    { id: 'im1', material_id: 'bm1', type: 'in', quantity: 100, reason: 'RECEBIMENTO_PO', notes: 'PO-2024-001', created_at: new Date().toISOString() },
-    { id: 'im2', material_id: 'bm1', type: 'out', quantity: -20, reason: 'CONSUMO_PRODUCAO', notes: 'OP-2024-001', created_at: new Date().toISOString() }
+    { id: 'im1', material_id: 'mat1', type: 'in', quantity: 100, reason: 'RECEBIMENTO_PO', notes: 'PO-2024-001', created_at: new Date().toISOString() },
+    { id: 'im2', material_id: 'mat1', type: 'out', quantity: -20, reason: 'CONSUMO_PRODUCAO', notes: 'OP-2024-001', created_at: new Date().toISOString() }
 ];
 
 const system_settings: SystemSetting[] = [
@@ -142,10 +149,10 @@ const suppliers: Supplier[] = [
 ];
 
 const purchase_order_items: PurchaseOrderItem[] = [
-    { id: 'poi1', po_id: 'pc1', material_id: 'bm1', material_name: 'Tecido Linho Bege', quantity: 50, received_quantity: 50, unit_price: 42.00, total: 2100.00 },
-    { id: 'poi2', po_id: 'pc2', material_id: 'bm2', material_name: 'Zíper YKK Dourado', quantity: 200, received_quantity: 100, unit_price: 3.00, total: 600.00 },
-    { id: 'poi3', po_id: 'pc2', material_id: 'bm3', material_name: 'Linha de Costura Branca', quantity: 10, received_quantity: 0, unit_price: 15.00, total: 150.00 },
-    { id: 'poi4', po_id: 'pc3', material_id: 'bm1', material_name: 'Tecido Linho Bege', quantity: 20, received_quantity: 0, unit_price: 45.50, total: 910.00 },
+    { id: 'poi1', po_id: 'pc1', material_id: 'mat1', material_name: 'Linho Bege Cru', quantity: 50, received_quantity: 50, unit_price: 42.00, total: 2100.00 },
+    { id: 'poi2', po_id: 'pc2', material_id: 'mat2', material_name: 'Zíper YKK #5 Dourado', quantity: 200, received_quantity: 100, unit_price: 3.00, total: 600.00 },
+    { id: 'poi3', po_id: 'pc2', material_id: 'mat3', material_name: 'Linha de Costura Branca', quantity: 10, received_quantity: 0, unit_price: 15.00, total: 150.00 },
+    { id: 'poi4', po_id: 'pc3', material_id: 'mat1', material_name: 'Linho Bege Cru', quantity: 20, received_quantity: 0, unit_price: 45.50, total: 910.00 },
 ];
 
 const purchase_orders: PurchaseOrder[] = [
@@ -227,7 +234,8 @@ let collections: Record<string, any[]> = {
     zipper_colors,
     bias_colors,
     config_fonts,
-    config_basic_materials,
+    config_supply_groups,
+    config_materials,
     system_settings,
     system_settings_logs: [],
     config_integrations,
@@ -319,8 +327,7 @@ const uploadFile = async (file: File, module: string, category: string): Promise
     console.log(`🧱 SANDBOX: Simulating upload for file: ${file.name}`);
     await new Promise(res => setTimeout(res, 500 + Math.random() * 800));
 
-    const newAsset: MediaAsset = {
-        id: generateId(),
+    const newAsset: Omit<MediaAsset, 'id'> = {
         drive_file_id: `sandbox_${generateId()}`,
         module,
         category,
@@ -332,9 +339,9 @@ const uploadFile = async (file: File, module: string, category: string): Promise
         created_at: new Date().toISOString()
     };
     
-    create<MediaAsset>('media_assets', newAsset as any);
+    const createdAsset = create<MediaAsset>('media_assets', newAsset);
 
-    return Promise.resolve({ id: newAsset.drive_file_id, webViewLink: newAsset.url_public! });
+    return Promise.resolve({ id: createdAsset.drive_file_id, webViewLink: createdAsset.url_public! });
 };
 
 const settingsTableMap: Record<string, string> = {
@@ -342,7 +349,8 @@ const settingsTableMap: Record<string, string> = {
     'catalogs-cores_texturas-ziper': 'zipper_colors',
     'catalogs-cores_texturas-vies': 'bias_colors',
     'catalogs-fontes_monogramas': 'config_fonts',
-    'materials-materiais_basicos': 'config_basic_materials',
+    'materials-grupos_suprimento': 'config_supply_groups',
+    'materials-materiais_basicos': 'config_materials',
 };
 
 const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
@@ -388,12 +396,10 @@ export const sandboxDb = {
             },
             fontes_monogramas: collections.config_fonts,
         },
-        materials: {
-            grupos_suprimento: [],
-            materiais_basicos: collections.config_basic_materials,
-        },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: collections.system_settings,
+        config_supply_groups: collections.config_supply_groups,
+        config_materials: collections.config_materials,
         contacts: collections.customers,
     } as AppData),
     addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => 
@@ -441,6 +447,17 @@ export const sandboxDb = {
          
          return Promise.resolve();
     },
+    getMaterials: async (): Promise<Material[]> => {
+        const materials = getCollection<Material>('config_materials');
+        const groups = getCollection<MaterialGroup>('config_supply_groups');
+        return materials.map(m => ({
+            ...m,
+            config_supply_groups: groups.find(g => g.id === m.group_id)
+        }));
+    },
+    getMaterialGroups: async (): Promise<MaterialGroup[]> => getCollection<MaterialGroup>('config_supply_groups'),
+    addMaterial: async (material: any) => Promise.resolve(create<Material>('config_materials', material)),
+    addMaterialGroup: async (group: any) => Promise.resolve(create<MaterialGroup>('config_supply_groups', group)),
     getOrders: async (): Promise<Order[]> => {
         const allOrders = getCollection<Order>('orders');
         const allItems = getCollection<OrderItem>('order_items');
