@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
 import { InventoryBalance, InventoryMovement, Material, InventoryMovementReason, InventoryMovementType } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
@@ -39,7 +38,6 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     useEffect(() => {
-        // In sandboxDB, this joins on config_materials which is what BasicMaterial represented.
         const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)', (data) => {
             setAllBalances(data);
         });

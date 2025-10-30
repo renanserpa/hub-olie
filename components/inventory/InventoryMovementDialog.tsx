@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
-// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
 import { Material, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { toast } from '../../hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -13,7 +12,6 @@ interface InventoryMovementDialogProps {
     materials: Material[];
 }
 
-// FIX: Corrected string literals to match type definitions.
 const REASON_OPTIONS: { value: InventoryMovementReason, label: string, types: InventoryMovementType[] }[] = [
     { value: 'RECEBIMENTO_PO', label: 'Entrada por Compra', types: ['in'] },
     { value: 'DEVOLUCAO_CLIENTE', label: 'Entrada por Devolução', types: ['in'] },

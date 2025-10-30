@@ -215,7 +215,7 @@ export interface Task {
 export interface InventoryBalance {
     id: string;
     material_id: string;
-    material?: Material; // Changed from BasicMaterial
+    material?: Material;
     current_stock: number;
     reserved_stock: number;
     location?: string;
@@ -299,7 +299,6 @@ export interface BiasColor { id: string; name: string; hex: string; palette_id?:
 export interface EmbroideryColor { id: string; name: string; hex: string; palette_id?: string; thread_type: string; is_active: boolean; }
 export interface FabricTexture { id: string; name: string; description?: string; image_url?: string; is_active: boolean; }
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
-export interface SupplyGroup { id: string; name: string; is_active: boolean; } // Simplified for old compatibility if needed
 
 export interface DeliveryMethod { id: string; name: string; description?: string; is_active: boolean; }
 export interface FreightParams { id: string; name: string; value: string; }
@@ -308,7 +307,7 @@ export interface BondType { id: string; name: string; description: string; }
 
 export type AnySettingsItem =
   | ColorPalette | FabricColor | ZipperColor | LiningColor | PullerColor | BiasColor
-  | EmbroideryColor | FabricTexture | MonogramFont | SupplyGroup
+  | EmbroideryColor | FabricTexture | MonogramFont
   | MaterialGroup | Material;
 
 export interface SystemSetting {

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-// FIX: Replaced BasicMaterial with Material as it's the correct exported type.
 import { Supplier, PurchaseOrder, PurchaseOrderItem, Material } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';

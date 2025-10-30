@@ -288,7 +288,7 @@ export const supabaseService = {
   getTasks: (): Promise<Task[]> => supabaseService.getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
-  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_basic_materials(*)'),
+  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*)'),
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
     const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
     if (error) { handleError(error, 'getInventoryMovements'); return []; }

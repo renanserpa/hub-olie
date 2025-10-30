@@ -5,7 +5,6 @@ interface MaterialPreviewCardProps {
   material: Material;
 }
 
-// FIX: Changed to a const with React.FC type for better type inference in parent components, which can resolve issues with props like `key`.
 export const MaterialPreviewCard: React.FC<MaterialPreviewCardProps> = ({ material }) => {
   return (
     <div className="border rounded-lg bg-card hover:shadow-lg transition-all group">
