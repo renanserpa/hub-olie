@@ -88,5 +88,29 @@ Fale em Português do Brasil. Seja direto e profissional. A resposta deve conter
       console.error('Error generating executive summary with Gemini:', error);
       throw new Error('Falha ao gerar análise com a IA.');
     }
+  },
+
+  logAnalyzerAI: async (logs: string[]): Promise<string> => {
+    const logData = logs.join('\n');
+    const prompt = `You are GeminiAI, an expert AI system auditor. Analyze the following execution logs from the AtlasAI Crew. Identify the root cause of any failures and suggest corrective actions.
+    Logs:
+    ---
+    ${logData}
+    ---
+    Provide a concise analysis in markdown format with:
+    - Root Cause Analysis
+    - Recommended Actions`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-flash-latest',
+            contents: prompt,
+        });
+
+        return response.text.trim();
+    } catch (error) {
+        console.error('Error analyzing logs with Gemini:', error);
+        throw new Error('Falha ao analisar logs com a IA.');
+    }
   }
 };

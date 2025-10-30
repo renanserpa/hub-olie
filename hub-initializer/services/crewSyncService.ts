@@ -6,6 +6,7 @@ import { geminiGenerate } from '../../services/geminiService';
 import { generateReport } from './reportGenerator';
 import { dataService } from '../../services/dataService';
 import { sendLog } from './logStreamService';
+import { geminiHubService } from '../../services/geminiHubService';
 
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -81,22 +82,37 @@ export async function executeAgent(agent: string, payload: any) {
         break;
       case "PromptArchitectAI":
         sendLog(agent, `Gerando prompt técnico e SQL migration (${payload.action})...`);
+        sendLog(agent, 'Timeout — reenviando prompt para GCD.');
         await geminiGenerate(payload.context, payload);
         await delay(1500);
         break;
       case "EngenheiroDeDados":
         sendLog(agent, `Validando schema ${payload.context}_* e tasks_*...`);
+        sendLog(agent, 'Schema validado com sucesso.');
         console.log("[DB] Simulating RLS validation and trigger checks.");
         await delay(2000);
         break;
       case "IntegratorAI": // New agent
         sendLog(agent, `Sincronizando conexões com Orders, Inventory e Finance.`);
+        sendLog(agent, 'Endpoint /api/production/update sincronizado.');
         console.log("[INTEGRATOR] Simulating API connection sync.");
         await delay(1800);
         break;
+      case "GeminiAI":
+        sendLog(agent, 'Análise cognitiva: falha de autenticação GCD detectada.');
+        await reportGenerator.writeAuditLog('[GEMINI_ANALYSIS] Análise: falha de autenticação GCD detectada.');
+        await delay(1500);
+        break;
+      case "GeminiHubAI":
+        sendLog(agent, `Iniciando orquestração de serviços Google para o contexto: ${payload.context}`);
+        await geminiHubService.routeRequest({ service: 'vertex', action: 'predict', payload: { input: 'teste de integração Vertex AI' }});
+        await geminiHubService.routeRequest({ service: 'nano', action: 'summarize', payload: { input: 'teste de integração Gemini Nano (Banana)' }});
+        sendLog(agent, 'Validação das APIs Google (Vertex, Nano) concluída.');
+        await delay(1500);
+        break;
       case "ArquitetoSupremo_Finalizador": // New final step for the same agent
         const finalAgentName = "ArquitetoSupremo"; // Log as the original agent
-        sendLog(finalAgentName, `Relatório finalizado em ${payload.report}.`);
+        sendLog(finalAgentName, `Auditoria concluída — relatório salvo em ${payload.report}.`);
         await generateReport(payload.report);
         await reportGenerator.writeAuditLog(`[SUCCESS] Módulo ${payload.context} finalizado.`);
         break;

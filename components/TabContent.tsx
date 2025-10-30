@@ -8,7 +8,6 @@ import Modal from './ui/Modal';
 import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
 import { toast } from '../hooks/use-toast';
-import { ColorSwatch } from './ui/ColorSwatch';
 
 interface TabContentProps {
   category: SettingsCategory;
@@ -26,14 +25,20 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
   const [currentItem, setCurrentItem] = useState<AnySettingsItem | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [fileData, setFileData] = useState<Record<string, File | null>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   
+  const validateHexColor = (color: string): boolean => {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
+  };
+
   const openModal = (item: AnySettingsItem | null = null) => {
     setCurrentItem(item);
     setFormData(item ? { ...item } : fields.reduce((acc, field) => ({ ...acc, [field.key]: field.type === 'checkbox' ? false : '' }), {}));
     setFileData({});
+    setFormErrors({});
     setIsModalOpen(true);
   };
 
@@ -42,6 +47,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
     setCurrentItem(null);
     setFormData({});
     setFileData({});
+    setFormErrors({});
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -59,6 +65,19 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
 
   const handleFieldChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    const fieldConfig = fields.find(f => f.key === name);
+    if (fieldConfig && fieldConfig.type === 'color') {
+        if (!validateHexColor(value)) {
+            setFormErrors(prev => ({ ...prev, [name]: 'Formato de cor hexadecimal inválido. Use #RRGGBB.' }));
+        } else {
+            setFormErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+    }
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,6 +121,8 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
         setDeleteItemId(null);
     }
   }
+  
+  const hasErrors = Object.keys(formErrors).length > 0;
 
   return (
     <div className="p-0">
@@ -249,10 +270,24 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                             )}
                         </div>
                     ) : field.type === 'color' ? (
-                         <ColorSwatch
-                            color={formData[field.key] || '#ffffff'}
-                            onChange={(value) => handleFieldChange(field.key, value)}
-                         />
+                         <>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    value={formData[field.key] || '#ffffff'}
+                                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                                    className="p-1 h-10 w-10 block bg-white border border-gray-200 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none dark:bg-dark-background dark:border-dark-border"
+                                />
+                                <input
+                                    type="text"
+                                    value={(formData[field.key] || '').toUpperCase()}
+                                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                                    placeholder="#RRGGBB"
+                                    className="w-24 p-2 font-mono text-sm border border-border dark:border-dark-border bg-background dark:bg-dark-background text-textPrimary dark:text-dark-textPrimary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                            </div>
+                            {formErrors[field.key] && <p className="text-sm text-red-600 mt-1">{formErrors[field.key]}</p>}
+                         </>
                     ) : (
                         <input
                             type={field.type}
@@ -269,7 +304,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
             </div>
           <div className="mt-6 flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={closeModal} disabled={isSubmitting}>Cancelar</Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || hasErrors}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar
             </Button>

@@ -1,15 +1,21 @@
 {
   "finalizar módulo produção": {
-    "route": ["ArquitetoSupremo", "PromptArchitectAI", "EngenheiroDeDados", "IntegratorAI", "ArquitetoSupremo_Finalizador"],
+    "route": ["ArquitetoSupremo", "PromptArchitectAI", "EngenheiroDeDados", "IntegratorAI", "GeminiAI", "ArquitetoSupremo_Finalizador"],
     "context": "production",
-    "action": "generate_diff",
-    "report": "/reports/production_v3_diff.md"
+    "action": "generate_diff_with_audit",
+    "report": "/reports/audit_production_gemini_v3.md"
   },
   "auditoria completa do fluxo": {
     "route": ["SYSTEM_AUDIT_START", "ArquitetoSupremo_AUDIT", "PromptArchitectAI_AUDIT", "EngenheiroDeDados_AUDIT", "IntegratorAI_AUDIT", "ArquitetoSupremo_AUDIT_FINISH", "SYSTEM_AUDIT_END"],
     "context": "production",
     "action": "audit_flow",
     "report": "/reports/audit_production_command_v3.md"
+  },
+  "integração google fullstack": {
+    "route": ["ArquitetoSupremo", "GeminiHubAI", "ArquitetoSupremo_Finalizador"],
+    "context": "integrations",
+    "action": "google_fullstack_integration",
+    "report": "/reports/google_integration_audit.md"
   },
   "gerar relatório diretoria": {
     "route": ["AnalyticsAI", "ExecutiveAI", "ArquitetoSupremo"],
