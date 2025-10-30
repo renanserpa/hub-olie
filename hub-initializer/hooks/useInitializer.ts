@@ -1,43 +1,33 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState } from 'react'
+import { ingestAgentMarkdown, ingestModuleMarkdown } from '../services/crewSyncService'
 import { InitializerLog } from '../../types';
-import { toast } from '../../hooks/use-toast';
-import { ingestAgentMarkdown, ingestModuleMarkdown } from '../services/crewSyncService';
-
 
 export function useInitializer() {
-  const [logs, setLogs] = useState<InitializerLog[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setProcessing] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
 
-  const addLog = useCallback((log: Omit<InitializerLog, 'id' | 'timestamp'>) => {
-    const newLog = { ...log, id: crypto.randomUUID(), timestamp: new Date().toISOString() };
-    setLogs(prev => [newLog, ...prev]);
-  }, []);
-
-  const handleUpload = async (files: FileList) => {
-    setIsProcessing(true);
-    setLogs([]); // Clear logs for new session
-    addLog({ agent_name: 'Initializer', action: `Recebidos ${files.length} arquivos para processamento.`, status: 'info' });
-
-    for (const file of Array.from(files)) {
-      if (file.name.endsWith('.md')) {
-        try {
-          if (file.name.includes('_v')) {
-            await ingestModuleMarkdown(file, addLog);
-          } else {
-            await ingestAgentMarkdown(file, addLog);
-          }
-        } catch (error) {
-           const errorMessage = (error as Error).message;
-           addLog({ agent_name: 'Initializer', action: `Erro ao processar ${file.name}: ${errorMessage}`, status: 'error' });
-           toast({ title: `Erro no arquivo ${file.name}`, description: errorMessage, variant: 'destructive' });
-        }
-      }
-    }
-    
-    addLog({ agent_name: 'Initializer', action: 'Processamento de arquivos concluído.', status: 'success' });
-    toast({ title: "Sincronização Concluída!"});
-    setIsProcessing(false);
+  const log = (msg: string) => {
+    console.log(msg)
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`])
+  }
+  
+  const addLog = (logData: Omit<InitializerLog, 'id' | 'timestamp'>) => {
+      const { agent_name, action, status } = logData;
+      log(`[${agent_name}] [${status.toUpperCase()}] ${action}`);
   };
 
-  return { logs, isProcessing, handleUpload };
+
+  const handleUpload = async (files: FileList) => {
+    setProcessing(true)
+    log('[INITIALIZER] Ingestão iniciada...')
+    for (const file of Array.from(files)) {
+      if (!file.name.endsWith('.md')) continue
+      if (file.name.includes('_v')) await ingestModuleMarkdown(file, addLog)
+      else await ingestAgentMarkdown(file, addLog)
+    }
+    log('[SYSTEM] Ingestão concluída.')
+    setProcessing(false)
+  }
+
+  return { handleUpload, isProcessing, logs }
 }

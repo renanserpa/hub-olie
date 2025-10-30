@@ -1,5 +1,4 @@
 import React from 'react';
-import { useInitializer } from '../hooks/useInitializer';
 import { useAgentSync } from '../hooks/useAgentSync';
 import { useSystemHealth } from '../hooks/useSystemHealth';
 import SystemHealthCard from '../components/SystemHealthCard';
@@ -11,7 +10,6 @@ import { Cpu } from 'lucide-react';
 const InitializerPage: React.FC = () => {
   const { agents } = useAgentSync();
   const { healthScore, healthStatus } = useSystemHealth(agents);
-  const { logs, isProcessing, handleUpload } = useInitializer();
 
   return (
     <div>
@@ -31,11 +29,7 @@ const InitializerPage: React.FC = () => {
         
         {/* Left Column (Main Panel) */}
         <div className="lg:col-span-2">
-          <ExecutionPanel 
-            isProcessing={isProcessing}
-            onUpload={handleUpload}
-            logs={logs}
-          />
+          <ExecutionPanel />
         </div>
 
         {/* Right Column (Status) */}
