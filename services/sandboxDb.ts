@@ -180,6 +180,22 @@ const executive_ai_insights: AIInsight[] = [
     { id: 'ai3', module: 'logistics', type: 'opportunity', insight: 'O custo médio de frete se manteve estável. Avaliar a renegociação com transportadoras para otimizar custos em rotas de maior volume pode gerar economia de até 5%.', period: 'Q4 2024', generated_at: new Date().toISOString() }
 ];
 
+const finance_accounts: FinanceAccount[] = [
+    { id: 'fa1', name: 'Conta Corrente Bradesco', type: 'checking', institution: 'Bradesco', balance: 15000.75, currency: 'BRL', is_active: true },
+    { id: 'fa2', name: 'Cartão de Crédito NuBank', type: 'credit_card', institution: 'NuBank', balance: -2500.00, currency: 'BRL', is_active: true },
+];
+const finance_categories: FinanceCategory[] = [
+    { id: 'fc1', name: 'Receita de Vendas', type: 'income' },
+    { id: 'fc2', name: 'Custo de Material', type: 'expense' },
+    { id: 'fc3', name: 'Marketing', type: 'expense' },
+    { id: 'fc4', name: 'Salários', type: 'expense' },
+];
+const finance_transactions: FinanceTransaction[] = [
+    { id: 'ft1', account_id: 'fa1', category_id: 'fc1', description: 'Recebimento Pedido OLIE-2024-1002', amount: 699.80, type: 'income', transaction_date: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
+    { id: 'ft2', account_id: 'fa2', category_id: 'fc2', description: 'Compra de Tecidos - Fornecedor S.A.', amount: -2100.00, type: 'expense', transaction_date: new Date(Date.now() - 5 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
+    { id: 'ft3', account_id: 'fa1', category_id: 'fc3', description: 'Impulsionamento Instagram - Campanha Inverno', amount: -500.00, type: 'expense', transaction_date: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
+];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -212,10 +228,9 @@ let collections: Record<string, any[]> = {
     analytics_kpis,
     executive_kpis,
     executive_ai_insights,
-    // FIX: Added missing finance collections to conform to the AppData type.
-    finance_accounts: [],
-    finance_categories: [],
-    finance_transactions: [],
+    finance_accounts,
+    finance_categories,
+    finance_transactions,
     finance_payables: [],
     finance_receivables: [],
 };
@@ -376,4 +391,23 @@ export const sandboxDb = {
         purchase_orders: getCollection<PurchaseOrder>('purchase_orders'),
         purchase_order_items: getCollection<PurchaseOrderItem>('purchase_order_items'),
     }),
+    getFinanceData: async () => {
+        const transactions = getCollection<FinanceTransaction>('finance_transactions');
+        const accounts = getCollection<FinanceAccount>('finance_accounts');
+        const categories = getCollection<FinanceCategory>('finance_categories');
+        
+        const transactionsWithDetails = transactions.map(t => ({
+            ...t,
+            account: accounts.find(a => a.id === t.account_id),
+            category: categories.find(c => c.id === t.category_id)
+        }));
+
+        return Promise.resolve({
+            accounts,
+            categories,
+            transactions: transactionsWithDetails,
+            payables: getCollection<FinancePayable>('finance_payables'),
+            receivables: getCollection<FinanceReceivable>('finance_receivables'),
+        });
+    },
 };

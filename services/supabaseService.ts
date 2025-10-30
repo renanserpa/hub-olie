@@ -309,4 +309,14 @@ export const supabaseService = {
     return { suppliers, purchase_orders, purchase_order_items };
   },
   getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => supabaseService.getCollection('analytics_kpis'),
+  getFinanceData: async () => {
+    const [accounts, categories, transactions, payables, receivables] = await Promise.all([
+        supabaseService.getCollection<FinanceAccount>('finance_accounts'),
+        supabaseService.getCollection<FinanceCategory>('finance_categories'),
+        supabaseService.getCollection<FinanceTransaction>('finance_transactions', '*, account:finance_accounts(*), category:finance_categories(*)'),
+        supabaseService.getCollection<FinancePayable>('finance_payables'),
+        supabaseService.getCollection<FinanceReceivable>('finance_receivables'),
+    ]);
+    return { accounts, categories, transactions, payables, receivables };
+  },
 };

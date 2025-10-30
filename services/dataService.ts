@@ -89,10 +89,12 @@ export const dataService = {
   getLogisticsData: () => isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 
   getMarketingCampaigns: () => isSandbox() ? sandboxService.getCollection<MarketingCampaign>('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),
-  getMarketingSegments: () => isSandbox() ? sandboxService.getCollection<MarketingSegment>('marketing_segments') : realSupabaseService.getMarketingSegments(),
+  getMarketingSegments: () => isSandbox() ? sandboxService.getCollection<MarketingSegment>('marketing_segments') : realSupabaseService.getMarketingTemplates(),
   getMarketingTemplates: () => isSandbox() ? sandboxService.getCollection<MarketingTemplate>('marketing_templates') : realSupabaseService.getMarketingTemplates(),
 
   getPurchasingData: () => isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
   
   getAnalyticsKpis: () => isSandbox() ? sandboxService.getCollection<AnalyticsKPI>('analytics_kpis') : realSupabaseService.getAnalyticsKpis(),
+
+  getFinanceData: () => isSandbox() ? sandboxService.getFinanceData() : realSupabaseService.getFinanceData(),
 };
