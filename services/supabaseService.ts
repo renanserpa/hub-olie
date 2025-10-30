@@ -35,6 +35,8 @@ import {
     FinanceReceivable,
     SystemSettingsLog,
     AnalyticsSnapshot,
+    Integration,
+    IntegrationLog,
 } from "../types";
 
 
@@ -172,22 +174,22 @@ export const supabaseService = {
         materials: { grupos_suprimento: [], materiais_basicos: [] },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
         sistema: [],
-// FIX: Added missing system_settings_logs property to satisfy the AppData type.
         system_settings_logs: [],
-        midia: {}, orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+// FIX: Corrected 'midia: {}' to 'media_assets: []' to match the AppData type definition.
+        media_assets: [], orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],
-        // FIX: Added missing analytics_snapshots property to satisfy the AppData type.
         analytics_snapshots: [],
         executive_kpis: [],
         executive_ai_insights: [],
-        // FIX: Added missing finance properties to satisfy the AppData type.
         finance_accounts: [],
         finance_categories: [],
         finance_transactions: [],
         finance_payables: [],
         finance_receivables: [],
+        config_integrations: [],
+        integration_logs: [],
     };
 
     try {

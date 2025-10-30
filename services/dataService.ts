@@ -39,6 +39,11 @@ export const dataService = {
     isSandbox()
       ? sandboxService.listenToDocument(table, id, callback)
       : realSupabaseService.listenToDocument(table, id, callback),
+  
+  testIntegrationConnection: (integrationId: string) =>
+    isSandbox()
+      ? sandboxService.testIntegrationConnection(integrationId)
+      : Promise.resolve(), // In a real app, this would be a Supabase RPC call
 
   // App-specific
   getSettings: () => 

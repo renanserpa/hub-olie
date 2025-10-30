@@ -1,60 +1,44 @@
 import React from 'react';
-import { Card } from './ui/Card';
-import { Badge } from './ui/Badge';
-import { Info, Cpu } from 'lucide-react';
+import { useIntegrations } from '../hooks/useIntegrations';
+import { IntegrationCard } from './settings/IntegrationCard';
+import { Button } from './ui/Button';
+import { RefreshCw, Loader2 } from 'lucide-react';
+import { cn } from '../lib/utils';
 
-const integrations = [
-    {
-        title: 'Pagamentos (Stripe/Mercado Pago)',
-        description: 'Gere links de pagamento dinâmicos para seus pedidos.',
-        status: 'Ativo (Simulado com IA)',
-        variant: 'ativo' as const,
-    },
-    {
-        title: 'Emissão Fiscal (NFe)',
-        description: 'Simule a emissão de Notas Fiscais para seus pedidos.',
-        status: 'Ativo (Simulado com IA)',
-        variant: 'ativo' as const,
-    },
-    {
-        title: 'Envios (Correios/Melhor Envio)',
-        description: 'Crie etiquetas de envio com códigos de rastreio.',
-        status: 'Ativo (Simulado com IA)',
-        variant: 'ativo' as const,
-    },
-    {
-        title: 'WhatsApp Business',
-        description: 'Conecte sua conta para automações e atendimento.',
-        status: 'Em breve',
-        variant: 'secondary' as const,
-    },
-];
+export function IntegrationsTabContent() {
+  const { integrations, logs, loading, testingId, refresh, handleTestConnection } = useIntegrations();
 
-const IntegrationsTabContent: React.FC = () => {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {integrations.map((integration) => (
-                 <Card key={integration.title}>
-                    <div className="p-6">
-                        <div className="flex justify-between items-start">
-                             <h3 className="text-lg font-bold text-textPrimary">{integration.title}</h3>
-                             {integration.status && <Badge variant={integration.variant}>{integration.status}</Badge>}
-                        </div>
-                        <div className="flex items-start text-sm text-textSecondary mt-4">
-                          <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                          <p>{integration.description}</p>
-                        </div>
-                         {integration.variant === 'ativo' && (
-                            <div className="flex items-center text-xs text-primary mt-3 p-2 bg-primary/10 rounded-md">
-                                <Cpu className="w-3 h-3 mr-2" />
-                                <p>Esta integração é simulada dinamicamente via Gemini API.</p>
-                            </div>
-                         )}
-                    </div>
-                </Card>
-            ))}
-        </div>
-    );
-};
+  if (loading && integrations.length === 0) {
+      return (
+          <div className="flex justify-center items-center h-64">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+      );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary">Gerenciador de Integrações</h2>
+        <Button variant="outline" onClick={refresh} disabled={loading}>
+            <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+            Atualizar Status
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {integrations.map((integration) => (
+          <IntegrationCard
+                key={integration.id}
+                integration={integration}
+                allLogs={logs}
+                onTestConnection={handleTestConnection}
+                isTesting={testingId === integration.id}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default IntegrationsTabContent;

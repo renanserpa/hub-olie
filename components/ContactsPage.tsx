@@ -12,6 +12,7 @@ const ContactsPage: React.FC = () => {
     const {
         isLoading,
         isSaving,
+        allContacts,
         filteredContacts,
         searchQuery,
         setSearchQuery,
@@ -26,7 +27,7 @@ const ContactsPage: React.FC = () => {
     
     const TABS = [
         // FIX: Calculate length based on all contacts before filtering for a more accurate total count.
-        { id: 'all', label: `Todos (${useContacts().filteredContacts.length})` },
+        { id: 'all', label: `Todos (${allContacts.length})` },
         { id: 'birthdays', label: 'Aniversariantes do Mês' },
     ];
 

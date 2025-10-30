@@ -91,6 +91,7 @@ export function useContacts() {
     return {
         isLoading,
         isSaving,
+        allContacts,
         filteredContacts,
         searchQuery,
         setSearchQuery,

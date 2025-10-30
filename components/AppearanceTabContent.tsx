@@ -1,17 +1,34 @@
 import React from 'react';
-import { Image as ImageIcon } from 'lucide-react';
-import PlaceholderContent from './PlaceholderContent';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+import { MediaUploadCard } from './media/MediaUploadCard';
+import { MediaGallery } from './media/MediaGallery';
 
-const AppearanceTabContent: React.FC = () => (
-    <PlaceholderContent 
-        title="Aparência e Mídia"
-        requiredTable="media_assets & storage buckets"
-        icon={ImageIcon}
-    >
-        <p className="mt-1 text-sm text-textSecondary">
-            Personalize a aparência do sistema com seu logo e tema, e gerencie a biblioteca de mídias para produtos e materiais.
-        </p>
-    </PlaceholderContent>
-);
+const AppearanceTabContent: React.FC = () => {
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Identidade Visual</CardTitle>
+                    <p className="text-sm text-textSecondary">Gerencie o logo e outros elementos visuais da plataforma.</p>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6 items-start">
+                    <MediaUploadCard module="system" category="logo" />
+                    <MediaGallery module="system" category="logo" />
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Banners Promocionais</CardTitle>
+                     <p className="text-sm text-textSecondary">Imagens para campanhas de marketing e promoções.</p>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6 items-start">
+                    <MediaUploadCard module="marketing" category="banner" />
+                    <MediaGallery module="marketing" category="banner" />
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
 
 export default AppearanceTabContent;

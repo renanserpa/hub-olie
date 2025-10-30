@@ -240,6 +240,21 @@ export interface InventoryMovement {
     created_at: string;
 }
 
+// --- MEDIA ---
+
+export interface MediaAsset {
+  id: string;
+  drive_file_id: string;
+  module: string;
+  category?: string;
+  name?: string;
+  mime_type?: string;
+  size?: number;
+  url_public?: string;
+  uploaded_by?: string;
+  created_at: string;
+}
+
 // --- SETTINGS ---
 export type SettingsCategory = 'integrations' | 'catalogs' | 'materials' | 'system' | 'appearance' | 'security';
 
@@ -286,6 +301,31 @@ export interface SystemSettingsLog {
   source_module: string;
   confidence: number;
   explanation: string;
+  created_at: string;
+}
+
+export type IntegrationType = 'ERP' | 'Ecommerce' | 'Transport' | 'Messaging' | 'Finance';
+export type IntegrationStatus = 'connected' | 'disconnected' | 'error';
+
+export interface Integration {
+  id: string;
+  name: string;
+  type: IntegrationType;
+  endpoint_url: string;
+  api_key?: string; // Should not be sent to client
+  status: IntegrationStatus;
+  last_sync?: string;
+  last_error?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IntegrationLog {
+  id: string;
+  integration_id: string;
+  event: string;
+  message: string;
   created_at: string;
 }
 
@@ -588,8 +628,10 @@ export interface AppData {
     };
     sistema: SystemSetting[];
     system_settings_logs: SystemSettingsLog[];
+    config_integrations: Integration[];
+    integration_logs: IntegrationLog[];
     
-    midia: any;
+    media_assets: MediaAsset[];
     orders: Order[];
     contacts: Contact[];
     products: Product[];

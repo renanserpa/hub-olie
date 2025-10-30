@@ -3,7 +3,7 @@ import {
     BasicMaterial, InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
-    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog
+    OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -196,6 +196,20 @@ const finance_transactions: FinanceTransaction[] = [
     { id: 'ft3', account_id: 'fa1', category_id: 'fc3', description: 'Impulsionamento Instagram - Campanha Inverno', amount: -500.00, type: 'expense', transaction_date: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
 ];
 
+const config_integrations: Integration[] = [
+    { id: 'int1', name: 'Bling ERP', type: 'ERP', endpoint_url: 'https://api.bling.com.br/v3', status: 'disconnected', is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'int2', name: 'Nuvemshop', type: 'Ecommerce', endpoint_url: 'https://api.nuvemshop.com.br', status: 'connected', last_sync: new Date(Date.now() - 3600 * 1000).toISOString(), is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'int3', name: 'Melhor Envio', type: 'Transport', endpoint_url: 'https://api.melhorenvio.com.br', status: 'error', last_error: 'Authentication failed (401)', is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'int4', name: 'Twilio (WhatsApp)', type: 'Messaging', endpoint_url: 'https://api.twilio.com', status: 'disconnected', is_active: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
+const integration_logs: IntegrationLog[] = [
+    { id: 'log1', integration_id: 'int2', event: 'Connected', message: 'Sync successful', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+    { id: 'log2', integration_id: 'int3', event: 'Error', message: 'Authentication failed (401)', created_at: new Date(Date.now() - 1800 * 1000).toISOString() },
+];
+
+const media_assets: MediaAsset[] = [];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -216,6 +230,9 @@ let collections: Record<string, any[]> = {
     config_basic_materials,
     system_settings,
     system_settings_logs: [],
+    config_integrations,
+    integration_logs,
+    media_assets,
     conversations,
     messages,
     logistics_waves,
@@ -268,6 +285,58 @@ const del = (path: string, id: string): void => {
     }
 };
 
+const testConnection = async (integrationId: string): Promise<void> => {
+    const integration = get<Integration>('config_integrations', integrationId);
+    if (!integration) {
+        console.error(`[sandboxDb] testConnection: Integration ${integrationId} not found.`);
+        return;
+    }
+    
+    // Simulate network delay
+    await new Promise(res => setTimeout(res, 500 + Math.random() * 800));
+    
+    const success = Math.random() > 0.3; // 70% chance of success
+    const latency = (50 + Math.random() * 200).toFixed(0);
+
+    const updatedFields: Partial<Integration> = {
+        last_sync: new Date().toISOString(),
+        status: success ? 'connected' : 'error',
+        last_error: success ? '' : 'Simulated Error: Authentication failed (503)',
+    };
+    
+    update<Integration>('config_integrations', integrationId, updatedFields);
+    
+    create<IntegrationLog>('integration_logs', {
+        integration_id: integrationId,
+        event: success ? 'Test Succeeded' : 'Test Failed',
+        message: success ? `Connection successful. Latency: ${latency}ms` : 'Simulated Error: Authentication failed (503)',
+    } as any);
+
+    console.log(`[sandboxDb] testConnection: Test for ${integration.name} completed. Success: ${success}`);
+};
+
+const uploadFile = async (file: File, module: string, category: string): Promise<{ id: string, webViewLink: string }> => {
+    console.log(`🧱 SANDBOX: Simulating upload for file: ${file.name}`);
+    await new Promise(res => setTimeout(res, 500 + Math.random() * 800));
+
+    const newAsset: MediaAsset = {
+        id: generateId(),
+        drive_file_id: `sandbox_${generateId()}`,
+        module,
+        category,
+        name: file.name,
+        mime_type: file.type,
+        size: file.size,
+        url_public: URL.createObjectURL(file), // Key for sandbox mode
+        uploaded_by: 'sandbox-user-01',
+        created_at: new Date().toISOString()
+    };
+    
+    create<MediaAsset>('media_assets', newAsset as any);
+
+    return Promise.resolve({ id: newAsset.drive_file_id, webViewLink: newAsset.url_public! });
+};
+
 const settingsTableMap: Record<string, string> = {
     'catalogs-cores_texturas-tecido': 'fabric_colors',
     'catalogs-cores_texturas-ziper': 'zipper_colors',
@@ -302,6 +371,8 @@ export const sandboxDb = {
         eventBus.addEventListener(path, handler);
         return { unsubscribe: () => eventBus.removeEventListener(path, handler) };
     },
+    testIntegrationConnection: testConnection,
+    uploadFile,
     getSettings: async (): Promise<AppData> => ({
         ...collections,
         catalogs: {
