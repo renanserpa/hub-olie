@@ -3,9 +3,11 @@ import { AnalyticsKPI } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import KpiAnomalyBadge from './KpiAnomalyBadge';
 
 interface KpiCardProps {
     kpi: AnalyticsKPI;
+    anomaly?: { isAnomaly: boolean; reason: string; };
 }
 
 const TrendIcon: React.FC<{ trend?: number }> = ({ trend }) => {
@@ -18,7 +20,7 @@ const TrendIcon: React.FC<{ trend?: number }> = ({ trend }) => {
     return <ArrowDown size={14} className="text-red-500" />;
 };
 
-const KpiCard: React.FC<KpiCardProps> = ({ kpi }) => {
+const KpiCard: React.FC<KpiCardProps> = ({ kpi, anomaly }) => {
     const formatValue = (value: string | number, unit?: string) => {
         if (typeof value === 'number') {
             const options: Intl.NumberFormatOptions = {
@@ -40,7 +42,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi }) => {
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-textSecondary">{kpi.name}</CardTitle>
-                {/* Could add an icon here based on kpi.module */}
+                {anomaly && <KpiAnomalyBadge isAnomaly={anomaly.isAnomaly} reason={anomaly.reason} />}
             </CardHeader>
             <CardContent>
                 <div className="text-3xl font-bold text-textPrimary">{formatValue(kpi.value, kpi.unit)}</div>

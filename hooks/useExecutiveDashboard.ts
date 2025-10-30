@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ExecutiveKPI, AIInsight, ExecutiveModule } from '../types';
 import { dataService } from '../services/dataService';
-import { toast } from '../hooks/use-toast';
+import { toast } from './use-toast';
 
 export function useExecutiveDashboard() {
     const [isLoading, setIsLoading] = useState(true);

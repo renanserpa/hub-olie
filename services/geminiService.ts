@@ -47,30 +47,4 @@ Responda apenas com a descrição gerada, sem formatação extra ou frases como 
       throw new Error('Falha ao gerar descrição com a IA.');
     }
   },
-
-  generateExecutiveSummary: async (kpis: ExecutiveKPI[]): Promise<string> => {
-    try {
-      const kpiSummary = kpis.map(k => `${k.name}: ${k.value} (tendência: ${(k.trend * 100).toFixed(1)}%)`).join('\n');
-      const prompt = `Você é um consultor de negócios sênior (C-level) analisando os KPIs trimestrais da marca de luxo "Olie".
-Os dados são:
-${kpiSummary}
-
-Gere um resumo executivo conciso em bullet points (use *).
-O resumo deve:
-1.  Identificar o resultado mais positivo.
-2.  Identificar o maior ponto de atenção ou risco.
-3.  Sugerir uma ação estratégica com base na análise.
-Fale em Português do Brasil. Seja direto e profissional. A resposta deve conter no máximo 3 bullet points.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-flash-latest',
-        contents: prompt,
-      });
-
-      return response.text.trim();
-    } catch (error)      {
-      console.error('Error generating executive summary with Gemini:', error);
-      throw new Error('Falha ao gerar análise com a IA.');
-    }
-  }
 };

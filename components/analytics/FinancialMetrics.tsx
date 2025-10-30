@@ -1,8 +1,14 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import ModuleMetrics from './ModuleMetrics';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
-const FinancialMetrics: React.FC<{ kpis: AnalyticsKPI[] }> = ({ kpis }) => {
-    return <ModuleMetrics kpis={kpis} moduleName="Financeiro" />;
+interface FinancialMetricsProps {
+    kpis: AnalyticsKPI[];
+    aiData: any;
+}
+
+const FinancialMetrics: React.FC<FinancialMetricsProps> = ({ kpis, aiData }) => {
+    return <AnalyticsDashboard kpis={kpis} aiData={aiData} moduleName="Financeiro" />;
 };
+
 export default FinancialMetrics;

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Sparkles, Lightbulb, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { geminiService } from '../../services/geminiService';
+import { analyticsAiService } from '../../services/analyticsAiService';
 import { toast } from '../../hooks/use-toast';
 
 interface ExecutiveAIInsightsProps {
@@ -26,7 +26,7 @@ const ExecutiveAIInsights: React.FC<ExecutiveAIInsightsProps> = ({ insights, kpi
         setIsGenerating(true);
         setGeneratedSummary('');
         try {
-            const summary = await geminiService.generateExecutiveSummary(kpis);
+            const summary = await analyticsAiService.insightGeneratorAI(kpis);
             setGeneratedSummary(summary);
             toast({ title: "Sucesso!", description: "Análise da IA gerada."});
         } catch (error) {

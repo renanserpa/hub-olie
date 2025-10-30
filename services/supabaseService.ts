@@ -34,6 +34,7 @@ import {
     FinancePayable,
     FinanceReceivable,
     SystemSettingsLog,
+    AnalyticsSnapshot,
 } from "../types";
 
 
@@ -177,6 +178,8 @@ export const supabaseService = {
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],
+        // FIX: Added missing analytics_snapshots property to satisfy the AppData type.
+        analytics_snapshots: [],
         executive_kpis: [],
         executive_ai_insights: [],
         // FIX: Added missing finance properties to satisfy the AppData type.

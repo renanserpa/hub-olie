@@ -1,8 +1,14 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import ModuleMetrics from './ModuleMetrics';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
-const InventoryMetrics: React.FC<{ kpis: AnalyticsKPI[] }> = ({ kpis }) => {
-    return <ModuleMetrics kpis={kpis} moduleName="Estoque" />;
+interface InventoryMetricsProps {
+    kpis: AnalyticsKPI[];
+    aiData: any;
+}
+
+const InventoryMetrics: React.FC<InventoryMetricsProps> = ({ kpis, aiData }) => {
+    return <AnalyticsDashboard kpis={kpis} aiData={aiData} moduleName="Estoque" />;
 };
+
 export default InventoryMetrics;

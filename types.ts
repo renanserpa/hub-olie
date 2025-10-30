@@ -473,6 +473,14 @@ export interface AnalyticsKPI {
     description: string;
 }
 
+export interface AnalyticsSnapshot {
+    id: string;
+    kpi_id: string;
+    value: number;
+    captured_at: string;
+}
+
+
 // --- EXECUTIVE DASHBOARD ---
 export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
 
@@ -603,6 +611,7 @@ export interface AppData {
     purchase_orders: PurchaseOrder[];
     purchase_order_items: PurchaseOrderItem[];
     analytics_kpis: AnalyticsKPI[];
+    analytics_snapshots: AnalyticsSnapshot[];
     executive_kpis: ExecutiveKPI[];
     executive_ai_insights: AIInsight[];
     finance_accounts: FinanceAccount[];

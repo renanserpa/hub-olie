@@ -1,8 +1,14 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import ModuleMetrics from './ModuleMetrics';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
-const LogisticsMetrics: React.FC<{ kpis: AnalyticsKPI[] }> = ({ kpis }) => {
-    return <ModuleMetrics kpis={kpis} moduleName="Logística" />;
+interface LogisticsMetricsProps {
+    kpis: AnalyticsKPI[];
+    aiData: any;
+}
+
+const LogisticsMetrics: React.FC<LogisticsMetricsProps> = ({ kpis, aiData }) => {
+    return <AnalyticsDashboard kpis={kpis} aiData={aiData} moduleName="Logística" />;
 };
+
 export default LogisticsMetrics;

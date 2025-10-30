@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { BarChart2, Loader2 } from 'lucide-react';
 import AnalyticsTabs from '../components/analytics/AnalyticsTabs';
@@ -9,9 +9,17 @@ import InventoryMetrics from '../components/analytics/InventoryMetrics';
 import LogisticsMetrics from '../components/analytics/LogisticsMetrics';
 import FinancialMetrics from '../components/analytics/FinancialMetrics';
 import MarketingMetrics from '../components/analytics/MarketingMetrics';
+import { useAnalyticsAI } from '../hooks/useAnalyticsAI';
 
 const AnalyticsPage: React.FC = () => {
-    const { isLoading, kpis, activeTab, setActiveTab } = useAnalytics();
+    const { isLoading, kpis, snapshots, activeTab, setActiveTab, kpisByModule } = useAnalytics();
+    const { isAiLoading, anomalies, predictions } = useAnalyticsAI(kpis, snapshots);
+    
+    const aiData = useMemo(() => ({
+        isLoading: isAiLoading,
+        anomalies,
+        predictions,
+    }), [isAiLoading, anomalies, predictions]);
 
     const renderContent = () => {
         if (isLoading) {
@@ -22,21 +30,23 @@ const AnalyticsPage: React.FC = () => {
             );
         }
         
+        const getKpis = (module: string) => (kpisByModule[module as keyof typeof kpisByModule] || []);
+
         switch (activeTab) {
             case 'overview':
-                return <DashboardOverview kpis={kpis} />;
+                return <DashboardOverview kpis={kpis} aiData={aiData} />;
             case 'orders':
-                return <SalesMetrics kpis={kpis.filter(k => k.module === 'orders')} />;
+                return <SalesMetrics kpis={getKpis('orders')} aiData={aiData} />;
             case 'production':
-                return <ProductionMetrics kpis={kpis.filter(k => k.module === 'production')} />;
+                return <ProductionMetrics kpis={getKpis('production')} aiData={aiData} />;
             case 'inventory':
-                return <InventoryMetrics kpis={kpis.filter(k => k.module === 'inventory')} />;
+                return <InventoryMetrics kpis={getKpis('inventory')} aiData={aiData} />;
             case 'logistics':
-                return <LogisticsMetrics kpis={kpis.filter(k => k.module === 'logistics')} />;
+                return <LogisticsMetrics kpis={getKpis('logistics')} aiData={aiData} />;
             case 'financial':
-                return <FinancialMetrics kpis={kpis.filter(k => k.module === 'financial')} />;
+                return <FinancialMetrics kpis={getKpis('financial')} aiData={aiData} />;
             case 'marketing':
-                return <MarketingMetrics kpis={kpis.filter(k => k.module === 'marketing')} />;
+                return <MarketingMetrics kpis={getKpis('marketing')} aiData={aiData} />;
             default:
                  return <div className="text-center p-8">Em desenvolvimento.</div>;
         }
