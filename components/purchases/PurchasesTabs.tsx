@@ -15,8 +15,11 @@ interface PurchasesTabsProps {
   purchaseOrders: (PurchaseOrder & { supplier?: Supplier, items: any[] })[];
   onNewSupplierClick: () => void;
   onEditSupplierClick: (supplier: Supplier) => void;
+  onNewPOClick: () => void;
+  onReceivePOClick: () => void;
   selectedPO: (PurchaseOrder & { supplier?: Supplier, items: any[] }) | null;
   onSelectPO: (id: string | null) => void;
+  isSaving: boolean;
 }
 
 const TABS: { id: PurchasesTab, label: string, icon: React.ElementType }[] = [
@@ -40,6 +43,9 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
                             purchaseOrders={props.purchaseOrders}
                             selectedPO={props.selectedPO}
                             onSelectPO={props.onSelectPO}
+                            onNewClick={props.onNewPOClick}
+                            onReceiveClick={props.onReceivePOClick}
+                            isSaving={props.isSaving}
                         />;
             case 'metrics':
                 return <PurchaseMetrics />;

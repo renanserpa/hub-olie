@@ -6,6 +6,8 @@ import POItemTable from './POItemTable';
 
 interface PODetailPanelProps {
     po: PurchaseOrder & { supplier?: any, items: any[] };
+    onReceiveClick: () => void;
+    isSaving: boolean;
 }
 
 const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
@@ -15,7 +17,9 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
     </div>
 );
 
-const PODetailPanel: React.FC<PODetailPanelProps> = ({ po }) => {
+const PODetailPanel: React.FC<PODetailPanelProps> = ({ po, onReceiveClick, isSaving }) => {
+    const canReceive = po.status === 'issued' || po.status === 'partial';
+
     return (
         <Card className="sticky top-20 h-[calc(100vh-18rem)] overflow-y-auto">
             <CardHeader>
@@ -38,11 +42,10 @@ const PODetailPanel: React.FC<PODetailPanelProps> = ({ po }) => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t">
-                    {po.status === 'draft' && <Button size="sm">Emitir PO</Button>}
-                    {po.status === 'issued' && <Button size="sm">Receber Materiais</Button>}
-                    {po.status === 'partial' && <Button size="sm">Finalizar Recebimento</Button>}
-                    <Button variant="outline" size="sm">Duplicar</Button>
-                    <Button variant="outline" size="sm" className="text-red-600">Cancelar</Button>
+                    {po.status === 'draft' && <Button size="sm" disabled={isSaving}>Emitir PO</Button>}
+                    {canReceive && <Button size="sm" onClick={onReceiveClick} disabled={isSaving}>Receber Materiais</Button>}
+                    <Button variant="outline" size="sm" disabled={isSaving}>Duplicar</Button>
+                    {po.status === 'draft' && <Button variant="outline" size="sm" className="text-red-600" disabled={isSaving}>Cancelar</Button>}
                 </div>
             </CardContent>
         </Card>

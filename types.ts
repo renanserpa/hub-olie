@@ -503,7 +503,9 @@ export interface PurchaseOrderItem {
     id: string;
     po_id: string;
     material_id: string;
-    material_name: string;
+    material?: Material; // For UI joins
+// FIX: Add optional `material_name` to support its use in sandbox data and UI components.
+    material_name?: string;
     quantity: number;
     received_quantity: number;
     unit_price: number;

@@ -7,12 +7,12 @@ import { useAuth } from '../context/AuthContext';
 export function usePurchasing() {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('suppliers');
     
     // Data states
     const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
     const [allPOs, setAllPOs] = useState<PurchaseOrder[]>([]);
-    const [allPOItems, setAllPOItems] = useState<PurchaseOrderItem[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
 
     const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
@@ -23,18 +23,29 @@ export function usePurchasing() {
         setIsLoading(true);
         try {
             console.log("[PURCHASING] Loading tables...");
-            const { suppliers, purchase_orders, purchase_order_items } = await dataService.getPurchasingData();
-            const materials = await dataService.getCollection<Material>('config_materials');
+            const { suppliers, purchase_orders } = await dataService.getPurchasingData();
+            const [materials, poItems] = await Promise.all([
+                dataService.getCollection<Material>('config_materials'),
+                dataService.getCollection<PurchaseOrderItem>('purchase_order_items')
+            ]);
 
             const loadedTables: string[] = [];
             const missingTables: string[] = [];
-
-            if(suppliers) { setAllSuppliers(suppliers); loadedTables.push('suppliers'); } else { missingTables.push('suppliers'); }
-            if(purchase_orders) { setAllPOs(purchase_orders); loadedTables.push('purchase_orders'); } else { missingTables.push('purchase_orders'); }
-            if(purchase_order_items) { setAllPOItems(purchase_order_items); loadedTables.push('purchase_order_items'); } else { missingTables.push('purchase_order_items'); }
             
             setAllMaterials(materials);
 
+            if(suppliers) { setAllSuppliers(suppliers); loadedTables.push('suppliers'); } else { missingTables.push('suppliers'); }
+            if(purchase_orders) { 
+                const posWithItems = purchase_orders.map(po => ({
+                    ...po,
+                    items: poItems.filter(item => item.po_id === po.id)
+                }));
+                setAllPOs(posWithItems); 
+                loadedTables.push('purchase_orders'); 
+            } else { 
+                missingTables.push('purchase_orders'); 
+            }
+            
             console.log(`[PURCHASING] Loaded tables: ${loadedTables.join(', ')}`);
             if (missingTables.length > 0) {
                  console.warn(`[PURCHASING] Missing tables: ${missingTables.join(', ')}`);
@@ -51,12 +62,11 @@ export function usePurchasing() {
     }, [loadData]);
 
     const posWithDetails = useMemo(() => {
-        return allPOs.map(po => {
-            const supplier = allSuppliers.find(s => s.id === po.supplier_id);
-            const items = allPOItems.filter(item => item.po_id === po.id);
-            return { ...po, supplier, items };
-        });
-    }, [allPOs, allSuppliers, allPOItems]);
+        return allPOs.map(po => ({
+            ...po,
+            supplier: allSuppliers.find(s => s.id === po.supplier_id)
+        }));
+    }, [allPOs, allSuppliers]);
 
     const selectedPO = useMemo(() => {
         return posWithDetails.find(po => po.id === selectedPOId) || null;
@@ -65,6 +75,7 @@ export function usePurchasing() {
 
     // --- MUTATIONS ---
     const saveSupplier = async (supplierData: Omit<Supplier, 'id' | 'created_at' | 'updated_at'> | Supplier) => {
+        setIsSaving(true);
         try {
             if ('id' in supplierData) {
                 await dataService.updateDocument('suppliers', supplierData.id, supplierData);
@@ -77,11 +88,42 @@ export function usePurchasing() {
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o fornecedor.", variant: "destructive" });
             throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    
+    const createPO = async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) => {
+        setIsSaving(true);
+        try {
+            await dataService.createPO(poData);
+            toast({ title: "Sucesso!", description: "Novo Pedido de Compra criado." });
+            loadData();
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível criar o Pedido de Compra.", variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const receivePOItems = async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
+        setIsSaving(true);
+        try {
+            await dataService.receivePOItems(poId, receivedItems);
+            toast({ title: "Sucesso!", description: "Recebimento de materiais registrado." });
+            loadData();
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível registrar o recebimento.", variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSaving(false);
         }
     };
     
     return {
         isLoading,
+        isSaving,
         isAdmin,
         activeTab,
         setActiveTab,
@@ -95,5 +137,7 @@ export function usePurchasing() {
 
         // Actions
         saveSupplier,
+        createPO,
+        receivePOItems,
     };
 }

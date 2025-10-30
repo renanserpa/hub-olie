@@ -322,6 +322,55 @@ export const supabaseService = {
     ]);
     return { suppliers, purchase_orders, purchase_order_items };
   },
+// FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
+  createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material_name' | 'material'>[] }) => {
+        const po_number = `PC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+        const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+        
+        const { data: newPO, error: poError } = await supabase.from('purchase_orders').insert({
+            po_number,
+            supplier_id: poData.supplier_id,
+            status: 'draft',
+            total
+        }).select().single();
+
+        if (poError) handleError(poError, 'createPO');
+        if (!newPO) throw new Error('Failed to create PO');
+
+        const itemsToInsert = poData.items.map(item => ({
+            ...item,
+            po_id: newPO.id,
+            received_quantity: 0
+        }));
+
+        const { error: itemsError } = await supabase.from('purchase_order_items').insert(itemsToInsert);
+        if (itemsError) handleError(itemsError, 'createPO (items)');
+
+        return newPO as PurchaseOrder;
+    },
+    receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
+        // In a real app, this MUST be a database transaction (RPC function)
+        console.warn('receivePOItems is not transactional in this Supabase implementation.');
+        
+        const { data: po, error: poError } = await supabase.from('purchase_orders').select('*, items:purchase_order_items(*)').eq('id', poId).single();
+        if(poError || !po) { handleError(poError, 'receivePOItems'); return; }
+
+        let allReceived = true;
+        for (const received of receivedItems) {
+            const item = po.items.find((i: any) => i.id === received.itemId);
+            if (item) {
+                const newQty = item.received_quantity + received.receivedQty;
+                await updateDocument('purchase_order_items', item.id, { received_quantity: newQty });
+
+                if (newQty < item.quantity) {
+                    allReceived = false;
+                }
+            }
+        }
+        
+        const newStatus = allReceived ? 'received' : 'partial';
+        await updateDocument('purchase_orders', poId, { status: newStatus });
+    },
   getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => supabaseService.getCollection('analytics_kpis'),
   getFinanceData: async () => {
     const [accounts, categories, transactions, payables, receivables] = await Promise.all([

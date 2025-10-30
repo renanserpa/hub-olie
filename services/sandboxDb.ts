@@ -504,6 +504,72 @@ export const sandboxDb = {
         }
         return Promise.resolve(movement);
     },
+// FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
+    createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) => {
+        const po_number = `PC-SB-${Date.now().toString().slice(-5)}`;
+        const newPO = create<PurchaseOrder>('purchase_orders', {
+            po_number,
+            supplier_id: poData.supplier_id,
+            status: 'draft',
+            total: poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0),
+        } as any);
+
+        const newItems = poData.items.map(item => {
+            const material = get<Material>('config_materials', item.material_id!);
+            return create<PurchaseOrderItem>('purchase_order_items', {
+                ...item,
+                po_id: newPO.id,
+                received_quantity: 0,
+                material_name: material?.name,
+            } as any);
+        });
+        
+        return Promise.resolve(newPO);
+    },
+    receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
+        const po = get<PurchaseOrder>('purchase_orders', poId);
+        if (!po) throw new Error("Purchase Order not found");
+
+        const poItems = getCollection<PurchaseOrderItem>('purchase_order_items').filter(i => i.po_id === poId);
+
+        for (const received of receivedItems) {
+            const item = poItems.find(i => i.id === received.itemId);
+            if (item) {
+                const newReceivedQty = item.received_quantity + received.receivedQty;
+                update<PurchaseOrderItem>('purchase_order_items', item.id, { received_quantity: newReceivedQty });
+                
+                // Create inventory movement
+                create<InventoryMovement>('inventory_movements', {
+                    material_id: item.material_id,
+                    type: 'in',
+                    quantity: received.receivedQty,
+                    reason: 'RECEBIMENTO_PO',
+                    ref: po.po_number,
+                } as any);
+                
+                // Update inventory balance
+                const balance = getCollection<InventoryBalance>('inventory_balances').find(b => b.material_id === item.material_id);
+                if (balance) {
+                    update<InventoryBalance>('inventory_balances', balance.id, { current_stock: balance.current_stock + received.receivedQty });
+                } else {
+                     create<InventoryBalance>('inventory_balances', {
+                         material_id: item.material_id,
+                         current_stock: received.receivedQty,
+                         reserved_stock: 0,
+                     } as any);
+                }
+            }
+        }
+
+        // Check all items again to determine final status
+        const updatedPoItems = getCollection<PurchaseOrderItem>('purchase_order_items').filter(i => i.po_id === poId);
+        const allItemsReceived = updatedPoItems.every(i => i.received_quantity >= i.quantity);
+
+        const newStatus = allItemsReceived ? 'received' : 'partial';
+        update<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
+        
+        return Promise.resolve();
+    },
     getLogisticsData: async () => Promise.resolve({
         orders: getCollection<Order>('orders').map(o => ({...o, customers: get('customers', o.customer_id)})),
         waves: getCollection<LogisticsWave>('logistics_waves'),

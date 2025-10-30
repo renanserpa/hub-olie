@@ -113,6 +113,11 @@ export const dataService = {
   getMarketingTemplates: () => isSandbox() ? sandboxService.getCollection<MarketingTemplate>('marketing_templates') : realSupabaseService.getMarketingTemplates(),
 
   getPurchasingData: () => isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
+// FIX: Add missing createPO and receivePOItems methods to resolve errors in usePurchasing hook.
+  createPO: (poData: { supplier_id: string; items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) =>
+    isSandbox() ? sandboxService.createPO(poData) : realSupabaseService.createPO(poData as any), // Cast as any for supabase simplicity
+  receivePOItems: (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) =>
+    isSandbox() ? sandboxService.receivePOItems(poId, receivedItems) : realSupabaseService.receivePOItems(poId, receivedItems),
   
   getAnalyticsKpis: () => isSandbox() ? sandboxService.getCollection<AnalyticsKPI>('analytics_kpis') : realSupabaseService.getAnalyticsKpis(),
 
