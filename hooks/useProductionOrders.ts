@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -10,6 +10,7 @@ export type ProductionOrderFiltersState = {
 
 export function useProductionOrders() {
     const [allOrders, setAllOrders] = useState<ProductionOrder[]>([]);
+    const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filters, setFilters] = useState<ProductionOrderFiltersState>({ search: '', status: [] });
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -17,8 +18,14 @@ export function useProductionOrders() {
     const loadOrders = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await dataService.getProductionOrders();
+            const [data, materialsData] = await Promise.all([
+                dataService.getProductionOrders(),
+                dataService.getCollection<Material>('config_materials')
+            ]);
+            
             setAllOrders(data);
+            setAllMaterials(materialsData);
+
             if (data.length > 0 && selectedOrderId === null) {
                 setSelectedOrderId(data[0].id);
             }
@@ -83,6 +90,7 @@ export function useProductionOrders() {
 
     return {
         allOrders,
+        allMaterials,
         filteredOrders,
         isLoading,
         filters,

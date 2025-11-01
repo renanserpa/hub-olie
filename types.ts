@@ -18,6 +18,8 @@ export interface User {
 
 
 // --- CONTACTS ---
+export type ContactStage = 'Lead' | 'Cliente Ativo' | 'Contato Geral' | 'Fornecedor' | 'Inativo';
+
 
 export interface ContactAddress {
     zip?: string;
@@ -40,6 +42,8 @@ export interface Contact {
     address?: ContactAddress;
     birth_date?: string; // or Date
     phones?: any; // based on sandboxDb
+    stage?: ContactStage;
+    tags?: string[];
 }
 export type AnyContact = Omit<Contact, 'id'>;
 
@@ -65,6 +69,7 @@ export interface Product {
     images: string[];
     createdAt: string;
     updatedAt: string;
+    bom?: { material_id: string; quantity_per_unit: number }[];
 }
 
 export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
@@ -715,7 +720,7 @@ export interface AppData {
     finance_accounts: FinanceAccount[];
     finance_categories: FinanceCategory[];
     finance_transactions: FinanceTransaction[];
-    finance_payables: FinancePayable[];
+    finance_payables: FinanceReceivable[];
     finance_receivables: FinanceReceivable[];
     initializer_logs: InitializerLog[];
     initializer_sync_state: InitializerSyncState[];

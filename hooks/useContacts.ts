@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Contact, AnyContact } from '../types';
+import { Contact, AnyContact, ContactStage } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -57,7 +57,7 @@ export function useContacts() {
             });
         }
         
-        return contacts;
+        return contacts.sort((a, b) => a.name.localeCompare(b.name));
     }, [allContacts, searchQuery, filter]);
     
     const openDialog = (contact: Contact | null = null) => {
@@ -88,6 +88,23 @@ export function useContacts() {
         }
     };
 
+    const updateContactStage = useCallback(async (contactId: string, newStage: ContactStage) => {
+        setIsSaving(true);
+        // Optimistic update
+        setAllContacts(prev => prev.map(c => c.id === contactId ? { ...c, stage: newStage } : c));
+        try {
+            // FIX: Explicitly pass the generic type to `updateDocument` to fix TypeScript's inference.
+            await dataService.updateDocument<Contact>('customers', contactId, { stage: newStage });
+            toast({ title: "Estágio Atualizado!", description: `O contato foi movido para "${newStage}".`});
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar o estágio do contato.", variant: "destructive" });
+            // Revert on failure
+            loadData(); 
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadData]);
+
     return {
         isLoading,
         isSaving,
@@ -102,5 +119,6 @@ export function useContacts() {
         openDialog,
         closeDialog,
         saveContact,
+        updateContactStage,
     };
 }

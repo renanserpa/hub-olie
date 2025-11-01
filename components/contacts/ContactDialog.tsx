@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Contact, AnyContact } from '../../types';
+import { Contact, AnyContact, ContactStage } from '../../types';
 import { Loader2, MapPin } from 'lucide-react';
 import { toast } from '../../hooks/use-toast';
 import { maskCpfCnpj } from '../../lib/utils';
@@ -13,6 +13,14 @@ interface ContactDialogProps {
     contact: Contact | null;
     isSaving: boolean;
 }
+
+const stageOptions: { value: ContactStage, label: string }[] = [
+    { value: 'Lead', label: 'Lead' },
+    { value: 'Cliente Ativo', label: 'Cliente Ativo' },
+    { value: 'Contato Geral', label: 'Contato Geral' },
+    { value: 'Fornecedor', label: 'Fornecedor' },
+    { value: 'Inativo', label: 'Inativo' },
+];
 
 const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, contact, isSaving }) => {
     const [formData, setFormData] = useState<Partial<Contact>>({});
@@ -26,18 +34,22 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
             setFormData({
                 name: '', email: '', phone: '', whatsapp: '', instagram: '',
                 document: '', birth_date: '',
+                stage: 'Lead',
+                tags: [],
                 address: { zip: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' }
             });
         }
     }, [contact, isOpen]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name.startsWith('address.')) {
             const addressField = name.split('.')[1];
             setFormData(prev => ({ ...prev, address: { ...prev.address, [addressField]: value } }));
         } else if (name === 'document') {
             setFormData(prev => ({ ...prev, [name]: maskCpfCnpj(value) }));
+        } else if (name === 'tags') {
+            setFormData(prev => ({ ...prev, tags: value.split(',').map(t => t.trim()) }));
         }
         else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -78,7 +90,11 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        await onSave(formData as Contact);
+        const dataToSave = { ...formData };
+        if (dataToSave.tags && !Array.isArray(dataToSave.tags)) {
+            dataToSave.tags = String(dataToSave.tags).split(',').map(tag => tag.trim()).filter(Boolean);
+        }
+        await onSave(dataToSave as Contact);
         setIsSubmitting(false);
     };
 
@@ -124,6 +140,20 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                         <input name="instagram" placeholder="@usuario" value={formData.instagram || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                  </div>
+
+                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2 pt-2">Organização</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className={labelStyle}>Estágio</label>
+                        <select name="stage" value={formData.stage || 'Contato Geral'} onChange={handleChange} className={inputStyle}>
+                            {stageOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className={labelStyle}>Tags (separadas por vírgula)</label>
+                        <input name="tags" value={formData.tags?.join(', ') || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                </div>
 
                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2 pt-2 flex items-center gap-2"><MapPin size={16}/>Endereço</h3>
                  <div className="grid grid-cols-3 gap-4">

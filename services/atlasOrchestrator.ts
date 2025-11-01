@@ -10,7 +10,7 @@ const orchestrationPromise = fetch('/schemas/ai_orchestration_map.json').then(re
     return res.json();
 });
 
-export async function orchestrateCommand(command: string) {
+export async function orchestrateCommand(command: string, contextOverride: Record<string, any> = {}) {
   const orchestration = await orchestrationPromise;
   const match = Object.keys(orchestration).find(k => command.toLowerCase().includes(k));
   if (!match) {
@@ -21,7 +21,9 @@ export async function orchestrateCommand(command: string) {
   }
 
   const config = (orchestration as any)[match];
-  const { route, context, action, report } = config;
+  // Merge base context from config with dynamic context from command
+  const finalContext = { ...config.context, ...contextOverride };
+  const { route, action, report } = config;
 
   const routeText = `Rota identificada: ${route.join(" → ")}`;
   console.log(`[ATLASAI] 🚀 Executando rota: ${routeText}`);
@@ -29,7 +31,8 @@ export async function orchestrateCommand(command: string) {
 
 
   for (const agent of route) {
-    await executeAgent(agent, { context, action, report });
+    // Pass the merged context to the agent
+    await executeAgent(agent, { context: finalContext, action, report });
   }
 
   const completionMessage = `Execução concluída para comando: "${command}"`;

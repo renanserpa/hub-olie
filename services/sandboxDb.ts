@@ -25,9 +25,12 @@ const subscribe = (path: string, handler: (items: any[]) => void) => {
 const generateId = () => crypto.randomUUID();
 
 const contacts: Contact[] = [
-    { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {} },
-    { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {} },
-    { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {} },
+    { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {}, stage: 'Cliente Ativo', tags: ['VIP', 'Bolsas'] },
+    { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {}, stage: 'Lead', tags: ['Instagram'] },
+    { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {}, stage: 'Cliente Ativo', tags: ['Nécessaires'] },
+    { id: 'c4', name: 'Fornecedor Têxtil Ltda', document: '12.345.678/0001-99', email: 'contato@textil.com', phone: '(19) 3322-1144', address: { city: 'Americana', state: 'SP' }, phones: {}, stage: 'Fornecedor', tags: ['Linho'] },
+    { id: 'c5', name: 'Mariana Lima', document: '', email: 'mari.lima@email.com', phone: '(11) 99887-7665', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Contato Geral', tags: ['Parceria'] },
+    { id: 'c6', name: 'Jorge Mendes', document: '444.555.666-77', email: 'jorge.m@example.com', phone: '(11) 98888-9999', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Inativo', tags: [] },
 ];
 
 const product_categories: ProductCategory[] = [
@@ -37,9 +40,9 @@ const product_categories: ProductCategory[] = [
 ];
 
 const products: Product[] = [
-    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 1.5 }, { material_id: 'mat2', quantity_per_unit: 1 }] },
+    { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 0.5 }, { material_id: 'mat2', quantity_per_unit: 1 }, { material_id: 'mat3', quantity_per_unit: 5 }] },
+    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
 ];
 
 const order_items: OrderItem[] = [
@@ -315,6 +318,8 @@ const create = <T extends {id?: string}>(path: string, data: Omit<T, 'id'>): T =
 };
 const update = <T extends {id: string}>(path: string, id: string, data: Partial<T>): T => {
     let updatedItem: T | null = null;
+    const originalItem = get(path, id);
+
     collections[path] = collections[path]?.map(item => {
         if (item.id === id) {
             updatedItem = { ...item, ...data, updated_at: new Date().toISOString() };
@@ -322,6 +327,16 @@ const update = <T extends {id: string}>(path: string, id: string, data: Partial<
         }
         return item;
     });
+
+    // --- TRIGGER SIMULATIONS ---
+    // FIX: Cast `data` to `Partial<Order>` to inform TypeScript that `status` is a valid property when path is 'orders'.
+    if (path === 'orders' && (data as Partial<Order>).status === 'paid' && (originalItem as Order)?.status !== 'paid') {
+        const fullOrder = get('orders', id) as Order;
+        const fullItems = getCollection<OrderItem>('order_items').filter(i => i.order_id === id);
+        fullOrder.items = fullItems;
+        createProductionOrderFromOrder(fullOrder);
+    }
+
     emit(path);
     if (!updatedItem) throw new Error(`Item with id ${id} not found in ${path}`);
     return updatedItem;
@@ -333,6 +348,41 @@ const del = (path: string, id: string): void => {
         emit(path);
     }
 };
+
+const createProductionOrderFromOrder = (order: Order) => {
+    console.log(`🧱 SANDBOX TRIGGER: Creating POs for paid order ${order.number}`);
+    order.items.forEach((item, index) => {
+        const poNumber = `OP-${order.number.split('-')[2]}-${index + 1}`;
+        const product = get<Product>('products', item.product_id);
+        const customer = get<Contact>('customers', order.customer_id);
+
+        const newPO = create<ProductionOrder>('production_orders', {
+            po_number: poNumber,
+            product_id: item.product_id,
+            product: product || undefined,
+            quantity: item.quantity,
+            status: 'novo',
+            priority: 'normal',
+            due_date: new Date(Date.now() + 7 * 86400000).toISOString(), // 7 days from now
+            steps_completed: 0,
+            steps_total: 3, // Default steps
+        } as any);
+
+        // Create initial task for the kanban
+        const firstStatus = getCollection<TaskStatus>('task_statuses').sort((a,b) => a.position - b.position)[0];
+        if (firstStatus) {
+            create<Task>('tasks', {
+                title: `${poNumber} - ${product?.name}`,
+                status_id: firstStatus.id,
+                client_name: customer?.name || 'N/A',
+                quantity: item.quantity,
+                position: getCollection<Task>('tasks').filter(t => t.status_id === firstStatus.id).length,
+                priority: 'normal',
+            } as any);
+        }
+    });
+};
+
 
 const testConnection = async (integrationId: string): Promise<void> => {
     const integration = get<Integration>('config_integrations', integrationId);

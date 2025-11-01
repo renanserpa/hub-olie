@@ -9,6 +9,7 @@ import { Card } from './ui/Card';
 import { useProductionKanban } from '../hooks/useProductionKanban';
 import KanbanBoard from './production/KanbanBoard';
 import { cn } from '../lib/utils';
+import { Material } from '../types';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -39,7 +40,11 @@ const ProductionPage: React.FC = () => {
             </div>
             <div className="lg:col-span-4">
                 {list.selectedOrder ? (
-                    <ProductionOrderDetailPanel order={list.selectedOrder} key={list.selectedOrder.id} />
+                    <ProductionOrderDetailPanel 
+                        order={list.selectedOrder} 
+                        allMaterials={list.allMaterials as Material[]}
+                        key={list.selectedOrder.id} 
+                    />
                 ) : !list.isLoading ? (
                     <Card className="sticky top-20 h-[calc(100vh-10rem)] flex items-center justify-center">
                         <div className="text-center text-textSecondary">

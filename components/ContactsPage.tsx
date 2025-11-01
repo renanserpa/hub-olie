@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '../types';
-import { Users, Plus, Search, Loader2 } from 'lucide-react';
+import { Users, Plus, Search, Loader2, LayoutGrid, List, Columns } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useContacts } from '../hooks/useContacts';
 import ContactCard from './contacts/ContactCard';
 import ContactDialog from './contacts/ContactDialog';
 import { cn } from '../lib/utils';
+import ContactsKanban from './contacts/ContactsKanban';
+import ContactsTable from './contacts/ContactsTable';
 
 const ContactsPage: React.FC = () => {
-    // FIX: Destructuring the object returned by the useContacts hook, which was previously failing because the hook returned void.
+    const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'table'>('list');
+    
     const {
         isLoading,
         isSaving,
@@ -23,13 +26,53 @@ const ContactsPage: React.FC = () => {
         openDialog,
         closeDialog,
         saveContact,
+        updateContactStage
     } = useContacts();
     
     const TABS = [
-        // FIX: Calculate length based on all contacts before filtering for a more accurate total count.
         { id: 'all', label: `Todos (${allContacts.length})` },
         { id: 'birthdays', label: 'Aniversariantes do Mês' },
     ];
+
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <div className="text-center py-10 flex items-center justify-center gap-2 text-textSecondary">
+                    <Loader2 className="h-5 w-5 animate-spin"/> Carregando contatos...
+                </div>
+            );
+        }
+
+        if (filteredContacts.length === 0) {
+            return (
+                <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
+                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhum contato encontrado</h3>
+                    <p className="mt-1 text-sm">Nenhum contato corresponde aos filtros selecionados.</p>
+                </div>
+            );
+        }
+
+        switch(viewMode) {
+            case 'kanban':
+                return <ContactsKanban 
+                    contacts={filteredContacts}
+                    onStageChange={updateContactStage}
+                    onCardClick={(contact) => openDialog(contact)}
+                />;
+            case 'table':
+                 return <ContactsTable contacts={filteredContacts} onEdit={(contact) => openDialog(contact)} />;
+            case 'list':
+            default:
+                return (
+                    <div className="space-y-4">
+                        {filteredContacts.map(contact => (
+                            <ContactCard key={contact.id} contact={contact} onEdit={() => openDialog(contact)} />
+                        ))}
+                    </div>
+                );
+        }
+    };
 
     return (
         <div>
@@ -39,6 +82,35 @@ const ContactsPage: React.FC = () => {
                     <p className="text-textSecondary mt-1">Gerencie seus clientes e fornecedores.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <div className="flex items-center p-1 rounded-lg bg-secondary">
+                       <Button 
+                         variant={viewMode === 'list' ? 'primary' : 'ghost'} 
+                         size="sm" 
+                         onClick={() => setViewMode('list')} 
+                         className="h-8 w-8 p-0"
+                         aria-label="Visualização em Lista"
+                       >
+                           <List size={16} />
+                       </Button>
+                        <Button 
+                          variant={viewMode === 'kanban' ? 'primary' : 'ghost'} 
+                          size="sm" 
+                          onClick={() => setViewMode('kanban')} 
+                          className="h-8 w-8 p-0"
+                           aria-label="Visualização em Kanban"
+                        >
+                            <LayoutGrid size={16} />
+                        </Button>
+                         <Button 
+                          variant={viewMode === 'table' ? 'primary' : 'ghost'} 
+                          size="sm" 
+                          onClick={() => setViewMode('table')} 
+                          className="h-8 w-8 p-0"
+                           aria-label="Visualização em Tabela"
+                        >
+                            <Columns size={16} />
+                        </Button>
+                    </div>
                     <Button onClick={() => openDialog()}><Plus className="w-4 h-4 mr-2" />Novo Contato</Button>
                 </div>
             </div>
@@ -74,17 +146,7 @@ const ContactsPage: React.FC = () => {
                 </div>
             </div>
 
-            {isLoading ? (
-                <div className="text-center py-10 flex items-center justify-center gap-2 text-textSecondary">
-                    <Loader2 className="h-5 w-5 animate-spin"/> Carregando contatos...
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {filteredContacts.map(contact => (
-                        <ContactCard key={contact.id} contact={contact} onEdit={() => openDialog(contact)} />
-                    ))}
-                </div>
-            )}
+            {renderContent()}
             
             <ContactDialog
                 isOpen={isDialogOpen}

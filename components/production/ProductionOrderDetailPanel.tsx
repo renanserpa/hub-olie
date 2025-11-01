@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProductionOrder } from '../../types';
+import { ProductionOrder, Material } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { ChevronDown, Info, ListChecks, Package, Calendar, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -41,7 +41,7 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
 );
 
 
-const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder }> = ({ order }) => {
+const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder, allMaterials: Material[] }> = ({ order, allMaterials }) => {
 
     const formatDate = (dateValue?: any) => {
         if (!dateValue) return '-';
@@ -51,6 +51,8 @@ const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder }> = ({ orde
             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };
+
+    const bom = order.product?.bom;
 
     return (
         <Card className="sticky top-20 h-[calc(100vh-10rem)] overflow-y-auto">
@@ -85,11 +87,29 @@ const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder }> = ({ orde
                 </div>
             </CollapsibleSection>
 
-             <CollapsibleSection title="Materiais" icon={Package}>
-                <div className="text-center p-6 bg-secondary rounded-lg">
-                    <p className="font-medium">🚧 Em desenvolvimento</p>
-                    <p className="text-xs">Lista de materiais, consumo real vs. planejado e baixas de estoque.</p>
-                </div>
+             <CollapsibleSection title="Materiais" icon={Package} defaultOpen>
+                 {bom && bom.length > 0 ? (
+                    <div className="space-y-2">
+                        {bom.map(item => {
+                            const material = allMaterials.find(m => m.id === item.material_id);
+                            const totalQuantity = item.quantity_per_unit * order.quantity;
+                            return (
+                                <div key={item.material_id} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
+                                    <div>
+                                        <p className="font-medium text-textPrimary">{material?.name || 'Material não encontrado'}</p>
+                                        <p className="text-xs">{item.quantity_per_unit.toFixed(2)} {material?.unit} por unidade</p>
+                                    </div>
+                                    <p className="font-bold text-primary">{totalQuantity.toFixed(2)} <span className="text-xs font-normal text-textSecondary">{material?.unit}</span></p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                 ) : (
+                    <div className="text-center p-6 bg-secondary rounded-lg">
+                        <p className="font-medium">Sem Ficha Técnica</p>
+                        <p className="text-xs">Nenhuma lista de materiais (BOM) cadastrada para este produto.</p>
+                    </div>
+                 )}
             </CollapsibleSection>
             
              <CollapsibleSection title="Qualidade" icon={Calendar}>

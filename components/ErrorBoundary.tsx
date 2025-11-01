@@ -1,9 +1,9 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -11,18 +11,21 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-// FIX: Changed to extend `Component` directly to avoid potential naming conflicts that could cause `this.props` to be undefined.
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = {
-    hasError: false,
-    error: undefined,
-  };
+  // FIX: Initialize state and props in the constructor to resolve errors where they were accessed before being defined.
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: undefined,
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('💥 UI ErrorBoundary caught:', error, errorInfo);
   }
 

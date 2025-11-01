@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnalyticsKPI } from '../../types';
-import AnalyticsDashboard from '/components/executive/AnalyticsDashboard.tsx';
+import AnalyticsDashboard from '../executive/AnalyticsDashboard';
 
 interface InventoryMetricsProps {
     kpis: AnalyticsKPI[];

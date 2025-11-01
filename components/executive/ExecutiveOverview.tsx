@@ -1,6 +1,6 @@
 import React from 'react';
 import { ExecutiveKPI } from '../../types';
-import ExecutiveKpiCard from '/components/analytics/ExecutiveKpiCard.tsx';
+import ExecutiveKpiCard from '../analytics/ExecutiveKpiCard';
 import EmptyState from './EmptyState';
 
 interface ExecutiveOverviewProps {
