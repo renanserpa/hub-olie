@@ -12,7 +12,12 @@ const AuthContext = createContext<AuthContextType>({ user: null, isLoading: true
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// FIX: Refactored to use an explicit props interface with React.FC to resolve a subtle typing issue in index.tsx.
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

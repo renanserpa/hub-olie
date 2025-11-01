@@ -32,8 +32,12 @@ export function useOmnichannel(user: User) {
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);
-                 setConversations(conversationsData.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()));
-                 setMessages(messagesData);
+                 if (Array.isArray(conversationsData)) {
+                    setConversations(conversationsData.sort((a, b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt)));
+                 }
+                 if(Array.isArray(messagesData)) {
+                    setMessages(messagesData);
+                 }
             } catch(e) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
             } finally {
