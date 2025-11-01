@@ -24,15 +24,16 @@ export function useOmnichannel(user: User) {
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
-                 const [contactsData, ordersData] = await Promise.all([
+                 const [contactsData, ordersData, conversationsData, messagesData] = await Promise.all([
                     dataService.getContacts(),
-                    dataService.getOrders()
+                    dataService.getOrders(),
+                    dataService.getCollection<Conversation>('conversations'),
+                    dataService.getCollection<Message>('messages'),
                  ]);
                  setAllContacts(contactsData);
                  setAllOrders(ordersData);
-                 // Mock data load for now
-                 setConversations([]);
-                 setMessages([]);
+                 setConversations(conversationsData.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()));
+                 setMessages(messagesData);
             } catch(e) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
             } finally {
@@ -53,6 +54,13 @@ export function useOmnichannel(user: User) {
     const selectedConversation = useMemo(() => {
         return conversations.find(c => c.id === selectedConversationId) || null;
     }, [conversations, selectedConversationId]);
+
+    const currentMessages = useMemo(() => {
+        if (!selectedConversationId) return [];
+        return messages
+            .filter(m => m.conversationId === selectedConversationId)
+            .sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }, [messages, selectedConversationId]);
 
     const customerInfo = useMemo(() => {
         if (!selectedConversation) return null;
@@ -85,7 +93,7 @@ export function useOmnichannel(user: User) {
         isSending,
         filteredConversations,
         selectedConversation,
-        currentMessages: messages,
+        currentMessages,
         customerInfo,
         customerOrders,
         currentQuote,

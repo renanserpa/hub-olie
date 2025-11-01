@@ -30,10 +30,16 @@ const contacts: Contact[] = [
     { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {} },
 ];
 
+const product_categories: ProductCategory[] = [
+    { id: 'pc1', name: 'Bolsas', description: 'Bolsas de diversos tamanhos e modelos.' },
+    { id: 'pc2', name: 'Nécessaires', description: 'Nécessaires para organização e viagem.' },
+    { id: 'pc3', name: 'Mochilas', description: 'Mochilas para uso urbano e viagens.' },
+];
+
 const products: Product[] = [
     { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
     { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
 ];
 
 const order_items: OrderItem[] = [
@@ -110,12 +116,20 @@ const inventory_movements: InventoryMovement[] = [
 const system_settings: SystemSetting[] = [
     { id: 'ss1', key: 'freight_params', value: JSON.stringify({ radius_km: 10, base_fee: 15, fee_per_km: 2.5, free_shipping_threshold: 250 }), category: 'logistica', description: 'Configurações para cálculo de frete via motoboy.' },
 ];
-const product_categories: ProductCategory[] = [
-    { id: 'pc1', name: 'Bolsas', description: 'Bolsas de diversos tamanhos e modelos.' },
-    { id: 'pc2', name: 'Nécessaires', description: 'Nécessaires para organização e viagem.' },
+
+const conversations: Conversation[] = [
+    { id: 'conv1', customerId: 'c1', customerName: 'Ana Silva', customerHandle: '5511987654321', channel: 'whatsapp', status: 'open', assigneeId: 'sandbox-user-01', priority: 'high', tags: ['novo_lead', 'vip'], unreadCount: 1, lastMessageAt: new Date(Date.now() - 60000 * 5).toISOString(), title: 'Preciso de ajuda com um pedido novo', quoteId: undefined },
+    { id: 'conv2', customerId: 'c2', customerName: 'Bruno Costa', customerHandle: '@brunocosta', channel: 'instagram', status: 'open', assigneeId: undefined, priority: 'normal', tags: ['suporte'], unreadCount: 0, lastMessageAt: new Date(Date.now() - 86400000).toISOString(), title: 'Onde está meu pedido?', quoteId: undefined },
+    { id: 'conv3', customerId: 'c3', customerName: 'Carla Dias', customerHandle: 'carla.dias@example.com', channel: 'site', status: 'closed', assigneeId: 'sandbox-user-01', priority: 'low', tags: [], unreadCount: 0, lastMessageAt: new Date(Date.now() - 2 * 86400000).toISOString(), title: 'Agradecimento', quoteId: undefined },
 ];
-const conversations: Conversation[] = [];
-const messages: Message[] = [];
+const messages: Message[] = [
+    { id: 'msg1', conversationId: 'conv1', direction: 'in', content: 'Olá! Gostaria de fazer uma encomenda personalizada, é possível?', authorName: 'Ana Silva', createdAt: new Date(Date.now() - 60000 * 6).toISOString(), status: 'read' },
+    { id: 'msg2', conversationId: 'conv1', direction: 'out', content: 'Olá Ana, claro! O que você tem em mente?', authorName: 'Admin', createdAt: new Date(Date.now() - 60000 * 5).toISOString(), status: 'delivered' },
+    { id: 'msg3', conversationId: 'conv2', direction: 'in', content: 'Oi, meu pedido OLIE-2024-1003 ainda não chegou. Podem verificar?', authorName: 'Bruno Costa', createdAt: new Date(Date.now() - 86400000).toISOString(), status: 'read' },
+    { id: 'msg4', conversationId: 'conv2', direction: 'note', content: 'Verificar com a logística, pedido parece estar em separação.', authorName: 'Admin', createdAt: new Date(Date.now() - 86400000 + 60000).toISOString(), status: 'sent' },
+    { id: 'msg5', conversationId: 'conv3', direction: 'in', content: 'Recebi minha bolsa, é linda! Obrigada!', authorName: 'Carla Dias', createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'read' },
+    { id: 'msg6', conversationId: 'conv3', direction: 'out', content: 'Ficamos felizes que gostou, Carla! Aproveite muito. ❤️', authorName: 'Admin', createdAt: new Date(Date.now() - 2 * 86400000 + 60000).toISOString(), status: 'read' },
+];
 
 const logistics_waves: LogisticsWave[] = [
     { id: 'w1', wave_number: 'WAVE-2024-001', status: 'completed', order_ids: ['o1'], created_by: 'sandbox-user-01', created_at: new Date(Date.now() - 86400000).toISOString() },
@@ -190,18 +204,30 @@ const executive_ai_insights: AIInsight[] = [
 const finance_accounts: FinanceAccount[] = [
     { id: 'fa1', name: 'Conta Corrente Bradesco', type: 'checking', institution: 'Bradesco', balance: 15000.75, currency: 'BRL', is_active: true },
     { id: 'fa2', name: 'Cartão de Crédito NuBank', type: 'credit_card', institution: 'NuBank', balance: -2500.00, currency: 'BRL', is_active: true },
+    { id: 'fa3', name: 'Caixa da Loja', type: 'cash', institution: 'Olie', balance: 575.50, currency: 'BRL', is_active: true },
 ];
 const finance_categories: FinanceCategory[] = [
     { id: 'fc1', name: 'Receita de Vendas', type: 'income' },
     { id: 'fc2', name: 'Custo de Material', type: 'expense' },
     { id: 'fc3', name: 'Marketing', type: 'expense' },
     { id: 'fc4', name: 'Salários', type: 'expense' },
+    { id: 'fc5', name: 'Outras Receitas', type: 'income'},
+    { id: 'fc6', name: 'Despesas Gerais', type: 'expense' },
 ];
 const finance_transactions: FinanceTransaction[] = [
     { id: 'ft1', account_id: 'fa1', category_id: 'fc1', description: 'Recebimento Pedido OLIE-2024-1002', amount: 699.80, type: 'income', transaction_date: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
     { id: 'ft2', account_id: 'fa2', category_id: 'fc2', description: 'Compra de Tecidos - Fornecedor S.A.', amount: -2100.00, type: 'expense', transaction_date: new Date(Date.now() - 5 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
     { id: 'ft3', account_id: 'fa1', category_id: 'fc3', description: 'Impulsionamento Instagram - Campanha Inverno', amount: -500.00, type: 'expense', transaction_date: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
+    { id: 'ft4', account_id: 'fa3', category_id: 'fc6', description: 'Pagamento de conta de luz', amount: -150.00, type: 'expense', transaction_date: new Date(Date.now() - 3 * 86400000).toISOString(), status: 'cleared', created_at: new Date().toISOString() },
 ];
+const finance_payables: FinancePayable[] = [
+    { id: 'fp1', due_date: new Date(Date.now() + 15 * 86400000).toISOString(), amount: 750.00, supplier_id: 'sup2', purchase_order_id: 'pc2', status: 'pending' }
+];
+const finance_receivables: FinanceReceivable[] = [
+    { id: 'fr1', due_date: new Date(Date.now() - 1 * 86400000).toISOString(), amount: 144.90, customer_id: 'c2', order_id: 'o3', status: 'pending' },
+    { id: 'fr2', due_date: new Date(Date.now() - 2 * 86400000).toISOString(), amount: 699.80, customer_id: 'c3', order_id: 'o2', status: 'paid' },
+];
+
 
 const config_integrations: Integration[] = [
     { id: 'int1', name: 'Bling ERP', type: 'ERP', endpoint_url: 'https://api.bling.com.br/v3', status: 'disconnected', is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
@@ -269,8 +295,8 @@ let collections: Record<string, any[]> = {
     finance_accounts,
     finance_categories,
     finance_transactions,
-    finance_payables: [],
-    finance_receivables: [],
+    finance_payables,
+    finance_receivables,
     initializer_logs,
     initializer_sync_state,
     initializer_agents,
