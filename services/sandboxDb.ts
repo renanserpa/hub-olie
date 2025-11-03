@@ -40,7 +40,7 @@ const product_categories: ProductCategory[] = [
 ];
 
 const products: Product[] = [
-    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 1.5 }, { material_id: 'mat2', quantity_per_unit: 1 }] },
+    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'], biasColor: ['bc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 1.5 }, { material_id: 'mat2', quantity_per_unit: 1 }] },
     { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 0.5 }, { material_id: 'mat2', quantity_per_unit: 1 }, { material_id: 'mat3', quantity_per_unit: 5 }] },
     { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
 ];

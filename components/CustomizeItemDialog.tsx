@@ -82,6 +82,21 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                     </div>
                 )}
 
+                {product.attributes?.biasColor && (
+                     <div>
+                        <label className="block text-sm font-medium text-textSecondary">Cor do Viés</label>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                             {getColorOptions('vies').map(color => (
+                                <button key={color.id} type="button" onClick={() => handleChange('biasColor', color.name)}
+                                    className={cn(`w-8 h-8 rounded-full border-2`, config.biasColor === color.name ? 'border-primary ring-2 ring-primary/50' : 'border-border')}
+                                    style={{ backgroundColor: color.hex }}
+                                     title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {product.attributes?.embroidery && (
                     <div className="space-y-3 pt-4 border-t">
                          <label className="flex items-center gap-2 text-sm text-textPrimary cursor-pointer font-medium">
@@ -94,7 +109,7 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                             Adicionar Bordado
                          </label>
                          {config.embroidery?.enabled && (
-                             <div className="pl-6 space-y-3 animate-fade-in">
+                             <div className="pl-6 space-y-3 animate-fade-in-up">
                                  <div>
                                     <label htmlFor="text" className="block text-sm font-medium text-textSecondary">Texto do Bordado</label>
                                     <input id="text" type="text" value={config.embroidery.text || ''} onChange={e => handleEmbroideryChange('text', e.target.value)} maxLength={50} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -107,11 +122,12 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                                      </select>
                                 </div>
                                 {config.embroidery.text && (
-                                    <div className="p-4 bg-secondary rounded-lg">
+                                    <div className="p-4 bg-secondary rounded-lg relative">
                                         <p className="text-xs text-textSecondary">Pré-visualização:</p>
-                                        <p className="text-2xl" style={{ fontFamily: selectedFont?.name || 'serif' }}>
+                                        <p className="text-2xl text-center py-4" style={{ fontFamily: selectedFont?.name || 'serif' }}>
                                             {config.embroidery.text}
                                         </p>
+                                        <span className="absolute bottom-2 right-2 text-xs text-textSecondary bg-background px-2 py-0.5 rounded-md">Preview</span>
                                     </div>
                                 )}
                              </div>

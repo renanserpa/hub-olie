@@ -1,16 +1,9 @@
 import React from 'react';
 import { useInitializer } from '../hooks/useInitializer';
 import SupremeCommandBox from './SupremeCommandBox';
-import { useInitializerContext } from '../../context/InitializerContext';
-import CommandPendingDisplay from './CommandPendingDisplay';
 
 export default function ExecutionPanel() {
   const { handleUpload, isProcessing: isUploading } = useInitializer();
-  const { isAwaitingResponse } = useInitializerContext();
-
-  if (isAwaitingResponse) {
-    return <CommandPendingDisplay />;
-  }
 
   return (
     <div className="bg-card p-6 rounded-2xl shadow-lg dark:bg-dark-card">

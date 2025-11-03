@@ -53,6 +53,7 @@ export type AnyContact = Omit<Contact, 'id'>;
 export interface ProductAttributes {
   fabricColor?: string[];
   zipperColor?: string[];
+  biasColor?: string[];
   embroidery?: boolean;
   [key: string]: any;
 }
@@ -83,6 +84,7 @@ export interface ProductCategory {
 export interface ConfigJson {
   fabricColor?: string;
   zipperColor?: string;
+  biasColor?: string;
   embroidery?: {
     enabled: boolean;
     text: string;

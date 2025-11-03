@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Product, AppData } from '../../types';
 import { Check, ChevronsUpDown } from 'lucide-react';
@@ -92,6 +93,13 @@ const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({ attributes, o
                 onChange={(val) => handleMultiSelectChange('zipperColor', val)}
             />
             
+            <MultiSelect
+                label="Cores de Viés Disponíveis"
+                options={colorOptions('vies')}
+                selected={attributes?.biasColor || []}
+                onChange={(val) => handleMultiSelectChange('biasColor', val)}
+            />
+
             <div className="pt-2">
                  <label className="flex items-center gap-3 text-sm text-textPrimary cursor-pointer font-medium">
                     <input 
