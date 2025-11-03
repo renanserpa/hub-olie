@@ -27,6 +27,7 @@ import { logout } from './services/authService';
 import { isSandbox } from './lib/runtime';
 import { dataService } from './services/dataService';
 import { ThemeToggle } from './components/ui/ThemeToggle';
+import NotificationBell from './components/NotificationBell';
 
 
 const MAIN_TABS = [
@@ -213,9 +214,7 @@ const App: React.FC = () => {
                            </div>
                             <div className="flex items-center gap-4">
                                 <ThemeToggle />
-                                <button className="relative text-textSecondary dark:text-dark-textSecondary hover:text-textPrimary dark:hover:text-dark-textPrimary">
-                                    <Bell size={20} />
-                                </button>
+                                <NotificationBell />
                                 {user && (
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">

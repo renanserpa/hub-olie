@@ -646,7 +646,18 @@ export interface FinanceReceivable {
     status: 'pending' | 'paid' | 'overdue';
 }
 
-// --- INITIALIZER ---
+// --- INITIALIZER & AI ---
+export interface AgentStatus {
+  id: string;
+  name: string;
+  role: string;
+  status: 'idle' | 'working' | 'error' | 'offline';
+  last_heartbeat: string;
+  health_score: number;
+  logs?: string[];
+}
+
+export type InitializerAgent = AgentStatus; // Consolidate type
 
 export interface InitializerLog {
   id: string;
@@ -666,13 +677,14 @@ export interface InitializerSyncState {
   updated_at: string;
 }
 
-export interface InitializerAgent {
-  id: string;
-  name: string;
-  role: string;
-  status: 'idle' | 'working' | 'error' | 'offline';
-  last_heartbeat: string;
-  health_score: number;
+// --- WORKFLOWS ---
+export interface WorkflowRule {
+    id: string;
+    name: string;
+    trigger: string;
+    action: string;
+    is_active: boolean;
+    description: string;
 }
 
 // --- DASHBOARD ---
@@ -684,6 +696,20 @@ export interface ActivityItem {
   description: string;
   value?: string | number;
   icon: React.ElementType;
+}
+
+// --- NOTIFICATIONS ---
+export type NotificationType = 'order_created' | 'stock_low' | 'task_assigned' | 'system_alert';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 
@@ -750,4 +776,6 @@ export interface AppData {
     initializer_logs: InitializerLog[];
     initializer_sync_state: InitializerSyncState[];
     initializer_agents: InitializerAgent[];
+    workflow_rules: WorkflowRule[];
+    notifications: Notification[];
 }

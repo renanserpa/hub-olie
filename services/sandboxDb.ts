@@ -4,7 +4,8 @@ import {
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
-    MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture
+    MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
+    WorkflowRule, Notification
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -25,12 +26,12 @@ const subscribe = (path: string, handler: (items: any[]) => void) => {
 const generateId = () => crypto.randomUUID();
 
 const contacts: Contact[] = [
-    { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {}, stage: 'Cliente Ativo', tags: ['VIP', 'Bolsas'] },
-    { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {}, stage: 'Lead', tags: ['Instagram'] },
-    { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {}, stage: 'Cliente Ativo', tags: ['Nécessaires'] },
-    { id: 'c4', name: 'Fornecedor Têxtil Ltda', document: '12.345.678/0001-99', email: 'contato@textil.com', phone: '(19) 3322-1144', address: { city: 'Americana', state: 'SP' }, phones: {}, stage: 'Fornecedor', tags: ['Linho'] },
-    { id: 'c5', name: 'Mariana Lima', document: '', email: 'mari.lima@email.com', phone: '(11) 99887-7665', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Contato Geral', tags: ['Parceria'] },
-    { id: 'c6', name: 'Jorge Mendes', document: '444.555.666-77', email: 'jorge.m@example.com', phone: '(11) 98888-9999', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Inativo', tags: [] },
+    { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {}, stage: 'Cliente Ativo', tags: ['VIP', 'Bolsas'], created_at: new Date(Date.now() - 2 * 86400000).toISOString() },
+    { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {}, stage: 'Lead', tags: ['Instagram'], created_at: new Date(Date.now() - 5 * 86400000).toISOString() },
+    { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {}, stage: 'Cliente Ativo', tags: ['Nécessaires'], created_at: new Date(Date.now() - 10 * 86400000).toISOString() },
+    { id: 'c4', name: 'Fornecedor Têxtil Ltda', document: '12.345.678/0001-99', email: 'contato@textil.com', phone: '(19) 3322-1144', address: { city: 'Americana', state: 'SP' }, phones: {}, stage: 'Fornecedor', tags: ['Linho'], created_at: new Date(Date.now() - 30 * 86400000).toISOString() },
+    { id: 'c5', name: 'Mariana Lima', document: '', email: 'mari.lima@email.com', phone: '(11) 99887-7665', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Contato Geral', tags: ['Parceria'], created_at: new Date(Date.now() - 1 * 86400000).toISOString() },
+    { id: 'c6', name: 'Jorge Mendes', document: '444.555.666-77', email: 'jorge.m@example.com', phone: '(11) 98888-9999', address: { city: 'São Paulo', state: 'SP' }, phones: {}, stage: 'Inativo', tags: [], created_at: new Date(Date.now() - 60 * 86400000).toISOString() },
 ];
 
 const product_categories: ProductCategory[] = [
@@ -247,12 +248,12 @@ const integration_logs: IntegrationLog[] = [
 const media_assets: MediaAsset[] = [];
 
 const initializer_agents: InitializerAgent[] = [
-    { id: 'agent1', name: 'ArquitetoSupremo', role: 'Coordenação Global', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
-    { id: 'agent2', name: 'AtlasAI', role: 'Roteamento de Tarefas', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
-    { id: 'agent3', name: 'CatalisadorAI', role: 'Estruturação de Projetos', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
-    { id: 'agent4', name: 'WebAppDevAI', role: 'Desenvolvimento Frontend', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
-    { id: 'agent5', name: 'EngenheiroDeDados', role: 'Gestão de Schema e Dados', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
-    { id: 'agent6', name: 'AuditorDeSistema', role: 'Auditoria e Validação', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0 },
+    { id: 'agent1', name: 'ArquitetoSupremo', role: 'Coordenação Global', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0, logs: ['[21:12:01] Auditoria concluída. Causa raiz: falha de comunicação GCD ↔ PromptArchitectAI.'] },
+    { id: 'agent2', name: 'AtlasAI', role: 'Roteamento de Tarefas', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0, logs: ['[21:11:58] Rota identificada: SYSTEM_AUDIT_START → ...'] },
+    { id: 'agent3', name: 'CatalisadorAI', role: 'Estruturação de Projetos', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0, logs: ['[21:10:30] Blueprint para módulo "Marketing" gerado.'] },
+    { id: 'agent4', name: 'WebAppDevAI', role: 'Desenvolvimento Frontend', status: 'working', last_heartbeat: new Date().toISOString(), health_score: 1.0, logs: ['[21:13:05] Criando componente RenderCanvas.tsx...'] },
+    { id: 'agent5', name: 'EngenheiroDeDados', role: 'Gestão de Schema e Dados', status: 'idle', last_heartbeat: new Date().toISOString(), health_score: 1.0, logs: ['[21:12:00] Validação RLS e roles Supabase OK.'] },
+    { id: 'agent6', name: 'AuditorDeSistema', role: 'Auditoria e Validação', status: 'error', last_heartbeat: new Date().toISOString(), health_score: 0.85, logs: ['[21:11:59] ERRO: Timeout ao validar endpoint /api/health.'] },
 ];
 
 const initializer_logs: InitializerLog[] = [];
@@ -276,8 +277,20 @@ const embroidery_colors: EmbroideryColor[] = [
     { id: 'ec2', name: 'Linha Branca', hex: '#FFFFFF', palette_id: 'pal2', thread_type: 'cotton', is_active: true },
 ];
 const fabric_textures: FabricTexture[] = [
-    { id: 'ft1', name: 'Linho Rústico', description: 'Textura natural do linho.', image_url: 'https://example.com/linho.jpg', is_active: true, hex_code: '#D2B48C', fabric_color_id: 'fc1', supplier_sku: 'FORN-LNH-01', manufacturer_sku: 'MAN-LNH-BG-RUST', manufacturer_id: 'sup1', distributor_id: 'sup1' },
-    { id: 'ft2', name: 'Couro Sintético', description: 'Textura que imita couro.', image_url: 'https://example.com/couro.jpg', is_active: true, hex_code: '#8B4513', supplier_sku: 'FORN-COU-02', manufacturer_sku: 'MAN-SYN-LTHR-BRW', manufacturer_id: 'sup2', distributor_id: 'sup1' },
+    { id: 'ft1', name: 'Linho Rústico', description: 'Textura natural do linho.', image_url: 'https://images.unsplash.com/photo-1562094254-105a5c68911a?q=80&w=2080&auto=format&fit=crop', is_active: true, hex_code: '#D2B48C', fabric_color_id: 'fc1', supplier_sku: 'FORN-LNH-01', manufacturer_sku: 'MAN-LNH-BG-RUST', manufacturer_id: 'sup1', distributor_id: 'sup1' },
+    { id: 'ft2', name: 'Couro Sintético Preto', description: 'Textura que imita couro.', image_url: 'https://images.unsplash.com/photo-1604147706283-d7119b5b822c?q=80&w=1974&auto=format&fit=crop', is_active: true, hex_code: '#333333', supplier_sku: 'FORN-COU-02', manufacturer_sku: 'MAN-SYN-LTHR-BRW', manufacturer_id: 'sup2', distributor_id: 'sup1' },
+];
+
+const workflow_rules: WorkflowRule[] = [
+    { id: 'wf1', name: 'Gerar OP em Pedido Pago', trigger: 'orders.status -> paid', action: 'create_production_order()', is_active: true, description: 'Cria uma ordem de produção automaticamente quando um pedido é confirmado como pago.' },
+    { id: 'wf2', name: 'Notificar Expedição', trigger: 'production_orders.status -> finalizado', action: 'create_logistics_shipment()', is_active: true, description: 'Cria um registro de expedição quando a produção de um item é finalizada.' },
+    { id: 'wf3', name: 'Alerta de Estoque Baixo', trigger: 'inventory_balances.available < 10', action: 'create_notification()', is_active: false, description: 'Envia uma notificação quando o estoque disponível de um material fica abaixo de 10 unidades.' },
+];
+
+const notifications: Notification[] = [
+    { id: 'n1', user_id: 'sandbox-user-01', type: 'order_created', title: 'Novo Pedido Recebido', message: 'Pedido #OLIE-2024-1003 foi criado.', link: '/orders', is_read: false, created_at: new Date().toISOString() },
+    { id: 'n2', user_id: 'sandbox-user-01', type: 'system_alert', title: 'Integração com Erro', message: 'A integração com Melhor Envio está apresentando erros.', link: '/settings', is_read: false, created_at: new Date(Date.now() - 3600000).toISOString() },
+    { id: 'n3', user_id: 'sandbox-user-01', type: 'stock_low', title: 'Estoque Baixo', message: 'O material "Linho Bege Cru" está com apenas 5m disponíveis.', link: '/inventory', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString() },
 ];
 
 
@@ -331,6 +344,9 @@ let collections: Record<string, any[]> = {
     puller_colors,
     embroidery_colors,
     fabric_textures,
+    // New Modules
+    workflow_rules,
+    notifications,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -357,7 +373,6 @@ const update = <T extends {id: string}>(path: string, id: string, data: Partial<
     });
 
     // --- TRIGGER SIMULATIONS ---
-    // FIX: Cast `data` to `Partial<Order>` to inform TypeScript that `status` is a valid property when path is 'orders'.
     if (path === 'orders' && (data as Partial<Order>).status === 'paid' && (originalItem as Order)?.status !== 'paid') {
         const fullOrder = get('orders', id) as Order;
         const fullItems = getCollection<OrderItem>('order_items').filter(i => i.order_id === id);
@@ -613,6 +628,15 @@ export const sandboxDb = {
         if (items && items.length > 0) {
             items.forEach(item => create<OrderItem>('order_items', { ...item, order_id: newOrder.id }));
         }
+        // SIMULATE TRIGGER: Create notification
+        create<Notification>('notifications', {
+            user_id: 'sandbox-user-01',
+            type: 'order_created',
+            title: `Novo Pedido: ${newOrder.number}`,
+            message: `Criado para ${get<Contact>('customers', newOrder.customer_id)?.name}`,
+            link: `/orders`,
+            is_read: false,
+        } as any);
         return Promise.resolve(newOrder);
     },
     updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> =>
@@ -628,7 +652,6 @@ export const sandboxDb = {
         }
         return Promise.resolve(movement);
     },
-// FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
     createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) => {
         const po_number = `PC-SB-${Date.now().toString().slice(-5)}`;
         const newPO = create<PurchaseOrder>('purchase_orders', {

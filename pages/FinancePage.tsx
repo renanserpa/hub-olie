@@ -6,9 +6,10 @@ import TransactionsTab from '../components/finance/TransactionsTab';
 import PlaceholderContent from '../components/PlaceholderContent';
 import { FinanceTransaction } from '../types';
 import TransactionDialog from '../components/finance/TransactionDialog';
+import PayablesReceivablesTab from '../components/finance/PayablesReceivablesTab';
 
 const FinancePage: React.FC = () => {
-    const { isLoading, accounts, categories, transactions, saveTransaction } = useFinance();
+    const { isLoading, accounts, categories, transactions, payables, receivables, saveTransaction } = useFinance();
     const [activeTab, setActiveTab] = useState('transactions');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<FinanceTransaction | null>(null);
@@ -31,8 +32,9 @@ const FinancePage: React.FC = () => {
         switch (activeTab) {
             case 'transactions':
                 return <TransactionsTab transactions={transactions} onNewClick={() => openDialog()} onEditClick={openDialog} />;
-            case 'overview':
             case 'payables_receivables':
+                return <PayablesReceivablesTab payables={payables} receivables={receivables} />;
+            case 'overview':
             case 'reports':
             case 'settings':
                 return <PlaceholderContent title={`Aba "${activeTab}" em desenvolvimento`} requiredTable="" icon={DollarSign} />;

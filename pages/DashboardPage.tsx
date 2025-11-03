@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import { Loader2, ShoppingCart, Users, Package, Workflow, LayoutDashboard, Sparkles, Cuboid, GitBranch, BarChart } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
-import ActivityFeedCard from '../components/dashboard/RecentActivityCard';
+import ActivityFeedCard from '../components/dashboard/ActivityFeedCard';
 import FinancialSummaryCard from '../components/dashboard/FinancialSummaryCard';
 import TabLayout from '../components/ui/TabLayout';
 import AiHealthMonitorPanel from '../components/dashboard/AiHealthMonitorPanel';
