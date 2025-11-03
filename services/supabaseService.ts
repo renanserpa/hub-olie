@@ -193,6 +193,7 @@ export const supabaseService = {
         system_settings_logs: [],
         config_supply_groups: [],
         config_materials: [],
+        warehouses: [],
         media_assets: [], orders: [], contacts: [], products: [], product_categories: [], production_orders: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
@@ -334,7 +335,7 @@ export const supabaseService = {
   getTasks: (): Promise<Task[]> => supabaseService.getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
-  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*)'),
+  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)'),
   getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
     const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
     if (error) { handleError(error, 'getInventoryMovements'); return []; }

@@ -220,10 +220,18 @@ export interface Task {
 
 // --- INVENTORY ---
 
+export interface Warehouse {
+    id: string;
+    name: string;
+    location: string;
+}
+
 export interface InventoryBalance {
     id: string;
     material_id: string;
     material?: Material;
+    warehouse_id: string;
+    warehouse?: Warehouse;
     current_stock: number;
     reserved_stock: number;
     location?: string;
@@ -241,7 +249,10 @@ export interface InventoryMovement {
     notes?: string;
     ref?: string;
     material_id: string;
-    quantity: number;
+    quantity: number; // For transfers, this is the amount transferred. Always positive.
+    warehouse_id?: string; // For in, out, adjust
+    from_warehouse_id?: string; // For transfers
+    to_warehouse_id?: string; // For transfers
     created_at: string;
 }
 
@@ -742,6 +753,9 @@ export interface AppData {
     // New Materials Structure
     config_supply_groups: MaterialGroup[];
     config_materials: Material[];
+    
+    // New Inventory Structure
+    warehouses: Warehouse[];
 
     media_assets: MediaAsset[];
     orders: Order[];

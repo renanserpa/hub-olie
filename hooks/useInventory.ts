@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { InventoryBalance, InventoryMovement, Material, InventoryMovementReason, InventoryMovementType } from '../types';
+import { InventoryBalance, InventoryMovement, Material, Warehouse, InventoryMovementReason, InventoryMovementType } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export function useInventory() {
     const [allBalances, setAllBalances] = useState<InventoryBalance[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
+    const [allWarehouses, setAllWarehouses] = useState<Warehouse[]>([]);
     const [movements, setMovements] = useState<InventoryMovement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -17,17 +18,19 @@ export function useInventory() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [balancesData, materialsData] = await Promise.all([
-                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),
-                dataService.getCollection<Material>('config_materials')
+            const [balancesData, materialsData, warehousesData] = await Promise.all([
+                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)'),
+                dataService.getCollection<Material>('config_materials'),
+                dataService.getCollection<Warehouse>('warehouses'),
             ]);
             
             setAllBalances(balancesData);
             setAllMaterials(materialsData);
+            setAllWarehouses(warehousesData);
             
-            if (balancesData.length > 0 && selectedMaterialId === null) {
-                setSelectedMaterialId(balancesData[0].material_id);
-            } else if (balancesData.length === 0) {
+            if (materialsData.length > 0 && selectedMaterialId === null) {
+                setSelectedMaterialId(materialsData[0].id);
+            } else if (materialsData.length === 0) {
                 setSelectedMaterialId(null);
             }
         } catch (error) {
@@ -38,7 +41,7 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     useEffect(() => {
-        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)', (data) => {
+        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)', (data) => {
             setAllBalances(data);
         });
         loadData();
@@ -63,29 +66,74 @@ export function useInventory() {
         };
         fetchMovements();
         
-        const listener = dataService.listenToCollection<InventoryMovement>(`inventory_movements?material_id=eq.${selectedMaterialId}`, undefined, (data) => {
+         const listener = dataService.listenToCollection<InventoryMovement>(`inventory_movements?material_id=eq.${selectedMaterialId}`, undefined, (data) => {
              setMovements(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         });
         return () => listener.unsubscribe();
 
     }, [selectedMaterialId]);
 
-    const filteredBalances = useMemo(() => {
+    const aggregatedBalances = useMemo(() => {
+        const materialMap = new Map<string, { material: Material, current_stock: number, reserved_stock: number }>();
+
+        allBalances.forEach(balance => {
+            if (!balance.material) return;
+            
+            if (!materialMap.has(balance.material_id)) {
+                materialMap.set(balance.material_id, {
+                    material: balance.material,
+                    current_stock: 0,
+                    reserved_stock: 0,
+                });
+            }
+            
+            const entry = materialMap.get(balance.material_id)!;
+            entry.current_stock += balance.current_stock;
+            entry.reserved_stock += balance.reserved_stock;
+        });
+
+        const filtered = Array.from(materialMap.values());
+        
         if (!searchQuery) {
-            return allBalances;
+            return filtered;
         }
         const lowercasedQuery = searchQuery.toLowerCase();
-        return allBalances.filter(balance =>
-            balance.material?.name.toLowerCase().includes(lowercasedQuery) ||
-            balance.material?.sku?.toLowerCase().includes(lowercasedQuery)
+        return filtered.filter(balance =>
+            balance.material.name.toLowerCase().includes(lowercasedQuery) ||
+            balance.material.sku?.toLowerCase().includes(lowercasedQuery)
         );
     }, [allBalances, searchQuery]);
+    
+    const balancesByMaterial = useMemo(() => {
+        if (!selectedMaterialId) return null;
+        
+        const material = allMaterials.find(m => m.id === selectedMaterialId);
+        if (!material) return null;
 
-    const selectedBalance = useMemo(() => {
-        return allBalances.find(b => b.material_id === selectedMaterialId) || null;
-    }, [allBalances, selectedMaterialId]);
+        const balances = allBalances.filter(b => b.material_id === selectedMaterialId);
+        
+        return { material, balances };
 
-    const createMovement = useCallback(async (movementData: any) => {
+    }, [allBalances, allMaterials, selectedMaterialId]);
+
+    const kpiStats = useMemo(() => {
+        const lowStockItems = aggregatedBalances.filter(b => (b.current_stock - b.reserved_stock) <= 10).length;
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        // This is a simplified calculation, a real app would fetch movements for all materials
+        const transfersThisMonth = movements.filter(m => m.type === 'transfer' && new Date(m.created_at) >= firstDayOfMonth).length;
+
+        return {
+            totalValue: 0, // Placeholder, would need material cost
+            lowStockItems,
+            totalItems: allMaterials.length,
+            transfersThisMonth,
+        };
+    }, [aggregatedBalances, allMaterials.length, movements]);
+
+
+    const addInventoryMovement = useCallback(async (movementData: any) => {
         setIsSaving(true);
         try {
             await dataService.addInventoryMovement(movementData);
@@ -97,18 +145,34 @@ export function useInventory() {
             setIsSaving(false);
         }
     }, []);
+    
+    const transferStock = useCallback(async (transferData: any) => {
+        setIsSaving(true);
+        try {
+            await dataService.transferStock(transferData);
+             toast({ title: 'Sucesso!', description: 'Transferência de estoque registrada.' });
+        } catch (error) {
+            toast({ title: 'Erro!', description: 'Não foi possível registrar a transferência.', variant: 'destructive' });
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    }, []);
 
     return {
         isLoading,
         isLoadingMovements,
         isSaving,
-        filteredBalances,
+        aggregatedBalances,
         searchQuery,
         setSearchQuery,
-        selectedBalance,
+        balancesByMaterial,
         setSelectedMaterialId,
         movements,
-        createMovement,
+        addInventoryMovement,
+        transferStock,
         allMaterials,
+        allWarehouses,
+        kpiStats,
     };
 }

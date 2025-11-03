@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -100,12 +100,15 @@ export const dataService = {
   getInventoryBalances: () => isSandbox() ? sandboxService.getCollection<InventoryBalance>('inventory_balances') : realSupabaseService.getInventoryBalances(),
   getInventoryMovements: (materialId: string) => isSandbox() ? sandboxService.getInventoryMovements(materialId) : realSupabaseService.getInventoryMovements(materialId),
   addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => isSandbox() ? sandboxService.addInventoryMovement(movementData) : realSupabaseService.addInventoryMovement(movementData),
+  transferStock: (transferData: any) => isSandbox() ? sandboxService.transferStock(transferData) : Promise.resolve(), // Real implementation would be an RPC call
   
   getProducts: () => isSandbox() ? sandboxService.getCollection<Product>('products') : realSupabaseService.getProducts(),
   getProductCategories: () => isSandbox() ? sandboxService.getCollection<ProductCategory>('product_categories') : realSupabaseService.getProductCategories(),
   
   getContacts: () => isSandbox() ? sandboxService.getCollection<Contact>('customers') : realSupabaseService.getContacts(),
   
+  getWarehouses: (): Promise<Warehouse[]> => isSandbox() ? sandboxService.getCollection<Warehouse>('warehouses') : realSupabaseService.getCollection<Warehouse>('warehouses'),
+
   getLogisticsData: () => isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 
   getMarketingCampaigns: () => isSandbox() ? sandboxService.getCollection<MarketingCampaign>('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),

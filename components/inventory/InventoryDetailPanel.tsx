@@ -1,12 +1,14 @@
 import React from 'react';
-import { InventoryBalance, InventoryMovement, InventoryMovementReason, InventoryMovementType } from '../../types';
+import { InventoryBalance, InventoryMovement, Material, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { ArrowDownLeft, ArrowUpRight, History, Package, Edit, RotateCw } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, History, Edit, RotateCw, Warehouse } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import EmptyState from './EmptyState';
+import InventoryChart from './InventoryChart';
 
 interface InventoryDetailPanelProps {
-    balance: InventoryBalance;
+    material: Material;
+    balances: InventoryBalance[];
     movements: InventoryMovement[];
     isLoading: boolean;
 }
@@ -28,17 +30,8 @@ const movementReasonLabels: Record<InventoryMovementReason, string> = {
     'TRANSFERENCIA_INTERNA': 'Transferência Interna'
 };
 
-const StatCard: React.FC<{ title: string, value: string, unit: string }> = ({ title, value, unit }) => (
-    <div className="bg-secondary p-3 rounded-lg text-center">
-        <p className="text-xs text-textSecondary">{title}</p>
-        <p className="text-xl font-bold text-textPrimary">{value} <span className="text-sm font-normal">{unit}</span></p>
-    </div>
-);
-
-const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, movements, isLoading }) => {
-    const available = balance.current_stock - balance.reserved_stock;
-    const material = balance.material;
-
+const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ material, balances, movements, isLoading }) => {
+    
     const formatDate = (dateValue: any) => {
         if (!dateValue) return '-';
         const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
@@ -47,17 +40,31 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, mo
     };
 
     return (
-        <Card className="sticky top-20 h-[calc(100vh-10rem)] overflow-y-auto">
+        <Card className="sticky top-20 h-[calc(100vh-18rem)] overflow-y-auto">
             <CardHeader>
-                <CardTitle>{material?.name}</CardTitle>
-                <p className="text-sm text-textSecondary font-mono">{material?.sku}</p>
+                <CardTitle>{material.name}</CardTitle>
+                <p className="text-sm text-textSecondary font-mono">{material.sku}</p>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-3 gap-2 mb-6">
-                    <StatCard title="Disponível" value={available.toFixed(2)} unit={material?.unit || ''} />
-                    <StatCard title="Físico" value={balance.current_stock.toFixed(2)} unit={material?.unit || ''} />
-                    <StatCard title="Reservado" value={balance.reserved_stock.toFixed(2)} unit={material?.unit || ''} />
+                <div className="mb-6">
+                    <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><Warehouse size={16}/> Saldo por Armazém</h4>
+                    {balances.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-2">
+                            {balances.map(b => (
+                                <div key={b.id} className="bg-secondary dark:bg-dark-secondary p-3 rounded-lg grid grid-cols-3 gap-2 text-center">
+                                    <p className="col-span-3 text-left font-medium text-sm">{b.warehouse?.name}</p>
+                                    <div><p className="text-xs text-textSecondary dark:text-dark-textSecondary">Disponível</p><p className="font-bold text-primary">{(b.current_stock - b.reserved_stock).toFixed(2)}</p></div>
+                                    <div><p className="text-xs text-textSecondary dark:text-dark-textSecondary">Físico</p><p className="font-semibold">{(b.current_stock).toFixed(2)}</p></div>
+                                    <div><p className="text-xs text-textSecondary dark:text-dark-textSecondary">Reservado</p><p className="font-semibold">{(b.reserved_stock).toFixed(2)}</p></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-center text-textSecondary dark:text-dark-textSecondary py-4">Sem saldo registrado.</p>
+                    )}
                 </div>
+
+                <InventoryChart />
 
                 <div className="border-t pt-4">
                     <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><History size={16}/> Histórico de Movimentos</h4>
@@ -81,15 +88,15 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, mo
                                 const isPositive = move.type === 'in' || (move.type === 'adjust' && move.quantity > 0);
                                 return (
                                     <li key={move.id} className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-full bg-secondary ${config.color}`}>
+                                        <div className={`p-2 rounded-full bg-secondary dark:bg-dark-secondary ${config.color}`}>
                                             <Icon size={18} />
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-medium text-sm">{movementReasonLabels[move.reason]}</p>
-                                            <p className="text-xs text-textSecondary">{formatDate(move.created_at)} {move.ref && `(${move.ref})`}</p>
+                                            <p className="text-xs text-textSecondary dark:text-dark-textSecondary">{formatDate(move.created_at)} {move.ref && `(${move.ref})`}</p>
                                         </div>
                                         <p className={`font-semibold text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                            {isPositive ? '+' : ''}{move.quantity.toFixed(2)}
+                                            {isPositive && move.type !== 'transfer' ? '+' : ''}{move.quantity.toFixed(2)}
                                         </p>
                                     </li>
                                 );
