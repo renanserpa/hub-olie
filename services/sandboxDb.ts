@@ -5,7 +5,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification
+    WorkflowRule, Notification, Warehouse
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -24,6 +24,12 @@ const subscribe = (path: string, handler: (items: any[]) => void) => {
 
 // --- SEED DATA ---
 const generateId = () => crypto.randomUUID();
+
+// FIX: Added warehouse seed data.
+const warehouses: Warehouse[] = [
+    { id: 'w1', name: 'Armazém Principal', location: 'Bloco A' },
+    { id: 'w2', name: 'Armazém Secundário', location: 'Bloco C' },
+];
 
 const contacts: Contact[] = [
     { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {}, stage: 'Cliente Ativo', tags: ['VIP', 'Bolsas'], created_at: new Date(Date.now() - 2 * 86400000).toISOString() },
@@ -103,18 +109,21 @@ const tasks: Task[] = [
     {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1, priority: 'normal'},
     {id: 't3', title: 'OP-2024-003 - Mochila Urbana', status_id: 'ts2', client_name: 'Bruno Costa', quantity: 2, position: 2, priority: 'urgente'},
 ];
-const inventory_balances: InventoryBalance[] = config_materials.map((m, i) => ({ 
+// FIX: Added warehouse_id and warehouse properties to satisfy the InventoryBalance type.
+const inventory_balances: InventoryBalance[] = config_materials.map((m, i) => ({
     id: `inv_bal_${i + 1}`,
-    material_id: m.id, 
-    material: m, 
-    current_stock: 50 + i * 10, 
-    reserved_stock: 10, 
+    material_id: m.id,
+    material: m,
+    warehouse_id: 'w1',
+    warehouse: warehouses[0],
+    current_stock: 50 + i * 10,
+    reserved_stock: 10,
     location: `A${i+1}-S${i+1}`,
-    updated_at: new Date().toISOString() 
+    updated_at: new Date().toISOString()
 }));
 const inventory_movements: InventoryMovement[] = [
-    { id: 'im1', material_id: 'mat1', type: 'in', quantity: 100, reason: 'RECEBIMENTO_PO', notes: 'PO-2024-001', created_at: new Date().toISOString() },
-    { id: 'im2', material_id: 'mat1', type: 'out', quantity: -20, reason: 'CONSUMO_PRODUCAO', notes: 'OP-2024-001', created_at: new Date().toISOString() }
+    { id: 'im1', material_id: 'mat1', type: 'in', quantity: 100, reason: 'RECEBIMENTO_PO', notes: 'PO-2024-001', warehouse_id: 'w1', created_at: new Date().toISOString() },
+    { id: 'im2', material_id: 'mat1', type: 'out', quantity: -20, reason: 'CONSUMO_PRODUCAO', notes: 'OP-2024-001', warehouse_id: 'w1', created_at: new Date().toISOString() }
 ];
 
 const system_settings: SystemSetting[] = [
@@ -347,6 +356,7 @@ let collections: Record<string, any[]> = {
     // New Modules
     workflow_rules,
     notifications,
+    warehouses,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -503,12 +513,13 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
 
 
 // --- EXPORTED SERVICE OBJECT ---
+// FIX: Converted sync methods to async to provide a consistent interface with supabaseService.
 export const sandboxDb = {
-    getCollection,
-    getDocument: get,
-    addDocument: create,
-    updateDocument: update,
-    deleteDocument: del,
+    async getCollection<T>(path: string): Promise<T[]> { return Promise.resolve(getCollection(path)); },
+    async getDocument<T>(path: string, id: string): Promise<T | null> { return Promise.resolve(get(path, id)); },
+    async addDocument<T extends {id?: string}>(path: string, data: Omit<T, 'id'>): Promise<T> { return Promise.resolve(create(path, data)); },
+    async updateDocument<T extends {id: string}>(path: string, id: string, data: Partial<T>): Promise<T> { return Promise.resolve(update(path, id, data)); },
+    async deleteDocument(path: string, id: string): Promise<void> { return Promise.resolve(del(path, id)); },
     listenToCollection: subscribe,
     listenToDocument: <T extends { id: string }>(path: string, id: string, callback: (payload: T) => void) => {
         const handler = () => {
@@ -594,7 +605,7 @@ export const sandboxDb = {
             config_supply_groups: groups.find(g => g.id === m.group_id)
         }));
     },
-    getMaterialGroups: async (): Promise<MaterialGroup[]> => getCollection<MaterialGroup>('config_supply_groups'),
+    getMaterialGroups: async (): Promise<MaterialGroup[]> => Promise.resolve(getCollection<MaterialGroup>('config_supply_groups')),
     addMaterial: async (material: any) => Promise.resolve(create<Material>('config_materials', material)),
     addMaterialGroup: async (group: any) => Promise.resolve(create<MaterialGroup>('config_supply_groups', group)),
     getOrders: async (): Promise<Order[]> => {
@@ -645,12 +656,50 @@ export const sandboxDb = {
         Promise.resolve(getCollection<InventoryMovement>('inventory_movements').filter(m => m.material_id === materialId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())),
     addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => {
         const movement = create<InventoryMovement>('inventory_movements', movementData as any);
-        const balance = getCollection<InventoryBalance>('inventory_balances').find(b => b.material_id === movement.material_id);
+        const balance = getCollection<InventoryBalance>('inventory_balances').find(b => b.material_id === movement.material_id && b.warehouse_id === movement.warehouse_id);
         if (balance) {
             const newStock = balance.current_stock + movement.quantity;
             update<InventoryBalance>('inventory_balances', balance.id, { current_stock: newStock });
+        } else if (movement.warehouse_id) {
+             create<InventoryBalance>('inventory_balances', {
+                material_id: movement.material_id,
+                warehouse_id: movement.warehouse_id,
+                current_stock: movement.quantity,
+                reserved_stock: 0,
+             } as any);
         }
         return Promise.resolve(movement);
+    },
+    // FIX: Added transferStock implementation for sandbox mode.
+    transferStock: async (transferData: any) => {
+        const { material_id, from_warehouse_id, to_warehouse_id, quantity } = transferData;
+        const allBalances = getCollection<InventoryBalance>('inventory_balances');
+        const fromBalance = allBalances.find(b => b.material_id === material_id && b.warehouse_id === from_warehouse_id);
+        const toBalance = allBalances.find(b => b.material_id === material_id && b.warehouse_id === to_warehouse_id);
+
+        if (!fromBalance || fromBalance.current_stock < quantity) {
+            throw new Error('Estoque insuficiente no armazém de origem.');
+        }
+
+        // Update from balance
+        update<InventoryBalance>('inventory_balances', fromBalance.id, { current_stock: fromBalance.current_stock - quantity });
+        
+        // Update or create to balance
+        if (toBalance) {
+            update<InventoryBalance>('inventory_balances', toBalance.id, { current_stock: toBalance.current_stock + quantity });
+        } else {
+            create<InventoryBalance>('inventory_balances', {
+                material_id,
+                warehouse_id: to_warehouse_id,
+                current_stock: quantity,
+                reserved_stock: 0,
+            } as any);
+        }
+        
+        // Create movement log
+        create<InventoryMovement>('inventory_movements', { ...transferData, created_at: new Date().toISOString() });
+        
+        return Promise.resolve();
     },
     createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) => {
         const po_number = `PC-SB-${Date.now().toString().slice(-5)}`;

@@ -100,7 +100,8 @@ export const dataService = {
   getInventoryBalances: () => isSandbox() ? sandboxService.getCollection<InventoryBalance>('inventory_balances') : realSupabaseService.getInventoryBalances(),
   getInventoryMovements: (materialId: string) => isSandbox() ? sandboxService.getInventoryMovements(materialId) : realSupabaseService.getInventoryMovements(materialId),
   addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => isSandbox() ? sandboxService.addInventoryMovement(movementData) : realSupabaseService.addInventoryMovement(movementData),
-  transferStock: (transferData: any) => isSandbox() ? sandboxService.transferStock(transferData) : Promise.resolve(), // Real implementation would be an RPC call
+  // FIX: Added transferStock to the service to match its usage in useInventory hook.
+  transferStock: (transferData: any) => isSandbox() ? sandboxService.transferStock(transferData) : realSupabaseService.transferStock(transferData),
   
   getProducts: () => isSandbox() ? sandboxService.getCollection<Product>('products') : realSupabaseService.getProducts(),
   getProductCategories: () => isSandbox() ? sandboxService.getCollection<ProductCategory>('product_categories') : realSupabaseService.getProductCategories(),

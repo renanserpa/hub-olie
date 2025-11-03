@@ -342,6 +342,8 @@ export const supabaseService = {
     return data || [];
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }),
+  // FIX: Added placeholder transferStock function. In a real app, this would be a transactional RPC call.
+  transferStock: (transferData: any) => { console.warn("Supabase transferStock is not implemented and should be an RPC function."); return Promise.resolve(); },
   getProducts: (): Promise<Product[]> => supabaseService.getCollection('products'),
   getProductCategories: (): Promise<ProductCategory[]> => supabaseService.getCollection('product_categories'),
   addProduct: (productData: AnyProduct) => addDocument('products', productData),
@@ -428,5 +430,6 @@ export const supabaseService = {
     return { accounts, categories, transactions, payables, receivables };
   },
   getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
-  markNotificationAsRead: (id: string): Promise<Notification> => updateDocument('notifications', id, { is_read: true }),
+  // FIX: Explicitly specify the generic type for updateDocument to ensure correct type checking for `is_read`.
+  markNotificationAsRead: (id: string): Promise<Notification> => updateDocument<Notification>('notifications', id, { is_read: true }),
 };
