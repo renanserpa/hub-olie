@@ -1,14 +1,12 @@
 import React from 'react';
 import { ProductionOrderStatus } from '../../types';
-import { ProductionOrderFiltersState } from '../../hooks/useProductionOrders';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Search, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 interface ProductionOrderFiltersProps {
-    filters: ProductionOrderFiltersState;
-    updateFilters: (newFilters: Partial<ProductionOrderFiltersState>) => void;
-    clearFilters: () => void;
+    filters: { search: string, status: ProductionOrderStatus[] };
+    onFilterChange: (filters: { search: string, status: ProductionOrderStatus[] }) => void;
     statusCounts: Record<ProductionOrderStatus | 'all', number>;
 }
 
@@ -21,22 +19,23 @@ const STATUS_OPTIONS: { id: ProductionOrderStatus; label: string }[] = [
     { id: 'cancelado', label: 'Cancelada' },
 ];
 
-const ProductionOrderFilters: React.FC<ProductionOrderFiltersProps> = ({ filters, updateFilters, clearFilters, statusCounts }) => {
+const ProductionOrderFilters: React.FC<ProductionOrderFiltersProps> = ({ filters, onFilterChange, statusCounts }) => {
 
     const handleStatusChange = (status: ProductionOrderStatus) => {
         const currentStatuses = filters.status;
         const newStatuses = currentStatuses.includes(status)
             ? currentStatuses.filter(s => s !== status)
             : [...currentStatuses, status];
-        updateFilters({ status: newStatuses });
+        onFilterChange({ ...filters, status: newStatuses });
     };
 
+    const clearFilters = () => onFilterChange({ search: '', status: [] });
     const hasActiveFilters = filters.search !== '' || filters.status.length > 0;
 
     return (
         <Card className="sticky top-20">
             <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-lg">Filtros</CardTitle>
+                <CardTitle className="text-lg">Filtros de OPs</CardTitle>
                 {hasActiveFilters && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
                         <X className="w-3 h-3 mr-1" />
@@ -55,7 +54,7 @@ const ProductionOrderFilters: React.FC<ProductionOrderFiltersProps> = ({ filters
                             type="text"
                             id="search-po"
                             value={filters.search}
-                            onChange={(e) => updateFilters({ search: e.target.value })}
+                            onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
                             placeholder="Buscar OP, produto..."
                             className="w-full pl-9 pr-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
@@ -76,6 +75,7 @@ const ProductionOrderFilters: React.FC<ProductionOrderFiltersProps> = ({ filters
                                     />
                                     {opt.label}
                                 </span>
+                                {/* @fix: Uncommented to display the status count for each filter option. */}
                                 <span className="text-xs bg-secondary px-1.5 py-0.5 rounded-full text-textSecondary font-medium">
                                     {statusCounts[opt.id] || 0}
                                 </span>

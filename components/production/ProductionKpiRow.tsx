@@ -1,5 +1,5 @@
 import React from 'react';
-import { Workflow, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { Workflow, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import StatCard from '../dashboard/StatCard'; // Reusing the dashboard StatCard
 
 interface ProductionKpiRowProps {
@@ -7,7 +7,7 @@ interface ProductionKpiRowProps {
         openOrders: number;
         completedToday: number;
         overdue: number;
-        efficiency: string;
+        qualityApprovalRate: string;
     }
 }
 
@@ -33,10 +33,10 @@ const ProductionKpiRow: React.FC<ProductionKpiRowProps> = ({ kpis }) => {
                 description="Ordens com prazo de entrega vencido"
             />
              <StatCard 
-                title="Eficiência (OTD)"
-                value={kpis.efficiency}
-                icon={Zap}
-                description="Entregas dentro do prazo"
+                title="Qualidade (Aprov.)"
+                value={kpis.qualityApprovalRate}
+                icon={ShieldCheck}
+                description="Taxa de aprovação nas inspeções"
             />
         </div>
     );

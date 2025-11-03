@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ProductionOrder, Material, ProductionTask, ProductionTaskStatus } from '../../types';
+import { ProductionOrder, Material, ProductionTask, ProductionTaskStatus, ProductionQualityCheck, QualityCheckResult } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Info, ListChecks, Package, ShieldCheck, Play, Check, Pause } from 'lucide-react';
+import { Info, ListChecks, Package, ShieldCheck, Play, Check, Pause, Plus, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import ProductionOrderCard from './ProductionOrderCard';
 import { Button } from '../ui/Button';
@@ -10,6 +10,7 @@ interface ProductionOrderDetailPanelProps {
     order: ProductionOrder;
     allMaterials: Material[];
     onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
+    onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
 }
 
 const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
@@ -19,8 +20,38 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
     </div>
 );
 
-const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials, onUpdateTaskStatus }) => {
+const QualityCheckForm: React.FC<{ orderId: string; onCreate: (check: any) => void }> = ({ orderId, onCreate }) => {
+    const [checkType, setCheckType] = useState('');
+    const [result, setResult] = useState<QualityCheckResult>('Aprovado');
+    const [inspector, setInspector] = useState('');
+    
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!checkType || !inspector) return;
+        onCreate({ production_order_id: orderId, check_type: checkType, result, inspector });
+        setCheckType('');
+        setResult('Aprovado');
+        setInspector('');
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="p-3 bg-secondary/50 rounded-lg space-y-2 text-sm">
+             <input value={checkType} onChange={e => setCheckType(e.target.value)} placeholder="Tipo de Inspeção (ex: Medidas)" className="w-full p-1 border rounded" required />
+             <input value={inspector} onChange={e => setInspector(e.target.value)} placeholder="Nome do Inspetor" className="w-full p-1 border rounded" required />
+             <select value={result} onChange={e => setResult(e.target.value as QualityCheckResult)} className="w-full p-1 border rounded">
+                <option value="Aprovado">Aprovado</option>
+                <option value="Reprovado">Reprovado</option>
+                <option value="Pendente">Pendente</option>
+             </select>
+             <Button type="submit" size="sm" className="w-full">Salvar Inspeção</Button>
+        </form>
+    );
+};
+
+
+const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials, onUpdateTaskStatus, onCreateQualityCheck }) => {
     const [activeTab, setActiveTab] = useState('tasks');
+    const [showAddQuality, setShowAddQuality] = useState(false);
 
     const formatDate = (dateValue?: any) => {
         if (!dateValue) return '-';
@@ -75,13 +106,22 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
     );
 
     const renderQualityTab = () => (
-        <div className="p-4">
-            <Button size="sm" className="mb-4">Registrar Inspeção</Button>
+        <div className="p-4 space-y-3">
+            {!showAddQuality ? (
+                <Button size="sm" variant="outline" className="w-full" onClick={() => setShowAddQuality(true)}><Plus size={14} className="mr-2"/>Registrar Inspeção</Button>
+            ) : (
+                <QualityCheckForm orderId={order.id} onCreate={(check) => { onCreateQualityCheck(check); setShowAddQuality(false); }} />
+            )}
+
             {order.quality_checks && order.quality_checks.length > 0 ? (
                 <div className="space-y-2">
                     {order.quality_checks.map(qc => (
                         <div key={qc.id} className="p-2 bg-secondary rounded-md text-sm">
-                            <span className="font-semibold">{qc.check_type}:</span> {qc.result}
+                            <div className="flex justify-between">
+                                <span className="font-semibold">{qc.check_type}</span>
+                                <span className={cn("font-bold", qc.result === 'Aprovado' ? 'text-green-600' : 'text-red-600')}>{qc.result}</span>
+                            </div>
+                            <p className="text-xs text-textSecondary">Inspetor: {qc.inspector}</p>
                         </div>
                     ))}
                 </div>
@@ -111,7 +151,7 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
 
 
     return (
-        <Card className="sticky top-20 h-[calc(100vh-18rem)] overflow-y-auto">
+        <Card className="sticky top-20 h-[calc(100vh-25rem)] overflow-y-auto">
             <div className="p-4 border-b border-border">
                 <ProductionOrderCard order={order} isSelected={false} onClick={() => {}} />
             </div>

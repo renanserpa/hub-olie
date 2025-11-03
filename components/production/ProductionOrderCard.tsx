@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../../types';
 import { Card } from '../ui/Card';
@@ -48,11 +45,23 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, isSele
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+        e.dataTransfer.setData('orderId', order.id);
+        e.currentTarget.style.opacity = '0.5';
+    };
+
+    const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+        e.currentTarget.style.opacity = '1';
+    };
+
     return (
         <Card
             onClick={onClick}
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             className={cn(
-                'cursor-pointer transition-all duration-200 hover:shadow-md',
+                'cursor-pointer transition-all duration-200 hover:shadow-md active:cursor-grabbing',
                 isSelected ? 'ring-2 ring-primary shadow-lg' : 'hover:border-primary/50',
                 isUrgentInProgress && "border-red-500 ring-2 ring-red-200 animate-pulse"
             )}

@@ -193,8 +193,8 @@ export interface ProductionTask {
     production_order_id: string;
     name: string;
     status: ProductionTaskStatus;
-    started_at?: string | null;
-    finished_at?: string | null;
+    started_at: string | null;
+    finished_at: string | null;
     operator_id?: string;
 }
 
@@ -205,7 +205,7 @@ export interface ProductionQualityCheck {
     production_order_id: string;
     check_type: string;
     result: QualityCheckResult;
-    inspector?: string;
+    inspector: string;
     notes?: string;
     created_at: string;
 }

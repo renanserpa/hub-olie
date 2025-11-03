@@ -12,6 +12,7 @@ export function useProduction() {
     const [isSaving, setIsSaving] = useState(false);
     
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [filters, setFilters] = useState<{ search: string; status: ProductionOrderStatus[] }>({ search: '', status: [] });
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -50,24 +51,38 @@ export function useProduction() {
         }));
     }, [allOrders, allTasks, allQualityChecks]);
     
+    const filteredOrders = useMemo(() => {
+        return ordersWithDetails.filter(order => {
+            const searchMatch = filters.search === '' || 
+                                order.po_number.toLowerCase().includes(filters.search.toLowerCase()) || 
+                                (order.product && order.product.name.toLowerCase().includes(filters.search.toLowerCase()));
+            
+            const statusMatch = filters.status.length === 0 || filters.status.includes(order.status);
+            
+            return searchMatch && statusMatch;
+        });
+    }, [ordersWithDetails, filters]);
+
     const selectedOrder = useMemo(() => {
-        return ordersWithDetails.find(o => o.id === selectedOrderId) || null;
-    }, [ordersWithDetails, selectedOrderId]);
+        return filteredOrders.find(o => o.id === selectedOrderId) || null;
+    }, [filteredOrders, selectedOrderId]);
 
     const kpis = useMemo(() => {
         const openOrders = allOrders.filter(o => o.status === 'em_andamento' || o.status === 'em_espera').length;
         const completedToday = allOrders.filter(o => o.completed_at && new Date(o.completed_at).toDateString() === new Date().toDateString()).length;
         const overdue = allOrders.filter(o => new Date(o.due_date) < new Date() && o.status !== 'finalizado' && o.status !== 'cancelado').length;
-        // Simplified efficiency. A real one would be more complex.
-        const efficiency = allOrders.length > 0 ? ((allOrders.length - overdue) / allOrders.length) * 100 : 100;
+        
+        const qcChecks = allQualityChecks;
+        const approvedChecks = qcChecks.filter(q => q.result === 'Aprovado').length;
+        const qualityApprovalRate = qcChecks.length > 0 ? (approvedChecks / qcChecks.length) * 100 : 100;
 
         return {
             openOrders,
             completedToday,
             overdue,
-            efficiency: efficiency.toFixed(0) + '%',
+            qualityApprovalRate: qualityApprovalRate.toFixed(0) + '%',
         };
-    }, [allOrders]);
+    }, [allOrders, allQualityChecks]);
     
     const updateTaskStatus = async (taskId: string, status: ProductionTaskStatus) => {
         setIsSaving(true);
@@ -96,10 +111,28 @@ export function useProduction() {
         }
     };
     
+    const updateProductionOrderStatus = async (orderId: string, status: ProductionOrderStatus) => {
+        setIsSaving(true);
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) return;
+        
+        // Optimistic update
+        setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+
+        try {
+            await dataService.updateDocument<ProductionOrder>('production_orders', orderId, { status });
+            toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado para "${status}".` });
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
+            loadData(); // Revert
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const createQualityCheck = async (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => {
         setIsSaving(true);
         try {
-// @fix: Added `created_at` to the object passed to `addDocument` to satisfy the type requirements.
             await dataService.addDocument<ProductionQualityCheck>('production_quality_checks', {
                 ...check,
                 created_at: new Date().toISOString()
@@ -115,13 +148,17 @@ export function useProduction() {
 
     return {
         allOrders: ordersWithDetails,
+        filteredOrders,
         allMaterials,
         isLoading,
         isSaving,
         selectedOrder,
         setSelectedOrderId,
         kpis,
+        filters,
+        setFilters,
         updateTaskStatus,
+        updateProductionOrderStatus,
         createQualityCheck,
     };
 }
