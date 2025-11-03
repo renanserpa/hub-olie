@@ -37,7 +37,6 @@ const CORES_SUB_TABS = [
 const paletteFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const colorFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor (Hex)', type: 'color' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [ {value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}, {value: 'cotton', label: 'Algodão'}, {value: 'metallic', label: 'Metálica'}]} ];
-const textureFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }, { key: 'image_url', label: 'URL da Imagem', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
 const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'select', options: [ {value: 'script', label: 'Script'}, {value: 'serif', label: 'Serif'}, {value: 'sans-serif', label: 'Sans-serif'}, {value: 'decorative', label: 'Decorativa'}, {value: 'handwritten', label: 'Manuscrita'}]}, { key: 'style', label: 'Estilo', type: 'select', options: [ {value: 'regular', label: 'Regular'}, {value: 'bold', label: 'Bold'}, {value: 'italic', label: 'Italic'}, {value: 'script', label: 'Script'}]}, { key: 'font_file_url', label: 'Arquivo da Fonte (.ttf, .otf)', type: 'file' }, { key: 'preview_url', label: 'URL da Imagem de Preview', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 
 const SettingsPage: React.FC = () => {
@@ -58,6 +57,22 @@ const SettingsPage: React.FC = () => {
     const renderCatalogsContent = () => {
         if (!settingsData) return null;
         
+        const suppliersOptions = settingsData.suppliers?.map(s => ({ value: s.id, label: s.name })) || [];
+        const fabricColorOptions = settingsData.catalogs.cores_texturas.tecido?.map(c => ({ value: c.id, label: c.name })) || [];
+
+        const textureFieldConfig: FieldConfig[] = [
+            { key: 'name', label: 'Nome da Textura', type: 'text' },
+            { key: 'description', label: 'Descrição', type: 'textarea' },
+            { key: 'image_url', label: 'URL da Imagem (Foto)', type: 'text' },
+            { key: 'hex_code', label: 'Cor Principal (Hex)', type: 'color' },
+            { key: 'fabric_color_id', label: 'Cor Equivalente no Sistema', type: 'select', options: fabricColorOptions },
+            { key: 'supplier_sku', label: 'Código do Fornecedor', type: 'text' },
+            { key: 'manufacturer_sku', label: 'Código do Fabricante', type: 'text' },
+            { key: 'manufacturer_id', label: 'Fabricante', type: 'select', options: suppliersOptions },
+            { key: 'distributor_id', label: 'Distribuidor', type: 'select', options: suppliersOptions },
+            { key: 'is_active', label: 'Status', type: 'checkbox' }
+        ];
+
         const dataExists = (key: keyof typeof settingsData.catalogs | keyof typeof settingsData.catalogs.cores_texturas, isSubSub: boolean = false) => {
           if (isSubSub) {
             return (settingsData.catalogs.cores_texturas as any)[key]?.length > 0

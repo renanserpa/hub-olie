@@ -214,6 +214,7 @@ export const supabaseService = {
         const [
             tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials,
             paletas_cores, forro, puxador, bordado, texturas,
+            suppliers,
             initializer_agents, initializer_logs, initializer_sync_state
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
@@ -228,6 +229,7 @@ export const supabaseService = {
             supabaseService.getCollection<PullerColor>('puller_colors'),
             supabaseService.getCollection<EmbroideryColor>('embroidery_colors'),
             supabaseService.getCollection<FabricTexture>('fabric_textures'),
+            supabaseService.getCollection<Supplier>('suppliers'),
             supabaseService.getCollection<InitializerAgent>('initializer_agents'),
             supabaseService.getCollection<InitializerLog>('initializer_logs'),
             supabaseService.getCollection<InitializerSyncState>('initializer_sync_state'),
@@ -235,6 +237,7 @@ export const supabaseService = {
         
         return {
             ...emptyAppData,
+            suppliers,
             catalogs: { 
                 ...emptyAppData.catalogs,
                 paletas_cores,

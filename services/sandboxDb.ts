@@ -276,8 +276,8 @@ const embroidery_colors: EmbroideryColor[] = [
     { id: 'ec2', name: 'Linha Branca', hex: '#FFFFFF', palette_id: 'pal2', thread_type: 'cotton', is_active: true },
 ];
 const fabric_textures: FabricTexture[] = [
-    { id: 'ft1', name: 'Linho Rústico', description: 'Textura natural do linho.', image_url: 'https://example.com/linho.jpg', is_active: true },
-    { id: 'ft2', name: 'Couro Sintético', description: 'Textura que imita couro.', image_url: 'https://example.com/couro.jpg', is_active: true },
+    { id: 'ft1', name: 'Linho Rústico', description: 'Textura natural do linho.', image_url: 'https://example.com/linho.jpg', is_active: true, hex_code: '#D2B48C', fabric_color_id: 'fc1', supplier_sku: 'FORN-LNH-01', manufacturer_sku: 'MAN-LNH-BG-RUST', manufacturer_id: 'sup1', distributor_id: 'sup1' },
+    { id: 'ft2', name: 'Couro Sintético', description: 'Textura que imita couro.', image_url: 'https://example.com/couro.jpg', is_active: true, hex_code: '#8B4513', supplier_sku: 'FORN-COU-02', manufacturer_sku: 'MAN-SYN-LTHR-BRW', manufacturer_id: 'sup2', distributor_id: 'sup1' },
 ];
 
 
