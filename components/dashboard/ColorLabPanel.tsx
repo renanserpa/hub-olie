@@ -1,6 +1,5 @@
 import React from 'react';
 import PlaceholderContent from '../PlaceholderContent';
-// FIX: Replaced non-existent 'Cube' icon with 'Cuboid'.
 import { Cuboid } from 'lucide-react';
 
 const ColorLabPanel: React.FC = () => {

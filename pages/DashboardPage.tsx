@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
-// FIX: Replaced non-existent 'Cube' icon with 'Cuboid'.
 import { Loader2, ShoppingCart, Users, Package, Workflow, LayoutDashboard, Sparkles, Cuboid, GitBranch, BarChart } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
 import ActivityFeedCard from '../components/dashboard/RecentActivityCard';
