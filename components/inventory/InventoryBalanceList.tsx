@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { InventoryBalance } from '../../types';
 import { Card, CardContent } from '../ui/Card';
@@ -96,7 +97,7 @@ const InventoryBalanceList: React.FC<InventoryBalanceListProps> = ({
                                         >
                                             <td className="p-4 font-medium text-textPrimary">
                                                 {balance.material?.name}
-                                                <span className="block text-xs text-textSecondary font-mono">{balance.material?.codigo}</span>
+                                                <span className="block text-xs text-textSecondary font-mono">{balance.material?.sku}</span>
                                             </td>
                                             <td className="p-4 font-bold text-lg text-primary">{available.toFixed(2)} <span className="text-xs font-normal text-textSecondary">{balance.material?.unit}</span></td>
                                             <td className="p-4">{balance.current_stock.toFixed(2)}</td>

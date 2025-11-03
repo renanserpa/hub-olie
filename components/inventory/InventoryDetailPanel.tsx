@@ -50,7 +50,7 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ balance, mo
         <Card className="sticky top-20 h-[calc(100vh-10rem)] overflow-y-auto">
             <CardHeader>
                 <CardTitle>{material?.name}</CardTitle>
-                <p className="text-sm text-textSecondary font-mono">{material?.codigo}</p>
+                <p className="text-sm text-textSecondary font-mono">{material?.sku}</p>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-3 gap-2 mb-6">

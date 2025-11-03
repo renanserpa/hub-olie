@@ -37,6 +37,7 @@ const CORES_SUB_TABS = [
 const paletteFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const colorFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor (Hex)', type: 'color' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [ {value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}, {value: 'cotton', label: 'Algodão'}, {value: 'metallic', label: 'Metálica'}]} ];
+const textureFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }, { key: 'image_url', label: 'URL da Imagem', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }];
 const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'select', options: [ {value: 'script', label: 'Script'}, {value: 'serif', label: 'Serif'}, {value: 'sans-serif', label: 'Sans-serif'}, {value: 'decorative', label: 'Decorativa'}, {value: 'handwritten', label: 'Manuscrita'}]}, { key: 'style', label: 'Estilo', type: 'select', options: [ {value: 'regular', label: 'Regular'}, {value: 'bold', label: 'Bold'}, {value: 'italic', label: 'Italic'}, {value: 'script', label: 'Script'}]}, { key: 'font_file_url', label: 'Arquivo da Fonte (.ttf, .otf)', type: 'file' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 
 const SettingsPage: React.FC = () => {
@@ -86,7 +87,7 @@ const SettingsPage: React.FC = () => {
                     case 'puxador': data = colorData.puxador; fields = colorFieldConfig; title = 'Cores de Puxador'; tableName = 'puller_colors'; break;
                     case 'vies': data = colorData.vies; fields = colorFieldConfig; title = 'Cores de Viés'; tableName = 'bias_colors'; break;
                     case 'bordado': data = colorData.bordado; fields = embroideryColorFieldConfig; title = 'Cores de Bordado'; tableName = 'embroidery_colors'; break;
-                    case 'texturas': data = colorData.texturas; fields = []; title = "Texturas de Tecido"; tableName = "config_fabric_textures"; break;
+                    case 'texturas': data = colorData.texturas; fields = textureFieldConfig; title = "Texturas de Tecido"; tableName = "fabric_textures"; break;
                 }
                 
                 if (!dataExists(activeCoresSubTab as any, true)) {
