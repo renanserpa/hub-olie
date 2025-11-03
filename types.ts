@@ -721,7 +721,7 @@ export interface AppData {
     finance_accounts: FinanceAccount[];
     finance_categories: FinanceCategory[];
     finance_transactions: FinanceTransaction[];
-    finance_payables: FinanceReceivable[];
+    finance_payables: FinancePayable[];
     finance_receivables: FinanceReceivable[];
     initializer_logs: InitializerLog[];
     initializer_sync_state: InitializerSyncState[];

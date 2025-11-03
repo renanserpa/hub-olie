@@ -23,7 +23,8 @@ export function useLogistics() {
         setIsLoading(true);
         try {
             const { orders, waves, shipments } = await dataService.getLogisticsData();
-            setAllOrders(orders);
+            // FIX: Cast `orders` to `Order[]` to resolve TypeScript's incorrect type inference on nested properties from Supabase joins.
+            setAllOrders(orders as Order[]);
             setAllWaves(waves);
             setAllShipments(shipments);
         } catch (error) {

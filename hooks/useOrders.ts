@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, Contact, Product, OrderStatus, AppData, OrderItem } from '../types';
+import { Order, Contact, Product, OrderStatus, AppData, OrderItem, LogisticsShipment } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -63,6 +63,24 @@ export function useOrders() {
         try {
             await dataService.updateOrderStatus(orderId, newStatus);
             toast({ title: "Status Atualizado!", description: `O pedido foi movido para "${newStatus}".`});
+
+            // Trigger de expedição automática
+            if (newStatus === 'awaiting_shipping') {
+                const order = allOrders.find(o => o.id === orderId);
+                if (order && order.customers) {
+                    // FIX: The type `Omit<LogisticsShipment, "id">` requires the `created_at` property.
+                    const newShipment: Omit<LogisticsShipment, 'id' | 'tracking_code'> = {
+                        order_id: order.id,
+                        order_number: order.number,
+                        customer_name: order.customers.name,
+                        status: 'pending',
+                        created_at: new Date().toISOString(),
+                    };
+                    await dataService.addDocument('logistics_shipments', newShipment);
+                    toast({ title: "Integração Logística", description: `Envio para o pedido ${order.number} criado na expedição.` });
+                }
+            }
+
             // Optimistic update
             setAllOrders(prev => prev.map(o => o.id === orderId ? {...o, status: newStatus} : o));
         } catch (error) {
@@ -70,7 +88,7 @@ export function useOrders() {
         } finally {
             setIsSaving(false);
         }
-    }, []);
+    }, [allOrders]);
     
     const createOrder = useCallback(async (orderData: Partial<Order>) => {
         setIsSaving(true);

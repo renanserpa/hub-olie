@@ -109,7 +109,8 @@ export const dataService = {
   getLogisticsData: () => isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 
   getMarketingCampaigns: () => isSandbox() ? sandboxService.getCollection<MarketingCampaign>('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),
-  getMarketingSegments: () => isSandbox() ? sandboxService.getCollection<MarketingSegment>('marketing_segments') : realSupabaseService.getMarketingTemplates(),
+  // FIX: Corrected a copy-paste error. This now calls `getMarketingSegments` instead of `getMarketingTemplates`.
+  getMarketingSegments: () => isSandbox() ? sandboxService.getCollection<MarketingSegment>('marketing_segments') : realSupabaseService.getMarketingSegments(),
   getMarketingTemplates: () => isSandbox() ? sandboxService.getCollection<MarketingTemplate>('marketing_templates') : realSupabaseService.getMarketingTemplates(),
 
   getPurchasingData: () => isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),

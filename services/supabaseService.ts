@@ -346,6 +346,7 @@ export const supabaseService = {
     return { orders, waves, shipments };
   },
   getMarketingCampaigns: (): Promise<MarketingCampaign[]> => supabaseService.getCollection('marketing_campaigns'),
+  // FIX: Added missing `getMarketingSegments` method.
   getMarketingSegments: (): Promise<MarketingSegment[]> => supabaseService.getCollection('marketing_segments'),
   getMarketingTemplates: (): Promise<MarketingTemplate[]> => supabaseService.getCollection('marketing_templates'),
   getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {

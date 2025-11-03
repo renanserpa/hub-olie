@@ -12,8 +12,10 @@ import MarketingMetrics from '../components/analytics/MarketingMetrics';
 import { useAnalyticsAI } from '../hooks/useAnalyticsAI';
 
 const AnalyticsPage: React.FC = () => {
-    const { isLoading, kpis, snapshots, activeTab, setActiveTab, kpisByModule } = useAnalytics();
-    const { isAiLoading, anomalies, predictions } = useAnalyticsAI(kpis, snapshots);
+    // FIX: Destructure `snapshotsByKpi` from `useAnalytics` to get the correctly grouped data.
+    const { isLoading, kpis, activeTab, setActiveTab, kpisByModule, snapshotsByKpi } = useAnalytics();
+    // FIX: Pass the grouped `snapshotsByKpi` object to the `useAnalyticsAI` hook instead of the flat `snapshots` array.
+    const { isAiLoading, anomalies, predictions } = useAnalyticsAI(kpis, snapshotsByKpi);
     
     const aiData = useMemo(() => ({
         isLoading: isAiLoading,
