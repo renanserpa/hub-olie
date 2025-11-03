@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -109,12 +109,10 @@ export const dataService = {
   getLogisticsData: () => isSandbox() ? sandboxService.getLogisticsData() : realSupabaseService.getLogisticsData(),
 
   getMarketingCampaigns: () => isSandbox() ? sandboxService.getCollection<MarketingCampaign>('marketing_campaigns') : realSupabaseService.getMarketingCampaigns(),
-  // FIX: Corrected a copy-paste error. This now calls `getMarketingSegments` instead of `getMarketingTemplates`.
   getMarketingSegments: () => isSandbox() ? sandboxService.getCollection<MarketingSegment>('marketing_segments') : realSupabaseService.getMarketingSegments(),
   getMarketingTemplates: () => isSandbox() ? sandboxService.getCollection<MarketingTemplate>('marketing_templates') : realSupabaseService.getMarketingTemplates(),
 
   getPurchasingData: () => isSandbox() ? sandboxService.getPurchasingData() : realSupabaseService.getPurchasingData(),
-  // FIX: Add missing createPO and receivePOItems methods to resolve errors in usePurchasing hook.
   createPO: (poData: { supplier_id: string; items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }) =>
     isSandbox() ? sandboxService.createPO(poData) : realSupabaseService.createPO(poData as any), // Cast as any for supabase simplicity
   receivePOItems: (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) =>
@@ -123,4 +121,7 @@ export const dataService = {
   getAnalyticsKpis: () => isSandbox() ? sandboxService.getCollection<AnalyticsKPI>('analytics_kpis') : realSupabaseService.getAnalyticsKpis(),
 
   getFinanceData: () => isSandbox() ? sandboxService.getFinanceData() : realSupabaseService.getFinanceData(),
+
+  getNotifications: (): Promise<Notification[]> => isSandbox() ? sandboxService.getCollection<Notification>('notifications') : realSupabaseService.getNotifications(),
+  markNotificationAsRead: (id: string): Promise<Notification> => isSandbox() ? sandboxService.updateDocument<Notification>('notifications', id, { is_read: true }) : realSupabaseService.markNotificationAsRead(id),
 };

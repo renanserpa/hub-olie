@@ -43,7 +43,7 @@ const SummaryCard: React.FC<{ title: string, data: (FinancePayable | FinanceRece
                             {data.map(item => (
                                 <tr key={item.id} className="border-b">
                                     <td className="p-2">{new Date(item.due_date).toLocaleDateString('pt-BR')}</td>
-                                    <td className="p-2 font-mono text-xs">{item.purchase_order_id || item.order_id}</td>
+                                    <td className="p-2 font-mono text-xs">{'purchase_order_id' in item ? item.purchase_order_id : 'order_id' in item ? item.order_id : ''}</td>
                                     <td className="p-2 text-right font-semibold">{item.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                 </tr>
                             ))}

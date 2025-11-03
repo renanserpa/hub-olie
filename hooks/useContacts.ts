@@ -93,7 +93,6 @@ export function useContacts() {
         // Optimistic update
         setAllContacts(prev => prev.map(c => c.id === contactId ? { ...c, stage: newStage } : c));
         try {
-            // FIX: Explicitly pass the generic type to `updateDocument` to fix TypeScript's inference.
             await dataService.updateDocument<Contact>('customers', contactId, { stage: newStage });
             toast({ title: "Estágio Atualizado!", description: `O contato foi movido para "${newStage}".`});
         } catch (error) {

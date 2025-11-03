@@ -43,28 +43,4 @@ export function useIntegrations() {
         await dataService.testIntegrationConnection(id);
         toast({ title: 'Teste Concluído', description: 'O status da integração foi atualizado.' });
     } catch(e) {
-        toast({ title: 'Erro no Teste', description: (e as Error).message, variant: 'destructive' });
-    } finally {
-        setTestingId(null);
-    }
-  };
-
-  const updateApiKey = async (id: string, apiKey: string) => {
-    if (!apiKey) {
-      toast({ title: 'Atenção', description: 'A chave de API não pode estar vazia.', variant: 'destructive' });
-      return;
-    }
-    setSavingId(id);
-    try {
-      // FIX: Add the generic type <Integration> to the updateDocument call to ensure TypeScript knows the correct shape of the update payload, resolving the error about the 'api_key' property not existing.
-      await dataService.updateDocument<Integration>('config_integrations', id, { api_key: apiKey });
-      toast({ title: 'Sucesso!', description: 'Chave de API salva com segurança.' });
-    } catch (e) {
-      toast({ title: 'Erro', description: 'Não foi possível salvar a chave de API.', variant: 'destructive' });
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  return { integrations, logs, loading, testingId, savingId, refresh, handleTestConnection, updateApiKey };
-}
+        toast({ title: 'Erro no Test

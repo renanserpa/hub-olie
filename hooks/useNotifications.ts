@@ -45,7 +45,7 @@ export function useNotifications() {
         try {
             // Optimistic update
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-            await dataService.updateDocument('notifications', id, { is_read: true });
+            await dataService.updateDocument<Notification>('notifications', id, { is_read: true });
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível marcar a notificação como lida.", variant: "destructive" });
             loadData(); // Revert on error
@@ -61,7 +61,7 @@ export function useNotifications() {
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
             
             // Batch update
-            await Promise.all(unreadIds.map(id => dataService.updateDocument('notifications', id, { is_read: true })));
+            await Promise.all(unreadIds.map(id => dataService.updateDocument<Notification>('notifications', id, { is_read: true })));
 
         } catch (error) {
              toast({ title: "Erro", description: "Não foi possível marcar todas as notificações como lidas.", variant: "destructive" });

@@ -73,27 +73,22 @@ const SettingsPage: React.FC = () => {
             { key: 'is_active', label: 'Status', type: 'checkbox' }
         ];
 
-        const dataExists = (key: keyof typeof settingsData.catalogs | keyof typeof settingsData.catalogs.cores_texturas, isSubSub: boolean = false) => {
-          if (isSubSub) {
-            return (settingsData.catalogs.cores_texturas as any)[key]?.length > 0
-          }
-          return (settingsData.catalogs as any)[key]?.length > 0
-        };
-
         switch (activeCatalogsSubTab) {
-            case 'paletas_cores': {
-                return dataExists('paletas_cores')
-                    ? <TabContent category="catalogs" data={settingsData.catalogs.paletas_cores} fields={paletteFieldConfig} {...createCrudHandlers('catalogs', 'paletas_cores')} isAdmin={isAdmin} title="Paletas de Cores" />
-                    : <PlaceholderContent title="Paletas de Cores" requiredTable="config_color_palettes" />;
-            }
-            case 'fontes_monogramas': {
-                 return dataExists('fontes_monogramas')
-                    ? <TabContent category="catalogs" data={settingsData.catalogs.fontes_monogramas} fields={fontFieldConfig} {...createCrudHandlers('catalogs', 'fontes_monogramas')} isAdmin={isAdmin} title="Fontes para Monograma" />
-                    : <PlaceholderContent title="Fontes para Monograma" requiredTable="config_fonts" />;
-            }
+            case 'paletas_cores':
+                if (!settingsData.catalogs.paletas_cores) {
+                    return <PlaceholderContent title="Paletas de Cores" requiredTable="config_color_palettes" />;
+                }
+                return <TabContent category="catalogs" data={settingsData.catalogs.paletas_cores} fields={paletteFieldConfig} {...createCrudHandlers('catalogs', 'paletas_cores')} isAdmin={isAdmin} title="Paletas de Cores" />;
+            
+            case 'fontes_monogramas':
+                if (!settingsData.catalogs.fontes_monogramas) {
+                    return <PlaceholderContent title="Fontes para Monograma" requiredTable="config_fonts" />;
+                }
+                return <TabContent category="catalogs" data={settingsData.catalogs.fontes_monogramas} fields={fontFieldConfig} {...createCrudHandlers('catalogs', 'fontes_monogramas')} isAdmin={isAdmin} title="Fontes para Monograma" />;
+
             case 'cores_texturas': {
                 const colorData = settingsData.catalogs.cores_texturas;
-                let data: AnySettingsItem[] = [], fields: FieldConfig[] = [], title = '', tableName = '';
+                let data: AnySettingsItem[] | undefined, fields: FieldConfig[] = [], title = '', tableName = '';
 
                 switch (activeCoresSubTab) {
                     case 'tecido': data = colorData.tecido; fields = colorFieldConfig; title = 'Cores de Tecido'; tableName = 'fabric_colors'; break;
@@ -105,7 +100,7 @@ const SettingsPage: React.FC = () => {
                     case 'texturas': data = colorData.texturas; fields = textureFieldConfig; title = "Texturas de Tecido"; tableName = "fabric_textures"; break;
                 }
                 
-                if (!dataExists(activeCoresSubTab as any, true)) {
+                if (!data) {
                     return <PlaceholderContent title={title} requiredTable={tableName} />;
                 }
                 return <TabContent category="catalogs" data={data} fields={fields} {...createCrudHandlers('catalogs', 'cores_texturas', activeCoresSubTab)} isAdmin={isAdmin} title={title} />;

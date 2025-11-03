@@ -46,6 +46,8 @@ import {
     InitializerAgent,
     InitializerLog,
     InitializerSyncState,
+    WorkflowRule,
+    Notification,
 } from "../types";
 
 
@@ -208,6 +210,8 @@ export const supabaseService = {
         initializer_agents: [],
         initializer_logs: [],
         initializer_sync_state: [],
+        workflow_rules: [],
+        notifications: [],
     };
 
     try {
@@ -215,7 +219,8 @@ export const supabaseService = {
             tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials,
             paletas_cores, forro, puxador, bordado, texturas,
             suppliers,
-            initializer_agents, initializer_logs, initializer_sync_state
+            initializer_agents, initializer_logs, initializer_sync_state,
+            notifications, workflow_rules
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
@@ -233,6 +238,8 @@ export const supabaseService = {
             supabaseService.getCollection<InitializerAgent>('initializer_agents'),
             supabaseService.getCollection<InitializerLog>('initializer_logs'),
             supabaseService.getCollection<InitializerSyncState>('initializer_sync_state'),
+            supabaseService.getCollection<Notification>('notifications'),
+            supabaseService.getCollection<WorkflowRule>('workflow_rules'),
         ]);
         
         return {
@@ -259,6 +266,8 @@ export const supabaseService = {
             initializer_agents,
             initializer_logs,
             initializer_sync_state,
+            notifications,
+            workflow_rules,
         };
     } catch (error) {
         handleError(error, 'getSettings');
@@ -349,7 +358,6 @@ export const supabaseService = {
     return { orders, waves, shipments };
   },
   getMarketingCampaigns: (): Promise<MarketingCampaign[]> => supabaseService.getCollection('marketing_campaigns'),
-  // FIX: Added missing `getMarketingSegments` method.
   getMarketingSegments: (): Promise<MarketingSegment[]> => supabaseService.getCollection('marketing_segments'),
   getMarketingTemplates: (): Promise<MarketingTemplate[]> => supabaseService.getCollection('marketing_templates'),
   getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
@@ -360,7 +368,6 @@ export const supabaseService = {
     ]);
     return { suppliers, purchase_orders, purchase_order_items };
   },
-  // FIX: Add missing purchasing methods to resolve errors in usePurchasing hook.
   createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material_name' | 'material'>[] }) => {
         const po_number = `PC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
         const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -387,7 +394,6 @@ export const supabaseService = {
         return newPO as PurchaseOrder;
     },
     receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
-        // In a real app, this MUST be a database transaction (RPC function)
         console.warn('receivePOItems is not transactional in this Supabase implementation.');
         
         const { data: po, error: poError } = await supabase.from('purchase_orders').select('*, items:purchase_order_items(*)').eq('id', poId).single();
@@ -398,7 +404,6 @@ export const supabaseService = {
             const item = po.items.find((i: any) => i.id === received.itemId);
             if (item) {
                 const newQty = item.received_quantity + received.receivedQty;
-                // FIX: Explicitly provide the generic type to ensure the update payload is correctly typed.
                 await updateDocument<PurchaseOrderItem>('purchase_order_items', item.id, { received_quantity: newQty });
 
                 if (newQty < item.quantity) {
@@ -408,7 +413,6 @@ export const supabaseService = {
         }
         
         const newStatus = allReceived ? 'received' : 'partial';
-        // FIX: Explicitly provide the generic type to ensure the update payload is correctly typed.
         await updateDocument<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
     },
   getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => supabaseService.getCollection('analytics_kpis'),
@@ -422,4 +426,6 @@ export const supabaseService = {
     ]);
     return { accounts, categories, transactions, payables, receivables };
   },
+  getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
+  markNotificationAsRead: (id: string): Promise<Notification> => updateDocument('notifications', id, { is_read: true }),
 };

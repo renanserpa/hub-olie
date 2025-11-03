@@ -68,7 +68,6 @@ export function useOrders() {
             if (newStatus === 'awaiting_shipping') {
                 const order = allOrders.find(o => o.id === orderId);
                 if (order && order.customers) {
-                    // FIX: The type `Omit<LogisticsShipment, "id">` requires the `created_at` property.
                     const newShipment: Omit<LogisticsShipment, 'id' | 'tracking_code'> = {
                         order_id: order.id,
                         order_number: order.number,
@@ -130,7 +129,6 @@ export function useOrders() {
                 const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0);
                 const newTotal = newSubtotal - order.discounts + order.shipping_fee;
     
-                // FIX: Explicitly provide the generic type for updateDocument to ensure correct type checking.
                 await dataService.updateDocument<Order>('orders', orderId, {
                     subtotal: newSubtotal,
                     total: newTotal,
