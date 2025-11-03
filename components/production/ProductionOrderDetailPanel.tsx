@@ -1,37 +1,16 @@
 import React, { useState } from 'react';
-import { ProductionOrder, Material } from '../../types';
+import { ProductionOrder, Material, ProductionTask, ProductionTaskStatus } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { ChevronDown, Info, ListChecks, Package, Calendar, Clock } from 'lucide-react';
+import { Info, ListChecks, Package, ShieldCheck, Play, Check, Pause } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import ProductionOrderCard from './ProductionOrderCard'; // Re-use for header
+import ProductionOrderCard from './ProductionOrderCard';
+import { Button } from '../ui/Button';
 
-interface CollapsibleSectionProps {
-    title: string;
-    icon: React.ElementType;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
+interface ProductionOrderDetailPanelProps {
+    order: ProductionOrder;
+    allMaterials: Material[];
+    onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
 }
-
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ title, icon: Icon, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-
-    return (
-        <div className="border-b border-border last:border-b-0">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-4 text-left font-medium text-textPrimary hover:bg-secondary/50"
-            >
-                <span className="flex items-center gap-3">
-                    <Icon size={16} className="text-textSecondary" />
-                    {title}
-                </span>
-                <ChevronDown size={18} className={cn('transition-transform', isOpen && 'rotate-180')} />
-            </button>
-            {isOpen && <div className="p-4 pt-0 text-sm text-textSecondary">{children}</div>}
-        </div>
-    );
-};
-
 
 const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
     <div>
@@ -40,91 +19,121 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
     </div>
 );
 
-
-const ProductionOrderDetailPanel: React.FC<{ order: ProductionOrder, allMaterials: Material[] }> = ({ order, allMaterials }) => {
+const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials, onUpdateTaskStatus }) => {
+    const [activeTab, setActiveTab] = useState('tasks');
 
     const formatDate = (dateValue?: any) => {
         if (!dateValue) return '-';
         const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
         if (isNaN(date.getTime())) return '-';
-        return date.toLocaleString('pt-BR', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+        return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
 
-    const bom = order.product?.bom;
+    const TABS = [
+        { id: 'info', label: 'Informações', icon: Info },
+        { id: 'tasks', label: 'Tarefas', icon: ListChecks },
+        { id: 'quality', label: 'Qualidade', icon: ShieldCheck },
+        { id: 'materials', label: 'Materiais', icon: Package },
+    ];
+
+    const renderInfoTab = () => (
+        <div className="space-y-4 p-4">
+            <div className="grid grid-cols-2 gap-4">
+                 <DetailItem label="Produto" value={order.product?.name} />
+                 <DetailItem label="Quantidade" value={order.quantity} />
+                 <DetailItem label="Prioridade" value={order.priority.charAt(0).toUpperCase() + order.priority.slice(1)} />
+                 <DetailItem label="Prazo Final" value={formatDate(order.due_date)} />
+                 <DetailItem label="Operador" value={order.operator} />
+            </div>
+            <div>
+                 <DetailItem label="Observações" value={order.notes} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                <DetailItem label="Criado em" value={formatDate(order.created_at)} />
+                <DetailItem label="Iniciado em" value={formatDate(order.started_at)} />
+                <DetailItem label="Finalizado em" value={formatDate(order.completed_at)} />
+                <DetailItem label="Última Atualização" value={formatDate(order.updated_at)} />
+            </div>
+        </div>
+    );
+    
+    const renderTasksTab = () => (
+        <div className="space-y-2 p-4">
+            {order.tasks?.map(task => (
+                <div key={task.id} className="p-3 bg-secondary rounded-lg">
+                    <p className="font-medium">{task.name}</p>
+                    <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-textSecondary">{task.status}</span>
+                        <div className="flex gap-1">
+                             {task.status === 'Pendente' && <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onUpdateTaskStatus(task.id, 'Em Andamento')}><Play size={12} className="mr-1"/> Iniciar</Button>}
+                             {task.status === 'Em Andamento' && <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => onUpdateTaskStatus(task.id, 'Concluída')}><Check size={12} className="mr-1"/> Finalizar</Button>}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+
+    const renderQualityTab = () => (
+        <div className="p-4">
+            <Button size="sm" className="mb-4">Registrar Inspeção</Button>
+            {order.quality_checks && order.quality_checks.length > 0 ? (
+                <div className="space-y-2">
+                    {order.quality_checks.map(qc => (
+                        <div key={qc.id} className="p-2 bg-secondary rounded-md text-sm">
+                            <span className="font-semibold">{qc.check_type}:</span> {qc.result}
+                        </div>
+                    ))}
+                </div>
+            ) : <p className="text-sm text-center text-textSecondary py-4">Nenhuma inspeção registrada.</p>}
+        </div>
+    );
+
+    const renderMaterialsTab = () => (
+        <div className="space-y-2 p-4">
+             {order.product?.bom && order.product.bom.length > 0 ? (
+                order.product.bom.map(item => {
+                    const material = allMaterials.find(m => m.id === item.material_id);
+                    const totalQuantity = item.quantity_per_unit * order.quantity;
+                    return (
+                        <div key={item.material_id} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
+                            <div>
+                                <p className="font-medium text-textPrimary">{material?.name || 'Material não encontrado'}</p>
+                                <p className="text-xs">{item.quantity_per_unit.toFixed(2)} {material?.unit} por unidade</p>
+                            </div>
+                            <p className="font-bold text-primary">{totalQuantity.toFixed(2)} <span className="text-xs font-normal text-textSecondary">{material?.unit}</span></p>
+                        </div>
+                    );
+                })
+             ) : <p className="text-sm text-center text-textSecondary py-4">Nenhuma lista de materiais (BOM) cadastrada.</p>}
+        </div>
+    );
+
 
     return (
-        <Card className="sticky top-20 h-[calc(100vh-10rem)] overflow-y-auto">
+        <Card className="sticky top-20 h-[calc(100vh-18rem)] overflow-y-auto">
             <div className="p-4 border-b border-border">
                 <ProductionOrderCard order={order} isSelected={false} onClick={() => {}} />
             </div>
             
-            <CollapsibleSection title="Informações" icon={Info} defaultOpen>
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                         <DetailItem label="Produto" value={order.product?.name} />
-                         <DetailItem label="Quantidade" value={order.quantity} />
-                         <DetailItem label="Prioridade" value={order.priority.charAt(0).toUpperCase() + order.priority.slice(1)} />
-                         <DetailItem label="Prazo Final" value={formatDate(order.due_date)} />
-                    </div>
-                    <div>
-                         <DetailItem label="Observações" value={order.notes} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
-                        <DetailItem label="Criado em" value={formatDate(order.created_at)} />
-                        <DetailItem label="Iniciado em" value={formatDate(order.started_at)} />
-                        <DetailItem label="Finalizado em" value={formatDate(order.completed_at)} />
-                        <DetailItem label="Última Atualização" value={formatDate(order.updated_at)} />
-                    </div>
-                </div>
-            </CollapsibleSection>
-            
-            <CollapsibleSection title="Etapas" icon={ListChecks}>
-                 <div className="text-center p-6 bg-secondary rounded-lg">
-                    <p className="font-medium">🚧 Em desenvolvimento</p>
-                    <p className="text-xs">Acompanhamento de etapas de produção e apontamentos de tempo.</p>
-                </div>
-            </CollapsibleSection>
+            <div className="border-b border-border">
+                <nav className="flex space-x-2 p-1">
+                    {TABS.map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                            className={cn('flex-1 flex items-center justify-center gap-2 text-xs font-medium p-2 rounded-md transition-colors',
+                                activeTab === tab.id ? 'bg-accent text-primary' : 'text-textSecondary hover:bg-accent/50'
+                            )}
+                        >
+                            <tab.icon size={14}/> {tab.label}
+                        </button>
+                    ))}
+                </nav>
+            </div>
 
-             <CollapsibleSection title="Materiais" icon={Package} defaultOpen>
-                 {bom && bom.length > 0 ? (
-                    <div className="space-y-2">
-                        {bom.map(item => {
-                            const material = allMaterials.find(m => m.id === item.material_id);
-                            const totalQuantity = item.quantity_per_unit * order.quantity;
-                            return (
-                                <div key={item.material_id} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
-                                    <div>
-                                        <p className="font-medium text-textPrimary">{material?.name || 'Material não encontrado'}</p>
-                                        <p className="text-xs">{item.quantity_per_unit.toFixed(2)} {material?.unit} por unidade</p>
-                                    </div>
-                                    <p className="font-bold text-primary">{totalQuantity.toFixed(2)} <span className="text-xs font-normal text-textSecondary">{material?.unit}</span></p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                 ) : (
-                    <div className="text-center p-6 bg-secondary rounded-lg">
-                        <p className="font-medium">Sem Ficha Técnica</p>
-                        <p className="text-xs">Nenhuma lista de materiais (BOM) cadastrada para este produto.</p>
-                    </div>
-                 )}
-            </CollapsibleSection>
-            
-             <CollapsibleSection title="Qualidade" icon={Calendar}>
-                 <div className="text-center p-6 bg-secondary rounded-lg">
-                    <p className="font-medium">📅 Planejado</p>
-                     <p className="text-xs">Inspeções, checklists e aprovações de qualidade.</p>
-                </div>
-            </CollapsibleSection>
-            
-            <CollapsibleSection title="Timeline" icon={Clock}>
-                 <div className="text-center p-6 bg-secondary rounded-lg">
-                    <p className="font-medium">🕒 Planejado</p>
-                     <p className="text-xs">Histórico completo de eventos e alterações da OP.</p>
-                </div>
-            </CollapsibleSection>
+            {activeTab === 'info' && renderInfoTab()}
+            {activeTab === 'tasks' && renderTasksTab()}
+            {activeTab === 'quality' && renderQualityTab()}
+            {activeTab === 'materials' && renderMaterialsTab()}
         </Card>
     );
 };

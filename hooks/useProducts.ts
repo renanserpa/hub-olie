@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct, AppData } from '../types';
+import { Product, ProductCategory, AnyProduct, AppData, ProductStatus } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
+
+export type ViewMode = 'list' | 'kanban';
 
 export function useProducts() {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -13,6 +15,20 @@ export function useProducts() {
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    
+    const [viewMode, setViewModeInternal] = useState<ViewMode>('kanban');
+
+    useEffect(() => {
+        const savedViewMode = sessionStorage.getItem('productsViewMode') as ViewMode;
+        if (savedViewMode) {
+            setViewModeInternal(savedViewMode);
+        }
+    }, []);
+
+    const setViewMode = (mode: ViewMode) => {
+        sessionStorage.setItem('productsViewMode', mode);
+        setViewModeInternal(mode);
+    };
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -68,7 +84,7 @@ export function useProducts() {
                 await dataService.updateDocument('products', productData.id, productData);
                 toast({ title: "Sucesso!", description: "Produto atualizado." });
             } else {
-                await dataService.addDocument('products', productData as AnyProduct);
+                await dataService.addDocument('products', { ...(productData as AnyProduct), status: 'Rascunho' });
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
             loadData();
@@ -80,6 +96,18 @@ export function useProducts() {
             setIsSaving(false);
         }
     };
+    
+    const updateProductStatus = useCallback(async (productId: string, newStatus: ProductStatus) => {
+        // Optimistic update
+        setAllProducts(prev => prev.map(p => p.id === productId ? { ...p, status: newStatus } : p));
+        try {
+            await dataService.updateDocument<Product>('products', productId, { status: newStatus });
+            toast({ title: "Status Atualizado!", description: `O produto foi movido para "${newStatus}".`});
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar o status do produto.", variant: "destructive" });
+            loadData(); // Revert on failure
+        }
+    }, [loadData]);
 
     return {
         isLoading,
@@ -94,5 +122,8 @@ export function useProducts() {
         openDialog,
         closeDialog,
         saveProduct,
+        viewMode,
+        setViewMode,
+        updateProductStatus,
     };
 }

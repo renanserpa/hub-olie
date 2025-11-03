@@ -1,103 +1,64 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material } from '../types';
-import { dataService } from '../services/dataService';
-import { toast } from './use-toast';
+import { useState, useMemo } from 'react';
+import { ProductionOrder, ProductionOrderStatus } from '../types';
 
-export type ProductionOrderFiltersState = {
-    search: string;
-    status: ProductionOrderStatus[];
-};
+export interface ProductionOrderFiltersState {
+  search: string;
+  status: ProductionOrderStatus[];
+}
 
-export function useProductionOrders() {
-    const [allOrders, setAllOrders] = useState<ProductionOrder[]>([]);
-    const [allMaterials, setAllMaterials] = useState<Material[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [filters, setFilters] = useState<ProductionOrderFiltersState>({ search: '', status: [] });
-    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+// Note: This hook is implemented to resolve a build error in ProductionOrderFilters.tsx.
+// It is not currently used in the main application flow but provides filtering logic
+// for production orders if needed in the future.
+export function useProductionOrders(allOrders: ProductionOrder[]) {
+  const [filters, setFilters] = useState<ProductionOrderFiltersState>({
+    search: '',
+    status: [],
+  });
 
-    const loadOrders = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const [data, materialsData] = await Promise.all([
-                dataService.getProductionOrders(),
-                dataService.getCollection<Material>('config_materials')
-            ]);
-            
-            setAllOrders(data);
-            setAllMaterials(materialsData);
+  const updateFilters = (newFilters: Partial<ProductionOrderFiltersState>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
 
-            if (data.length > 0 && selectedOrderId === null) {
-                setSelectedOrderId(data[0].id);
-            }
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar as ordens de produção.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
+  const clearFilters = () => setFilters({ search: '', status: [] });
+
+  const filteredOrders = useMemo(() => {
+    if (!allOrders) return [];
+    return allOrders.filter(order => {
+        const searchMatch = filters.search === '' || 
+                            order.po_number.toLowerCase().includes(filters.search.toLowerCase()) || 
+                            (order.product && order.product.name.toLowerCase().includes(filters.search.toLowerCase()));
+        
+        const statusMatch = filters.status.length === 0 || filters.status.includes(order.status);
+        
+        return searchMatch && statusMatch;
+    });
+  }, [allOrders, filters]);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<ProductionOrderStatus | 'all', number> = {
+      all: allOrders?.length || 0,
+      novo: 0,
+      planejado: 0,
+      em_andamento: 0,
+      em_espera: 0,
+      finalizado: 0,
+      cancelado: 0,
+    };
+    if (allOrders) {
+        for (const order of allOrders) {
+          if (counts[order.status] !== undefined) {
+            counts[order.status]++;
+          }
         }
-    }, [selectedOrderId]);
+    }
+    return counts;
+  }, [allOrders]);
 
-    useEffect(() => {
-        loadOrders();
-    }, [loadOrders]);
-
-    const statusCounts = useMemo(() => {
-        const counts: Record<ProductionOrderStatus | 'all', number> = {
-            all: allOrders.length,
-            novo: 0,
-            planejado: 0,
-            em_andamento: 0,
-            em_espera: 0,
-            finalizado: 0,
-            cancelado: 0,
-        };
-        allOrders.forEach(order => {
-            if(counts[order.status] !== undefined) {
-                counts[order.status]++;
-            }
-        });
-        return counts;
-    }, [allOrders]);
-    
-    const filteredOrders = useMemo(() => {
-        return allOrders.filter(order => {
-            const searchMatch = filters.search.length === 0 ||
-                order.po_number.toLowerCase().includes(filters.search.toLowerCase()) ||
-                (order.product?.name && order.product.name.toLowerCase().includes(filters.search.toLowerCase()));
-
-            const statusMatch = filters.status.length === 0 || filters.status.includes(order.status);
-
-            return searchMatch && statusMatch;
-        });
-    }, [allOrders, filters]);
-    
-    const selectedOrder = useMemo(() => {
-        return allOrders.find(o => o.id === selectedOrderId) || null;
-    }, [allOrders, selectedOrderId]);
-
-    const updateFilters = (newFilters: Partial<ProductionOrderFiltersState>) => {
-        setFilters(prev => ({ ...prev, ...newFilters }));
-    };
-
-    const clearFilters = () => {
-        setFilters({ search: '', status: [] });
-    };
-
-    useEffect(() => {
-        if(selectedOrderId && filteredOrders.length > 0 && !filteredOrders.find(o => o.id === selectedOrderId)) {
-             setSelectedOrderId(filteredOrders[0]?.id || null);
-        }
-    }, [filteredOrders, selectedOrderId]);
-
-    return {
-        allOrders,
-        allMaterials,
-        filteredOrders,
-        isLoading,
-        filters,
-        updateFilters,
-        clearFilters,
-        statusCounts,
-        selectedOrder,
-        setSelectedOrderId,
-    };
+  return {
+    filters,
+    updateFilters,
+    clearFilters,
+    filteredOrders,
+    statusCounts,
+  };
 }
