@@ -149,37 +149,28 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
               {data.map(item => (
                 <tr key={item.id} className="border-b border-border dark:border-dark-border hover:bg-accent/50 dark:hover:bg-dark-accent/50">
                   {fields.map(field => field.key !== 'id' && (
-                    <td key={field.key} className="p-4 text-textPrimary dark:text-dark-textPrimary">
-                      {field.type === 'color' ? (
-                        <div
-                          className="flex items-center gap-3 cursor-pointer group"
-                          title="Clique para copiar"
-                          onClick={() => {
-                            const hex = item[field.key as keyof AnySettingsItem] as string;
-                            if (navigator.clipboard) {
-                              navigator.clipboard.writeText(hex);
-                              toast({ title: "Copiado!", description: `A cor ${hex} foi copiada.` });
+                    <td key={field.key} className="p-4 text-textPrimary dark:text-dark-textPrimary align-middle">
+                       {(() => {
+                            const value = item[field.key as keyof AnySettingsItem] as any;
+                            if (field.key === 'preview_url' && value) {
+                                return <img src={value} alt="Preview" className="h-8 w-auto max-w-[100px] object-contain bg-secondary dark:bg-dark-secondary rounded" />;
                             }
-                          }}
-                        >
-                          <div
-                            className="w-6 h-6 rounded-md border-2 border-white dark:border-dark-card shadow-md group-hover:scale-110 transition-transform"
-                            style={{ backgroundColor: item[field.key as keyof AnySettingsItem] as string }}
-                          ></div>
-                          <span className="font-mono text-sm group-hover:text-primary transition-colors">{(item[field.key as keyof AnySettingsItem] as string || '').toUpperCase()}</span>
-                        </div>
-                      ) : field.type === 'checkbox' ? (
-                         <Badge variant={item[field.key as keyof AnySettingsItem] ? 'ativo' : 'inativo'}>
-                             {item[field.key as keyof AnySettingsItem] ? 'Ativo' : 'Inativo'}
-                         </Badge>
-                      ) : field.type === 'file' ? (
-                          item[field.key as keyof AnySettingsItem] ? 
-                          <a href={item[field.key as keyof AnySettingsItem] as string} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate">
-                            {(item[field.key as keyof AnySettingsItem] as string).split('/').pop()}
-                          </a> : <span className="text-xs text-textSecondary/70 dark:text-dark-textSecondary/70">Nenhum arquivo</span>
-                      ) : (
-                        String(item[field.key as keyof AnySettingsItem] ?? '')
-                      )}
+                            switch (field.type) {
+                                case 'color':
+                                    return (
+                                        <div className="flex items-center gap-3 cursor-pointer group" title="Clique para copiar" onClick={() => { if (navigator.clipboard) { navigator.clipboard.writeText(value); toast({ title: "Copiado!", description: `A cor ${value} foi copiada.` }); } }}>
+                                            <div className="w-6 h-6 rounded-md border-2 border-white dark:border-dark-card shadow-md group-hover:scale-110 transition-transform" style={{ backgroundColor: value }}></div>
+                                            <span className="font-mono text-sm group-hover:text-primary transition-colors">{(value || '').toUpperCase()}</span>
+                                        </div>
+                                    );
+                                case 'checkbox':
+                                    return <Badge variant={value ? 'ativo' : 'inativo'}>{value ? 'Ativo' : 'Inativo'}</Badge>;
+                                case 'file':
+                                    return value ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate">{(value as string).split('/').pop()}</a> : <span className="text-xs text-textSecondary/70 dark:text-dark-textSecondary/70">Nenhum arquivo</span>;
+                                default:
+                                    return String(value ?? '');
+                            }
+                       })()}
                     </td>
                   ))}
                   {isAdmin && (

@@ -4,7 +4,7 @@ import {
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
-    MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent
+    MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -258,6 +258,28 @@ const initializer_agents: InitializerAgent[] = [
 const initializer_logs: InitializerLog[] = [];
 const initializer_sync_state: InitializerSyncState[] = [];
 
+// New seed data for Catalogs
+const config_color_palettes: ColorPalette[] = [
+    { id: 'pal1', name: 'Cores de Verão 2024', descricao: 'Paleta vibrante para a coleção de verão.', is_active: true },
+    { id: 'pal2', name: 'Tons Neutros', descricao: 'Cores clássicas e atemporais.', is_active: true },
+];
+const lining_colors: LiningColor[] = [
+    { id: 'lc1', name: 'Forro Bege', hex: '#EAE0D5', palette_id: 'pal2', is_active: true },
+    { id: 'lc2', name: 'Forro Preto', hex: '#2C2C2C', palette_id: 'pal2', is_active: true },
+];
+const puller_colors: PullerColor[] = [
+    { id: 'pc1', name: 'Puxador Dourado', hex: '#FFD700', palette_id: 'pal1', is_active: true },
+    { id: 'pc2', name: 'Puxador Níquel', hex: '#C0C0C0', palette_id: 'pal2', is_active: true },
+];
+const embroidery_colors: EmbroideryColor[] = [
+    { id: 'ec1', name: 'Linha Ouro', hex: '#CFB53B', palette_id: 'pal1', thread_type: 'metallic', is_active: true },
+    { id: 'ec2', name: 'Linha Branca', hex: '#FFFFFF', palette_id: 'pal2', thread_type: 'cotton', is_active: true },
+];
+const fabric_textures: FabricTexture[] = [
+    { id: 'ft1', name: 'Linho Rústico', description: 'Textura natural do linho.', image_url: 'https://example.com/linho.jpg', is_active: true },
+    { id: 'ft2', name: 'Couro Sintético', description: 'Textura que imita couro.', image_url: 'https://example.com/couro.jpg', is_active: true },
+];
+
 
 // --- IN-MEMORY STORE ---
 let collections: Record<string, any[]> = {
@@ -303,6 +325,12 @@ let collections: Record<string, any[]> = {
     initializer_logs,
     initializer_sync_state,
     initializer_agents,
+    // New Catalog Collections
+    config_color_palettes,
+    lining_colors,
+    puller_colors,
+    embroidery_colors,
+    fabric_textures,
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 
@@ -475,15 +503,15 @@ export const sandboxDb = {
     getSettings: async (): Promise<AppData> => ({
         ...collections,
         catalogs: {
-            paletas_cores: [],
+            paletas_cores: collections.config_color_palettes,
             cores_texturas: {
                 tecido: collections.fabric_colors,
                 ziper: collections.zipper_colors,
-                forro: [],
-                puxador: [],
+                forro: collections.lining_colors,
+                puxador: collections.puller_colors,
                 vies: collections.bias_colors,
-                bordado: [],
-                texturas: [],
+                bordado: collections.embroidery_colors,
+                texturas: collections.fabric_textures,
             },
             fontes_monogramas: collections.config_fonts,
         },

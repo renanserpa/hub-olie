@@ -4,15 +4,20 @@ import {
     AnyProduct,
     AppData,
     BiasColor,
+    ColorPalette,
     Contact,
+    EmbroideryColor,
     FabricColor,
+    FabricTexture,
     InventoryBalance,
     InventoryMovement,
+    LiningColor,
     MonogramFont,
     Order, OrderItem, OrderStatus,
     Product,
     ProductCategory,
     ProductionOrder,
+    PullerColor,
     SettingsCategory,
     SystemSetting,
     Task,
@@ -92,6 +97,7 @@ const deleteDocument = async (table: string, id: string): Promise<void> => {
 };
 
 const settingsTableMap: Record<string, string> = {
+    'catalogs-paletas_cores': 'config_color_palettes',
     'catalogs-cores_texturas-tecido': 'fabric_colors',
     'catalogs-cores_texturas-ziper': 'zipper_colors',
     'catalogs-cores_texturas-vies': 'bias_colors',
@@ -207,6 +213,7 @@ export const supabaseService = {
     try {
         const [
             tecido, ziper, vies, fontes_monogramas, system_settings_logs, config_supply_groups, config_materials,
+            paletas_cores, forro, puxador, bordado, texturas,
             initializer_agents, initializer_logs, initializer_sync_state
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
@@ -216,6 +223,11 @@ export const supabaseService = {
             supabaseService.getCollection<SystemSettingsLog>('system_settings_logs'),
             supabaseService.getMaterialGroups(),
             supabaseService.getMaterials(),
+            supabaseService.getCollection<ColorPalette>('config_color_palettes'),
+            supabaseService.getCollection<LiningColor>('lining_colors'),
+            supabaseService.getCollection<PullerColor>('puller_colors'),
+            supabaseService.getCollection<EmbroideryColor>('embroidery_colors'),
+            supabaseService.getCollection<FabricTexture>('fabric_textures'),
             supabaseService.getCollection<InitializerAgent>('initializer_agents'),
             supabaseService.getCollection<InitializerLog>('initializer_logs'),
             supabaseService.getCollection<InitializerSyncState>('initializer_sync_state'),
@@ -225,11 +237,16 @@ export const supabaseService = {
             ...emptyAppData,
             catalogs: { 
                 ...emptyAppData.catalogs,
+                paletas_cores,
                 cores_texturas: { 
                     ...emptyAppData.catalogs.cores_texturas,
                     tecido, 
                     ziper, 
-                    vies, 
+                    vies,
+                    forro,
+                    puxador,
+                    bordado,
+                    texturas,
                 }, 
                 fontes_monogramas 
             },
