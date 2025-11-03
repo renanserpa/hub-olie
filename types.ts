@@ -44,6 +44,7 @@ export interface Contact {
     phones?: any; // based on sandboxDb
     stage?: ContactStage;
     tags?: string[];
+    created_at?: string; // Added for activity feed
 }
 export type AnyContact = Omit<Contact, 'id'>;
 
@@ -672,6 +673,17 @@ export interface InitializerAgent {
   status: 'idle' | 'working' | 'error' | 'offline';
   last_heartbeat: string;
   health_score: number;
+}
+
+// --- DASHBOARD ---
+export interface ActivityItem {
+  id: string;
+  type: 'order' | 'contact' | 'production' | 'system_log';
+  timestamp: string;
+  title: string;
+  description: string;
+  value?: string | number;
+  icon: React.ElementType;
 }
 
 

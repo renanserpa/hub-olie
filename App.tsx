@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppData, User } from './types';
 import Toaster from './components/Toaster';
 import { toast } from './hooks/use-toast';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -18,6 +18,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
+import DashboardPage from './pages/DashboardPage'; // Import new page
 import { cn } from './lib/utils';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
@@ -29,6 +30,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle';
 
 
 const MAIN_TABS = [
+    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
     { id: 'initializer', label: 'Initializer', icon: Cpu },
     { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal },
     { id: 'analytics', label: 'Analytics', icon: BarChart2 },
@@ -46,6 +48,7 @@ const MAIN_TABS = [
 ];
 
 const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
+    dashboard: ['AdminGeral', 'Administrativo', 'Financeiro'],
     initializer: ['AdminGeral'],
     executive: ['AdminGeral'],
     analytics: ['AdminGeral', 'Financeiro', 'Administrativo'],
@@ -63,7 +66,7 @@ const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
 };
 
 const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
-    AdminGeral: 'initializer',
+    AdminGeral: 'dashboard',
     Producao: 'production',
     Vendas: 'orders',
     Financeiro: 'analytics',
@@ -121,6 +124,8 @@ const App: React.FC = () => {
         }
 
         switch (activePage) {
+            case 'dashboard':
+                return <DashboardPage />;
             case 'initializer':
                 return <InitializerPage />;
             case 'executive':
