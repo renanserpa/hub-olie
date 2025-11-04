@@ -17,6 +17,8 @@ import {
     Product,
     ProductCategory,
     ProductionOrder,
+    ProductionQualityCheck,
+    ProductionTask,
     PullerColor,
     SettingsCategory,
     SystemSetting,
@@ -194,7 +196,6 @@ export const supabaseService = {
         config_supply_groups: [],
         config_materials: [],
         warehouses: [],
-// @fix: Added missing properties `production_tasks` and `production_quality_checks` to align with the AppData type.
         media_assets: [], orders: [], contacts: [], products: [], product_categories: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],

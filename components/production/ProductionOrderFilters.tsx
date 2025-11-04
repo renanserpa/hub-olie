@@ -75,7 +75,6 @@ const ProductionOrderFilters: React.FC<ProductionOrderFiltersProps> = ({ filters
                                     />
                                     {opt.label}
                                 </span>
-                                {/* @fix: Uncommented to display the status count for each filter option. */}
                                 <span className="text-xs bg-secondary px-1.5 py-0.5 rounded-full text-textSecondary font-medium">
                                     {statusCounts[opt.id] || 0}
                                 </span>

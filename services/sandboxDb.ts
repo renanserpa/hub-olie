@@ -5,7 +5,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse
+    WorkflowRule, Notification, Warehouse, ProductionTask, ProductionQualityCheck
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -67,8 +67,8 @@ const orders: Omit<Order, 'items' | 'customers'>[] = [
 
 
 const production_orders: ProductionOrder[] = [
-    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product: products[1], quantity: 10, status: 'planejado', priority: 'normal', due_date: new Date(Date.now() + 10 * 86400000).toISOString(), steps_completed: 0, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
+    { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product: products[1], quantity: 10, status: 'planejado', priority: 'normal', due_date: new Date(Date.now() + 10 * 86400000).toISOString(), steps_completed: 0, steps_total: 4, created_at: new Date(Date.now() - 2 * 86400000).toISOString(), updated_at: new Date().toISOString() },
     { id: 'po3', po_number: 'OP-2024-003', product_id: 'p3', product: products[2], quantity: 2, status: 'em_andamento', priority: 'urgente', due_date: new Date(Date.now() + 2 * 86400000).toISOString(), steps_completed: 1, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
@@ -110,6 +110,17 @@ const tasks: Task[] = [
     {id: 't2', title: 'OP-2024-002 - Nécessaire', status_id: 'ts2', client_name: 'Carla Dias', quantity: 10, position: 1, priority: 'normal'},
     {id: 't3', title: 'OP-2024-003 - Mochila Urbana', status_id: 'ts2', client_name: 'Bruno Costa', quantity: 2, position: 2, priority: 'urgente'},
 ];
+
+const production_tasks: ProductionTask[] = [
+    { id: 'pt1', production_order_id: 'po1', name: 'Corte do Tecido', status: 'Concluída', started_at: new Date(Date.now() - 2 * 86400000).toISOString(), finished_at: new Date(Date.now() - 2 * 86400000 + 4 * 3600000).toISOString() },
+    { id: 'pt2', production_order_id: 'po1', name: 'Costura da Bolsa', status: 'Em Andamento', started_at: new Date(Date.now() - 1 * 86400000).toISOString(), finished_at: null },
+    { id: 'pt3', production_order_id: 'po2', name: 'Corte (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
+    { id: 'pt6', production_order_id: 'po2', name: 'Costura (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
+    { id: 'pt7', production_order_id: 'po2', name: 'Acabamento (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
+    { id: 'pt4', production_order_id: 'po3', name: 'Corte do Tecido', status: 'Concluída', started_at: new Date(Date.now() - 1 * 86400000).toISOString(), finished_at: new Date(Date.now() - 1 * 86400000 + 2 * 3600000).toISOString() },
+    { id: 'pt5', production_order_id: 'po3', name: 'Costura da Mochila', status: 'Em Andamento', started_at: new Date().toISOString(), finished_at: null },
+];
+
 // FIX: Added warehouse_id and warehouse properties to satisfy the InventoryBalance type.
 const inventory_balances: InventoryBalance[] = config_materials.map((m, i) => ({
     id: `inv_bal_${i + 1}`,
@@ -358,6 +369,8 @@ let collections: Record<string, any[]> = {
     workflow_rules,
     notifications,
     warehouses,
+    production_tasks,
+    production_quality_checks: [],
 };
 console.log('🧱 SANDBOX: In-memory database initialized with seed data.');
 

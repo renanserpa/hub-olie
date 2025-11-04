@@ -1,4 +1,6 @@
 // types.ts
+// Fix: Add React import for React.ElementType
+import React from 'react';
 
 // --- CORE ---
 

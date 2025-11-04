@@ -15,9 +15,20 @@ const ProductionTimeline: React.FC<ProductionTimelineProps> = ({ orders }) => {
     const { timeRange, startDate } = useMemo(() => {
         if (orders.length === 0) return { timeRange: 30, startDate: new Date() };
 
-        const dates = orders.flatMap(o => o.tasks?.map(t => parseISO(t.started_at || o.created_at)) || [parseISO(o.created_at)]);
-        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-        const maxDate = new Date(Math.max(...dates.map(d => d.getTime()), new Date().getTime()));
+        const dates = orders.flatMap(o => 
+            (Array.isArray(o.tasks) && o.tasks.length > 0)
+                ? o.tasks.map(t => parseISO(t.started_at || o.created_at))
+                : [parseISO(o.created_at)]
+        );
+        
+        const validDates = dates.filter(d => d && !isNaN(d.getTime()));
+        
+        if (validDates.length === 0) {
+            return { timeRange: 30, startDate: new Date(new Date().setDate(new Date().getDate() - 15)) };
+        }
+
+        const minDate = new Date(Math.min(...validDates.map(d => d.getTime())));
+        const maxDate = new Date(Math.max(...validDates.map(d => d.getTime()), new Date().getTime()));
         
         const range = Math.max(differenceInDays(maxDate, minDate) + 2, 10);
         return { timeRange: range, startDate: minDate };
