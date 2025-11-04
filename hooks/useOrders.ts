@@ -58,6 +58,36 @@ export function useOrders() {
         return allOrders.find(o => o.id === selectedOrderId) || null;
     }, [allOrders, selectedOrderId]);
 
+    const kpis = useMemo(() => {
+        if (!allOrders) {
+            return { newOrders: 0, revenueToday: 0, awaitingShipping: 0, cancelledThisMonth: 0 };
+        }
+        
+        const now = new Date();
+        const today = now.toDateString();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        const newOrders = allOrders.filter(o => o.status === 'pending_payment').length;
+        
+        const revenueToday = allOrders.filter(o => {
+            if (o.status !== 'paid' || !o.updated_at) return false;
+            const paidDate = new Date(o.updated_at);
+            return paidDate.toDateString() === today;
+        }).reduce((sum, o) => sum + o.total, 0);
+
+        const awaitingShipping = allOrders.filter(o => o.status === 'awaiting_shipping').length;
+
+        const cancelledThisMonth = allOrders.filter(o => {
+            if (o.status !== 'cancelled' || !o.updated_at) return false;
+            const cancelledDate = new Date(o.updated_at);
+            return cancelledDate.getMonth() === thisMonth && cancelledDate.getFullYear() === thisYear;
+        }).length;
+
+        return { newOrders, revenueToday, awaitingShipping, cancelledThisMonth };
+
+    }, [allOrders]);
+
     const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus) => {
         setIsSaving(true);
         try {
@@ -153,6 +183,8 @@ export function useOrders() {
         allContacts,
         allProducts,
         settingsData,
+        // KPIs
+        kpis,
         // Filters
         searchQuery,
         setSearchQuery,

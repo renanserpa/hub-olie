@@ -1,124 +1,91 @@
-import React, { useState, useMemo } from 'react';
-import { Workflow, Loader2 } from 'lucide-react';
-import { useProduction } from '../hooks/useProduction';
-import ProductionOrderDetailPanel from './production/ProductionOrderDetailPanel';
-import { Card } from './ui/Card';
-import { Material, ProductionOrderStatus } from '../types';
-import TabLayout from './ui/TabLayout';
+import React from 'react';
+import { Loader2, PackageOpen } from 'lucide-react';
+import { useProduction, ProductionViewMode } from '../hooks/useProduction';
+import { Material } from '../types';
 import ProductionKanban from './production/ProductionKanban';
-import ProductionTimeline from './production/ProductionTimeline';
-import ProductionQualityPanel from './production/ProductionQualityPanel';
 import ProductionKpiRow from './production/ProductionKpiRow';
-import ProductionOrderFilters from './production/ProductionOrderFilters';
-
-const PRODUCTION_TABS = [
-    { id: 'orders', label: 'Ordens', icon: Workflow },
-    { id: 'timeline', label: 'Timeline', icon: Workflow }, // Replace with better icon
-    { id: 'quality', label: 'Qualidade', icon: Workflow }, // Replace with better icon
-];
+import ProductionFilterBar from './production/ProductionFilterBar';
+import ProductionDrawer from './production/ProductionDrawer';
+import ProductionDialog from './production/ProductionDialog';
+import ProductionOrderList from './production/ProductionOrderList';
+import ProductionTable from './production/ProductionTable';
 
 const ProductionPage: React.FC = () => {
-    const [activeViewTab, setActiveViewTab] = useState('orders');
-    
     const {
-        allOrders,
         filteredOrders,
         allMaterials,
+        allProducts,
         isLoading,
+        isSaving,
         selectedOrder,
         setSelectedOrderId,
         kpis,
-        filters,
-        setFilters,
         updateTaskStatus,
         updateProductionOrderStatus,
-        createQualityCheck
+        createQualityCheck,
+        createProductionOrder,
+        viewMode,
+        setViewMode,
+        isCreateDialogOpen,
+        setIsCreateDialogOpen,
     } = useProduction();
 
-    const statusCounts = useMemo(() => {
-        const counts: Record<ProductionOrderStatus | 'all', number> = {
-            novo: 0,
-            planejado: 0,
-            em_andamento: 0,
-            em_espera: 0,
-            finalizado: 0,
-            cancelado: 0,
-            all: allOrders.length,
-        };
-
-        for (const order of allOrders) {
-            if (order.status in counts) {
-                counts[order.status]++;
-            }
-        }
-        return counts;
-    }, [allOrders]);
-
     const renderContent = () => {
-        if (isLoading) {
+        if (isLoading && filteredOrders.length === 0) {
             return <div className="flex justify-center items-center h-96"><Loader2 className="w-8 h-8 animate-spin text-primary"/></div>;
         }
 
-        switch(activeViewTab) {
-            case 'orders':
-                return <ProductionKanban orders={filteredOrders} onCardClick={setSelectedOrderId} onStatusChange={updateProductionOrderStatus} />;
-            case 'timeline':
-                return <ProductionTimeline orders={filteredOrders} />;
-            case 'quality':
-                return <ProductionQualityPanel checks={[]} onCreate={createQualityCheck} />;
+        if (filteredOrders.length === 0) {
+            return (
+                 <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
+                    <PackageOpen className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhuma Ordem de Produção</h3>
+                    <p className="mt-1 text-sm">Nenhuma OP corresponde aos filtros selecionados.</p>
+                </div>
+            );
+        }
+
+        switch(viewMode) {
+            case 'list':
+                return <ProductionOrderList orders={filteredOrders} onOrderClick={setSelectedOrderId} />;
+            case 'table':
+                return <ProductionTable orders={filteredOrders} onOrderSelect={setSelectedOrderId} />;
+            case 'kanban':
             default:
-                return null;
+                return <ProductionKanban orders={filteredOrders} onCardClick={setSelectedOrderId} onStatusChange={updateProductionOrderStatus} />;
         }
     };
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                 <div>
-                    <div className="flex items-center gap-3">
-                        <Workflow className="text-primary" size={28}/>
-                        <h1 className="text-3xl font-bold text-textPrimary">Produção</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Controle o chão de fábrica, da matéria-prima ao produto acabado.</p>
-                </div>
-            </div>
+            <ProductionFilterBar 
+                onNewOrderClick={() => setIsCreateDialogOpen(true)}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+            />
             
             <div className="mb-6">
                 <ProductionKpiRow kpis={kpis} />
             </div>
 
-            <TabLayout tabs={PRODUCTION_TABS} activeTab={activeViewTab} onTabChange={setActiveViewTab} />
-            
-            <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div className="lg:col-span-3">
-                    <ProductionOrderFilters 
-                        filters={filters}
-                        onFilterChange={setFilters}
-                        // @fix: Pass the calculated statusCounts object to the component, resolving the type mismatch error.
-                        statusCounts={statusCounts}
-                    />
-                </div>
-                <div className="lg:col-span-5 min-w-0">
-                    {renderContent()}
-                </div>
-                <div className="lg:col-span-4">
-                     {selectedOrder ? (
-                        <ProductionOrderDetailPanel 
-                            order={selectedOrder} 
-                            allMaterials={allMaterials as Material[]}
-                            key={selectedOrder.id} 
-                            onUpdateTaskStatus={updateTaskStatus}
-                            onCreateQualityCheck={createQualityCheck}
-                        />
-                    ) : !isLoading ? (
-                        <Card className="sticky top-20 h-[calc(100vh-25rem)] flex items-center justify-center">
-                            <div className="text-center text-textSecondary">
-                                <p>Selecione uma OP para ver os detalhes</p>
-                            </div>
-                        </Card>
-                    ) : null}
-                </div>
-            </div>
+            {renderContent()}
+
+            <ProductionDrawer
+                order={selectedOrder}
+                isOpen={!!selectedOrder}
+                onClose={() => setSelectedOrderId(null)}
+                allMaterials={allMaterials as Material[]}
+                onUpdateTaskStatus={updateTaskStatus}
+                onCreateQualityCheck={createQualityCheck}
+            />
+
+            <ProductionDialog
+                isOpen={isCreateDialogOpen}
+                onClose={() => setIsCreateDialogOpen(false)}
+                onSave={createProductionOrder}
+                products={allProducts}
+                isSaving={isSaving}
+            />
         </div>
     );
 };

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { ProductionOrder, Material, ProductionTask, ProductionTaskStatus, ProductionQualityCheck, QualityCheckResult } from '../../types';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Info, ListChecks, Package, ShieldCheck, Play, Check, Pause, Plus, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import ProductionOrderCard from './ProductionOrderCard';
 import { Button } from '../ui/Button';
 
 interface ProductionOrderDetailPanelProps {
@@ -151,9 +149,9 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
 
 
     return (
-        <Card className="sticky top-20 h-[calc(100vh-25rem)] overflow-y-auto">
+        <div>
             <div className="p-4 border-b border-border">
-                <ProductionOrderCard order={order} isSelected={false} onClick={() => {}} />
+                 {/* Summary card could go here if needed */}
             </div>
             
             <div className="border-b border-border">
@@ -174,7 +172,7 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
             {activeTab === 'tasks' && renderTasksTab()}
             {activeTab === 'quality' && renderQualityTab()}
             {activeTab === 'materials' && renderMaterialsTab()}
-        </Card>
+        </div>
     );
 };
 

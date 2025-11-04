@@ -8,6 +8,7 @@ import OrderFilters from './OrderFilters';
 import { Loader2, PackageOpen } from 'lucide-react';
 import OrdersTable from './orders/OrdersTable';
 import OrderCard from './OrderCard';
+import { OrderKpiRow } from './orders/OrderKpiRow';
 
 type ViewMode = 'kanban' | 'list' | 'table';
 
@@ -29,6 +30,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         createOrder,
         addItemToOrder,
         refresh,
+        kpis,
     } = useOrders();
 
     if (isLoading && filteredOrders.length === 0) {
@@ -83,6 +85,10 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
             />
+
+            <div className="mb-6">
+                <OrderKpiRow stats={kpis} />
+            </div>
             
             {renderContent()}
 

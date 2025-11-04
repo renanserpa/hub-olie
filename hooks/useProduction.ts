@@ -1,43 +1,60 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
+
+export type ProductionViewMode = 'kanban' | 'list' | 'table';
 
 export function useProduction() {
     const [allOrders, setAllOrders] = useState<ProductionOrder[]>([]);
     const [allTasks, setAllTasks] = useState<ProductionTask[]>([]);
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [filters, setFilters] = useState<{ search: string; status: ProductionOrderStatus[] }>({ search: '', status: [] });
 
+    const [viewMode, setViewModeInternal] = useState<ProductionViewMode>('kanban');
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+     useEffect(() => {
+        const savedViewMode = sessionStorage.getItem('productionViewMode') as ProductionViewMode;
+        if (savedViewMode) {
+            setViewModeInternal(savedViewMode);
+        }
+    }, []);
+
+    const setViewMode = (mode: ProductionViewMode) => {
+        sessionStorage.setItem('productionViewMode', mode);
+        setViewModeInternal(mode);
+    };
+
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [ordersData, tasksData, qualityData, materialsData] = await Promise.all([
+            const [ordersData, tasksData, qualityData, materialsData, productsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
-                dataService.getCollection<Material>('config_materials')
+                dataService.getCollection<Material>('config_materials'),
+                dataService.getCollection<Product>('products'),
             ]);
             
             setAllOrders(ordersData);
             setAllTasks(tasksData);
             setAllQualityChecks(qualityData);
             setAllMaterials(materialsData);
+            setAllProducts(productsData);
 
-            if (ordersData.length > 0 && !selectedOrderId) {
-                setSelectedOrderId(ordersData[0].id);
-            }
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
-    }, [selectedOrderId]);
+    }, []);
 
     useEffect(() => {
         loadData();
@@ -116,7 +133,6 @@ export function useProduction() {
         const order = allOrders.find(o => o.id === orderId);
         if (!order) return;
         
-        // Optimistic update
         setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
 
         try {
@@ -125,6 +141,21 @@ export function useProduction() {
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
             loadData(); // Revert
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const createProductionOrder = async (orderData: Partial<Omit<ProductionOrder, 'id' | 'created_at' | 'updated_at'>>) => {
+        setIsSaving(true);
+        try {
+            const po_number = `OP-MAN-${Date.now().toString().slice(-6)}`;
+            await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
+            toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
+            setIsCreateDialogOpen(false);
+            loadData();
+        } catch(e) {
+            toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
@@ -150,6 +181,7 @@ export function useProduction() {
         allOrders: ordersWithDetails,
         filteredOrders,
         allMaterials,
+        allProducts,
         isLoading,
         isSaving,
         selectedOrder,
@@ -160,5 +192,10 @@ export function useProduction() {
         updateTaskStatus,
         updateProductionOrderStatus,
         createQualityCheck,
+        createProductionOrder,
+        viewMode,
+        setViewMode,
+        isCreateDialogOpen,
+        setIsCreateDialogOpen,
     };
 }
