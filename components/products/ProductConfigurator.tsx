@@ -80,24 +80,38 @@ const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({ attributes, o
             <h4 className="font-semibold text-textPrimary">Opções de Personalização</h4>
             
             <MultiSelect
-                label="Cores de Tecido Disponíveis"
+                label="Cores de Tecido Externo"
                 options={colorOptions('tecido')}
-                selected={attributes?.fabricColor || []}
-                onChange={(val) => handleMultiSelectChange('fabricColor', val)}
-            />
-
-            <MultiSelect
-                label="Cores de Zíper Disponíveis"
-                options={colorOptions('ziper')}
-                selected={attributes?.zipperColor || []}
-                onChange={(val) => handleMultiSelectChange('zipperColor', val)}
+                selected={attributes?.external_fabric_color_ids || []}
+                onChange={(val) => handleMultiSelectChange('external_fabric_color_ids', val)}
             />
             
             <MultiSelect
-                label="Cores de Viés Disponíveis"
+                label="Cores de Forro Interno"
+                options={colorOptions('forro')}
+                selected={attributes?.internal_lining_color_ids || []}
+                onChange={(val) => handleMultiSelectChange('internal_lining_color_ids', val)}
+            />
+
+            <MultiSelect
+                label="Cores de Zíper"
+                options={colorOptions('ziper')}
+                selected={attributes?.zipper_color_ids || []}
+                onChange={(val) => handleMultiSelectChange('zipper_color_ids', val)}
+            />
+            
+            <MultiSelect
+                label="Cores de Viés"
                 options={colorOptions('vies')}
-                selected={attributes?.biasColor || []}
-                onChange={(val) => handleMultiSelectChange('biasColor', val)}
+                selected={attributes?.bias_color_ids || []}
+                onChange={(val) => handleMultiSelectChange('bias_color_ids', val)}
+            />
+            
+            <MultiSelect
+                label="Cores de Puxador"
+                options={colorOptions('puxador')}
+                selected={attributes?.puller_color_ids || []}
+                onChange={(val) => handleMultiSelectChange('puller_color_ids', val)}
             />
 
             <div className="pt-2">

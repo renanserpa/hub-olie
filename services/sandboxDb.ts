@@ -5,7 +5,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionAudit
+    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -46,11 +46,17 @@ const product_categories: ProductCategory[] = [
     { id: 'pc3', name: 'Mochilas', description: 'Mochilas para uso urbano e viagens.' },
 ];
 
+// FIX: Renamed 'collections' to 'collectionsSeed' to avoid redeclaration error.
+const collectionsSeed: Collection[] = [
+    { id: 'col1', name: 'Coleção Essenciais', description: 'Produtos clássicos e atemporais.'},
+    { id: 'col2', name: 'Coleção POOL', description: 'Produtos com tema de piscina, impermeáveis e fáceis de limpar.'}
+];
+
 const products: Product[] = [
-    { id: 'p1', name: 'Bolsa Tote Clássica', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', stock_quantity: 15, hasVariants: true, status: 'Ativo', attributes: { fabricColor: ['fc1', 'fc2'], zipperColor: ['zc1'], biasColor: ['bc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 1.5 }, { material_id: 'mat2', quantity_per_unit: 1 }] },
-    { id: 'p2', name: 'Nécessaire de Viagem', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', stock_quantity: 30, hasVariants: true, status: 'Ativo', attributes: { embroidery: true, fabricColor: ['fc1', 'fc3'], zipperColor: ['zc1', 'zc2'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 0.5 }, { material_id: 'mat2', quantity_per_unit: 1 }, { material_id: 'mat3', quantity_per_unit: 5 }] },
-    { id: 'p3', name: 'Mochila Urbana', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', stock_quantity: 8, hasVariants: false, status: 'Rascunho', attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
-    { id: 'p4', name: 'Estojo Lápis (Modelo Antigo)', base_sku: 'EL-OLD-01', base_price: 79.90, category: 'Nécessaires', stock_quantity: 0, hasVariants: false, status: 'Arquivado', attributes: {}, images:[], createdAt: new Date(Date.now() - 100 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
+    { id: 'p1', name: 'Bolsa Tote Clássica', description: 'Uma bolsa espaçosa e elegante para o dia a dia, feita com materiais de alta qualidade.', base_sku: 'BT-CLA-01', base_price: 299.90, category: 'Bolsas', hasVariants: true, status: 'Ativo', attributes: { external_fabric_color_ids: ['fc1', 'fc2'], zipper_color_ids: ['zc1'], bias_color_ids: ['bc1'] }, images:[], createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 1.5 }, { material_id: 'mat2', quantity_per_unit: 1 }], collection_ids: ['col1'] },
+    { id: 'p2', name: 'Nécessaire de Viagem', description: 'Perfeita para organizar seus itens de higiene e maquiagem em viagens.', base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', hasVariants: true, status: 'Ativo', attributes: { embroidery: true, external_fabric_color_ids: ['fc1', 'fc3'], zipper_color_ids: ['zc1', 'zc2'], internal_lining_color_ids: ['lc1'] }, images:[], createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [{ material_id: 'mat1', quantity_per_unit: 0.5 }, { material_id: 'mat2', quantity_per_unit: 1 }, { material_id: 'mat3', quantity_per_unit: 5 }], collection_ids: ['col1', 'col2'] },
+    { id: 'p3', name: 'Mochila Urbana', description: 'Design moderno e funcional, ideal para o trabalho ou passeios.', base_sku: 'MU-PRE-01', base_price: 450.00, category: 'Mochilas', hasVariants: false, status: 'Rascunho', attributes: {}, images:[], createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
+    { id: 'p4', name: 'Estojo Lápis (Modelo Antigo)', description: 'Um estojo simples e prático.', base_sku: 'EL-OLD-01', base_price: 79.90, category: 'Nécessaires', hasVariants: false, status: 'Descontinuado', attributes: {}, images:[], createdAt: new Date(Date.now() - 100 * 86400000).toISOString(), updatedAt: new Date().toISOString(), bom: [] },
 ];
 
 const order_items: OrderItem[] = [
@@ -309,10 +315,12 @@ const notifications: Notification[] = [
 
 
 // --- IN-MEMORY STORE ---
+// FIX: Renamed to `collections` to avoid redeclaration error.
 let collections: Record<string, any[]> = {
     customers: contacts,
     products,
     product_categories,
+    collections: collectionsSeed,
     orders,
     order_items,
     production_orders,
@@ -535,27 +543,70 @@ export const sandboxDb = {
     },
     testIntegrationConnection: testConnection,
     uploadFile,
+    // FIX: Rewrote getSettings to correctly construct the AppData object from the in-memory store, resolving a major type error.
     getSettings: async (): Promise<AppData> => ({
-        ...collections,
         catalogs: {
-            paletas_cores: collections.config_color_palettes,
+            paletas_cores: collections.config_color_palettes as ColorPalette[],
             cores_texturas: {
-                tecido: collections.fabric_colors,
-                ziper: collections.zipper_colors,
-                forro: collections.lining_colors,
-                puxador: collections.puller_colors,
-                vies: collections.bias_colors,
-                bordado: collections.embroidery_colors,
-                texturas: collections.fabric_textures,
+                tecido: collections.fabric_colors as FabricColor[],
+                ziper: collections.zipper_colors as ZipperColor[],
+                forro: collections.lining_colors as LiningColor[],
+                puxador: collections.puller_colors as PullerColor[],
+                vies: collections.bias_colors as BiasColor[],
+                bordado: collections.embroidery_colors as EmbroideryColor[],
+                texturas: collections.fabric_textures as FabricTexture[],
             },
-            fontes_monogramas: collections.config_fonts,
+            fontes_monogramas: collections.config_fonts as MonogramFont[],
         },
         logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
-        sistema: collections.system_settings,
-        config_supply_groups: collections.config_supply_groups,
-        config_materials: collections.config_materials,
-        contacts: collections.customers,
-    } as AppData),
+        sistema: collections.system_settings as SystemSetting[],
+        system_settings_logs: collections.system_settings_logs as SystemSettingsLog[],
+        config_integrations: collections.config_integrations as Integration[],
+        integration_logs: collections.integration_logs as IntegrationLog[],
+        config_supply_groups: collections.config_supply_groups as MaterialGroup[],
+        config_materials: collections.config_materials as Material[],
+        warehouses: collections.warehouses as Warehouse[],
+        media_assets: collections.media_assets as MediaAsset[],
+        orders: collections.orders as Order[],
+        contacts: collections.customers as Contact[],
+        products: collections.products as Product[],
+        product_categories: collections.product_categories as ProductCategory[],
+        collections: collections.collections as Collection[],
+        production_orders: collections.production_orders as ProductionOrder[],
+        production_audit: collections.production_audit as ProductionAudit[],
+        production_tasks: collections.production_tasks as ProductionTask[],
+        production_quality_checks: collections.production_quality_checks as ProductionQualityCheck[],
+        task_statuses: collections.task_statuses as TaskStatus[],
+        tasks: collections.tasks as Task[],
+        omnichannel: {
+            conversations: collections.conversations as Conversation[],
+            messages: collections.messages as Message[],
+            quotes: (collections.quotes || []) as any[],
+        },
+        inventory_balances: collections.inventory_balances as InventoryBalance[],
+        inventory_movements: collections.inventory_movements as InventoryMovement[],
+        marketing_campaigns: collections.marketing_campaigns as MarketingCampaign[],
+        marketing_segments: collections.marketing_segments as MarketingSegment[],
+        marketing_templates: collections.marketing_templates as MarketingTemplate[],
+        suppliers: collections.suppliers as Supplier[],
+        purchase_orders: collections.purchase_orders as PurchaseOrder[],
+        purchase_order_items: collections.purchase_order_items as PurchaseOrderItem[],
+        analytics_kpis: collections.analytics_kpis as AnalyticsKPI[],
+        analytics_snapshots: (collections.analytics_snapshots || []) as AnalyticsSnapshot[],
+        executive_kpis: collections.executive_kpis as ExecutiveKPI[],
+        executive_ai_insights: collections.executive_ai_insights as AIInsight[],
+        finance_accounts: collections.finance_accounts as FinanceAccount[],
+        finance_categories: collections.finance_categories as FinanceCategory[],
+        finance_transactions: collections.finance_transactions as FinanceTransaction[],
+        finance_payables: collections.finance_payables as FinancePayable[],
+        finance_receivables: collections.finance_receivables as FinanceReceivable[],
+        initializer_logs: collections.initializer_logs as InitializerLog[],
+        initializer_sync_state: collections.initializer_sync_state as InitializerSyncState[],
+        initializer_agents: collections.initializer_agents as InitializerAgent[],
+        workflow_rules: collections.workflow_rules as WorkflowRule[],
+        notifications: collections.notifications as Notification[],
+        system_audit: collections.system_audit as SystemAudit[],
+    }),
     addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => 
         Promise.resolve(create(getTableNameForSetting(category, subTab, subSubTab), data)),
     updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) =>
@@ -807,8 +858,8 @@ export const sandboxDb = {
             accounts,
             categories,
             transactions: transactionsWithDetails,
-            payables: getCollection<FinancePayable>('payables'),
-            receivables: getCollection<FinanceReceivable>('receivables'),
+            payables: getCollection<FinancePayable>('finance_payables'),
+            receivables: getCollection<FinanceReceivable>('finance_receivables'),
         });
     },
 };

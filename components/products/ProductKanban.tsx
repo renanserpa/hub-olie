@@ -11,8 +11,10 @@ interface ProductKanbanProps {
 
 const PRODUCT_COLUMNS: { id: ProductStatus, label: string }[] = [
   { id: 'Rascunho', label: 'Rascunho' },
+  { id: 'Homologado Qualidade', label: 'Homologado' },
   { id: 'Ativo', label: 'Ativo' },
-  { id: 'Arquivado', label: 'Arquivado' },
+  { id: 'Suspenso', label: 'Suspenso' },
+  { id: 'Descontinuado', label: 'Descontinuado' },
 ];
 
 const ProductKanban: React.FC<ProductKanbanProps> = ({ products, onCardClick, onStatusChange }) => {
@@ -41,7 +43,7 @@ const ProductKanban: React.FC<ProductKanbanProps> = ({ products, onCardClick, on
     };
 
     return (
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:-mx-6">
             {PRODUCT_COLUMNS.map(column => (
                 <div 
                     key={column.id}

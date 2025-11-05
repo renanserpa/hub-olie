@@ -27,14 +27,14 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                 base_sku: '',
                 base_price: 0,
                 category: '',
-                stock_quantity: 0,
+                description: '',
                 hasVariants: false,
                 attributes: {},
             });
         }
     }, [product, isOpen]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         
         if (type === 'checkbox') {
@@ -74,6 +74,11 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                     <label className={labelStyle}>Nome do Produto *</label>
                     <input name="name" value={formData.name || ''} onChange={handleChange} required className={inputStyle} />
                 </div>
+
+                <div>
+                    <label className={labelStyle}>Descrição</label>
+                    <textarea name="description" value={formData.description || ''} onChange={handleChange} rows={3} className={inputStyle} />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                      <div>
@@ -94,10 +99,6 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                      <div>
                         <label className={labelStyle}>Preço Base (R$)</label>
                         <input name="base_price" type="number" step="0.01" value={formData.base_price || ''} onChange={handleChange} required className={inputStyle} />
-                    </div>
-                    <div>
-                        <label className={labelStyle}>Estoque Inicial</label>
-                        <input name="stock_quantity" type="number" value={formData.stock_quantity || ''} onChange={handleChange} required className={inputStyle} />
                     </div>
                 </div>
 

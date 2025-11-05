@@ -43,7 +43,7 @@ const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onEdit }
                     {product.base_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
                 <Badge variant="secondary" className="text-xs">
-                    Estoque: {product.stock_quantity}
+                    {product.category}
                 </Badge>
             </div>
         </div>

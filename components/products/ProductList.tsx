@@ -19,7 +19,6 @@ const SkeletonRow: React.FC = () => (
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
-        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
         <td className="p-4"><div className="h-8 bg-gray-200 rounded w-20"></div></td>
     </tr>
 );
@@ -49,7 +48,6 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }
                                     <th className="p-4 font-semibold text-textSecondary">SKU</th>
                                     <th className="p-4 font-semibold text-textSecondary">Categoria</th>
                                     <th className="p-4 font-semibold text-textSecondary">Preço Base</th>
-                                    <th className="p-4 font-semibold text-textSecondary">Estoque</th>
                                     <th className="p-4 font-semibold text-textSecondary text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -60,7 +58,6 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }
                                         <td className="p-4 font-mono text-xs">{product.base_sku}</td>
                                         <td className="p-4"><Badge variant="secondary">{product.category || 'N/A'}</Badge></td>
                                         <td className="p-4">R$ {product.base_price.toFixed(2)}</td>
-                                        <td className="p-4">{product.stock_quantity}</td>
                                         <td className="p-4 text-right">
                                             <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>
                                                 <Edit size={14} className="mr-2" />

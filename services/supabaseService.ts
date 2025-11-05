@@ -5,6 +5,7 @@ import {
     AppData,
     BiasColor,
     ColorPalette,
+    Collection,
     Contact,
     EmbroideryColor,
     FabricColor,
@@ -199,7 +200,7 @@ export const supabaseService = {
         config_supply_groups: [],
         config_materials: [],
         warehouses: [],
-        media_assets: [], orders: [], contacts: [], products: [], product_categories: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+        media_assets: [], orders: [], contacts: [], products: [], product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],
@@ -233,6 +234,7 @@ export const supabaseService = {
             notifications, workflow_rules,
             system_audit,
             production_audit,
+            collections,
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
@@ -254,6 +256,7 @@ export const supabaseService = {
             supabaseService.getCollection<WorkflowRule>('workflow_rules'),
             supabaseService.getCollection<SystemAudit>('system_audit'),
             supabaseService.getCollection<ProductionAudit>('production_audit'),
+            supabaseService.getCollection<Collection>('collections'),
         ]);
         
         return {
@@ -284,6 +287,7 @@ export const supabaseService = {
             workflow_rules,
             system_audit,
             production_audit,
+            collections,
         };
     } catch (error) {
         handleError(error, 'getSettings');

@@ -91,25 +91,28 @@ export type AnyContact = Omit<Contact, 'id'>;
 // --- PRODUCTS & CATALOG ---
 
 export interface ProductAttributes {
-  fabricColor?: string[];
-  zipperColor?: string[];
-  biasColor?: string[];
+  external_fabric_color_ids?: string[];
+  internal_lining_color_ids?: string[];
+  zipper_color_ids?: string[];
+  bias_color_ids?: string[];
+  puller_color_ids?: string[];
   embroidery?: boolean;
-  [key: string]: any;
+  [key: string]: any; // Keep for backward compatibility during transition
 }
 
-export type ProductStatus = 'Rascunho' | 'Ativo' | 'Arquivado';
+export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
 export interface Product {
     id: string;
     name: string;
+    description?: string;
     base_sku: string;
     base_price: number;
     category: string;
-    stock_quantity: number;
     hasVariants: boolean;
     status: ProductStatus;
     attributes?: ProductAttributes;
+    collection_ids?: string[];
     images: string[];
     createdAt: string;
     updatedAt: string;
@@ -119,6 +122,12 @@ export interface Product {
 export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 
 export interface ProductCategory {
+    id: string;
+    name: string;
+    description?: string;
+}
+
+export interface Collection {
     id: string;
     name: string;
     description?: string;
@@ -853,6 +862,7 @@ export interface AppData {
     contacts: Contact[];
     products: Product[];
     product_categories: ProductCategory[];
+    collections: Collection[];
     production_orders: ProductionOrder[];
     production_audit: ProductionAudit[];
     // FIX: Add missing production task-related arrays to AppData
