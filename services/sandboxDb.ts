@@ -780,11 +780,23 @@ export const sandboxDb = {
         
         return Promise.resolve();
     },
-    getLogisticsData: async () => Promise.resolve({
-        orders: getCollection<Order>('orders').map(o => ({...o, customers: get('customers', o.customer_id)})),
-        waves: getCollection<LogisticsWave>('logistics_waves'),
-        shipments: getCollection<LogisticsShipment>('logistics_shipments'),
-    }),
+    getLogisticsData: async () => {
+        // This now mirrors the logic from getOrders to ensure `items` are always included.
+        const allOrders = getCollection<Order>('orders');
+        const allItems = getCollection<OrderItem>('order_items');
+        const allContacts = getCollection<Contact>('customers');
+        const ordersWithDetails = allOrders.map(o => ({
+            ...o,
+            items: allItems.filter(item => item.order_id === o.id),
+            customers: allContacts.find(c => c.id === o.customer_id),
+        }));
+
+        return {
+            orders: ordersWithDetails,
+            waves: getCollection<LogisticsWave>('logistics_waves'),
+            shipments: getCollection<LogisticsShipment>('logistics_shipments'),
+        };
+    },
     getPurchasingData: async () => Promise.resolve({
         suppliers: getCollection<Supplier>('suppliers'),
         purchase_orders: getCollection<PurchaseOrder>('purchase_orders'),
