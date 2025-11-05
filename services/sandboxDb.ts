@@ -10,20 +10,6 @@ import {
     WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent
 } from '../types';
 
-// --- FAKE REALTIME EVENT BUS ---
-const eventBus = new EventTarget();
-const emit = (path: string) => {
-    console.log(`🧱 SANDBOX: Emitting update for path -> ${path}`);
-    eventBus.dispatchEvent(new CustomEvent(path));
-};
-const subscribe = (path: string, handler: (items: any[]) => void) => {
-    const callback = () => handler(getCollection(path));
-    eventBus.addEventListener(path, callback);
-    // Initial call to populate data
-    callback();
-    return { unsubscribe: () => eventBus.removeEventListener(path, callback) };
-};
-
 // --- SEED DATA ---
 const generateId = () => crypto.randomUUID();
 
@@ -228,5 +214,288 @@ const purchase_order_items: PurchaseOrderItem[] = [
     { id: 'poi4', po_id: 'pc3', material_id: 'mat1', material_name: 'Linho Bege Cru', quantity: 20, received_quantity: 0, unit_price: 45.50, total: 910.00 },
 ];
 
+// FIX: Corrected a syntax error in the purchase_orders array by completing a truncated line and converting a Date object to a string.
 const purchase_orders: PurchaseOrder[] = [
-    { id: 'pc1', po_number: 'PC-2024-001', supplier_id: 'sup1', supplier: suppliers[0], status: 'received', items: [purchase_order_items[0]], total: 2100.00, created_at: new Date(Date.now() - 10 * 86400000).toISOString(), updated_at: new Date(Date.now() - 5 * 86400000).toISOString(), issued_at: new Date(Date.now() - 9 * 86400000).toISOString(), received_at: new Date(Date.
+    { id: 'pc1', po_number: 'PC-2024-001', supplier_id: 'sup1', supplier: suppliers[0], status: 'received', items: [purchase_order_items[0]], total: 2100.00, created_at: new Date(Date.now() - 10 * 86400000).toISOString(), updated_at: new Date(Date.now() - 5 * 86400000).toISOString(), issued_at: new Date(Date.now() - 9 * 86400000).toISOString(), received_at: new Date(Date.now() - 5 * 86400000).toISOString() },
+];
+// FIX: The rest of this file was truncated in the user input. I am assuming this is where it ended based on the start of the next file.
+
+// --- IN-MEMORY DATABASE ---
+// This object aggregates all our seed data into a single "database"
+const db: AppData = {
+    // FIX: Add missing 'production_audit' property to satisfy the AppData type.
+    production_audit: [],
+    // FIX: Add missing 'production_quality_checks' property to satisfy the AppData type.
+    production_quality_checks: [],
+    // FIX: Add missing 'production_tasks' property to satisfy the AppData type.
+    production_tasks: [],
+    // FIX: Added missing 'system_audit' property to satisfy the AppData type.
+    system_audit: [],
+    warehouses,
+    contacts,
+    customers: contacts, // Alias for contacts
+    product_categories,
+    products,
+    order_items,
+    orders: orders as any, // Cast to avoid deep type checking issues with items/customers
+    production_orders,
+    task_statuses,
+    tasks,
+    inventory_balances,
+    inventory_movements,
+    system_settings,
+    conversations,
+    messages,
+    logistics_waves,
+    logistics_shipments,
+    marketing_campaigns,
+    marketing_segments,
+    marketing_templates,
+    suppliers,
+    purchase_orders,
+    purchase_order_items,
+    collections: collectionsSeed,
+    // Catalogs (nested for clarity in settings)
+    catalogs: {
+        paletas_cores: [],
+        cores_texturas: {
+            tecido: fabric_colors,
+            ziper: zipper_colors,
+            vies: bias_colors,
+            forro: [],
+            puxador: [],
+            bordado: [],
+            texturas: [],
+        },
+        fontes_monogramas: config_fonts,
+    },
+    // Materials
+    config_supply_groups,
+    config_materials,
+    // The rest would be empty arrays to satisfy AppData type
+    logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
+    system_settings_logs: [],
+    config_integrations: [],
+    integration_logs: [],
+    media_assets: [],
+    omnichannel: { conversations: [], messages: [], quotes: [] },
+    analytics_kpis: [],
+    analytics_snapshots: [],
+    executive_kpis: [],
+    executive_ai_insights: [],
+    finance_accounts: [],
+    finance_categories: [],
+    finance_transactions: [],
+    finance_payables: [],
+    finance_receivables: [],
+    initializer_logs: [],
+    initializer_sync_state: [],
+    initializer_agents: [],
+    workflow_rules: [],
+    notifications: [],
+};
+
+// FIX: Moved this helper function above the event bus logic to resolve a reference error.
+const getCollection = <T>(table: string): T[] => {
+    return (db as any)[table] || [];
+};
+
+// --- FAKE REALTIME EVENT BUS ---
+const eventBus = new EventTarget();
+const emit = (path: string) => {
+    console.log(`🧱 SANDBOX: Emitting update for path -> ${path}`);
+    eventBus.dispatchEvent(new CustomEvent(path));
+};
+const subscribe = (path: string, handler: (items: any[]) => void) => {
+    const callback = () => handler(getCollection(path));
+    eventBus.addEventListener(path, callback);
+    // Initial call to populate data
+    callback();
+    return { unsubscribe: () => eventBus.removeEventListener(path, callback) };
+};
+
+export const sandboxDb = {
+    getCollection: <T>(table: string): Promise<T[]> => {
+        console.log(`🧱 SANDBOX: getCollection(${table})`);
+        // Simulate network delay
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const data = getCollection<T>(table);
+                 if (data.length === 0) {
+                    console.warn(`[sandboxDb] No data found for table "${table}". Returning empty array.`);
+                }
+                resolve(JSON.parse(JSON.stringify(data))); // Deep copy to prevent mutation issues
+            }, 200);
+        });
+    },
+
+    getDocument: async <T extends { id: string }>(table: string, id: string): Promise<T | null> => {
+        console.log(`🧱 SANDBOX: getDocument(${table}, ${id})`);
+        const collection = await sandboxDb.getCollection<T>(table);
+        return collection.find(doc => doc.id === id) || null;
+    },
+
+    addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
+        console.log(`🧱 SANDBOX: addDocument(${table})`);
+        const collection = getCollection(table);
+        const newDoc = { ...docData, id: generateId() } as T;
+        collection.push(newDoc);
+        emit(table);
+        return newDoc;
+    },
+    
+    updateDocument: async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
+        console.log(`🧱 SANDBOX: updateDocument(${table}, ${id})`);
+        const collection = getCollection<T>(table);
+        const docIndex = collection.findIndex(doc => doc.id === id);
+        if (docIndex === -1) throw new Error("Document not found");
+        const updatedDoc = { ...collection[docIndex], ...docData };
+        collection[docIndex] = updatedDoc;
+        emit(table);
+        return updatedDoc;
+    },
+    
+    deleteDocument: async (table: string, id: string): Promise<void> => {
+        console.log(`🧱 SANDBOX: deleteDocument(${table}, ${id})`);
+        const collection = getCollection(table);
+        const docIndex = collection.findIndex(doc => doc.id === id);
+        if (docIndex === -1) throw new Error("Document not found");
+        collection.splice(docIndex, 1);
+        emit(table);
+    },
+
+    listenToCollection: (path: string, handler: (items: any[]) => void) => {
+      // The `path` for sandbox is just the table name.
+      return subscribe(path.split('?')[0], handler);
+    },
+
+    listenToDocument: <T extends { id: string }>(table: string, id: string, callback: (payload: T) => void) => {
+        const handler = (items: T[]) => {
+            const item = items.find(i => i.id === id);
+            if(item) callback(item);
+        }
+        return subscribe(table, handler as any);
+    },
+    
+    // Specific implementations
+    getSettings: (): Promise<AppData> => {
+        console.log(`🧱 SANDBOX: getSettings()`);
+        return Promise.resolve(JSON.parse(JSON.stringify(db)));
+    },
+    
+    getOrders: async (): Promise<Order[]> => {
+        const ordersData = await sandboxDb.getCollection<Order>('orders');
+        const itemsData = await sandboxDb.getCollection<OrderItem>('order_items');
+        const contactsData = await sandboxDb.getCollection<Contact>('contacts');
+
+        return ordersData.map(order => ({
+            ...order,
+            items: itemsData.filter(item => item.order_id === order.id),
+            customers: contactsData.find(c => c.id === order.customer_id)
+        }));
+    },
+    
+    getOrder: async (id: string): Promise<Order | null> => {
+        const order = await sandboxDb.getDocument<Order>('orders', id);
+        if (!order) return null;
+        const items = await sandboxDb.getCollection<OrderItem>('order_items');
+        return {
+            ...order,
+            items: items.filter(i => i.order_id === id)
+        };
+    },
+    
+    updateOrderStatus: (orderId: string, newStatus: OrderStatus): Promise<Order> => {
+        return sandboxDb.updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
+    },
+    
+    addOrder: async (orderData: Partial<Order>): Promise<Order> => {
+        const orderNumber = `OLIE-2024-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+        const { items, ...orderToInsert } = orderData;
+        
+        const newOrder = await sandboxDb.addDocument<Order>('orders', {
+            ...orderToInsert,
+            number: orderNumber,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        } as any);
+      
+        if (items && items.length > 0) {
+            for (const item of items) {
+                await sandboxDb.addDocument('order_items', { ...item, order_id: newOrder.id });
+            }
+        }
+        return newOrder;
+    },
+    updateOrder: (orderId: string, data: Partial<Order>): Promise<Order> => {
+        return sandboxDb.updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() });
+    },
+    getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
+        const allMovements = await sandboxDb.getCollection<InventoryMovement>('inventory_movements');
+        return allMovements.filter(m => m.material_id === materialId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    },
+    
+    addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {
+        return sandboxDb.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
+    },
+    
+    transferStock: async (transferData: any): Promise<void> => {
+        await sandboxDb.addDocument('inventory_movements', {
+            type: 'transfer',
+            reason: 'TRANSFERENCIA_INTERNA',
+            material_id: transferData.material_id,
+            quantity: transferData.quantity,
+            from_warehouse_id: transferData.from_warehouse_id,
+            to_warehouse_id: transferData.to_warehouse_id,
+            notes: transferData.notes,
+            created_at: new Date().toISOString(),
+        });
+        
+        // In a real DB this would be a transaction. Here we simulate the balance update.
+        const balances = getCollection<InventoryBalance>('inventory_balances');
+        const fromBalance = balances.find(b => b.material_id === transferData.material_id && b.warehouse_id === transferData.from_warehouse_id);
+        if(fromBalance) fromBalance.current_stock -= transferData.quantity;
+        
+        const toBalance = balances.find(b => b.material_id === transferData.material_id && b.warehouse_id === transferData.to_warehouse_id);
+        if(toBalance) toBalance.current_stock += transferData.quantity;
+        else balances.push({ id: generateId(), material_id: transferData.material_id, warehouse_id: transferData.to_warehouse_id, current_stock: transferData.quantity, reserved_stock: 0, updated_at: new Date().toISOString() });
+        
+        emit('inventory_balances');
+    },
+    
+    getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
+        const [orders, waves, shipments] = await Promise.all([
+            sandboxDb.getOrders(),
+            sandboxDb.getCollection<LogisticsWave>('logistics_waves'),
+            sandboxDb.getCollection<LogisticsShipment>('logistics_shipments'),
+        ]);
+        return { orders, waves, shipments };
+    },
+    
+     getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
+        const [suppliers, purchase_orders, purchase_order_items] = await Promise.all([
+            sandboxDb.getCollection<Supplier>('suppliers'),
+            sandboxDb.getCollection<PurchaseOrder>('purchase_orders'),
+            sandboxDb.getCollection<PurchaseOrderItem>('purchase_order_items'),
+        ]);
+        return { suppliers, purchase_orders, purchase_order_items };
+    },
+    
+     getFinanceData: async () => {
+        const [accounts, categories, transactions, payables, receivables] = await Promise.all([
+            sandboxDb.getCollection<FinanceAccount>('finance_accounts'),
+            sandboxDb.getCollection<FinanceCategory>('finance_categories'),
+            sandboxDb.getCollection<FinanceTransaction>('finance_transactions'),
+            sandboxDb.getCollection<FinancePayable>('finance_payables'),
+            sandboxDb.getCollection<FinanceReceivable>('finance_receivables'),
+        ]);
+        
+        const transactionsWithDetails = transactions.map(t => ({
+            ...t,
+            account: accounts.find(a => a.id === t.account_id),
+            category: categories.find(c => c.id === t.category_id)
+        }));
+
+        return { accounts, categories, transactions: transactionsWithDetails, payables, receivables };
+  },
+};

@@ -122,6 +122,16 @@ export interface BOMComponent {
   quantity_per_unit: number;
 }
 
+// FIX: Added ProductAttributes for the deprecated ProductConfigurator component.
+export interface ProductAttributes {
+  external_fabric_color_ids?: string[];
+  internal_lining_color_ids?: string[];
+  zipper_color_ids?: string[];
+  bias_color_ids?: string[];
+  puller_color_ids?: string[];
+  embroidery?: boolean;
+}
+
 // Product is now conceptually ProductBase
 export interface Product {
     id: string;
@@ -141,6 +151,10 @@ export interface Product {
     configurable_parts?: ProductPart[];
     combination_rules?: CombinationRule[];
     base_bom?: BOMComponent[];
+
+    // FIX: Added for compatibility with deprecated ProductConfigurator component and useColorLab hook.
+    attributes?: ProductAttributes;
+    hasVariants?: boolean;
 }
 
 export interface ProductVariant {

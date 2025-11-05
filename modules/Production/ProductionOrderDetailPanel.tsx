@@ -43,8 +43,10 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                         order.tasks.map(task => (
                             <div key={task.id} className="p-2 border rounded-md bg-secondary/50 flex justify-between items-center">
                                 <div>
-                                    <p className="font-medium text-sm">{task.title.split(' - ')[1] || task.title}</p>
-                                    <p className="text-xs text-textSecondary">{task.statusName}</p>
+                                    {/* FIX: Replaced 'task.title' with 'task.name' to match the ProductionTask type. */}
+                                    <p className="font-medium text-sm">{task.name.split(' - ')[1] || task.name}</p>
+                                    {/* FIX: Replaced 'task.statusName' with 'task.status' to match the ProductionTask type. */}
+                                    <p className="text-xs text-textSecondary">{task.status}</p>
                                 </div>
                             </div>
                         ))
