@@ -16,7 +16,36 @@ export interface User {
   uid: string;
   email: string;
   role: UserRole;
+  team_id?: string; // Added for team association
 }
+
+// FIX: Added CompanyProfile and Team types for the enhanced Settings module.
+export interface CompanyProfile {
+  id: string;
+  legal_name: string;
+  trade_name: string;
+  cnpj: string;
+  state_registration?: string;
+  address: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zip_code: string;
+  };
+  contact_email: string;
+  contact_phone: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  manager_id?: string; // User ID of the team manager
+}
+
 
 // --- SYSTEM AUDIT ---
 export interface SystemAudit {
