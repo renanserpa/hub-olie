@@ -12,7 +12,9 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Switched to a constructor for state initialization. This explicitly calls `super(props)` which can resolve type errors where `this.props` is not found.
+  // Fix: Initialize state in the constructor. This is required for class components
+  // to ensure `this.state` is defined before it's accessed in methods like render().
+  // Calling super(props) also makes `this.props` available.
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
