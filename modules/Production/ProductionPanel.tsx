@@ -14,7 +14,8 @@ export default function ProductionPanel() {
   const { 
     filteredOrders,
     reload, 
-    loading, 
+    // FIX: Changed 'loading' to 'isLoading' to match the property returned by the useProduction hook.
+    isLoading, 
     updateProductionOrderStatus, 
     selectedOrder, 
     setSelectedOrderId,
@@ -31,7 +32,7 @@ export default function ProductionPanel() {
   } = useProduction();
 
   const renderContent = () => {
-    if (loading) {
+    if (isLoading) {
       return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
     }
     

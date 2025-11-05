@@ -1,7 +1,8 @@
 'use client';
 import StatCard from '../../components/dashboard/StatCard';
 import { Workflow, Cog, CheckCircle, PauseCircle } from 'lucide-react';
-import { ProductionOrder } from './useProduction';
+// FIX: Corrected import path for ProductionOrder type.
+import { ProductionOrder } from '../../types';
 
 export default function ProductionKPIHeader({ orders }: { orders: ProductionOrder[] }) {
   const total = orders.length;

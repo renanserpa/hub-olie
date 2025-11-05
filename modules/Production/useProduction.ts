@@ -33,7 +33,8 @@ export function useProduction() {
         setViewModeInternal(mode);
     };
 
-    const loadData = useCallback(async () => {
+    // FIX: Renamed loadData to reload for consistency and to export it.
+    const reload = useCallback(async () => {
         setIsLoading(true);
         try {
             const [ordersData, tasksData, qualityData, materialsData, productsData] = await Promise.all([
@@ -58,8 +59,8 @@ export function useProduction() {
     }, []);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        reload();
+    }, [reload]);
 
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => ({
@@ -121,7 +122,7 @@ export function useProduction() {
         try {
             await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
             toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
-            await loadData();
+            await reload();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
         } finally {
@@ -141,7 +142,7 @@ export function useProduction() {
             toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado para "${status}".` });
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
-            loadData(); // Revert
+            reload(); // Revert
         } finally {
             setIsSaving(false);
         }
@@ -154,7 +155,7 @@ export function useProduction() {
             await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
             toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
             setIsCreateDialogOpen(false);
-            loadData();
+            reload();
         } catch(e) {
             toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
@@ -170,7 +171,7 @@ export function useProduction() {
                 created_at: new Date().toISOString()
             });
             toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
-            await loadData();
+            await reload();
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
         } finally {
@@ -198,5 +199,6 @@ export function useProduction() {
         setViewMode,
         isCreateDialogOpen,
         setIsCreateDialogOpen,
+        reload,
     };
 }
