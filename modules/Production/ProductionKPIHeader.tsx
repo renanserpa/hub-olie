@@ -5,9 +5,12 @@ import { ProductionOrder } from './useProduction';
 
 export default function ProductionKPIHeader({ orders }: { orders: ProductionOrder[] }) {
   const total = orders.length;
-  const completed = orders.filter((o: ProductionOrder) => o.status === 'completed').length;
-  const inProgress = orders.filter((o: ProductionOrder) => o.status === 'in_progress').length;
-  const paused = orders.filter((o: ProductionOrder) => o.status === 'paused').length;
+  // FIX: Use correct Portuguese status values for comparison
+  const completed = orders.filter((o: ProductionOrder) => o.status === 'finalizado').length;
+  // FIX: Use correct Portuguese status values for comparison
+  const inProgress = orders.filter((o: ProductionOrder) => o.status === 'em_andamento').length;
+  // FIX: Use correct Portuguese status values for comparison
+  const paused = orders.filter((o: ProductionOrder) => o.status === 'em_espera').length;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
