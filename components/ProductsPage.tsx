@@ -1,10 +1,18 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package, BookOpen } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
 import ProductDialog from './products/ProductDialog';
 import ProductFilterBar from './products/ProductFilterBar';
 import ProductKanban from './products/ProductKanban';
+import TabLayout from './ui/TabLayout';
+import CatalogManagement from './products/CatalogManagement';
+
+const PRODUCT_PAGE_TABS = [
+    { id: 'products', label: 'Produtos', icon: Package },
+    { id: 'catalog', label: 'Dados Mestres (Catálogo)', icon: BookOpen },
+];
+
 
 const ProductsPage: React.FC = () => {
     const {
@@ -25,7 +33,9 @@ const ProductsPage: React.FC = () => {
         updateProductStatus,
     } = useProducts();
 
-    const renderContent = () => {
+    const [activeProductTab, setActiveProductTab] = React.useState('products');
+
+    const renderProductsContent = () => {
         if (isLoading) {
              return (
                 <div className="flex justify-center items-center h-64">
@@ -41,17 +51,29 @@ const ProductsPage: React.FC = () => {
 
     return (
         <div>
-            <ProductFilterBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onNewProductClick={() => openDialog()}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-            />
-            
-            <div className="mt-6">
-                {renderContent()}
+            <div className="mb-6">
+                <TabLayout tabs={PRODUCT_PAGE_TABS} activeTab={activeProductTab} onTabChange={setActiveProductTab} />
             </div>
+
+            {activeProductTab === 'products' && (
+                <div>
+                    <ProductFilterBar
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onNewProductClick={() => openDialog()}
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                    />
+                    
+                    <div className="mt-6">
+                        {renderProductsContent()}
+                    </div>
+                </div>
+            )}
+
+            {activeProductTab === 'catalog' && (
+                <CatalogManagement />
+            )}
             
             {isDialogOpen && settingsData && (
                 <ProductDialog

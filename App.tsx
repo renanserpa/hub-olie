@@ -44,8 +44,7 @@ const MAIN_TABS = [
     { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare, scope: 'Omnichannel', description: 'Central de comunicação com o cliente em múltiplos canais.' },
     { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing', description: 'Gerencie campanhas, segmente públicos e analise resultados.' },
     { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts', description: 'Gerencie seus clientes e fornecedores.' },
-    { id: 'products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie seu catálogo de produtos e variações.' },
-    { id: 'catalog', label: 'Catálogo', icon: BookOpen, scope: 'Settings', description: 'Gerencie os dados mestres de personalização e materiais de produção.' },
+    { id: 'products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie produtos, variações e os dados mestres do catálogo.' },
     { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings', description: 'Gerencie os dados mestres e configurações globais da plataforma.' },
 ];
 
@@ -76,6 +75,12 @@ const App: React.FC = () => {
 
     const renderActivePage = () => {
         if (!user) return null;
+
+        // The 'catalog' page is now part of 'products', but we might have old bookmarks.
+        // Let's redirect to 'products' if 'catalog' is requested.
+        if (activeModule === 'catalog') {
+            return <ProductsPage />;
+        }
 
         if (!can(activeModule, 'read')) {
             return <AccessDeniedPage role={user.role} />;
@@ -110,8 +115,6 @@ const App: React.FC = () => {
                 return <ContactsPage />;
             case 'products':
                 return <ProductsPage />;
-            case 'catalog':
-                return <CatalogPage />;
             case 'orders':
             default:
                 return <OrdersPage user={user} />;
