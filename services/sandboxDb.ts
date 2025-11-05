@@ -12,6 +12,8 @@ import {
 
 // --- SEED DATA ---
 const generateId = () => crypto.randomUUID();
+// FIX: Added 'delay' function definition to resolve 'Cannot find name' error.
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // FIX: Added warehouse seed data.
 const warehouses: Warehouse[] = [
@@ -386,10 +388,13 @@ export const sandboxDb = {
         return collection.find(doc => doc.id === id) || null;
     },
 
-    addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
+    // FIX: Changed signature of `docData` to be more lenient with timestamps, which are added by this function.
+    // FIX: Changed generic constraint to allow for optional timestamps.
+    addDocument: async <T extends { id?: string; created_at?: any; updated_at?: any }>(table: string, docData: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> => {
         console.log(`🧱 SANDBOX: addDocument(${table})`);
         const collection = getCollection(table);
-        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as T;
+        // FIX: Cast through 'unknown' to satisfy the strict generic type conversion.
+        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as unknown as T;
         collection.push(newDoc);
         emit(table);
         return newDoc;
@@ -400,7 +405,8 @@ export const sandboxDb = {
         const collection = getCollection<T>(table);
         const docIndex = collection.findIndex(doc => doc.id === id);
         if (docIndex === -1) throw new Error("Document not found");
-        const updatedDoc = { ...collection[docIndex], ...docData, updated_at: new Date().toISOString() };
+        // FIX: Explicitly cast the updated object to `T` to ensure the function's return type is correct.
+        const updatedDoc = { ...collection[docIndex], ...docData, updated_at: new Date().toISOString() } as T;
         collection[docIndex] = updatedDoc;
         emit(table);
         return updatedDoc;

@@ -59,6 +59,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
             item.product_name = product?.name;
             item.unit_price = product?.base_price || 0;
             item.product = product;
+            item.config_json = {}; // Reset config when product changes
         } else {
             // @ts-ignore
             item[field] = value;
@@ -68,10 +69,16 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
         setItems(newItems);
     };
     
-    const handleCustomizationSave = (config: ConfigJson) => {
+    const handleCustomizationSave = (data: { config: Record<string, string>, variantName: string, finalPrice: number }) => {
         if (customizingItemIndex !== null) {
             const newItems = [...items];
-            newItems[customizingItemIndex].config_json = config;
+            const item = newItems[customizingItemIndex];
+            
+            item.config_json = data.config;
+            item.product_name = data.variantName;
+            item.unit_price = data.finalPrice;
+            item.total = (item.quantity || 1) * data.finalPrice;
+
             setItems(newItems);
             setCustomizingItemIndex(null);
         }
@@ -126,13 +133,18 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
                     <h3 className="text-md font-semibold text-textPrimary mb-2">Itens</h3>
                     <div className="space-y-3">
                         {items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-lg bg-secondary/50">
+                            <div key={index} className="grid grid-cols-12 gap-2 items-start p-2 border rounded-lg bg-secondary/50">
                                 <div className="col-span-5">
                                     <label className="text-xs font-medium text-textSecondary">Produto</label>
                                     <select value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} required className="w-full text-sm p-1 border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/50">
                                         <option value="">Selecione</option>
                                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
+                                    {item.product_name && item.product && item.product_name !== item.product.name && (
+                                        <div className="text-xs text-primary mt-1 truncate" title={item.product_name}>
+                                            {item.product_name.replace(item.product.name, '').replace(' - ', '')}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="col-span-2">
                                     <label className="text-xs font-medium text-textSecondary">Qtd</label>
@@ -143,7 +155,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
                                     <p className="text-sm font-medium">R$ {item.total?.toFixed(2) || '0.00'}</p>
                                 </div>
                                 <div className="col-span-2 flex items-center justify-end gap-1">
-                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCustomizingItemIndex(index)} disabled={!item.product_id}><Settings size={14}/></Button>
+                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCustomizingItemIndex(index)} disabled={!item.product_id || (!item.product?.available_sizes && !item.product?.configurable_parts)}><Settings size={14}/></Button>
                                     <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500" onClick={() => handleRemoveItem(index)}><Trash2 size={14}/></Button>
                                 </div>
                             </div>
@@ -186,7 +198,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
                 isOpen={customizingItemIndex !== null}
                 onClose={() => setCustomizingItemIndex(null)}
                 onSave={handleCustomizationSave}
-                initialConfig={itemToCustomize.config_json || {}}
+                initialConfig={(itemToCustomize.config_json as Record<string, string>) || {}}
                 product={itemToCustomize.product}
                 appData={appData}
             />

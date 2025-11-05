@@ -209,7 +209,7 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total: number;
-  config_json?: ConfigJson;
+  config_json?: ConfigJson | Record<string, string>;
   product?: Product;
 }
 
@@ -911,6 +911,8 @@ export interface AppData {
 
     media_assets: MediaAsset[];
     orders: Order[];
+    // FIX: Added 'order_items' to AppData to align with sandbox DB structure.
+    order_items: OrderItem[];
     contacts: Contact[];
     products: Product[];
     product_variants: ProductVariant[];
