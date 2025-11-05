@@ -4,7 +4,7 @@ import KpiCard from '../analytics/KpiCard';
 import EmptyState from './EmptyState';
 import ChartCard from '../analytics/ChartCard';
 import ChartCardForecast from '../analytics/ChartCardForecast';
-import { AnomalyData, PredictionData } from '../../hooks/useAnalyticsAI';
+import { AnomalyData, PredictionData, ForecastData } from '../../hooks/useAnalyticsAI';
 import HeatmapPanel from '../analytics/HeatmapPanel';
 
 interface AnalyticsDashboardProps {
@@ -13,6 +13,7 @@ interface AnalyticsDashboardProps {
         isLoading: boolean;
         anomalies: Record<string, AnomalyData>;
         predictions: Record<string, PredictionData>;
+        forecasts: Record<string, ForecastData>;
     };
     moduleName: string;
 }
@@ -20,8 +21,8 @@ interface AnalyticsDashboardProps {
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis, aiData, moduleName }) => {
     
     // Find the first available KPI and its prediction for the forecast chart
-    const forecastKpi = kpis.find(kpi => aiData.predictions[kpi.id]?.prediction > 0);
-    const forecastPrediction = forecastKpi ? aiData.predictions[forecastKpi.id] : null;
+    const forecastKpi = kpis.find(kpi => aiData.forecasts[kpi.id]);
+    const forecast = forecastKpi ? aiData.forecasts[forecastKpi.id] : null;
 
     return (
         <div className="space-y-6">
@@ -35,10 +36,10 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis, aiData, m
                 )}
             </div>
             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-                 {forecastKpi && forecastPrediction ? (
+                 {forecastKpi ? (
                     <ChartCardForecast 
                         title={`Previsão IA - ${forecastKpi.name}`}
-                        prediction={forecastPrediction.prediction}
+                        forecast={forecast}
                         unit={forecastKpi.unit}
                     />
                  ) : (

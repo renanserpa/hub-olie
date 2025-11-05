@@ -13,13 +13,14 @@ import { useAnalyticsAI } from '../hooks/useAnalyticsAI';
 
 const AnalyticsPage: React.FC = () => {
     const { isLoading, kpis, activeTab, setActiveTab, kpisByModule, snapshotsByKpi } = useAnalytics();
-    const { isAiLoading, anomalies, predictions } = useAnalyticsAI(kpis, snapshotsByKpi);
+    const { isAiLoading, anomalies, predictions, forecasts } = useAnalyticsAI(kpis, snapshotsByKpi);
     
     const aiData = useMemo(() => ({
         isLoading: isAiLoading,
         anomalies,
         predictions,
-    }), [isAiLoading, anomalies, predictions]);
+        forecasts,
+    }), [isAiLoading, anomalies, predictions, forecasts]);
 
     const renderContent = () => {
         if (isLoading) {

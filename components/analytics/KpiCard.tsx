@@ -45,7 +45,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ kpi, anomaly }) => {
                 {anomaly && <KpiAnomalyBadge isAnomaly={anomaly.isAnomaly} reason={anomaly.reason} />}
             </CardHeader>
             <CardContent>
-                <div className="text-3xl font-bold text-textPrimary">{formatValue(kpi.value, kpi.unit)}</div>
+                <div className="text-3xl font-semibold text-textPrimary">{formatValue(kpi.value, kpi.unit)}</div>
                 <div className="text-xs text-textSecondary flex items-center gap-1 mt-1">
                     {kpi.trend !== undefined && (
                         <span className={cn("flex items-center font-semibold", kpi.trend > 0 ? "text-green-600" : kpi.trend < 0 ? "text-red-600" : "text-gray-500")}>

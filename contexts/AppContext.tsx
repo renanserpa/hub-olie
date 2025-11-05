@@ -19,6 +19,7 @@ interface AppContextType {
   setActiveModule: (module: string) => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  isAIEnabled: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,6 +37,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [isAIEnabled, setIsAIEnabled] = useState(true); // AI Layer is active
   const hasRedirected = useRef(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -75,7 +77,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, isLoading]);
 
-  const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme };
+  const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme, isAIEnabled };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

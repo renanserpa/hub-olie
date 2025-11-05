@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from './types';
 import Toaster from './components/Toaster';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -58,7 +58,7 @@ const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (
 );
 
 const App: React.FC = () => {
-    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule } = useApp();
+    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule, isAIEnabled } = useApp();
     const { can, goto } = useOlie();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -183,6 +183,12 @@ const App: React.FC = () => {
                         </div>
                     </header>
                     <div className="container mx-auto p-4 sm:p-6">
+                        {isAIEnabled && (
+                            <div className="mb-4 flex items-center gap-2 text-sm text-blue-800 bg-blue-100 p-3 rounded-lg dark:bg-blue-900/30 dark:text-blue-200">
+                                <Lightbulb size={16} />
+                                <span>**IA Ativa** — Insights preditivos fornecidos pelo Gemini Layer.</span>
+                            </div>
+                        )}
                         {activeTabInfo && can(activeTabInfo.scope, 'read') && (
                             <div className="mb-6">
                                  <div className="flex items-center gap-3">

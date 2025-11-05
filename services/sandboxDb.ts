@@ -197,14 +197,12 @@ const purchase_orders: PurchaseOrder[] = [
 ];
 
 const analytics_kpis: AnalyticsKPI[] = [
-    { id: 'kpi1', module: 'orders', name: 'Total de Pedidos', value: orders.length, trend: 0.1, unit: '', description: 'Número total de pedidos no período.' },
-    { id: 'kpi2', module: 'orders', name: 'Faturamento Total', value: orders.reduce((s, o) => s + o.total, 0), trend: 0.15, unit: 'R$', description: 'Receita total gerada pelos pedidos.' },
-    { id: 'kpi3', module: 'orders', name: 'Ticket Médio', value: orders.length > 0 ? (orders.reduce((s, o) => s + o.total, 0) / orders.length) : 0, trend: -0.05, unit: 'R$', description: 'Valor médio por pedido.' },
-    { id: 'kpi4', module: 'production', name: 'Eficiência da Produção', value: 87, trend: 0.02, unit: '%', description: 'Percentual de eficiência das ordens de produção.' },
-    { id: 'kpi5', module: 'inventory', name: 'Giro de Estoque', value: 4.2, trend: 0.1, unit: 'x', description: 'Quantas vezes o estoque foi renovado no período.' },
-    { id: 'kpi6', module: 'logistics', name: 'Entregas no Prazo (OTIF)', value: 96, trend: -0.01, unit: '%', description: 'Percentual de pedidos entregues dentro do prazo prometido.' },
-    { id: 'kpi7', module: 'marketing', name: 'ROI de Campanhas', value: 250, trend: 0.2, unit: '%', description: 'Retorno sobre o investimento das campanhas de marketing ativas.' },
-    { id: 'kpi8', module: 'financial', name: 'Lucro Líquido (Simulado)', value: 12540.50, trend: 0.08, unit: 'R$', description: 'Lucro líquido estimado para o período.' },
+    { id: 'kpi-orders-total', module: 'orders', name: 'Pedidos Totais', value: 120, trend: 0.1, unit: '', description: 'Número total de pedidos no período.' },
+    { id: 'kpi-orders-revenue', module: 'orders', name: 'Faturamento', value: 328900, trend: 0.15, unit: 'R$', description: 'Receita total gerada pelos pedidos.' },
+    { id: 'kpi-financial-growth', module: 'financial', name: 'Crescimento Mensal', value: 8.2, trend: 0.02, unit: '%', description: 'Crescimento percentual do faturamento em relação ao mês anterior.' },
+    { id: 'kpi-financial-margin', module: 'financial', name: 'Margem Operacional', value: 14.5, trend: -0.01, unit: '%', description: 'Percentual de lucro operacional sobre a receita.' },
+    { id: 'kpi-production-leadtime', module: 'production', name: 'Tempo Médio Produção', value: 3.4, trend: -0.05, unit: 'dias', description: 'Tempo médio para finalizar uma ordem de produção.' },
+    { id: 'kpi-inventory-turnover', module: 'inventory', name: 'Giro de Estoque', value: 4.2, trend: 0.1, unit: 'x', description: 'Quantas vezes o estoque foi renovado no período.' },
 ];
 
 const executive_kpis: ExecutiveKPI[] = [

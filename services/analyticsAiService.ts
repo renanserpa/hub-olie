@@ -64,6 +64,18 @@ export const analyticsAiService = {
     }
   },
 
+  generateForecastInsight: async (kpi: AnalyticsKPI): Promise<{ metric: string; trend: string; confidence: number; insight: string; }> => {
+    // This is a stub function as requested
+    console.log(`🤖 [AI Service] Generating forecast insight for: ${kpi.name}`);
+    await new Promise(res => setTimeout(res, 200 + Math.random() * 300)); // Simulate AI processing
+    return {
+      metric: kpi.name,
+      trend: "upward",
+      confidence: 0.87,
+      insight: "A previsão indica crescimento sustentado de 12% nos próximos 30 dias com base na sazonalidade e no aumento de leads."
+    };
+  },
+
   insightGeneratorAI: async (kpis: (ExecutiveKPI | AnalyticsKPI)[]): Promise<string> => {
     try {
       const kpiSummary = kpis.map(k => `${k.name}: ${k.value} (tendência: ${k.trend ? (k.trend * 100).toFixed(1) + '%' : 'N/A'})`).join('\n');
