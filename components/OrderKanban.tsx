@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '../types';
 import OrderCard from './OrderCard';
@@ -22,6 +21,7 @@ interface OrderKanbanProps {
 
 const OrderKanban: React.FC<OrderKanbanProps> = ({ orders, onStatusChange, onCardClick }) => {
     const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
+    const [isDraggingOver, setIsDraggingOver] = useState<OrderStatus | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, orderId: string) => {
         setDraggedOrderId(orderId);
@@ -34,12 +34,19 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({ orders, onStatusChange, onCar
         e.currentTarget.style.opacity = '1';
     };
     
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, status: OrderStatus) => {
         e.preventDefault();
+        setIsDraggingOver(status);
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setIsDraggingOver(null);
     };
     
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, newStatus: OrderStatus) => {
         e.preventDefault();
+        setIsDraggingOver(null);
         const orderId = e.dataTransfer.getData('orderId');
         if (orderId) {
             onStatusChange(orderId, newStatus);
@@ -51,9 +58,13 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({ orders, onStatusChange, onCar
             {ORDER_COLUMNS.map(column => (
                 <div 
                     key={column.id}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, column.id)}
+                    onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, column.id)}
-                    className="w-80 flex-shrink-0 bg-secondary dark:bg-dark-secondary p-3 rounded-xl"
+                    className={cn(
+                        "w-80 flex-shrink-0 bg-secondary dark:bg-dark-secondary p-3 rounded-xl transition-colors duration-200",
+                        isDraggingOver === column.id && "bg-primary/10"
+                    )}
                 >
                     <div className="flex justify-between items-center mb-4 px-1">
                         <h3 className="font-semibold text-sm text-textPrimary dark:text-dark-textPrimary">{column.label}</h3>

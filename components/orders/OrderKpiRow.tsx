@@ -1,13 +1,13 @@
 import React from 'react';
-import { Inbox, DollarSign, PackageCheck, Ban } from 'lucide-react';
+import { Clock, CreditCard, Workflow, PackageCheck } from 'lucide-react';
 import StatCard from '../dashboard/StatCard';
 
 interface OrderKpiRowProps {
     stats: {
-        newOrders: number;
-        revenueToday: number;
+        pending: number;
+        paid: number;
+        inProduction: number;
         awaitingShipping: number;
-        cancelledThisMonth: number;
     }
 }
 
@@ -15,28 +15,28 @@ export const OrderKpiRow: React.FC<OrderKpiRowProps> = ({ stats }) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard 
-                title="Novos Pedidos" 
-                value={stats.newOrders} 
-                icon={Inbox}
-                description="Aguardando pagamento"
+                title="Aguardando Pag." 
+                value={stats.pending} 
+                icon={Clock}
+                description="Pedidos aguardando pagamento"
             />
             <StatCard 
-                title="Faturado Hoje" 
-                value={stats.revenueToday.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} 
-                icon={DollarSign} 
-                description="Pedidos pagos no dia de hoje"
+                title="Pagos" 
+                value={stats.paid} 
+                icon={CreditCard} 
+                description="Liberados para produção"
             />
             <StatCard 
-                title="Aguardando Envio" 
+                title="Em Produção" 
+                value={stats.inProduction} 
+                icon={Workflow}
+                description="Pedidos no chão de fábrica"
+            />
+            <StatCard 
+                title="Prontos p/ Envio" 
                 value={stats.awaitingShipping} 
                 icon={PackageCheck}
-                description="Prontos para expedição"
-            />
-            <StatCard 
-                title="Cancelados (Mês)" 
-                value={stats.cancelledThisMonth} 
-                icon={Ban}
-                description="Pedidos cancelados este mês"
+                description="Aguardando expedição"
             />
         </div>
     );

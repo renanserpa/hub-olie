@@ -3,6 +3,16 @@ import { Order, Contact, Product, OrderStatus, AppData, OrderItem, LogisticsShip
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
+export interface AdvancedFilters {
+    startDate: string;
+    endDate: string;
+    customerIds: string[];
+    status: OrderStatus[];
+    minValue: number | '';
+    maxValue: number | '';
+    productId: string;
+}
+
 export function useOrders() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [allContacts, setAllContacts] = useState<Contact[]>([]);
@@ -13,7 +23,10 @@ export function useOrders() {
     const [isSaving, setIsSaving] = useState(false);
     
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<OrderStatus[]>([]);
+    const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
+        startDate: '', endDate: '', customerIds: [], status: [], minValue: '', maxValue: '', productId: '',
+    });
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -44,15 +57,23 @@ export function useOrders() {
 
     const filteredOrders = useMemo(() => {
         return allOrders.filter(order => {
+            // Basic search
             const searchMatch = searchQuery.length === 0 ||
                 order.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (order.customers?.name && order.customers.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            const statusMatch = statusFilter.length === 0 || statusFilter.includes(order.status);
+            // Advanced filters
+            const startDateMatch = !advancedFilters.startDate || new Date(order.created_at) >= new Date(advancedFilters.startDate);
+            const endDateMatch = !advancedFilters.endDate || new Date(order.created_at) <= new Date(advancedFilters.endDate);
+            const customerMatch = advancedFilters.customerIds.length === 0 || advancedFilters.customerIds.includes(order.customer_id);
+            const statusMatch = advancedFilters.status.length === 0 || advancedFilters.status.includes(order.status);
+            const minValueMatch = advancedFilters.minValue === '' || order.total >= advancedFilters.minValue;
+            const maxValueMatch = advancedFilters.maxValue === '' || order.total <= advancedFilters.maxValue;
+            const productMatch = !advancedFilters.productId || order.items.some(item => item.product_id === advancedFilters.productId);
 
-            return searchMatch && statusMatch;
+            return searchMatch && startDateMatch && endDateMatch && customerMatch && statusMatch && minValueMatch && maxValueMatch && productMatch;
         });
-    }, [allOrders, searchQuery, statusFilter]);
+    }, [allOrders, searchQuery, advancedFilters]);
     
     const selectedOrder = useMemo(() => {
         return allOrders.find(o => o.id === selectedOrderId) || null;
@@ -60,32 +81,14 @@ export function useOrders() {
 
     const kpis = useMemo(() => {
         if (!allOrders) {
-            return { newOrders: 0, revenueToday: 0, awaitingShipping: 0, cancelledThisMonth: 0 };
+            return { pending: 0, paid: 0, inProduction: 0, awaitingShipping: 0 };
         }
-        
-        const now = new Date();
-        const today = now.toDateString();
-        const thisMonth = now.getMonth();
-        const thisYear = now.getFullYear();
-
-        const newOrders = allOrders.filter(o => o.status === 'pending_payment').length;
-        
-        const revenueToday = allOrders.filter(o => {
-            if (o.status !== 'paid' || !o.updated_at) return false;
-            const paidDate = new Date(o.updated_at);
-            return paidDate.toDateString() === today;
-        }).reduce((sum, o) => sum + o.total, 0);
-
-        const awaitingShipping = allOrders.filter(o => o.status === 'awaiting_shipping').length;
-
-        const cancelledThisMonth = allOrders.filter(o => {
-            if (o.status !== 'cancelled' || !o.updated_at) return false;
-            const cancelledDate = new Date(o.updated_at);
-            return cancelledDate.getMonth() === thisMonth && cancelledDate.getFullYear() === thisYear;
-        }).length;
-
-        return { newOrders, revenueToday, awaitingShipping, cancelledThisMonth };
-
+        return {
+            pending: allOrders.filter(o => o.status === 'pending_payment').length,
+            paid: allOrders.filter(o => o.status === 'paid').length,
+            inProduction: allOrders.filter(o => o.status === 'in_production').length,
+            awaitingShipping: allOrders.filter(o => o.status === 'awaiting_shipping').length
+        };
     }, [allOrders]);
 
     const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus) => {
@@ -94,7 +97,6 @@ export function useOrders() {
             await dataService.updateOrderStatus(orderId, newStatus);
             toast({ title: "Status Atualizado!", description: `O pedido foi movido para "${newStatus}".`});
 
-            // Trigger de expedição automática
             if (newStatus === 'awaiting_shipping') {
                 const order = allOrders.find(o => o.id === orderId);
                 if (order && order.customers) {
@@ -110,7 +112,6 @@ export function useOrders() {
                 }
             }
 
-            // Optimistic update
             setAllOrders(prev => prev.map(o => o.id === orderId ? {...o, status: newStatus} : o));
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status do pedido.", variant: "destructive" });
@@ -125,7 +126,7 @@ export function useOrders() {
             await dataService.addOrder(orderData);
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             setIsCreateDialogOpen(false);
-            loadData(); // Refresh all data
+            loadData();
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível criar o pedido.", variant: "destructive" });
         } finally {
@@ -188,8 +189,10 @@ export function useOrders() {
         // Filters
         searchQuery,
         setSearchQuery,
-        statusFilter,
-        setStatusFilter,
+        advancedFilters,
+        setAdvancedFilters,
+        isFilterPanelOpen,
+        setIsFilterPanelOpen,
         // Selection
         selectedOrder,
         setSelectedOrderId,

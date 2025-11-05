@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus, LayoutGrid, List, Columns } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, Columns, SlidersHorizontal } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
 
@@ -9,14 +9,15 @@ interface OrderFiltersProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
     onNewOrderClick: () => void;
+    onAdvancedFilterClick: () => void;
     viewMode: ViewMode;
     onViewModeChange: (mode: ViewMode) => void;
 }
 
-const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange, onNewOrderClick, viewMode, onViewModeChange }) => {
+const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange, onNewOrderClick, onAdvancedFilterClick, viewMode, onViewModeChange }) => {
     return (
         <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
                  <div className="relative flex-1 sm:flex-initial sm:w-64">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Search className="h-4 w-4 text-textSecondary" />
@@ -29,6 +30,10 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange
                         className="w-full pl-9 pr-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                 </div>
+                <Button variant="outline" onClick={onAdvancedFilterClick}>
+                    <SlidersHorizontal size={14} className="mr-2" />
+                    Filtros
+                </Button>
                 <div className="flex items-center p-1 rounded-lg bg-secondary dark:bg-dark-secondary">
                     <Button 
                         variant={viewMode === 'kanban' ? 'primary' : 'ghost'} 

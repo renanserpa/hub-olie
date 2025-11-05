@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { User } from '../types';
 import { useOrders } from '../hooks/useOrders';
 import OrderKanban from './OrderKanban';
@@ -8,12 +8,12 @@ import OrderFilters from './OrderFilters';
 import { Loader2, PackageOpen } from 'lucide-react';
 import OrdersTable from './orders/OrdersTable';
 import OrderCard from './OrderCard';
-import { OrderKpiRow } from './orders/OrderKpiRow';
+import OrderKpiRow from './orders/OrderKpiRow';
+import AdvancedFilterPanel from './orders/AdvancedFilterPanel';
 
 type ViewMode = 'kanban' | 'list' | 'table';
 
 const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
-    const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const {
         isLoading,
         isSaving,
@@ -22,6 +22,10 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         allProducts,
         searchQuery,
         setSearchQuery,
+        advancedFilters,
+        setAdvancedFilters,
+        isFilterPanelOpen,
+        setIsFilterPanelOpen,
         selectedOrder,
         setSelectedOrderId,
         isCreateDialogOpen,
@@ -32,6 +36,8 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         refresh,
         kpis,
     } = useOrders();
+
+    const [viewMode, setViewMode] = React.useState<ViewMode>('kanban');
 
     if (isLoading && filteredOrders.length === 0) {
         return (
@@ -50,7 +56,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                  <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
                     <PackageOpen className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhum pedido encontrado</h3>
-                    <p className="mt-1 text-sm">Nenhum pedido corresponde à sua busca.</p>
+                    <p className="mt-1 text-sm">Nenhum pedido corresponde aos filtros aplicados.</p>
                 </div>
             );
         }
@@ -84,11 +90,21 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                 onNewOrderClick={() => setIsCreateDialogOpen(true)}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
+                onAdvancedFilterClick={() => setIsFilterPanelOpen(true)}
             />
 
             <OrderKpiRow stats={kpis} />
             
             {renderContent()}
+
+            <AdvancedFilterPanel
+                isOpen={isFilterPanelOpen}
+                onClose={() => setIsFilterPanelOpen(false)}
+                filters={advancedFilters}
+                onFiltersChange={setAdvancedFilters}
+                contacts={allContacts}
+                products={allProducts}
+            />
 
             <OrderDrawer 
                 order={selectedOrder}
