@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { LineChart, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { ForecastData } from '../../hooks/useAnalyticsAI';
 import { AnalyticsKPI } from '../../types';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 interface ForecastLineChartProps {
     title: string;
@@ -11,37 +12,29 @@ interface ForecastLineChartProps {
 }
 
 const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forecast }) => {
-    const chartWidth = 400;
-    const chartHeight = 180;
-
-    // Simulate 4 historical points leading up to the current value
     const currentValue = Number(kpi.value);
     const trendFactor = kpi.trend || 0;
-    const historicalPoints = [
-        currentValue / (1 + trendFactor * 4),
-        currentValue / (1 + trendFactor * 3),
-        currentValue / (1 + trendFactor * 2),
-        currentValue / (1 + trendFactor * 1),
-        currentValue
+    
+    // Simulate 4 historical points leading up to the current value
+    const historicalPoints = Array.from({ length: 5 }, (_, i) => ({
+        name: `P-${4 - i}`,
+        value: currentValue / (1 + trendFactor * (4 - i)),
+    }));
+    
+    const predictedValue = forecast.prediction > 0 ? forecast.prediction : currentValue * (1 + trendFactor); // A simple prediction if AI fails
+    
+    const chartData = [
+        ...historicalPoints,
+        { name: 'Previsto', value: predictedValue },
     ];
 
-    const allValues = [...historicalPoints, forecast.confidence * 100]; // Placeholder prediction value
-    const maxValue = Math.max(...allValues) * 1.2;
-    const minValue = Math.min(...allValues) * 0.8;
-    const range = maxValue - minValue;
-
-    const toPath = (points: number[]) => {
-        return points.map((p, i) => {
-            const x = (i / (points.length - 1)) * (chartWidth - 40) + 20;
-            const y = chartHeight - 20 - ((p - minValue) / range) * (chartHeight - 40);
-            return `${x},${y}`;
-        }).join(' ');
+    const formatValue = (value: number, unit?: string) => {
+        const options: Intl.NumberFormatOptions = { notation: 'compact', maximumFractionDigits: 1 };
+        if (unit === 'R$') {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', ...options });
+        }
+        return value.toLocaleString('pt-BR', options);
     };
-
-    const historicalPath = toPath(historicalPoints);
-    const lastHistoricalPoint = historicalPath.split(' ').pop()?.split(',');
-    const forecastX = chartWidth - 20;
-    const forecastY = chartHeight - 20 - ((forecast.confidence * 100 - minValue) / range) * (chartHeight - 40); // Placeholder prediction value
 
     return (
         <Card>
@@ -49,43 +42,37 @@ const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forec
                 <CardTitle className="text-base font-medium">{title}</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="h-auto">
-                    <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto font-sans">
-                        {/* Historical Line */}
-                        <polyline
-                            points={historicalPath}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="text-primary/50"
-                        />
-
-                        {/* Forecast Line */}
-                        {lastHistoricalPoint && (
-                             <line
-                                x1={lastHistoricalPoint[0]}
-                                y1={lastHistoricalPoint[1]}
-                                x2={forecastX}
-                                y2={forecastY}
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeDasharray="4 4"
-                                className="text-primary"
-                             />
-                        )}
-                       
-                        {/* Forecast Point */}
-                        <circle cx={forecastX} cy={forecastY} r="4" fill="currentColor" className="text-primary" />
-                        
-                         {/* Historical Points */}
-                        {historicalPoints.map((p, i) => {
-                             const x = (i / (historicalPoints.length - 1)) * (chartWidth - 40) + 20;
-                             const y = chartHeight - 20 - ((p - minValue) / range) * (chartHeight - 40);
-                             return <circle key={i} cx={x} cy={y} r="3" fill="currentColor" className="text-primary/50" />;
-                        })}
-                    </svg>
+                <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                            <YAxis tickFormatter={(value) => formatValue(value, kpi.unit)} tick={{ fontSize: 12 }} />
+                            <Tooltip 
+                                formatter={(value: number) => [formatValue(value, kpi.unit), kpi.name]}
+                                contentStyle={{
+                                    backgroundColor: 'hsl(var(--background))',
+                                    borderColor: 'hsl(var(--border))',
+                                    borderRadius: '0.75rem',
+                                }}
+                            />
+                            <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={false}
+                                activeDot={false}
+                                legendType="none"
+                                connectNulls // This will connect the last historical point to the prediction
+                                data={[{ name: 'P-0', value: currentValue }, { name: 'Previsto', value: predictedValue }]}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
-                <div className="mt-2 text-xs p-2 bg-primary/10 text-primary/80 rounded-md flex items-start gap-2">
+                 <div className="mt-2 text-xs p-2 bg-primary/10 text-primary/80 rounded-md flex items-start gap-2">
                     <Sparkles size={24} className="flex-shrink-0" />
                     <span>{forecast.insight}</span>
                 </div>

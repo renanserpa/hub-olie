@@ -365,6 +365,35 @@ export interface Task {
     priority?: 'baixa' | 'normal' | 'alta' | 'urgente';
 }
 
+// --- NEW PRODUCTION ENGINEERING TYPES ---
+export interface Mold {
+  codigo: string;
+  molde_id: string;
+  arquivos: string[];
+  pecas: {
+    nome: string;
+    qtd: number;
+    margem_costura_mm: number;
+    piques?: number;
+    fio?: string;
+  }[];
+  observacoes: string;
+}
+
+export interface MoldLibrary {
+  produto: string;
+  slug: string;
+  tamanhos: Mold[];
+}
+
+export interface ProductionRoute {
+  produto: string;
+  tamanho: string;
+  rota: string[];
+  tempos_std_min: Record<string, number>;
+}
+
+
 // --- INVENTORY ---
 
 export interface Warehouse {
@@ -440,6 +469,10 @@ export interface Material {
     thickness_mm?: number;
     weight_gsm?: number;
     composition?: string;
+    is_waterproof?: boolean | 'resistant';
+    min_stock?: number;
+    target_stock?: number;
+    lead_time_days?: number;
   };
   care_instructions?: string;
   approved_substitutes?: string[]; // Array of material_ids
@@ -921,6 +954,10 @@ export interface AppData {
     // New Inventory Structure
     warehouses: Warehouse[];
 
+    // New Production Engineering Structure
+    mold_library: MoldLibrary[];
+    production_routes: ProductionRoute[];
+
     media_assets: MediaAsset[];
     orders: Order[];
     // FIX: Added 'order_items' to AppData to align with sandbox DB structure.
@@ -942,6 +979,9 @@ export interface AppData {
         messages: Message[];
         quotes: Quote[];
     };
+    // FIX: Add logistics_waves and logistics_shipments to AppData interface
+    logistics_waves: LogisticsWave[];
+    logistics_shipments: LogisticsShipment[];
     inventory_balances: InventoryBalance[];
     inventory_movements: InventoryMovement[];
     marketing_campaigns: MarketingCampaign[];

@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse, ProductionRoute, MoldLibrary } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -17,14 +17,14 @@ export const dataService = {
   getCollection: <T>(table: string, join?: string) => 
     isSandbox() ? sandboxService.getCollection<T>(table) : realSupabaseService.getCollection<T>(table, join),
   
-  getDocument: <T>(table: string, id: string) =>
+  getDocument: <T extends { id: string }>(table: string, id: string) =>
     isSandbox() ? sandboxService.getDocument<T>(table, id) : realSupabaseService.getDocument<T>(table, id),
 
   updateDocument: <T extends {id: string}>(table: string, id: string, docData: Partial<T>) =>
     isSandbox() ? sandboxService.updateDocument<T>(table, id, docData) : realSupabaseService.updateDocument<T>(table, id, docData),
 
   addDocument: <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>) =>
-    isSandbox() ? sandboxService.addDocument(table, docData) : realSupabaseService.addDocument(table, docData),
+    isSandbox() ? sandboxService.addDocument<T>(table, docData) : realSupabaseService.addDocument(table, docData),
   
   deleteDocument: (table: string, id: string) =>
     isSandbox() ? sandboxService.deleteDocument(table, id) : realSupabaseService.deleteDocument(table, id),
@@ -92,6 +92,8 @@ export const dataService = {
   updateOrder: (orderId: string, data: Partial<Order>) => isSandbox() ? sandboxService.updateOrder(orderId, data) : realSupabaseService.updateOrder(orderId, data),
 
   getProductionOrders: () => isSandbox() ? sandboxService.getCollection<ProductionOrder>('production_orders') : realSupabaseService.getProductionOrders(),
+  getProductionRoutes: () => isSandbox() ? sandboxService.getCollection<ProductionRoute>('production_routes') : Promise.resolve([]),
+  getMoldLibrary: () => isSandbox() ? sandboxService.getCollection<MoldLibrary>('mold_library') : Promise.resolve([]),
   
   getTasks: () => isSandbox() ? sandboxService.getCollection<Task>('tasks') : realSupabaseService.getTasks(),
   getTaskStatuses: () => isSandbox() ? sandboxService.getCollection<TaskStatus>('task_statuses') : realSupabaseService.getTaskStatuses(),

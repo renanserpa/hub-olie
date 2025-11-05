@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier } from '../../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../../types';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
 
@@ -13,6 +13,8 @@ export function useProduction() {
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
+    const [allRoutes, setAllRoutes] = useState<ProductionRoute[]>([]);
+    const [allMolds, setAllMolds] = useState<MoldLibrary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -46,7 +48,7 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData] = await Promise.all([
+            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
@@ -54,6 +56,8 @@ export function useProduction() {
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<Supplier>('suppliers'),
+                dataService.getProductionRoutes(),
+                dataService.getMoldLibrary(),
             ]);
             
             const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
@@ -70,6 +74,8 @@ export function useProduction() {
             setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
+            setAllRoutes(routesData);
+            setAllMolds(moldsData);
 
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
@@ -85,14 +91,19 @@ export function useProduction() {
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => {
             const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku) : undefined;
+            const product = allProducts.find(p => p.id === order.product_id);
+            const sizeName = variant?.configuration.size ? product?.available_sizes?.find(s => s.id === variant.configuration.size)?.name : undefined;
+            
             return {
                 ...order,
                 variant,
+                product,
+                route: allRoutes.find(r => r.produto.toLowerCase() === product?.name.toLowerCase() && r.tamanho === sizeName),
                 tasks: allTasks.filter(t => t.production_order_id === order.id),
                 quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
             };
         });
-    }, [allOrders, allTasks, allQualityChecks, allVariants]);
+    }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes]);
     
     const filteredOrders = useMemo(() => {
         return ordersWithDetails.filter(order => {

@@ -18,4 +18,15 @@ const PredictiveDashboardPanel: React.FC = () => {
     
     if (isLoading) {
         return (
-             <div className="flex justify-center items-center h
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    return (
+        <AnalyticsDashboard kpis={kpis} aiData={aiData} moduleName="Visão Geral Preditiva" />
+    );
+};
+
+export default PredictiveDashboardPanel;

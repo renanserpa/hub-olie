@@ -74,7 +74,7 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ material, b
                     )}
                 </div>
 
-                <InventoryChart />
+                <InventoryChart movements={movements} material={material} />
 
                 <div className="border-t pt-4">
                     <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><History size={16}/> Histórico de Movimentos</h4>

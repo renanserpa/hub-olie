@@ -7,7 +7,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus
+    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus, MoldLibrary, ProductionRoute
 } from '../types';
 
 // --- SEED DATA ---
@@ -248,11 +248,14 @@ const purchase_order_items: PurchaseOrderItem[] = [
     { id: 'poi4', po_id: 'pc3', material_id: 'mat1', material_name: 'Linho Bege Cru', quantity: 20, received_quantity: 0, unit_price: 45.50, total: 910.00 },
 ];
 
-// FIX: Corrected a syntax error in the purchase_orders array by completing a truncated line and converting a Date object to a string.
 const purchase_orders: PurchaseOrder[] = [
     { id: 'pc1', po_number: 'PC-2024-001', supplier_id: 'sup1', supplier: suppliers[0], status: 'received', items: [purchase_order_items[0]], total: 2100.00, created_at: new Date(Date.now() - 10 * 86400000).toISOString(), updated_at: new Date(Date.now() - 5 * 86400000).toISOString(), issued_at: new Date(Date.now() - 9 * 86400000).toISOString(), received_at: new Date(Date.now() - 5 * 86400000).toISOString() },
+    { id: 'pc2', po_number: 'PC-2024-002', supplier_id: 'sup2', supplier: suppliers[1], status: 'partial', items: [], total: 750.00, created_at: new Date(Date.now() - 8 * 86400000).toISOString(), updated_at: new Date(Date.now() - 2 * 86400000).toISOString(), issued_at: new Date(Date.now() - 7 * 86400000).toISOString(), expected_delivery_date: new Date(Date.now() + 5 * 86400000).toISOString() },
+    { id: 'pc3', po_number: 'PC-2024-003', supplier_id: 'sup1', supplier: suppliers[0], status: 'draft', items: [], total: 910.00, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
-// FIX: The rest of this file was truncated in the user input. I am assuming this is where it ended based on the start of the next file.
+
+const mold_library: MoldLibrary[] = [];
+const production_routes: ProductionRoute[] = [];
 
 // --- IN-MEMORY DATABASE ---
 // This object aggregates all our seed data into a single "database"
@@ -277,9 +280,8 @@ const db: AppData = {
     tasks,
     inventory_balances,
     inventory_movements,
-    system_settings,
-    conversations,
-    messages,
+    // FIX: Changed property name from `system_settings` to `sistema` to match AppData type.
+    sistema: system_settings,
     logistics_waves,
     logistics_shipments,
     marketing_campaigns,
@@ -289,6 +291,8 @@ const db: AppData = {
     purchase_orders,
     purchase_order_items,
     collections: collectionsSeed,
+    mold_library,
+    production_routes,
     // Catalogs (nested for clarity in settings)
     catalogs: {
         paletas_cores: [],
@@ -312,7 +316,8 @@ const db: AppData = {
     config_integrations: [],
     integration_logs: [],
     media_assets: [],
-    omnichannel: { conversations: [], messages: [], quotes: [] },
+    // FIX: The 'conversations' and 'messages' properties do not exist on AppData. Moved them into the 'omnichannel' property.
+    omnichannel: { conversations: conversations, messages: messages, quotes: [] },
     analytics_kpis: [],
     analytics_snapshots: [],
     executive_kpis: [],
@@ -393,139 +398,204 @@ export const sandboxDb = {
 
     getDocument: async <T extends { id: string }>(table: string, id: string): Promise<T | null> => {
         console.log(`🧱 SANDBOX: getDocument(${table}, ${id})`);
-        const collection = await sandboxDb.getCollection<T>(table);
-        return collection.find(doc => doc.id === id) || null;
+        await delay(50);
+        const collection = getCollection<T>(table);
+        const doc = collection.find(d => d.id === id) || null;
+        return JSON.parse(JSON.stringify(doc));
     },
 
-    // FIX: Changed signature of `docData` to be more lenient with timestamps, which are added by this function.
-    // FIX: Changed generic constraint to allow for optional timestamps.
-    addDocument: async <T extends { id?: string; created_at?: any; updated_at?: any }>(table: string, docData: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> => {
+    addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
         console.log(`🧱 SANDBOX: addDocument(${table})`);
-        const collection = getCollection(table);
-        // FIX: Cast through 'unknown' to satisfy the strict generic type conversion.
-        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as unknown as T;
-        collection.push(newDoc);
+        await delay(100);
+        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString() } as T;
+        (db as any)[table].push(newDoc);
         emit(table);
-        return newDoc;
+        return JSON.parse(JSON.stringify(newDoc));
     },
     
     updateDocument: async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
         console.log(`🧱 SANDBOX: updateDocument(${table}, ${id})`);
+        await delay(100);
         const collection = getCollection<T>(table);
-        const docIndex = collection.findIndex(doc => doc.id === id);
-        if (docIndex === -1) throw new Error("Document not found");
-        // FIX: Explicitly cast the updated object to `T` to ensure the function's return type is correct.
-        const updatedDoc = { ...collection[docIndex], ...docData, updated_at: new Date().toISOString() } as T;
+        const docIndex = collection.findIndex(d => d.id === id);
+        if (docIndex === -1) throw new Error(`Document with id ${id} not found in ${table}`);
+        const updatedDoc = { ...collection[docIndex], ...docData, updated_at: new Date().toISOString() };
         collection[docIndex] = updatedDoc;
         emit(table);
-        return updatedDoc;
+        return JSON.parse(JSON.stringify(updatedDoc));
     },
-    
+
     deleteDocument: async (table: string, id: string): Promise<void> => {
         console.log(`🧱 SANDBOX: deleteDocument(${table}, ${id})`);
+        await delay(100);
         const collection = getCollection<any>(table);
-        const docIndex = collection.findIndex(doc => doc.id === id);
-        if (docIndex === -1) throw new Error("Document not found");
-        collection.splice(docIndex, 1);
+        const initialLength = collection.length;
+        (db as any)[table] = collection.filter((d: any) => d.id !== id);
+        if ((db as any)[table].length === initialLength) {
+             console.warn(`[sandboxDb] deleteDocument: ID ${id} not found in ${table}`);
+        }
         emit(table);
     },
 
-    listenToCollection: (path: string, handler: (items: any[]) => void) => {
-      // The `path` for sandbox is just the table name.
-      return subscribe(path.split('?')[0], handler);
+    listenToCollection: <T>(table: string, handler: (payload: T[]) => void) => {
+        console.log(`🧱 SANDBOX: listenToCollection(${table})`);
+        return subscribe(table, handler);
     },
-
-    listenToDocument: <T extends { id: string }>(table: string, id: string, callback: (payload: T) => void) => {
-        const handler = (items: T[]) => {
+    
+    listenToDocument: <T extends { id: string }>(table: string, id: string, handler: (payload: T) => void) => {
+        console.log(`🧱 SANDBOX: listenToDocument(${table}, ${id})`);
+        const sub = subscribe(table, (items: T[]) => {
             const item = items.find(i => i.id === id);
-            if(item) callback(item);
-        }
-        return subscribe(table, handler as any);
+            if (item) handler(item);
+        });
+        return { unsubscribe: sub.unsubscribe };
     },
-    
-    // Specific implementations
-    getSettings: (): Promise<AppData> => {
-        console.log(`🧱 SANDBOX: getSettings()`);
-        return Promise.resolve(JSON.parse(JSON.stringify(db)));
-    },
-    
-    getOrders: async (): Promise<Order[]> => {
-        const ordersData = await sandboxDb.getCollection<Order>('orders');
-        const itemsData = await sandboxDb.getCollection<OrderItem>('order_items');
-        const contactsData = await sandboxDb.getCollection<Contact>('contacts');
 
-        return ordersData.map(order => ({
-            ...order,
-            items: itemsData.filter(item => item.order_id === order.id),
-            customers: contactsData.find(c => c.id === order.customer_id)
-        }));
+    testIntegrationConnection: async (id: string): Promise<void> => {
+        console.log(`🧱 SANDBOX: testIntegrationConnection(${id})`);
+        await delay(1000);
+        const integration = db.config_integrations.find(i => i.id === id);
+        if (integration) {
+            integration.status = Math.random() > 0.2 ? 'connected' : 'error';
+            integration.last_sync = new Date().toISOString();
+            if (integration.status === 'error') {
+                integration.last_error = 'Simulated connection failure.';
+            } else {
+                integration.last_error = undefined;
+            }
+            emit('config_integrations');
+        }
     },
     
+    getSettings: async (): Promise<AppData> => {
+        console.log("🧱 SANDBOX: getSettings()");
+        await delay(100);
+        return JSON.parse(JSON.stringify(db));
+    },
+    
+    addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null): Promise<any> => {
+        const tableName = getTableNameForSetting(category, subTab, subSubTab);
+        return sandboxDb.addDocument(tableName, data);
+    },
+    updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null): Promise<any> => {
+        const tableName = getTableNameForSetting(category, subTab, subSubTab);
+        return sandboxDb.updateDocument(tableName, id, data);
+    },
+    deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null): Promise<void> => {
+        const tableName = getTableNameForSetting(category, subTab, subSubTab);
+        return sandboxDb.deleteDocument(tableName, id);
+    },
+    updateSystemSettings: async (settings: SystemSetting[]): Promise<void> => {
+        console.log("🧱 SANDBOX: updateSystemSettings()");
+        await delay(150);
+        settings.forEach(settingToUpdate => {
+            const index = db.sistema.findIndex(s => s.id === settingToUpdate.id);
+            if(index !== -1) {
+                db.sistema[index].value = settingToUpdate.value;
+            }
+        });
+        emit('system_settings');
+    },
+
+    updateSystemSetting: async (key: string, newValue: any, source: string, confidence: number, explanation: string): Promise<void> => {
+        const setting = db.sistema.find(s => s.key === key);
+        if (setting) {
+            const oldValue = setting.value;
+            setting.value = JSON.stringify(newValue);
+            
+            await sandboxDb.addDocument<SystemSettingsLog>('system_settings_logs', {
+                key,
+                old_value: oldValue,
+                new_value: setting.value,
+                source_module: source,
+                confidence,
+                explanation,
+            } as any);
+            emit('system_settings');
+        }
+    },
+    
+    getMaterials: (): Promise<Material[]> => sandboxDb.getCollection('config_materials'),
+    getMaterialGroups: (): Promise<MaterialGroup[]> => sandboxDb.getCollection('config_supply_groups'),
+    addMaterial: (data: any): Promise<Material> => sandboxDb.addDocument('config_materials', data),
+    addMaterialGroup: (data: any): Promise<MaterialGroup> => sandboxDb.addDocument('config_supply_groups', data),
+
+    getOrders: async (): Promise<Order[]> => {
+        console.log("🧱 SANDBOX: getOrders()");
+        await delay(200);
+        return JSON.parse(JSON.stringify(db.orders.map(o => ({
+            ...o,
+            items: db.order_items.filter(i => i.order_id === o.id),
+            customers: db.contacts.find(c => c.id === o.customer_id)
+        }))));
+    },
+
     getOrder: async (id: string): Promise<Order | null> => {
+        console.log(`🧱 SANDBOX: getOrder(${id})`);
         const order = await sandboxDb.getDocument<Order>('orders', id);
         if (!order) return null;
-        const items = await sandboxDb.getCollection<OrderItem>('order_items');
-        return {
-            ...order,
-            items: items.filter(i => i.order_id === id)
-        };
+        const items = db.order_items.filter(i => i.order_id === id);
+        const customer = db.contacts.find(c => c.id === order.customer_id);
+        return JSON.parse(JSON.stringify({ ...order, items, customers: customer }));
     },
-    
+
     updateOrderStatus: (orderId: string, newStatus: OrderStatus): Promise<Order> => {
-        return sandboxDb.updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() });
+        return sandboxDb.updateDocument<Order>('orders', orderId, { status: newStatus });
     },
     
     addOrder: async (orderData: Partial<Order>): Promise<Order> => {
-        const orderNumber = `OLIE-2024-${String(Math.floor(Math.random() * 90000) + 10000)}`;
-        const { items, ...orderToInsert } = orderData;
-        
-        const newOrder = await sandboxDb.addDocument<Order>('orders', {
-            ...orderToInsert,
-            number: orderNumber,
-        } as any);
-      
-        if (items && items.length > 0) {
+        const { items, ...orderRest } = orderData;
+        const newOrder = await sandboxDb.addDocument<Order>('orders', orderRest as any);
+        if (items) {
             for (const item of items) {
-                await sandboxDb.addDocument('order_items', { ...item, order_id: newOrder.id });
+                await sandboxDb.addDocument<OrderItem>('order_items', { ...item, order_id: newOrder.id } as any);
             }
         }
+        emit('orders');
         return newOrder;
     },
-    updateOrder: (orderId: string, data: Partial<Order>): Promise<Order> => {
-        return sandboxDb.updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() });
-    },
-    getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
-        const allMovements = await sandboxDb.getCollection<InventoryMovement>('inventory_movements');
-        return allMovements.filter(m => m.material_id === materialId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    },
+
+    updateOrder: (orderId: string, data: Partial<Order>): Promise<Order> => sandboxDb.updateDocument('orders', orderId, data),
     
-    addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {
-        return sandboxDb.addDocument('inventory_movements', { ...movementData });
+    getInventoryMovements: (materialId: string): Promise<InventoryMovement[]> => {
+        const allMovements = getCollection<InventoryMovement>('inventory_movements');
+        return Promise.resolve(allMovements.filter(m => m.material_id === materialId).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    },
+
+    addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {
+        const newMovement = await sandboxDb.addDocument<InventoryMovement>('inventory_movements', movementData as any);
+        
+        // Simulate trigger to update balance
+        const balance = db.inventory_balances.find(b => b.material_id === newMovement.material_id && b.warehouse_id === newMovement.warehouse_id);
+        if (balance) {
+            balance.current_stock += newMovement.quantity;
+        } else if(newMovement.type !== 'transfer') {
+            db.inventory_balances.push({
+                id: generateId(),
+                material_id: newMovement.material_id,
+                warehouse_id: newMovement.warehouse_id!,
+                current_stock: newMovement.quantity,
+                reserved_stock: 0,
+                updated_at: new Date().toISOString(),
+            });
+        }
+        emit('inventory_balances');
+        return newMovement;
     },
     
     transferStock: async (transferData: any): Promise<void> => {
-        await sandboxDb.addDocument('inventory_movements', {
-            type: 'transfer',
-            reason: 'TRANSFERENCIA_INTERNA',
-            material_id: transferData.material_id,
-            quantity: transferData.quantity,
-            from_warehouse_id: transferData.from_warehouse_id,
-            to_warehouse_id: transferData.to_warehouse_id,
-            notes: transferData.notes,
+        await sandboxDb.addInventoryMovement({
+            ...transferData,
+            warehouse_id: transferData.from_warehouse_id,
+            quantity: -Math.abs(transferData.quantity),
         });
-        
-        // In a real DB this would be a transaction. Here we simulate the balance update.
-        const balances = getCollection<InventoryBalance>('inventory_balances');
-        const fromBalance = balances.find(b => b.material_id === transferData.material_id && b.warehouse_id === transferData.from_warehouse_id);
-        if(fromBalance) fromBalance.current_stock -= transferData.quantity;
-        
-        const toBalance = balances.find(b => b.material_id === transferData.material_id && b.warehouse_id === transferData.to_warehouse_id);
-        if(toBalance) toBalance.current_stock += transferData.quantity;
-        else balances.push({ id: generateId(), material_id: transferData.material_id, warehouse_id: transferData.to_warehouse_id, current_stock: transferData.quantity, reserved_stock: 0, updated_at: new Date().toISOString() } as InventoryBalance);
-        
-        emit('inventory_balances');
+        await sandboxDb.addInventoryMovement({
+            ...transferData,
+            warehouse_id: transferData.to_warehouse_id,
+            quantity: Math.abs(transferData.quantity),
+        });
     },
-    
+
     getLogisticsData: async (): Promise<{ orders: Order[], waves: LogisticsWave[], shipments: LogisticsShipment[] }> => {
         const [orders, waves, shipments] = await Promise.all([
             sandboxDb.getOrders(),
@@ -535,7 +605,7 @@ export const sandboxDb = {
         return { orders, waves, shipments };
     },
     
-     getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
+    getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
         const [suppliers, purchase_orders, purchase_order_items] = await Promise.all([
             sandboxDb.getCollection<Supplier>('suppliers'),
             sandboxDb.getCollection<PurchaseOrder>('purchase_orders'),
@@ -543,148 +613,79 @@ export const sandboxDb = {
         ]);
         return { suppliers, purchase_orders, purchase_order_items };
     },
-    
-     getFinanceData: async () => {
-        const [accounts, categories, transactions, payables, receivables] = await Promise.all([
-            sandboxDb.getCollection<FinanceAccount>('finance_accounts'),
-            sandboxDb.getCollection<FinanceCategory>('finance_categories'),
-            sandboxDb.getCollection<FinanceTransaction>('finance_transactions'),
-            sandboxDb.getCollection<FinancePayable>('finance_payables'),
-            sandboxDb.getCollection<FinanceReceivable>('finance_receivables'),
-        ]);
+
+    createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }): Promise<PurchaseOrder> => {
+        const po_number = `PC-SANDBOX-${Date.now().toString().slice(-4)}`;
+        const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+        const newPO = await sandboxDb.addDocument<PurchaseOrder>('purchase_orders', {
+            po_number,
+            supplier_id: poData.supplier_id,
+            status: 'draft',
+            total
+        } as any);
+
+        for(const item of poData.items) {
+            await sandboxDb.addDocument<PurchaseOrderItem>('purchase_order_items', { ...item, po_id: newPO.id, received_quantity: 0 } as any);
+        }
+        emit('purchase_orders');
+        return newPO;
+    },
+
+    receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]): Promise<void> => {
+        const po = db.purchase_orders.find(p => p.id === poId);
+        if (!po) return;
         
-        const transactionsWithDetails = transactions.map(t => ({
-            ...t,
-            account: accounts.find(a => a.id === t.account_id),
-            category: categories.find(c => c.id === t.category_id)
-        }));
+        let allReceived = true;
+        for (const received of receivedItems) {
+            const item = db.purchase_order_items.find(i => i.id === received.itemId);
+            if (item) {
+                item.received_quantity += received.receivedQty;
+                if (item.received_quantity < item.quantity) allReceived = false;
+                
+                // Simulate trigger to add to inventory
+                const material = db.config_materials.find(m => m.id === item.material_id);
+                if (material) {
+                    await sandboxDb.addInventoryMovement({
+                        material_id: material.id,
+                        type: 'in',
+                        quantity: received.receivedQty,
+                        reason: 'RECEBIMENTO_PO',
+                        ref: po.po_number,
+                        warehouse_id: 'w1', // default to main warehouse
+                    });
+                }
+            }
+        }
+        po.status = allReceived ? 'received' : 'partial';
+        emit('purchase_orders');
+        emit('purchase_order_items');
+    },
+    
+    getFinanceData: async (): Promise<any> => {
+         return {
+            accounts: await sandboxDb.getCollection('finance_accounts'),
+            categories: await sandboxDb.getCollection('finance_categories'),
+            transactions: await sandboxDb.getCollection('finance_transactions'),
+            payables: await sandboxDb.getCollection('finance_payables'),
+            receivables: await sandboxDb.getCollection('finance_receivables'),
+        };
+    },
 
-        return { accounts, categories, transactions: transactionsWithDetails, payables, receivables };
-  },
-  // FIX: Implement missing mock functions
-  testIntegrationConnection: async (integrationId: string): Promise<void> => {
-    console.log(`🧱 SANDBOX: Testing connection for integration ${integrationId}`);
-    await delay(1000);
-    const integrations = getCollection<Integration>('config_integrations');
-    const integration = integrations.find(i => i.id === integrationId);
-    if (integration) {
-        const success = Math.random() > 0.2; // 80% success rate
-        integration.status = success ? 'connected' : 'error';
-        integration.last_sync = new Date().toISOString();
-        integration.last_error = success ? '' : 'Sandbox random connection error';
-        emit('config_integrations');
-    }
-  },
-  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => {
-    const tableName = getTableNameForSetting(category, subTab, subSubTab);
-    return sandboxDb.addDocument(tableName, data);
-  },
-  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => {
-      const tableName = getTableNameForSetting(category, subTab, subSubTab);
-      return sandboxDb.updateDocument(tableName, id, data);
-  },
-  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => {
-      const tableName = getTableNameForSetting(category, subTab, subSubTab);
-      return sandboxDb.deleteDocument(tableName, id);
-  },
-  updateSystemSettings: async (settings: SystemSetting[]): Promise<void> => {
-      console.log('🧱 SANDBOX: Updating system settings');
-      const systemSettings = getCollection<SystemSetting>('system_settings');
-      settings.forEach(s => {
-          const index = systemSettings.findIndex(db_s => db_s.id === s.id);
-          if(index > -1) {
-              systemSettings[index].value = s.value;
-          }
-      });
-      emit('system_settings');
-  },
-  updateSystemSetting: async (key: string, newValue: any, source: string, confidence: number, explanation: string): Promise<void> => {
-      console.log(`🧱 SANDBOX: AI is updating setting ${key}`);
-      const systemSettings = getCollection<SystemSetting>('system_settings');
-      const settingIndex = systemSettings.findIndex(s => s.key === key);
-      if (settingIndex > -1) {
-          const old_value = systemSettings[settingIndex].value;
-          systemSettings[settingIndex].value = JSON.stringify(newValue);
-          
-          await sandboxDb.addDocument<SystemSettingsLog>('system_settings_logs', {
-              key,
-              old_value: old_value,
-              new_value: JSON.stringify(newValue),
-              source_module: source,
-              confidence,
-              explanation,
-          } as any);
-
-          emit('system_settings');
-          emit('system_settings_logs');
-      } else {
-          console.warn(`[sandboxDb] Setting with key "${key}" not found for AI update.`);
-      }
-  },
-  getMaterials: (): Promise<Material[]> => sandboxDb.getCollection('config_materials'),
-  getMaterialGroups: (): Promise<MaterialGroup[]> => sandboxDb.getCollection('config_supply_groups'),
-  addMaterial: (material: any): Promise<Material> => sandboxDb.addDocument('config_materials', material),
-  addMaterialGroup: (group: any): Promise<MaterialGroup> => sandboxDb.addDocument('config_supply_groups', group),
-  createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }): Promise<PurchaseOrder> => {
-      const po_number = `PC-SB-${Date.now().toString().slice(-6)}`;
-      const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-      
-      const newPO = await sandboxDb.addDocument<PurchaseOrder>('purchase_orders', {
-          po_number,
-          supplier_id: poData.supplier_id,
-          status: 'draft',
-          total
-      } as any);
-
-      const itemsToInsert = poData.items.map(item => ({
-          ...item,
-          po_id: newPO.id,
-          received_quantity: 0
-      }));
-      
-      for (const item of itemsToInsert) {
-          await sandboxDb.addDocument('purchase_order_items', item);
-      }
-
-      return newPO;
-  },
-  receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
-      const po = await sandboxDb.getDocument<PurchaseOrder>('purchase_orders', poId);
-      if(!po) return;
-
-      const poItems = getCollection<PurchaseOrderItem>('purchase_order_items').filter(i => i.po_id === poId);
-      
-      let allReceived = true;
-      for (const received of receivedItems) {
-          const item = poItems.find(i => i.id === received.itemId);
-          if (item) {
-              const newQty = item.received_quantity + received.receivedQty;
-              await sandboxDb.updateDocument<PurchaseOrderItem>('purchase_order_items', item.id, { received_quantity: newQty });
-              if (newQty < item.quantity) {
-                  allReceived = false;
-              }
-          }
-      }
-      
-      const newStatus = allReceived ? 'received' : 'partial';
-      await sandboxDb.updateDocument<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
-  },
-  uploadFile: async (file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> => {
-      console.log(`🧱 SANDBOX: Simulating upload for file: ${file.name}`);
-      const newAsset = {
-          drive_file_id: `sb_drive_${generateId()}`,
-          module,
-          category: category,
-          name: file.name,
-          mime_type: file.type,
-          size: file.size,
-          url_public: URL.createObjectURL(file),
-          uploaded_by: 'sandbox-user-01',
-      };
-      const addedAsset = await sandboxDb.addDocument<MediaAsset>('media_assets', newAsset as any);
-      return {
-          id: addedAsset.drive_file_id,
-          webViewLink: addedAsset.url_public!
-      };
-  },
+    uploadFile: async (file: File, module: string, category: string): Promise<any> => {
+        await delay(500);
+        const newAsset: MediaAsset = {
+            id: generateId(),
+            drive_file_id: `sandbox_${file.name}_${Date.now()}`,
+            module,
+            category,
+            name: file.name,
+            mime_type: file.type,
+            size: file.size,
+            url_public: URL.createObjectURL(file),
+            created_at: new Date().toISOString(),
+        };
+        db.media_assets.push(newAsset);
+        emit('media_assets');
+        return { id: newAsset.drive_file_id, webViewLink: newAsset.url_public };
+    },
 };

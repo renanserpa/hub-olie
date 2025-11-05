@@ -54,6 +54,8 @@ import {
     WorkflowRule,
     Notification,
     SystemAudit,
+    MoldLibrary,
+    ProductionRoute,
 } from "../types";
 
 
@@ -200,7 +202,13 @@ export const supabaseService = {
         config_supply_groups: [],
         config_materials: [],
         warehouses: [],
-        media_assets: [], orders: [], contacts: [], products: [], 
+        // FIX: Add missing properties mold_library and production_routes to satisfy AppData type
+        mold_library: [],
+        production_routes: [],
+        media_assets: [], orders: [],
+        // FIX: Added missing 'order_items' to AppData to align with sandbox DB structure.
+        order_items: [],
+        contacts: [], products: [], 
         // FIX: Add missing 'product_variants' to satisfy the AppData type.
         product_variants: [], 
         product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],

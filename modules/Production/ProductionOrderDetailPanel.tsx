@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductionOrder, Material, BOMComponent } from '../../types';
+import { ProductionOrder, Material, BOMComponent, ProductionRoute } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { cn } from '../../lib/utils';
 
@@ -18,7 +18,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 interface ProductionOrderDetailPanelProps {
-    order: ProductionOrder & { product?: any, tasks?: any[], variant?: any };
+    order: ProductionOrder & { product?: any, tasks?: any[], variant?: any, route?: ProductionRoute };
     allMaterials: Material[];
 }
 
@@ -46,21 +46,20 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                  </div>
             </Section>
             
-            <Section title="Tarefas de Produção">
+            <Section title="Roteiro de Produção">
                 <div className="space-y-2">
-                    {order.tasks && order.tasks.length > 0 ? (
-                        order.tasks.map(task => (
-                            <div key={task.id} className="p-2 border rounded-md bg-secondary/50 flex justify-between items-center">
-                                <div>
-                                    {/* FIX: Replaced 'task.title' with 'task.name' to match the ProductionTask type. */}
-                                    <p className="font-medium text-sm">{task.name.split(' - ')[1] || task.name}</p>
-                                    {/* FIX: Replaced 'task.statusName' with 'task.status' to match the ProductionTask type. */}
-                                    <p className="text-xs text-textSecondary">{task.status}</p>
-                                </div>
-                            </div>
-                        ))
+                    {order.route ? (
+                        <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-2">
+                            {order.route.rota.map((step, index) => (
+                                 <li key={index} className="mb-4 ml-4">
+                                    <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -left-1.5 border border-white dark:border-gray-900 dark:bg-gray-700"></div>
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{step.replace('?', '')}</h4>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Tempo Padrão: {order.route.tempos_std_min[step]} min</p>
+                                </li>
+                            ))}
+                        </ol>
                     ) : (
-                        <p className="text-sm text-textSecondary">Nenhuma tarefa associada a esta OP.</p>
+                        <p className="text-sm text-textSecondary">Nenhum roteiro de produção encontrado para este produto/tamanho.</p>
                     )}
                 </div>
             </Section>
@@ -70,4 +69,23 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                      {bomToShow && bomToShow.length > 0 ? (
                          bomToShow.map((item: BOMComponent, index: number) => {
                             const material = allMaterials.find(m => m.id === item.material_id);
-                            const
+                            return (
+                                <div key={index} className="flex justify-between items-center text-sm p-2 bg-background rounded">
+                                    <div>
+                                        <p className="font-medium">{material?.name || 'Material não encontrado'}</p>
+                                        <p className="text-xs text-textSecondary">SKU: {material?.sku || 'N/A'}</p>
+                                    </div>
+                                    <p className="font-semibold">{item.quantity_per_unit} {material?.unit}</p>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <p className="text-sm text-textSecondary">Nenhuma lista de materiais (BOM) definida para este produto/variante.</p>
+                    )}
+                </div>
+            </Section>
+        </div>
+    );
+};
+
+export default ProductionOrderDetailPanel;

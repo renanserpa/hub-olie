@@ -9,6 +9,7 @@ export const mediaService = {
     async uploadFile(file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> {
         toast({ title: "Enviando arquivo...", description: file.name });
         if (isSandbox()) {
+            // FIX: Corrected to call sandboxDb as it contains the mock uploadFile implementation.
             return sandboxDb.uploadFile(file, module, category);
         }
         try {
