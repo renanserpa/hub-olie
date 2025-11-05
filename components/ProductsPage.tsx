@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Package, BookOpen } from 'lucide-react';
+import { Loader2, Package, BookOpen, GitFork } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
 import ProductDialog from './products/ProductDialog';
@@ -7,9 +7,11 @@ import ProductFilterBar from './products/ProductFilterBar';
 import ProductKanban from './products/ProductKanban';
 import TabLayout from './ui/TabLayout';
 import CatalogManagement from './products/CatalogManagement';
+import PlaceholderContent from './PlaceholderContent';
 
 const PRODUCT_PAGE_TABS = [
-    { id: 'products', label: 'Produtos', icon: Package },
+    { id: 'products', label: 'Produtos Base', icon: Package },
+    { id: 'variants', label: 'Variantes & SKUs', icon: GitFork },
     { id: 'catalog', label: 'Dados Mestres (Catálogo)', icon: BookOpen },
 ];
 
@@ -69,6 +71,12 @@ const ProductsPage: React.FC = () => {
                         {renderProductsContent()}
                     </div>
                 </div>
+            )}
+            
+            {activeProductTab === 'variants' && (
+                <PlaceholderContent title="Gerenciador de Variantes" requiredTable="product_variants" icon={GitFork}>
+                    <p className="mt-1 text-sm text-textSecondary">Gerencie todas as combinações de produtos, SKUs e preços.</p>
+                </PlaceholderContent>
             )}
 
             {activeProductTab === 'catalog' && (

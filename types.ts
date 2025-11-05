@@ -88,38 +88,76 @@ export interface Contact {
 export type AnyContact = Omit<Contact, 'id'>;
 
 
-// --- PRODUCTS & CATALOG ---
-
-export interface ProductAttributes {
-  external_fabric_color_ids?: string[];
-  internal_lining_color_ids?: string[];
-  zipper_color_ids?: string[];
-  bias_color_ids?: string[];
-  puller_color_ids?: string[];
-  embroidery?: boolean;
-  [key: string]: any; // Keep for backward compatibility during transition
-}
+// --- PRODUCTS & CATALOG (NEW ARCHITECTURE) ---
 
 export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
+export interface ProductSize {
+  id: string;
+  name: string; // e.g., 'P', 'M', 'G'
+  dimensions?: { width: number; height: number; depth: number };
+}
+
+export interface ProductPart {
+  id: string;
+  key: string; // e.g., 'tecido_principal', 'forro', 'ziper'
+  name: string; // e.g., 'Tecido Principal', 'Forro', 'Zíper'
+  options_source: 'fabric_colors' | 'zipper_colors' | 'lining_colors' | 'puller_colors' | 'bias_colors' | 'embroidery_colors' | 'config_materials';
+}
+
+export interface CombinationRule {
+  id: string;
+  condition: {
+    part_key: string;
+    option_id: string;
+  };
+  consequence: {
+    part_key: string;
+    allowed_option_ids: string[];
+  };
+}
+
+export interface BOMComponent {
+  material_id: string;
+  quantity_per_unit: number;
+}
+
+// Product is now conceptually ProductBase
 export interface Product {
     id: string;
-    name: string;
+    name: string; // e.g., 'Bolsa Celine', 'Nécessaire Paris'
     description?: string;
-    base_sku: string;
+    base_sku: string; // Base for generating variant SKUs
     base_price: number;
     category: string;
-    hasVariants: boolean;
     status: ProductStatus;
-    attributes?: ProductAttributes;
     collection_ids?: string[];
     images: string[];
     createdAt: string;
     updatedAt: string;
-    bom?: { material_id: string; quantity_per_unit: number }[];
+    
+    // New architecture fields
+    available_sizes?: ProductSize[];
+    configurable_parts?: ProductPart[];
+    combination_rules?: CombinationRule[];
+    base_bom?: BOMComponent[];
+}
+
+export interface ProductVariant {
+  id: string;
+  product_base_id: string;
+  sku: string; // Final, unique SKU
+  name: string; // Generated name, e.g., "Bolsa Celine M - Linho Bege"
+  configuration: Record<string, string>; // { size: 'size_id', tecido_principal: 'color_id', ... }
+  price_modifier: number; // Price difference from base price
+  final_price: number;
+  dimensions?: { width: number; height: number; depth: number };
+  bom: BOMComponent[];
+  stock_quantity?: number;
 }
 
 export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+
 
 export interface ProductCategory {
     id: string;
