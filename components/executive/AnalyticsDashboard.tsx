@@ -2,10 +2,9 @@ import React from 'react';
 import { AnalyticsKPI } from '../../types';
 import KpiCard from '../analytics/KpiCard';
 import EmptyState from './EmptyState';
-import ChartCard from '../analytics/ChartCard';
-import ChartCardForecast from '../analytics/ChartCardForecast';
 import { AnomalyData, PredictionData, ForecastData } from '../../hooks/useAnalyticsAI';
-import HeatmapPanel from '../analytics/HeatmapPanel';
+import ModuleBarChart from '../analytics/ModuleBarChart';
+import ForecastLineChart from '../analytics/ForecastLineChart';
 
 interface AnalyticsDashboardProps {
     kpis: AnalyticsKPI[];
@@ -36,16 +35,16 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis, aiData, m
                 )}
             </div>
             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-                 {forecastKpi ? (
-                    <ChartCardForecast 
+                 {forecastKpi && forecast ? (
+                    <ForecastLineChart
                         title={`Previsão IA - ${forecastKpi.name}`}
+                        kpi={forecastKpi}
                         forecast={forecast}
-                        unit={forecastKpi.unit}
                     />
                  ) : (
-                    <ChartCard title={`Tendência de ${moduleName}`} />
+                    <ModuleBarChart title={`Resumo de KPIs - ${moduleName}`} kpis={kpis} />
                  )}
-                 <HeatmapPanel title={`Clusters de Performance - ${moduleName}`} />
+                 <ModuleBarChart title={`Comparativo de KPIs - ${moduleName}`} kpis={kpis} />
             </div>
         </div>
     );
