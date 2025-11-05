@@ -76,11 +76,7 @@ const ContactsPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                 <div>
-                    <h1 className="text-3xl font-bold text-textPrimary">Contatos</h1>
-                    <p className="text-textSecondary mt-1">Gerencie seus clientes e fornecedores.</p>
-                </div>
+            <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4 mb-6">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center p-1 rounded-lg bg-secondary">
                        <Button 

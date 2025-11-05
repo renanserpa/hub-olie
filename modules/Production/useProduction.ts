@@ -4,8 +4,9 @@ import { dataService } from '../../services/dataService';
 import { log } from '../../lib/logger';
 import { useApp } from '../../contexts/AppContext';
 import { toast } from '../../hooks/use-toast';
+// FIX: Imported ProductionOrder type to be used within this module.
+import { Task, TaskStatus, Product, ProductionOrder } from '../../types';
 // FIX: Re-export ProductionOrder type to be available to other components within the module.
-import { Task, TaskStatus, Product } from '../../types';
 export type { ProductionOrder } from '../../types';
 
 

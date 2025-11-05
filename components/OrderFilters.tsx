@@ -15,11 +15,7 @@ interface OrderFiltersProps {
 
 const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange, onNewOrderClick, viewMode, onViewModeChange }) => {
     return (
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-             <div>
-                <h1 className="text-3xl font-bold text-textPrimary">Pedidos</h1>
-                <p className="text-textSecondary mt-1">Gerencie e acompanhe todos os pedidos da sua loja.</p>
-            </div>
+        <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
             <div className="flex items-center gap-4">
                  <div className="relative flex-1 sm:flex-initial sm:w-64">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">

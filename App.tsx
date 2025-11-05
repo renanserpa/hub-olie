@@ -30,21 +30,21 @@ import { useOlie } from './contexts/OlieContext';
 
 
 const MAIN_TABS = [
-    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard, scope: 'Dashboard' },
-    { id: 'initializer', label: 'Initializer', icon: Cpu, scope: 'Initializer' },
-    { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal, scope: 'ExecutiveDashboard' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2, scope: 'Analytics' },
-    { id: 'orders', label: 'Pedidos', icon: ShoppingCart, scope: 'Orders' },
-    { id: 'production', label: 'Produção', icon: Workflow, scope: 'Production' },
-    { id: 'inventory', label: 'Estoque', icon: Package, scope: 'Inventory' },
-    { id: 'purchases', label: 'Compras', icon: ShoppingBasket, scope: 'Purchases' },
-    { id: 'logistics', label: 'Logística', icon: Truck, scope: 'Logistics' },
-    { id: 'finance', label: 'Financeiro', icon: DollarSign, scope: 'Finance' },
-    { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare, scope: 'Omnichannel' },
-    { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing' },
-    { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts' },
-    { id: 'products', label: 'Produtos', icon: Package, scope: 'Products' },
-    { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings' },
+    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard, scope: 'Dashboard', description: 'Visão geral da operação com KPIs, status do sistema e atalhos.' },
+    { id: 'initializer', label: 'Initializer', icon: Cpu, scope: 'Initializer', description: 'Sincronização e boot cognitivo do ecossistema AtlasAI.' },
+    { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal, scope: 'ExecutiveDashboard', description: 'Visão consolidada dos indicadores estratégicos do Olie Hub.' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2, scope: 'Analytics', description: 'Painéis e relatórios de desempenho do Olie Hub.' },
+    { id: 'orders', label: 'Pedidos', icon: ShoppingCart, scope: 'Orders', description: 'Gerencie e acompanhe todos os pedidos da sua loja.' },
+    { id: 'production', label: 'Produção', icon: Workflow, scope: 'Production', description: 'Controle o chão de fábrica, da matéria-prima ao produto acabado.' },
+    { id: 'inventory', label: 'Estoque', icon: Package, scope: 'Inventory', description: 'Consulte saldos, movimentações e transferências entre armazéns.' },
+    { id: 'purchases', label: 'Compras', icon: ShoppingBasket, scope: 'Purchases', description: 'Gerencie fornecedores e pedidos de compra de materiais.' },
+    { id: 'logistics', label: 'Logística', icon: Truck, scope: 'Logistics', description: 'Gerencie o fluxo de separação, embalagem e expedição.' },
+    { id: 'finance', label: 'Financeiro', icon: DollarSign, scope: 'Finance', description: 'Gerencie contas, transações, e o fluxo de caixa.' },
+    { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare, scope: 'Omnichannel', description: 'Central de comunicação com o cliente em múltiplos canais.' },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing', description: 'Gerencie campanhas, segmente públicos e analise resultados.' },
+    { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts', description: 'Gerencie seus clientes e fornecedores.' },
+    { id: 'products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie seu catálogo de produtos e variações.' },
+    { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings', description: 'Gerencie os dados mestres e configurações globais da plataforma.' },
 ];
 
 const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (
@@ -130,6 +130,7 @@ const App: React.FC = () => {
     }
     
     const visibleTabs = MAIN_TABS.filter(tab => can(tab.scope, 'read'));
+    const activeTabInfo = MAIN_TABS.find(tab => tab.id === activeModule);
     
     return (
         <div className="min-h-screen font-sans bg-background dark:bg-dark-background">
@@ -182,6 +183,15 @@ const App: React.FC = () => {
                         </div>
                     </header>
                     <div className="container mx-auto p-4 sm:p-6">
+                        {activeTabInfo && can(activeTabInfo.scope, 'read') && (
+                            <div className="mb-6">
+                                 <div className="flex items-center gap-3">
+                                    <activeTabInfo.icon className="text-primary" size={28}/>
+                                    <h1 className="text-3xl font-bold text-textPrimary">{activeTabInfo.label}</h1>
+                                </div>
+                                <p className="text-textSecondary mt-1">{activeTabInfo.description}</p>
+                            </div>
+                        )}
                         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert" onClick={() => setError(null)}>{error}</div>}
                         {renderActivePage()}
                     </div>

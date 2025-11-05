@@ -196,6 +196,7 @@ export interface Order {
 // FIX: Add missing production-related types to resolve multiple errors.
 export type ProductionTaskStatus = 'Pendente' | 'Em Andamento' | 'Concluída';
 export type QualityCheckResult = 'Aprovado' | 'Reprovado' | 'Pendente';
+// FIX: Expanded ProductionOrderStatus to include all statuses used in kanban and tables.
 export type ProductionOrderStatus = 'novo' | 'planejado' | 'em_andamento' | 'em_espera' | 'finalizado' | 'cancelado' | 'pending' | 'in_progress' | 'quality_check' | 'completed' | 'paused';
 export type ProductionOrderPriority = 'baixa' | 'normal' | 'alta' | 'urgente';
 

@@ -45,16 +45,6 @@ const FinancePage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                 <div>
-                    <div className="flex items-center gap-3">
-                        <DollarSign className="text-primary" size={28} />
-                        <h1 className="text-3xl font-bold text-textPrimary">Financeiro</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Gerencie contas, transações, e o fluxo de caixa.</p>
-                </div>
-            </div>
-            
             <FinanceTabs activeTab={activeTab} onTabChange={setActiveTab as any} />
             
             <div className="mt-6">

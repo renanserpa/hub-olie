@@ -54,16 +54,6 @@ const AnalyticsPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <BarChart2 className="text-primary" size={28} />
-                        <h1 className="text-3xl font-bold text-textPrimary">Analytics</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Painéis e relatórios de desempenho do Olie Hub.</p>
-                </div>
-            </div>
-            
             <AnalyticsTabs activeTab={activeTab} onTabChange={setActiveTab} />
             
             <div className="mt-6">

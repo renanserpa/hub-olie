@@ -11,13 +11,12 @@ export default function DashboardPanel() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Painel Operacional — Olie Hub Ops</h1>
+      <div className="flex justify-end items-center">
         <Button onClick={reload} variant="outline" disabled={loading}>
           {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
           Recarregar
         </Button>
-      </header>
+      </div>
 
       <DashboardSystemStatus status={data.systemStatus} />
       

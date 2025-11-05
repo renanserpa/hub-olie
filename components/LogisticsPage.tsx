@@ -50,16 +50,6 @@ const LogisticsPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <Truck className="text-primary" size={28} />
-                        <h1 className="text-3xl font-bold text-textPrimary">Logística</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Gerencie o fluxo de separação, embalagem e expedição.</p>
-                </div>
-            </div>
-
             <LogisticsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
             <div className="mt-6">

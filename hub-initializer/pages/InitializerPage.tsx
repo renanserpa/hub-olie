@@ -14,17 +14,6 @@ const InitializerPage: React.FC = () => {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-          <div>
-              <div className="flex items-center gap-3">
-                  <Cpu className="text-primary" size={28} />
-                  <h1 className="text-3xl font-bold text-textPrimary">Hub Initializer</h1>
-              </div>
-              <p className="text-textSecondary mt-1">Sincronização e boot cognitivo do ecossistema AtlasAI.</p>
-          </div>
-      </div>
-
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         

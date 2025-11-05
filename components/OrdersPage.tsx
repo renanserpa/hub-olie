@@ -77,7 +77,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
     };
     
     return (
-        <div>
+        <div className="space-y-6">
             <OrderFilters 
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -86,9 +86,7 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
                 onViewModeChange={setViewMode}
             />
 
-            <div className="mb-6">
-                <OrderKpiRow stats={kpis} />
-            </div>
+            <OrderKpiRow stats={kpis} />
             
             {renderContent()}
 

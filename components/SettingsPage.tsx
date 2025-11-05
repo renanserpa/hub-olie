@@ -149,12 +149,6 @@ const SettingsPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <div className="flex items-center gap-3"><Settings className="text-primary" size={28} /><h1 className="text-3xl font-bold text-textPrimary">Configurações</h1></div>
-                    <p className="text-textSecondary mt-1">Gerencie os dados mestres e configurações globais da plataforma.</p>
-                </div>
-            </div>
             <div className="mb-6"><TabLayout tabs={SETTINGS_TABS} activeTab={activeTab} onTabChange={handleTabChange} /></div>
             <div>{renderMainContent()}</div>
         </div>

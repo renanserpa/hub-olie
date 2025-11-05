@@ -49,16 +49,6 @@ const PurchasesPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <ShoppingBasket className="text-primary" size={28} />
-                        <h1 className="text-3xl font-bold text-textPrimary">Compras</h1>
-                    </div>
-                    <p className="text-textSecondary mt-1">Gerencie fornecedores e pedidos de compra de materiais.</p>
-                </div>
-            </div>
-            
             <PurchasesTabs
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
