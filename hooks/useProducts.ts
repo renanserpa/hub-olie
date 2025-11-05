@@ -15,6 +15,7 @@ export function useProducts() {
     
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     
     const [viewMode, setViewModeInternal] = useState<ViewMode>('kanban');
 
@@ -125,5 +126,7 @@ export function useProducts() {
         viewMode,
         setViewMode,
         updateProductStatus,
+        selectedProductId,
+        setSelectedProductId,
     };
 }

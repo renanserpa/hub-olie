@@ -7,7 +7,9 @@ import ProductFilterBar from './products/ProductFilterBar';
 import ProductKanban from './products/ProductKanban';
 import TabLayout from './ui/TabLayout';
 import CatalogManagement from './products/CatalogManagement';
-import PlaceholderContent from './PlaceholderContent';
+import ProductVariantsPanel from './products/ProductVariantsPanel';
+// FIX: Import the 'Product' type.
+import { Product } from '../types';
 
 const PRODUCT_PAGE_TABS = [
     { id: 'products', label: 'Produtos Base', icon: Package },
@@ -33,9 +35,20 @@ const ProductsPage: React.FC = () => {
         viewMode,
         setViewMode,
         updateProductStatus,
+        selectedProductId,
+        setSelectedProductId,
     } = useProducts();
 
     const [activeProductTab, setActiveProductTab] = React.useState('products');
+
+    const handleSelectProduct = (product: Product) => {
+        setSelectedProductId(product.id);
+        openDialog(product);
+    };
+    
+    const handleSelectProductForVariants = (productId: string) => {
+        setSelectedProductId(productId);
+    };
 
     const renderProductsContent = () => {
         if (isLoading) {
@@ -46,9 +59,21 @@ const ProductsPage: React.FC = () => {
             );
         }
         if (viewMode === 'kanban') {
-            return <ProductKanban products={filteredProducts} onCardClick={openDialog} onStatusChange={updateProductStatus} />;
+            return <ProductKanban 
+                products={filteredProducts} 
+                onCardClick={(product) => handleSelectProductForVariants(product.id)} 
+                onStatusChange={updateProductStatus} 
+                selectedProductId={selectedProductId}
+                onEdit={openDialog}
+            />;
         }
-        return <ProductList products={filteredProducts} isLoading={isLoading} onEdit={openDialog} />;
+        return <ProductList 
+            products={filteredProducts} 
+            isLoading={isLoading} 
+            onEdit={openDialog} 
+            selectedProductId={selectedProductId}
+            onRowClick={handleSelectProductForVariants}
+        />;
     };
 
     return (
@@ -74,9 +99,7 @@ const ProductsPage: React.FC = () => {
             )}
             
             {activeProductTab === 'variants' && (
-                <PlaceholderContent title="Gerenciador de Variantes" requiredTable="product_variants" icon={GitFork}>
-                    <p className="mt-1 text-sm text-textSecondary">Gerencie todas as combinações de produtos, SKUs e preços.</p>
-                </PlaceholderContent>
+                <ProductVariantsPanel productId={selectedProductId} />
             )}
 
             {activeProductTab === 'catalog' && (

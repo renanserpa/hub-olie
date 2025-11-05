@@ -7,6 +7,8 @@ interface ProductKanbanProps {
   products: Product[];
   onCardClick: (product: Product) => void;
   onStatusChange: (productId: string, newStatus: ProductStatus) => void;
+  selectedProductId: string | null;
+  onEdit: (product: Product) => void;
 }
 
 const PRODUCT_COLUMNS: { id: ProductStatus, label: string }[] = [
@@ -17,7 +19,7 @@ const PRODUCT_COLUMNS: { id: ProductStatus, label: string }[] = [
   { id: 'Descontinuado', label: 'Descontinuado' },
 ];
 
-const ProductKanban: React.FC<ProductKanbanProps> = ({ products, onCardClick, onStatusChange }) => {
+const ProductKanban: React.FC<ProductKanbanProps> = ({ products, onCardClick, onStatusChange, selectedProductId, onEdit }) => {
     const [isDraggingOver, setIsDraggingOver] = useState<ProductStatus | null>(null);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, status: ProductStatus) => {
@@ -68,7 +70,9 @@ const ProductKanban: React.FC<ProductKanbanProps> = ({ products, onCardClick, on
                                 <ProductKanbanCard
                                     key={product.id} 
                                     product={product} 
-                                    onEdit={() => onCardClick(product)}
+                                    onClick={() => onCardClick(product)}
+                                    onEdit={() => onEdit(product)}
+                                    isSelected={product.id === selectedProductId}
                                 />
                             ))
                         }

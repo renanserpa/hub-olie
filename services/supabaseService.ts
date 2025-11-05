@@ -200,7 +200,10 @@ export const supabaseService = {
         config_supply_groups: [],
         config_materials: [],
         warehouses: [],
-        media_assets: [], orders: [], contacts: [], products: [], product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+        media_assets: [], orders: [], contacts: [], products: [], 
+        // FIX: Add missing 'product_variants' to satisfy the AppData type.
+        product_variants: [], 
+        product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],

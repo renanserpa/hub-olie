@@ -1,16 +1,20 @@
 
 
+
 import React from 'react';
 import { Product } from '../../types';
 import { Card, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { PackageOpen, Edit } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import { cn } from '../../lib/utils';
 
 interface ProductListProps {
     products: Product[];
     isLoading: boolean;
     onEdit: (product: Product) => void;
+    selectedProductId: string | null;
+    onRowClick: (productId: string) => void;
 }
 
 const SkeletonRow: React.FC = () => (
@@ -23,7 +27,7 @@ const SkeletonRow: React.FC = () => (
     </tr>
 );
 
-const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }) => {
+const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit, selectedProductId, onRowClick }) => {
     return (
         <Card>
             <CardContent className="p-0">
@@ -53,13 +57,20 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit }
                             </thead>
                             <tbody>
                                 {products.map(product => (
-                                    <tr key={product.id} className="border-b border-border hover:bg-accent/50">
+                                    <tr 
+                                        key={product.id} 
+                                        onClick={() => onRowClick(product.id)}
+                                        className={cn(
+                                            "border-b border-border cursor-pointer",
+                                            selectedProductId === product.id ? 'bg-accent/80' : 'hover:bg-accent/50'
+                                        )}
+                                    >
                                         <td className="p-4 font-medium text-textPrimary">{product.name}</td>
                                         <td className="p-4 font-mono text-xs">{product.base_sku}</td>
                                         <td className="p-4"><Badge variant="secondary">{product.category || 'N/A'}</Badge></td>
                                         <td className="p-4">R$ {product.base_price.toFixed(2)}</td>
                                         <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>
+                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(product); }}>
                                                 <Edit size={14} className="mr-2" />
                                                 Editar
                                             </Button>

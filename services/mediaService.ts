@@ -6,7 +6,7 @@ import { MediaAsset } from '../types';
 import { toast } from '../hooks/use-toast';
 
 export const mediaService = {
-    async uploadFile(file: File, module: string, category: string) {
+    async uploadFile(file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> {
         toast({ title: "Enviando arquivo...", description: file.name });
         if (isSandbox()) {
             return sandboxDb.uploadFile(file, module, category);

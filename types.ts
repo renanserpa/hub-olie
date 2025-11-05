@@ -913,6 +913,7 @@ export interface AppData {
     orders: Order[];
     contacts: Contact[];
     products: Product[];
+    product_variants: ProductVariant[];
     product_categories: ProductCategory[];
     collections: Collection[];
     production_orders: ProductionOrder[];

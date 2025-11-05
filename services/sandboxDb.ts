@@ -7,7 +7,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent
+    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus
 } from '../types';
 
 // --- SEED DATA ---
@@ -76,6 +76,29 @@ const products: Product[] = [
         createdAt: new Date(Date.now() - 100 * 86400000).toISOString(), updatedAt: new Date().toISOString(), 
         base_bom: [] 
     },
+];
+
+const product_variants: ProductVariant[] = [
+  {
+    id: 'pv1',
+    product_base_id: 'p1',
+    sku: 'BT-CLA-01-M-FC1-ZC1',
+    name: 'Bolsa Tote Clássica M - Bege Claro / Zíper Dourado',
+    configuration: { size: 's1', tecido_externo: 'fc1', ziper: 'zc1' },
+    price_modifier: 0,
+    final_price: 299.90,
+    bom: [],
+  },
+  {
+    id: 'pv2',
+    product_base_id: 'p1',
+    sku: 'BT-CLA-01-G-FC2-ZC2',
+    name: 'Bolsa Tote Clássica G - Azul Marinho / Zíper Prateado',
+    configuration: { size: 's2', tecido_externo: 'fc2', ziper: 'zc2' },
+    price_modifier: 20.00,
+    final_price: 319.90,
+    bom: [],
+  },
 ];
 
 const order_items: OrderItem[] = [
@@ -229,13 +252,13 @@ const db: AppData = {
     production_quality_checks: [],
     // FIX: Add missing 'production_tasks' property to satisfy the AppData type.
     production_tasks: [],
-    // FIX: Added missing 'system_audit' property to satisfy the AppData type.
+    // FIX: Add missing 'system_audit' property to satisfy the AppData type.
     system_audit: [],
     warehouses,
     contacts,
-    customers: contacts, // Alias for contacts
     product_categories,
     products,
+    product_variants,
     order_items,
     orders: orders as any, // Cast to avoid deep type checking issues with items/customers
     production_orders,
@@ -313,6 +336,34 @@ const subscribe = (path: string, handler: (items: any[]) => void) => {
     callback();
     return { unsubscribe: () => eventBus.removeEventListener(path, callback) };
 };
+// FIX: Add helper function for settings table mapping, needed for mock implementations.
+const settingsTableMap: Record<string, string> = {
+    'catalogs-paletas_cores': 'config_color_palettes',
+    'catalogs-cores_texturas-tecido': 'fabric_colors',
+    'catalogs-cores_texturas-ziper': 'zipper_colors',
+    'catalogs-cores_texturas-vies': 'bias_colors',
+    'catalogs-cores_texturas-forro': 'lining_colors',
+    'catalogs-cores_texturas-puxador': 'puller_colors',
+    'catalogs-cores_texturas-bordado': 'embroidery_colors',
+    'catalogs-cores_texturas-texturas': 'fabric_textures',
+    'catalogs-fontes_monogramas': 'config_fonts',
+    'materials-grupos_suprimento': 'config_supply_groups',
+    'materials-materiais_basicos': 'config_materials',
+};
+
+const getTableNameForSetting = (category: SettingsCategory, subTab: string | null, subSubTab: string | null): string => {
+    let key = category;
+    if (subTab) key += `-${subTab}`;
+    if (subSubTab) key += `-${subSubTab}`;
+    
+    const tableName = settingsTableMap[key];
+    if (!tableName) {
+        console.error(`No table mapping found for key: ${key}`);
+        return subSubTab || subTab || category;
+    }
+    return tableName;
+};
+
 
 export const sandboxDb = {
     getCollection: <T>(table: string): Promise<T[]> => {
@@ -338,7 +389,7 @@ export const sandboxDb = {
     addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
         console.log(`🧱 SANDBOX: addDocument(${table})`);
         const collection = getCollection(table);
-        const newDoc = { ...docData, id: generateId() } as T;
+        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as T;
         collection.push(newDoc);
         emit(table);
         return newDoc;
@@ -349,7 +400,7 @@ export const sandboxDb = {
         const collection = getCollection<T>(table);
         const docIndex = collection.findIndex(doc => doc.id === id);
         if (docIndex === -1) throw new Error("Document not found");
-        const updatedDoc = { ...collection[docIndex], ...docData };
+        const updatedDoc = { ...collection[docIndex], ...docData, updated_at: new Date().toISOString() };
         collection[docIndex] = updatedDoc;
         emit(table);
         return updatedDoc;
@@ -357,7 +408,7 @@ export const sandboxDb = {
     
     deleteDocument: async (table: string, id: string): Promise<void> => {
         console.log(`🧱 SANDBOX: deleteDocument(${table}, ${id})`);
-        const collection = getCollection(table);
+        const collection = getCollection<any>(table);
         const docIndex = collection.findIndex(doc => doc.id === id);
         if (docIndex === -1) throw new Error("Document not found");
         collection.splice(docIndex, 1);
@@ -416,8 +467,6 @@ export const sandboxDb = {
         const newOrder = await sandboxDb.addDocument<Order>('orders', {
             ...orderToInsert,
             number: orderNumber,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
         } as any);
       
         if (items && items.length > 0) {
@@ -436,7 +485,7 @@ export const sandboxDb = {
     },
     
     addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {
-        return sandboxDb.addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() });
+        return sandboxDb.addDocument('inventory_movements', { ...movementData });
     },
     
     transferStock: async (transferData: any): Promise<void> => {
@@ -448,7 +497,6 @@ export const sandboxDb = {
             from_warehouse_id: transferData.from_warehouse_id,
             to_warehouse_id: transferData.to_warehouse_id,
             notes: transferData.notes,
-            created_at: new Date().toISOString(),
         });
         
         // In a real DB this would be a transaction. Here we simulate the balance update.
@@ -458,7 +506,7 @@ export const sandboxDb = {
         
         const toBalance = balances.find(b => b.material_id === transferData.material_id && b.warehouse_id === transferData.to_warehouse_id);
         if(toBalance) toBalance.current_stock += transferData.quantity;
-        else balances.push({ id: generateId(), material_id: transferData.material_id, warehouse_id: transferData.to_warehouse_id, current_stock: transferData.quantity, reserved_stock: 0, updated_at: new Date().toISOString() });
+        else balances.push({ id: generateId(), material_id: transferData.material_id, warehouse_id: transferData.to_warehouse_id, current_stock: transferData.quantity, reserved_stock: 0, updated_at: new Date().toISOString() } as InventoryBalance);
         
         emit('inventory_balances');
     },
@@ -497,5 +545,131 @@ export const sandboxDb = {
         }));
 
         return { accounts, categories, transactions: transactionsWithDetails, payables, receivables };
+  },
+  // FIX: Implement missing mock functions
+  testIntegrationConnection: async (integrationId: string): Promise<void> => {
+    console.log(`🧱 SANDBOX: Testing connection for integration ${integrationId}`);
+    await delay(1000);
+    const integrations = getCollection<Integration>('config_integrations');
+    const integration = integrations.find(i => i.id === integrationId);
+    if (integration) {
+        const success = Math.random() > 0.2; // 80% success rate
+        integration.status = success ? 'connected' : 'error';
+        integration.last_sync = new Date().toISOString();
+        integration.last_error = success ? '' : 'Sandbox random connection error';
+        emit('config_integrations');
+    }
+  },
+  addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => {
+    const tableName = getTableNameForSetting(category, subTab, subSubTab);
+    return sandboxDb.addDocument(tableName, data);
+  },
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => {
+      const tableName = getTableNameForSetting(category, subTab, subSubTab);
+      return sandboxDb.updateDocument(tableName, id, data);
+  },
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => {
+      const tableName = getTableNameForSetting(category, subTab, subSubTab);
+      return sandboxDb.deleteDocument(tableName, id);
+  },
+  updateSystemSettings: async (settings: SystemSetting[]): Promise<void> => {
+      console.log('🧱 SANDBOX: Updating system settings');
+      const systemSettings = getCollection<SystemSetting>('system_settings');
+      settings.forEach(s => {
+          const index = systemSettings.findIndex(db_s => db_s.id === s.id);
+          if(index > -1) {
+              systemSettings[index].value = s.value;
+          }
+      });
+      emit('system_settings');
+  },
+  updateSystemSetting: async (key: string, newValue: any, source: string, confidence: number, explanation: string): Promise<void> => {
+      console.log(`🧱 SANDBOX: AI is updating setting ${key}`);
+      const systemSettings = getCollection<SystemSetting>('system_settings');
+      const settingIndex = systemSettings.findIndex(s => s.key === key);
+      if (settingIndex > -1) {
+          const old_value = systemSettings[settingIndex].value;
+          systemSettings[settingIndex].value = JSON.stringify(newValue);
+          
+          await sandboxDb.addDocument<SystemSettingsLog>('system_settings_logs', {
+              key,
+              old_value: old_value,
+              new_value: JSON.stringify(newValue),
+              source_module: source,
+              confidence,
+              explanation,
+          } as any);
+
+          emit('system_settings');
+          emit('system_settings_logs');
+      } else {
+          console.warn(`[sandboxDb] Setting with key "${key}" not found for AI update.`);
+      }
+  },
+  getMaterials: (): Promise<Material[]> => sandboxDb.getCollection('config_materials'),
+  getMaterialGroups: (): Promise<MaterialGroup[]> => sandboxDb.getCollection('config_supply_groups'),
+  addMaterial: (material: any): Promise<Material> => sandboxDb.addDocument('config_materials', material),
+  addMaterialGroup: (group: any): Promise<MaterialGroup> => sandboxDb.addDocument('config_supply_groups', group),
+  createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id'>[] }): Promise<PurchaseOrder> => {
+      const po_number = `PC-SB-${Date.now().toString().slice(-6)}`;
+      const total = poData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+      
+      const newPO = await sandboxDb.addDocument<PurchaseOrder>('purchase_orders', {
+          po_number,
+          supplier_id: poData.supplier_id,
+          status: 'draft',
+          total
+      } as any);
+
+      const itemsToInsert = poData.items.map(item => ({
+          ...item,
+          po_id: newPO.id,
+          received_quantity: 0
+      }));
+      
+      for (const item of itemsToInsert) {
+          await sandboxDb.addDocument('purchase_order_items', item);
+      }
+
+      return newPO;
+  },
+  receivePOItems: async (poId: string, receivedItems: { itemId: string; receivedQty: number }[]) => {
+      const po = await sandboxDb.getDocument<PurchaseOrder>('purchase_orders', poId);
+      if(!po) return;
+
+      const poItems = getCollection<PurchaseOrderItem>('purchase_order_items').filter(i => i.po_id === poId);
+      
+      let allReceived = true;
+      for (const received of receivedItems) {
+          const item = poItems.find(i => i.id === received.itemId);
+          if (item) {
+              const newQty = item.received_quantity + received.receivedQty;
+              await sandboxDb.updateDocument<PurchaseOrderItem>('purchase_order_items', item.id, { received_quantity: newQty });
+              if (newQty < item.quantity) {
+                  allReceived = false;
+              }
+          }
+      }
+      
+      const newStatus = allReceived ? 'received' : 'partial';
+      await sandboxDb.updateDocument<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
+  },
+  uploadFile: async (file: File, module: string, category: string): Promise<{ id: string, webViewLink: string }> => {
+      console.log(`🧱 SANDBOX: Simulating upload for file: ${file.name}`);
+      const newAsset = {
+          drive_file_id: `sb_drive_${generateId()}`,
+          module,
+          category: category,
+          name: file.name,
+          mime_type: file.type,
+          size: file.size,
+          url_public: URL.createObjectURL(file),
+          uploaded_by: 'sandbox-user-01',
+      };
+      const addedAsset = await sandboxDb.addDocument<MediaAsset>('media_assets', newAsset as any);
+      return {
+          id: addedAsset.drive_file_id,
+          webViewLink: addedAsset.url_public!
+      };
   },
 };

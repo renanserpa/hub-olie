@@ -1,14 +1,17 @@
 import React from 'react';
 import { Product } from '../../types';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Edit } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import { cn } from '../../lib/utils';
 
 interface ProductKanbanCardProps {
     product: Product;
+    onClick: () => void;
     onEdit: () => void;
+    isSelected: boolean;
 }
 
-const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onEdit }) => {
+const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onClick, onEdit, isSelected }) => {
     
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         e.dataTransfer.setData('productId', product.id);
@@ -26,16 +29,23 @@ const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onEdit }
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onClick={onEdit}
-            className="p-3 rounded-lg shadow-sm border bg-card border-border cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/50 transition-all duration-200"
+            onClick={onClick}
+            className={cn(
+                "p-3 rounded-lg shadow-sm border bg-card border-border cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/50 transition-all duration-200",
+                isSelected && "ring-2 ring-primary"
+            )}
         >
             <div className="flex items-start">
                 <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-textPrimary truncate">{product.name}</p>
                     <p className="text-xs text-textSecondary truncate">{product.base_sku}</p>
                 </div>
-                <button className="text-textSecondary/50 hover:text-textSecondary">
-                    <GripVertical size={18} />
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+                    className="text-textSecondary/50 hover:text-textSecondary p-1"
+                    title="Editar Produto Base"
+                >
+                    <Edit size={14} />
                 </button>
             </div>
             <div className="mt-2 flex justify-between items-center">

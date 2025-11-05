@@ -21,7 +21,7 @@ export const dataService = {
     isSandbox() ? sandboxService.getDocument<T>(table, id) : realSupabaseService.getDocument<T>(table, id),
 
   updateDocument: <T extends {id: string}>(table: string, id: string, docData: Partial<T>) =>
-    isSandbox() ? sandboxService.updateDocument(table, id, docData) : realSupabaseService.updateDocument(table, id, docData),
+    isSandbox() ? sandboxService.updateDocument<T>(table, id, docData) : realSupabaseService.updateDocument<T>(table, id, docData),
 
   addDocument: <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>) =>
     isSandbox() ? sandboxService.addDocument(table, docData) : realSupabaseService.addDocument(table, docData),
