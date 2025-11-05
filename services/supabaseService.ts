@@ -19,6 +19,7 @@ import {
     ProductionOrder,
     // FIX: Import missing production types
     ProductionQualityCheck,
+    ProductionAudit,
     ProductionTask,
     PullerColor,
     SettingsCategory,
@@ -219,6 +220,8 @@ export const supabaseService = {
         notifications: [],
         // Fix: Added missing 'system_audit' property to satisfy the AppData type.
         system_audit: [],
+        // FIX: Add missing 'production_audit' property to satisfy the AppData type.
+        production_audit: [],
     };
 
     try {
@@ -228,7 +231,8 @@ export const supabaseService = {
             suppliers,
             initializer_agents, initializer_logs, initializer_sync_state,
             notifications, workflow_rules,
-            system_audit
+            system_audit,
+            production_audit,
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
@@ -249,6 +253,7 @@ export const supabaseService = {
             supabaseService.getCollection<Notification>('notifications'),
             supabaseService.getCollection<WorkflowRule>('workflow_rules'),
             supabaseService.getCollection<SystemAudit>('system_audit'),
+            supabaseService.getCollection<ProductionAudit>('production_audit'),
         ]);
         
         return {
@@ -278,6 +283,7 @@ export const supabaseService = {
             notifications,
             workflow_rules,
             system_audit,
+            production_audit,
         };
     } catch (error) {
         handleError(error, 'getSettings');

@@ -1,36 +1,38 @@
 'use client';
 import React, { useState } from 'react';
 import ProductionTaskCard from './ProductionTaskCard';
-import { ProductionOrder } from '../../types';
+import { ProductionOrder } from './useProduction';
 import { cn } from '../../lib/utils';
 
 interface ProductionColumnProps {
     title: string;
+    status: string;
     orders: ProductionOrder[];
-    statusKey: string;
-    onDrop: (statusKey: string) => void;
+    onDrop: (status: string) => void;
     onDragStart: (e: React.DragEvent<HTMLDivElement>, orderId: string) => void;
 }
 
-export default function ProductionColumn({ title, orders, statusKey, onDrop, onDragStart }: ProductionColumnProps) {
+const ProductionColumn: React.FC<ProductionColumnProps> = ({ title, status, orders, onDrop, onDragStart }) => {
   const [isOver, setIsOver] = useState(false);
-
   return (
-    <div 
-        onDragOver={(e) => { e.preventDefault(); setIsOver(true); }}
-        onDragLeave={() => setIsOver(false)}
-        onDrop={(e) => { e.preventDefault(); setIsOver(false); onDrop(statusKey); }}
-        className={cn(
-            "w-80 flex-shrink-0 bg-secondary dark:bg-dark-secondary p-3 rounded-xl transition-colors",
-            isOver && "bg-primary/10"
-        )}
+    <div
+      onDrop={(e) => { e.preventDefault(); setIsOver(false); onDrop(status); }}
+      onDragOver={(e) => { e.preventDefault(); setIsOver(true); }}
+      onDragLeave={() => setIsOver(false)}
+      className={cn("w-80 flex-shrink-0 bg-secondary dark:bg-dark-secondary p-3 rounded-xl transition-colors", isOver && "bg-primary/10")}
     >
-      <h2 className="text-sm font-semibold mb-3 text-textPrimary dark:text-dark-textPrimary">{title} ({orders.length})</h2>
+      <div className="flex justify-between items-center mb-4 px-1">
+        <h2 className="text-sm font-semibold mb-2 capitalize text-textPrimary dark:text-dark-textPrimary">{title}</h2>
+        <span className="text-xs font-medium text-textSecondary dark:text-dark-textSecondary bg-background dark:bg-dark-background px-2 py-1 rounded-full">
+            {orders.length}
+        </span>
+      </div>
       <div className="space-y-3 min-h-[400px]">
-        {orders.map((o: ProductionOrder) => (
-          <ProductionTaskCard key={o.id} order={o} onDragStart={(e) => onDragStart(e, o.id)} />
-        ))}
+        {/* FIX: Removed ':any' to allow TypeScript to correctly infer the type from the 'orders' prop. */}
+        {orders.map((o) => <ProductionTaskCard key={o.id} order={o} onDragStart={onDragStart} />)}
       </div>
     </div>
   );
 }
+
+export default ProductionColumn;

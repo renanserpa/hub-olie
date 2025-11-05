@@ -63,14 +63,14 @@ export async function ingestModuleMarkdown(file: File, addLog: (log: Omit<Initia
 export async function executeAgent(agent: string, payload: any) {
   const actionDescription = `${payload.action} no contexto ${payload.context}`;
   
-  // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+  // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
   await dataService.addDocument<InitializerLog>('initializer_logs', {
     agent_name: agent,
     action: actionDescription,
     status: 'running',
     module: payload.context,
     timestamp: new Date().toISOString()
-  } as Omit<InitializerLog, 'id'>);
+  });
 
   console.log(`[AGENT] ${agent} executando ${actionDescription}`);
 
@@ -184,7 +184,7 @@ export async function executeAgent(agent: string, payload: any) {
     const agents = await dataService.getCollection<InitializerAgent>('initializer_agents');
     const agentData = agents.find(a => a.name === agent);
 
-    // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+    // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
     await dataService.addDocument<InitializerLog>('initializer_logs', {
       agent_name: agent,
       action: actionDescription,
@@ -195,12 +195,12 @@ export async function executeAgent(agent: string, payload: any) {
           agent_status: agentData?.status || 'unknown',
           health_score: agentData?.health_score || 'unknown'
       }
-    } as Omit<InitializerLog, 'id'>);
+    });
 
   } catch (error) {
     console.error(`[AGENT] Erro ao executar ${agent}:`, error);
     sendLog(agent, `ERRO: ${actionDescription} - ${(error as Error).message}`);
-    // FIX: Changed generic type from Omit<InitializerLog, 'id'> to InitializerLog to satisfy the 'T extends { id?: string }' constraint.
+    // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
     await dataService.addDocument<InitializerLog>('initializer_logs', {
       agent_name: agent,
       action: actionDescription,
@@ -210,6 +210,6 @@ export async function executeAgent(agent: string, payload: any) {
       metadata: {
         error: (error as Error).message
       }
-    } as Omit<InitializerLog, 'id'>);
+    });
   }
 }

@@ -100,8 +100,6 @@ class ExecutorAI implements IAgent {
                 status: 'novo',
                 priority: 'normal',
                 due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
-                steps_completed: 0,
-                steps_total: 3,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
              };

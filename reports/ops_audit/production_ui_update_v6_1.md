@@ -35,11 +35,11 @@ A refatoração modernizou a experiência do usuário, introduziu componentes de
 
 A auditoria confirma que a nova estrutura de arquivos foi implementada conforme especificado:
 
--   `/src/modules/Production/` foi criado, encapsulando toda a lógica do módulo.
--   Hooks (`useProduction`, `useProductionFilters`, `useProductionKanban`) foram criados para gerenciar o estado.
+-   `/modules/Production/` foi criado, encapsulando toda a lógica do módulo.
+-   Hooks (`useProduction`, `useProductionFilters`) foram criados para gerenciar o estado.
 -   Componentes de UI (`ProductionPanel`, `ProductionKPIHeader`, `ProductionFilters`, `ProductionKanban`, `ProductionColumn`, `ProductionTaskCard`) foram criados e utilizam os componentes do `AtlasUI`.
 -   O antigo ponto de entrada (`/components/ProductionPage.tsx`) foi refatorado para ser um simples wrapper para o novo módulo.
--   Arquivos obsoletos (`/hooks/useProductionOrders.ts`, etc.) foram removidos.
+-   Arquivos obsoletos (`/hooks/useProductionKanban.ts`, etc.) foram marcados como depreciados.
 
 ---
 

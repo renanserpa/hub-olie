@@ -13,7 +13,8 @@ interface ErrorBoundaryState {
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // FIX: Reverted to class property for state initialization to resolve type inference issues with `this.props` and `this.state`.
-  public state: ErrorBoundaryState = {
+  // Removed 'public' modifier to align with common practice and avoid potential tooling conflicts.
+  state: ErrorBoundaryState = {
     hasError: false,
     error: undefined,
   };

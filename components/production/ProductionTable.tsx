@@ -10,6 +10,7 @@ interface ProductionTableProps {
     onOrderSelect: (orderId: string) => void;
 }
 
+// FIX: Added all missing statuses to satisfy the Record<ProductionOrderStatus, ...> type.
 const statusStyles: Record<ProductionOrderStatus, { badge: string; label: string }> = {
   novo: { badge: 'bg-gray-100 text-gray-800', label: 'Nova' },
   planejado: { badge: 'bg-blue-100 text-blue-800', label: 'Planejada' },
@@ -17,6 +18,11 @@ const statusStyles: Record<ProductionOrderStatus, { badge: string; label: string
   em_espera: { badge: 'bg-yellow-100 text-yellow-800', label: 'Em Espera' },
   finalizado: { badge: 'bg-green-100 text-green-800', label: 'Finalizada' },
   cancelado: { badge: 'bg-red-100 text-red-800', label: 'Cancelada' },
+  pending: { badge: 'bg-gray-100 text-gray-800', label: 'Pendente' },
+  in_progress: { badge: 'bg-indigo-100 text-indigo-800', label: 'Em Progresso' },
+  quality_check: { badge: 'bg-purple-100 text-purple-800', label: 'Qualidade' },
+  completed: { badge: 'bg-green-100 text-green-800', label: 'Completa' },
+  paused: { badge: 'bg-yellow-100 text-yellow-800', label: 'Pausada' },
 };
 
 

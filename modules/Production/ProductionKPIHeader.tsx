@@ -1,13 +1,9 @@
-import React from 'react';
-import { ProductionOrder } from '../../types';
+'use client';
 import StatCard from '../../components/dashboard/StatCard';
 import { Workflow, Cog, CheckCircle, PauseCircle } from 'lucide-react';
+import { ProductionOrder } from './useProduction';
 
-interface ProductionKPIHeaderProps {
-    orders: ProductionOrder[];
-}
-
-const ProductionKPIHeader: React.FC<ProductionKPIHeaderProps> = ({ orders }) => {
+export default function ProductionKPIHeader({ orders }: { orders: ProductionOrder[] }) {
   const total = orders.length;
   const completed = orders.filter((o: ProductionOrder) => o.status === 'completed').length;
   const inProgress = orders.filter((o: ProductionOrder) => o.status === 'in_progress').length;
@@ -22,5 +18,3 @@ const ProductionKPIHeader: React.FC<ProductionKPIHeaderProps> = ({ orders }) => 
     </div>
   );
 }
-
-export default ProductionKPIHeader;

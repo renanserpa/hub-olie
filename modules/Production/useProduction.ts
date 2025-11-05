@@ -1,11 +1,24 @@
 'use client';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { dataService } from '../../services/dataService';
 import { log } from '../../lib/logger';
-import { ProductionOrder } from '../../types';
+import { useApp } from '../../contexts/AppContext';
 import { toast } from '../../hooks/use-toast';
 
-export function useProduction(filters: { status: string; search: string; }) {
+export interface ProductionOrder {
+  id: string;
+  order_code: string;
+  product_name: string;
+  status: string;
+  quantity: number;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string;
+  notes?: string;
+}
+
+export function useProduction() {
+  const { user } = useApp();
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,32 +31,20 @@ export function useProduction(filters: { status: string; search: string; }) {
   }, []);
 
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
-    log.info('[Production] Updating order status:', orderId, newStatus);
+    const originalOrders = [...orders];
+    // Optimistic update
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     
-    const originalOrders = orders;
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus as any } : o)));
-
     try {
-        // FIX: Explicitly provide the generic type to `updateDocument` to resolve type error.
         await dataService.updateDocument<ProductionOrder>('production_orders', orderId, { status: newStatus as any });
-        toast({ title: "Status atualizado!", description: `Ordem movida para "${newStatus}".` });
-    } catch(e) {
-        toast({ title: "Erro!", description: "Não foi possível atualizar o status.", variant: 'destructive' });
-        setOrders(originalOrders);
+        toast({ title: "Status Atualizado!", description: `A ordem foi movida para "${newStatus.replace('_', ' ')}".`});
+    } catch (error) {
+        toast({ title: "Erro!", description: "Não foi possível atualizar o status da ordem.", variant: "destructive" });
+        setOrders(originalOrders); // Revert on failure
     }
   }, [orders]);
-  
-  const filteredOrders = useMemo(() => {
-    return orders.filter((o: ProductionOrder) => 
-        (filters.status === 'all' || o.status === filters.status) &&
-        (filters.search === '' || 
-          o.product_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          o.order_code.toLowerCase().includes(filters.search.toLowerCase())
-        )
-    );
-  }, [orders, filters]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  return { orders: filteredOrders, reload: fetchOrders, loading, updateOrderStatus };
+  return { orders, reload: fetchOrders, loading, updateOrderStatus };
 }

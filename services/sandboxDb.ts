@@ -65,13 +65,13 @@ const orders: Omit<Order, 'items' | 'customers'>[] = [
     { id: 'o3', number: 'OLIE-2024-1003', customer_id: 'c2', status: 'pending_payment', payments_history: [], timeline: [], notes_internal: [], subtotal: 129.90, discounts: 0, shipping_fee: 15.00, total: 144.90, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
 ];
 
-
+// FIX: Updated production_orders to match the new ProductionOrder interface from types.ts.
 const production_orders: ProductionOrder[] = [
-    { id: 'po1', order_code: 'OP-2024-001', product_name: 'Bolsa Tote Clássica', status: 'in_progress', assigned_to: 'Maria', quantity: 5, start_date: '2024-08-01', end_date: '2024-08-10', notes: 'Cliente pediu urgência.' },
-    { id: 'po2', order_code: 'OP-2024-002', product_name: 'Nécessaire de Viagem', status: 'pending', assigned_to: 'João', quantity: 10, start_date: '2024-08-05', end_date: '2024-08-15', notes: '' },
-    { id: 'po3', order_code: 'OP-2024-003', product_name: 'Mochila Urbana', status: 'quality_check', assigned_to: 'Maria', quantity: 2, start_date: '2024-07-28', end_date: '2024-08-05', notes: 'Verificar zíper.' },
-    { id: 'po4', order_code: 'OP-2024-004', product_name: 'Bolsa Tote Clássica', status: 'completed', assigned_to: 'João', quantity: 3, start_date: '2024-07-25', end_date: '2024-08-02', notes: '' },
-    { id: 'po5', order_code: 'OP-2024-005', product_name: 'Nécessaire de Viagem', status: 'paused', assigned_to: 'Maria', quantity: 8, start_date: '2024-08-02', end_date: '2024-08-12', notes: 'Falta de material.' },
+    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product_name: 'Bolsa Tote Clássica', status: 'in_progress', operator: 'Maria', quantity: 5, due_date: '2024-08-10', notes: 'Cliente pediu urgência.', created_at: '2024-08-01', updated_at: '2024-08-01', priority: 'alta', order_code: 'OP-2024-001', assigned_to: 'Maria', start_date: '2024-08-01', end_date: '2024-08-10' },
+    { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product_name: 'Nécessaire de Viagem', status: 'pending', operator: 'João', quantity: 10, due_date: '2024-08-15', notes: '', created_at: '2024-08-05', updated_at: '2024-08-05', priority: 'normal', order_code: 'OP-2024-002', assigned_to: 'João', start_date: '2024-08-05', end_date: '2024-08-15' },
+    { id: 'po3', po_number: 'OP-2024-003', product_id: 'p3', product_name: 'Mochila Urbana', status: 'quality_check', operator: 'Maria', quantity: 2, due_date: '2024-08-05', notes: 'Verificar zíper.', created_at: '2024-07-28', updated_at: '2024-07-28', priority: 'normal', order_code: 'OP-2024-003', assigned_to: 'Maria', start_date: '2024-07-28', end_date: '2024-08-05' },
+    { id: 'po4', po_number: 'OP-2024-004', product_id: 'p1', product_name: 'Bolsa Tote Clássica', status: 'completed', operator: 'João', quantity: 3, due_date: '2024-08-02', notes: '', created_at: '2024-07-25', updated_at: '2024-07-25', priority: 'normal', order_code: 'OP-2024-004', assigned_to: 'João', start_date: '2024-07-25', end_date: '2024-08-02' },
+    { id: 'po5', po_number: 'OP-2024-005', product_id: 'p2', product_name: 'Nécessaire de Viagem', status: 'paused', operator: 'Maria', quantity: 8, due_date: '2024-08-12', notes: 'Falta de material.', created_at: '2024-08-02', updated_at: '2024-08-02', priority: 'baixa', order_code: 'OP-2024-005', assigned_to: 'Maria', start_date: '2024-08-02', end_date: '2024-08-12' },
 ];
 
 const fabric_colors: FabricColor[] = [
