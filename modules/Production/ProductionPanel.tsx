@@ -7,9 +7,10 @@ import { useProduction } from './useProduction';
 import { useProductionFilters } from './useProductionFilters';
 import { Button } from '../../components/ui/Button';
 import { Loader2 } from 'lucide-react';
+import ProductionDrawer from './ProductionDrawer';
 
 export default function ProductionPanel() {
-  const { orders: allOrders, reload, loading, updateOrderStatus } = useProduction();
+  const { orders: allOrders, reload, loading, updateOrderStatus, selectedOrder, setSelectedOrderId } = useProduction();
   const { filters, updateFilter } = useProductionFilters();
 
   const filteredOrders = useMemo(() => {
@@ -17,8 +18,8 @@ export default function ProductionPanel() {
     return allOrders.filter(o => 
       (filters.status === 'all' || o.status === filters.status) &&
       (filters.search === '' || 
-        o.product_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        (o.order_code && o.order_code.toLowerCase().includes(filters.search.toLowerCase())))
+        (o.product?.name || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+        (o.po_number && o.po_number.toLowerCase().includes(filters.search.toLowerCase())))
     );
   }, [allOrders, filters, loading]);
 
@@ -37,7 +38,13 @@ export default function ProductionPanel() {
 
       <ProductionKPIHeader orders={allOrders} />
       <ProductionFilters filters={filters} updateFilter={updateFilter} />
-      {loading ? <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> : <ProductionKanban orders={filteredOrders} onStatusChange={updateOrderStatus} />}
+      {loading ? <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div> : <ProductionKanban orders={filteredOrders} onStatusChange={updateOrderStatus} onCardClick={setSelectedOrderId} />}
+    
+      <ProductionDrawer
+        order={selectedOrder}
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrderId(null)}
+      />
     </div>
   );
 }

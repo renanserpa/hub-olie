@@ -1,16 +1,17 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import ProductionColumn from './ProductionColumn';
-import { ProductionOrder } from './useProduction';
+import { ProductionOrder } from '../../types';
 
 const statuses = ['pending','in_progress','quality_check','completed','paused'];
 
 interface ProductionKanbanProps {
   orders: ProductionOrder[];
   onStatusChange: (orderId: string, newStatus: string) => void;
+  onCardClick: (id: string) => void;
 }
 
-export default function ProductionKanban({ orders, onStatusChange }: ProductionKanbanProps) {
+export default function ProductionKanban({ orders, onStatusChange, onCardClick }: ProductionKanbanProps) {
   const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
@@ -45,6 +46,7 @@ export default function ProductionKanban({ orders, onStatusChange }: ProductionK
             orders={grouped[s] || []} 
             onDrop={handleDrop}
             onDragStart={handleDragStart}
+            onCardClick={onCardClick}
         />
       ))}
     </div>

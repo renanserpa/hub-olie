@@ -1,39 +1,48 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { dataService } from '../../services/dataService';
 import { log } from '../../lib/logger';
 import { useApp } from '../../contexts/AppContext';
 import { toast } from '../../hooks/use-toast';
+// FIX: Re-export ProductionOrder type to be available to other components within the module.
+import { Task, TaskStatus, Product } from '../../types';
+export type { ProductionOrder } from '../../types';
 
-export interface ProductionOrder {
-  id: string;
-  order_code: string;
-  product_name: string;
-  status: string;
-  quantity: number;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string;
-  notes?: string;
-}
 
 export function useProduction() {
   const { user } = useApp();
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskStatuses, setTaskStatuses] = useState<TaskStatus[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
-    log.info('[Production] Loading production orders...');
-    const data = await dataService.getCollection<ProductionOrder>('production_orders');
-    setOrders(data || []);
-    setLoading(false);
+    log.info('[Production] Loading production data...');
+    try {
+        const [ordersData, tasksData, taskStatusesData, productsData] = await Promise.all([
+            dataService.getCollection<ProductionOrder>('production_orders'),
+            dataService.getCollection<Task>('tasks'),
+            dataService.getCollection<TaskStatus>('task_statuses'),
+            dataService.getCollection<Product>('products'),
+        ]);
+        setOrders(ordersData || []);
+        setTasks(tasksData || []);
+        setTaskStatuses(taskStatusesData || []);
+        setProducts(productsData || []);
+    } catch (error) {
+        toast({ title: "Erro de Produção", description: "Não foi possível carregar os dados.", variant: "destructive" });
+    } finally {
+        setLoading(false);
+    }
   }, []);
 
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     const originalOrders = [...orders];
     // Optimistic update
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus as ProductionOrder['status'] } : o));
     
     try {
         await dataService.updateDocument<ProductionOrder>('production_orders', orderId, { status: newStatus as any });
@@ -45,6 +54,36 @@ export function useProduction() {
   }, [orders]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  
+  const ordersWithDetails = useMemo(() => {
+    const taskStatusMap = new Map(taskStatuses.map(ts => [ts.id, ts.name]));
+    return orders.map(order => {
+        const orderTasks = tasks
+            .filter(task => task.title.startsWith(order.po_number || ''))
+            .map(task => ({
+                ...task,
+                statusName: taskStatusMap.get(task.status_id) || 'Desconhecido'
+            }));
+        const product = products.find(p => p.id === order.product_id);
+        return {
+            ...order,
+            product,
+            tasks: orderTasks
+        }
+    })
+  }, [orders, tasks, taskStatuses, products]);
 
-  return { orders, reload: fetchOrders, loading, updateOrderStatus };
+  const selectedOrder = useMemo(() => {
+    return ordersWithDetails.find(o => o.id === selectedOrderId) || null;
+  }, [ordersWithDetails, selectedOrderId]);
+
+
+  return { 
+      orders: ordersWithDetails, 
+      reload: fetchOrders, 
+      loading, 
+      updateOrderStatus,
+      selectedOrder,
+      setSelectedOrderId
+    };
 }

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import ProductionTaskCard from './ProductionTaskCard';
-import { ProductionOrder } from './useProduction';
+import { ProductionOrder } from '../../types';
 import { cn } from '../../lib/utils';
 
 interface ProductionColumnProps {
@@ -10,9 +10,10 @@ interface ProductionColumnProps {
     orders: ProductionOrder[];
     onDrop: (status: string) => void;
     onDragStart: (e: React.DragEvent<HTMLDivElement>, orderId: string) => void;
+    onCardClick: (id: string) => void;
 }
 
-const ProductionColumn: React.FC<ProductionColumnProps> = ({ title, status, orders, onDrop, onDragStart }) => {
+const ProductionColumn: React.FC<ProductionColumnProps> = ({ title, status, orders, onDrop, onDragStart, onCardClick }) => {
   const [isOver, setIsOver] = useState(false);
   return (
     <div
@@ -28,8 +29,7 @@ const ProductionColumn: React.FC<ProductionColumnProps> = ({ title, status, orde
         </span>
       </div>
       <div className="space-y-3 min-h-[400px]">
-        {/* FIX: Removed ':any' to allow TypeScript to correctly infer the type from the 'orders' prop. */}
-        {orders.map((o) => <ProductionTaskCard key={o.id} order={o} onDragStart={onDragStart} />)}
+        {orders.map((o) => <ProductionTaskCard key={o.id} order={o} onDragStart={onDragStart} onClick={onCardClick} />)}
       </div>
     </div>
   );
