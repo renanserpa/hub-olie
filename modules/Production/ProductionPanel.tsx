@@ -1,20 +1,18 @@
 'use client';
 import React, { useMemo } from 'react';
-import ProductionKanban from './ProductionKanban';
-import ProductionFilters from '../../components/production/ProductionFilterBar';
 import { useProduction } from './useProduction';
-import { Button } from '../../components/ui/Button';
 import { Loader2 } from 'lucide-react';
 import ProductionDrawer from '../../components/production/ProductionDrawer';
 import ProductionTable from '../../components/production/ProductionTable';
 import ProductionDialog from '../../components/production/ProductionDialog';
 import ProductionKpiRow from '../../components/production/ProductionKpiRow';
+import ProductionFilterBar from '../../components/production/ProductionFilterBar';
+import ProductionKanban from '../../components/production/ProductionKanban';
+import AdvancedFilterPanel from '../../components/production/AdvancedFilterPanel';
 
 export default function ProductionPanel() {
   const { 
     filteredOrders,
-    reload, 
-    // FIX: Changed 'loading' to 'isLoading' to match the property returned by the useProduction hook.
     isLoading, 
     updateProductionOrderStatus, 
     selectedOrder, 
@@ -29,6 +27,9 @@ export default function ProductionPanel() {
     createProductionOrder,
     allProducts,
     isSaving,
+    isAdvancedFilterOpen,
+    setIsAdvancedFilterOpen,
+    clearFilters
   } = useProduction();
 
   const renderContent = () => {
@@ -48,12 +49,13 @@ export default function ProductionPanel() {
 
   return (
     <div className="space-y-6">
-      <ProductionFilters 
-        // filters={filters}
-        // onFiltersChange={setFilters}
+      <ProductionFilterBar 
+        filters={filters}
+        onFiltersChange={setFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onNewOrderClick={() => setIsCreateDialogOpen(true)}
+        onAdvancedFilterClick={() => setIsAdvancedFilterOpen(true)}
       />
 
       <ProductionKpiRow kpis={kpis} />
@@ -74,6 +76,14 @@ export default function ProductionPanel() {
         onSave={createProductionOrder}
         products={allProducts}
         isSaving={isSaving}
+      />
+      <AdvancedFilterPanel
+        isOpen={isAdvancedFilterOpen}
+        onClose={() => setIsAdvancedFilterOpen(false)}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onClearFilters={clearFilters}
+        products={allProducts}
       />
     </div>
   );
