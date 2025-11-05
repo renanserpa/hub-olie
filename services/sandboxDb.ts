@@ -1,5 +1,7 @@
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
+    // FIX: Added missing type imports
+    ProductionTask, ProductionQualityCheck, SystemAudit,
     InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
     FabricColor, ZipperColor, BiasColor, MonogramFont, SystemSetting, LogisticsWave, LogisticsShipment,
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
