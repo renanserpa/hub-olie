@@ -70,7 +70,7 @@ export async function executeAgent(agent: string, payload: any) {
     status: 'running',
     module: payload.context,
     timestamp: new Date().toISOString()
-  });
+  } as Omit<InitializerLog, 'id'>);
 
   console.log(`[AGENT] ${agent} executando ${actionDescription}`);
 
@@ -195,7 +195,7 @@ export async function executeAgent(agent: string, payload: any) {
           agent_status: agentData?.status || 'unknown',
           health_score: agentData?.health_score || 'unknown'
       }
-    });
+    } as Omit<InitializerLog, 'id'>);
 
   } catch (error) {
     console.error(`[AGENT] Erro ao executar ${agent}:`, error);
@@ -210,6 +210,6 @@ export async function executeAgent(agent: string, payload: any) {
       metadata: {
         error: (error as Error).message
       }
-    });
+    } as Omit<InitializerLog, 'id'>);
   }
 }

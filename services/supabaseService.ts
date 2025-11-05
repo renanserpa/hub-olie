@@ -17,6 +17,7 @@ import {
     Product,
     ProductCategory,
     ProductionOrder,
+    // FIX: Import missing production types
     ProductionQualityCheck,
     ProductionTask,
     PullerColor,
@@ -351,7 +352,7 @@ export const supabaseService = {
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }),
   // FIX: Added placeholder transferStock function. In a real app, this would be a transactional RPC call.
-  transferStock: (transferData: any) => { console.warn("Supabase transferStock is not implemented and should be an RPC function."); return Promise.resolve(); },
+  transferStock: (transferData: any): Promise<void> => { console.warn("Supabase transferStock is not implemented and should be an RPC function."); return Promise.resolve(); },
   getProducts: (): Promise<Product[]> => supabaseService.getCollection('products'),
   getProductCategories: (): Promise<ProductCategory[]> => supabaseService.getCollection('product_categories'),
   addProduct: (productData: AnyProduct) => addDocument('products', productData),

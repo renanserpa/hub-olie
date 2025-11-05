@@ -192,54 +192,68 @@ export interface Order {
     notes_internal: OrderNote[];
 }
 
-// --- PRODUCTION ---
-export type ProductionOrderStatus = 'novo' | 'planejado' | 'em_andamento' | 'em_espera' | 'finalizado' | 'cancelado';
+// --- PRODUCTION (v6.1) ---
+// FIX: Add missing production-related types to resolve multiple errors.
+export type ProductionTaskStatus = 'Pendente' | 'Em Andamento' | 'Concluída';
+export type QualityCheckResult = 'Aprovado' | 'Reprovado' | 'Pendente';
+export type ProductionOrderStatus = 'novo' | 'planejado' | 'em_andamento' | 'em_espera' | 'finalizado' | 'cancelado' | 'pending' | 'in_progress' | 'quality_check' | 'completed' | 'paused';
 export type ProductionOrderPriority = 'baixa' | 'normal' | 'alta' | 'urgente';
 
-export type ProductionTaskStatus = 'Pendente' | 'Em Andamento' | 'Concluída' | 'Pausada';
-
 export interface ProductionTask {
-    id: string;
-    production_order_id: string;
-    name: string;
-    status: ProductionTaskStatus;
-    started_at: string | null;
-    finished_at: string | null;
-    operator_id?: string;
+  id: string;
+  production_order_id: string;
+  name: string;
+  status: ProductionTaskStatus;
+  started_at?: string;
+  finished_at?: string;
+  notes?: string;
 }
-
-export type QualityCheckResult = 'Aprovado' | 'Reprovado' | 'Pendente';
 
 export interface ProductionQualityCheck {
-    id: string;
-    production_order_id: string;
-    check_type: string;
-    result: QualityCheckResult;
-    inspector: string;
-    notes?: string;
-    created_at: string;
+  id: string;
+  production_order_id: string;
+  check_type: string; // e.g., 'Medidas', 'Costura', 'Acabamento'
+  result: QualityCheckResult;
+  inspector: string;
+  notes?: string;
+  created_at: string;
+}
+
+// FIX: Expand ProductionOrder to be more comprehensive.
+export interface ProductionOrder {
+  id: string;
+  po_number: string;
+  product_id: string;
+  product?: Product;
+  quantity: number;
+  status: ProductionOrderStatus;
+  priority: ProductionOrderPriority;
+  operator?: string;
+  due_date: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  started_at?: string;
+  completed_at?: string;
+  tasks?: ProductionTask[];
+  quality_checks?: ProductionQualityCheck[];
+
+  // For compatibility with older code
+  order_code?: string;
+  product_name?: string;
+  assigned_to?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 
-export interface ProductionOrder {
-    id: string;
-    po_number: string;
-    product_id: string;
-    product?: Product;
-    quantity: number;
-    status: ProductionOrderStatus;
-    priority: ProductionOrderPriority;
-    due_date: string;
-    steps_completed: number;
-    steps_total: number;
-    notes?: string;
-    operator?: string;
-    created_at: string;
-    updated_at: string;
-    started_at?: string;
-    completed_at?: string;
-    tasks?: ProductionTask[];
-    quality_checks?: ProductionQualityCheck[];
+export interface ProductionAudit {
+  id: string;
+  order_id: string;
+  action: string;
+  performed_by: string;
+  details?: any;
+  created_at: string;
 }
 
 export interface TaskStatus {
@@ -256,7 +270,7 @@ export interface Task {
     client_name: string;
     quantity: number;
     position: number;
-    priority?: ProductionOrderPriority;
+    priority?: 'baixa' | 'normal' | 'alta' | 'urgente';
 }
 
 // --- INVENTORY ---
@@ -811,6 +825,8 @@ export interface AppData {
     products: Product[];
     product_categories: ProductCategory[];
     production_orders: ProductionOrder[];
+    production_audit: ProductionAudit[];
+    // FIX: Add missing production task-related arrays to AppData
     production_tasks: ProductionTask[];
     production_quality_checks: ProductionQualityCheck[];
     task_statuses: TaskStatus[];

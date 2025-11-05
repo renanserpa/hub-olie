@@ -5,7 +5,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionTask, ProductionQualityCheck, MarketingSegmentRule, SystemAudit
+    WorkflowRule, Notification, Warehouse, ProductionAudit
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -67,9 +67,11 @@ const orders: Omit<Order, 'items' | 'customers'>[] = [
 
 
 const production_orders: ProductionOrder[] = [
-    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product: products[0], quantity: 5, status: 'em_andamento', priority: 'alta', due_date: new Date(Date.now() + 5 * 86400000).toISOString(), steps_completed: 2, steps_total: 5, created_at: new Date(Date.now() - 3 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product: products[1], quantity: 10, status: 'planejado', priority: 'normal', due_date: new Date(Date.now() + 10 * 86400000).toISOString(), steps_completed: 0, steps_total: 4, created_at: new Date(Date.now() - 2 * 86400000).toISOString(), updated_at: new Date().toISOString() },
-    { id: 'po3', po_number: 'OP-2024-003', product_id: 'p3', product: products[2], quantity: 2, status: 'em_andamento', priority: 'urgente', due_date: new Date(Date.now() + 2 * 86400000).toISOString(), steps_completed: 1, steps_total: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'po1', order_code: 'OP-2024-001', product_name: 'Bolsa Tote Clássica', status: 'in_progress', assigned_to: 'Maria', quantity: 5, start_date: '2024-08-01', end_date: '2024-08-10', notes: 'Cliente pediu urgência.' },
+    { id: 'po2', order_code: 'OP-2024-002', product_name: 'Nécessaire de Viagem', status: 'pending', assigned_to: 'João', quantity: 10, start_date: '2024-08-05', end_date: '2024-08-15', notes: '' },
+    { id: 'po3', order_code: 'OP-2024-003', product_name: 'Mochila Urbana', status: 'quality_check', assigned_to: 'Maria', quantity: 2, start_date: '2024-07-28', end_date: '2024-08-05', notes: 'Verificar zíper.' },
+    { id: 'po4', order_code: 'OP-2024-004', product_name: 'Bolsa Tote Clássica', status: 'completed', assigned_to: 'João', quantity: 3, start_date: '2024-07-25', end_date: '2024-08-02', notes: '' },
+    { id: 'po5', order_code: 'OP-2024-005', product_name: 'Nécessaire de Viagem', status: 'paused', assigned_to: 'Maria', quantity: 8, start_date: '2024-08-02', end_date: '2024-08-12', notes: 'Falta de material.' },
 ];
 
 const fabric_colors: FabricColor[] = [
@@ -111,15 +113,7 @@ const tasks: Task[] = [
     {id: 't3', title: 'OP-2024-003 - Mochila Urbana', status_id: 'ts2', client_name: 'Bruno Costa', quantity: 2, position: 2, priority: 'urgente'},
 ];
 
-const production_tasks: ProductionTask[] = [
-    { id: 'pt1', production_order_id: 'po1', name: 'Corte do Tecido', status: 'Concluída', started_at: new Date(Date.now() - 2 * 86400000).toISOString(), finished_at: new Date(Date.now() - 2 * 86400000 + 4 * 3600000).toISOString() },
-    { id: 'pt2', production_order_id: 'po1', name: 'Costura da Bolsa', status: 'Em Andamento', started_at: new Date(Date.now() - 1 * 86400000).toISOString(), finished_at: null },
-    { id: 'pt3', production_order_id: 'po2', name: 'Corte (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
-    { id: 'pt6', production_order_id: 'po2', name: 'Costura (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
-    { id: 'pt7', production_order_id: 'po2', name: 'Acabamento (Nécessaire)', status: 'Pendente', started_at: null, finished_at: null },
-    { id: 'pt4', production_order_id: 'po3', name: 'Corte do Tecido', status: 'Concluída', started_at: new Date(Date.now() - 1 * 86400000).toISOString(), finished_at: new Date(Date.now() - 1 * 86400000 + 2 * 3600000).toISOString() },
-    { id: 'pt5', production_order_id: 'po3', name: 'Costura da Mochila', status: 'Em Andamento', started_at: new Date().toISOString(), finished_at: null },
-];
+const production_audit: ProductionAudit[] = [];
 
 // FIX: Added warehouse_id and warehouse properties to satisfy the InventoryBalance type.
 const inventory_balances: InventoryBalance[] = config_materials.map((m, i) => ({
@@ -323,6 +317,7 @@ let collections: Record<string, any[]> = {
     orders,
     order_items,
     production_orders,
+    production_audit,
     tasks,
     task_statuses,
     inventory_balances,
@@ -369,7 +364,7 @@ let collections: Record<string, any[]> = {
     workflow_rules,
     notifications,
     warehouses,
-    production_tasks,
+    production_tasks: [],
     production_quality_checks: [],
     system_audit: [],
 };
@@ -425,15 +420,10 @@ const createProductionOrderFromOrder = (order: Order) => {
         const customer = get<Contact>('customers', order.customer_id);
 
         const newPO = create<ProductionOrder>('production_orders', {
-            po_number: poNumber,
-            product_id: item.product_id,
-            product: product || undefined,
+            order_code: poNumber,
+            product_name: product?.name || 'N/A',
             quantity: item.quantity,
-            status: 'novo',
-            priority: 'normal',
-            due_date: new Date(Date.now() + 7 * 86400000).toISOString(), // 7 days from now
-            steps_completed: 0,
-            steps_total: 3, // Default steps
+            status: 'pending',
         } as any);
 
         // Create initial task for the kanban
