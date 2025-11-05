@@ -59,27 +59,30 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allPr
         >
             <div 
                 className={cn(
-                    "fixed top-0 right-0 h-full w-full max-w-2xl bg-card shadow-lg flex flex-col transition-transform duration-300",
+                    "fixed top-0 right-0 h-full w-full max-w-2xl bg-card dark:bg-dark-card shadow-lg flex flex-col transition-transform duration-300",
                     isOpen ? "translate-x-0" : "translate-x-full"
                 )}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 border-b border-border flex-shrink-0">
+                <div className="flex justify-between items-start p-4 border-b border-border dark:border-dark-border flex-shrink-0">
                     <div>
-                        <h2 className="text-xl font-bold text-textPrimary">Pedido {order.number}</h2>
-                        <p className="text-sm text-textSecondary">Cliente: {order.customers?.name}</p>
+                        <p className="text-sm text-textSecondary dark:text-dark-textSecondary">Pedido</p>
+                        <h2 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">{order.number}</h2>
+                        <p className="text-sm text-textSecondary dark:text-dark-textSecondary mt-1">Cliente: {order.customers?.name}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}><X /></Button>
                 </div>
                 
                 {/* Tabs */}
-                <div className="p-2 border-b border-border flex-shrink-0">
-                    <nav className="flex space-x-2">
+                <div className="p-2 border-b border-border dark:border-dark-border flex-shrink-0">
+                    <nav className="flex space-x-1">
                         {TABS.map(tab => (
                             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                                className={cn('flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-colors',
-                                    activeTab === tab.id ? 'bg-accent text-primary' : 'text-textSecondary hover:bg-accent/50')}>
+                                className={cn('flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm transition-colors',
+                                    activeTab === tab.id 
+                                    ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                                    : 'text-textSecondary dark:text-dark-textSecondary hover:bg-secondary dark:hover:bg-dark-secondary hover:text-textPrimary dark:hover:text-dark-textPrimary')}>
                                 <tab.icon size={16} />
                                 {tab.label}
                             </button>
@@ -88,7 +91,7 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allPr
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 bg-secondary/50 dark:bg-dark-secondary/30">
                     {renderTabContent()}
                 </div>
             </div>

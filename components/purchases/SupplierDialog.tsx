@@ -85,6 +85,7 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
                      <div>
                         <label className={labelStyle}>CNPJ / CPF</label>
                         <input name="document" value={formData.document || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.document && <p className="text-xs text-red-500 mt-1">{errors.document}</p>}
                     </div>
                      <div>
                         <label className={labelStyle}>Email</label>

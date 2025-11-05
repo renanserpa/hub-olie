@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from './types';
 import Toaster from './components/Toaster';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -11,6 +11,7 @@ import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import SettingsPage from './components/SettingsPage';
+import CatalogPage from './pages/CatalogPage';
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
@@ -44,6 +45,7 @@ const MAIN_TABS = [
     { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing', description: 'Gerencie campanhas, segmente públicos e analise resultados.' },
     { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts', description: 'Gerencie seus clientes e fornecedores.' },
     { id: 'products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie seu catálogo de produtos e variações.' },
+    { id: 'catalog', label: 'Catálogo', icon: BookOpen, scope: 'Settings', description: 'Gerencie os dados mestres de personalização e materiais de produção.' },
     { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings', description: 'Gerencie os dados mestres e configurações globais da plataforma.' },
 ];
 
@@ -108,6 +110,8 @@ const App: React.FC = () => {
                 return <ContactsPage />;
             case 'products':
                 return <ProductsPage />;
+            case 'catalog':
+                return <CatalogPage />;
             case 'orders':
             default:
                 return <OrdersPage user={user} />;
