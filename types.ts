@@ -315,6 +315,8 @@ export interface ProductionOrder {
   po_number: string;
   product_id: string;
   product?: Product;
+  variant_sku?: string;
+  variant?: ProductVariant;
   quantity: number;
   status: ProductionOrderStatus;
   priority: ProductionOrderPriority;
@@ -429,8 +431,18 @@ export interface Material {
   id: string;
   name: string;
   sku?: string;
+  description?: string;
   group_id: string;
   config_supply_groups?: { name: string }; // For joins
+  supplier_id?: string;
+  supplier?: Supplier;
+  technical_specs?: {
+    thickness_mm?: number;
+    weight_gsm?: number;
+    composition?: string;
+  };
+  care_instructions?: string;
+  approved_substitutes?: string[]; // Array of material_ids
   color_id?: string;
   config_color_palettes?: { hex_value: string };
   texture_id?: string;

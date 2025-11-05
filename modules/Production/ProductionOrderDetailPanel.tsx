@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductionOrder } from '../../types';
+import { ProductionOrder, Material, BOMComponent } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { cn } from '../../lib/utils';
 
@@ -18,11 +18,20 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 interface ProductionOrderDetailPanelProps {
-    order: ProductionOrder & { product?: any, tasks?: any[] };
+    order: ProductionOrder & { product?: any, tasks?: any[], variant?: any };
+    allMaterials: Material[];
 }
 
-const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order }) => {
+const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials }) => {
     
+    const bomToShow: BOMComponent[] | undefined = order.variant?.bom && order.variant.bom.length > 0 
+        ? order.variant.bom 
+        : order.product?.base_bom;
+        
+    const bomTitle = order.variant?.bom && order.variant.bom.length > 0 
+        ? "Materiais (BOM da Variante)" 
+        : "Materiais (BOM Base)";
+
     return (
         <div className="space-y-2">
             <Section title="Resumo da Ordem de Produção">
@@ -56,17 +65,24 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                 </div>
             </Section>
 
-            <Section title="Materiais Necessários (BOM)">
+            <Section title={bomTitle}>
                 <div className="space-y-2">
-                     {order.product?.bom && order.product.bom.length > 0 ? (
-                         order.product.bom.map((item: any, index: number) => (
-                            <div key={index} className="p-2 border rounded-md bg-secondary/50 flex justify-between items-center">
-                                <p className="font-medium text-sm">{item.material_id}</p>
-                                <p className="text-sm">{item.quantity_per_unit * order.quantity} unidades</p>
-                            </div>
-                         ))
+                     {bomToShow && bomToShow.length > 0 ? (
+                         bomToShow.map((item: BOMComponent, index: number) => {
+                            const material = allMaterials.find(m => m.id === item.material_id);
+                            const totalRequired = item.quantity_per_unit * order.quantity;
+                            return (
+                                <div key={index} className="p-2 border rounded-md bg-secondary/50 flex justify-between items-center text-sm">
+                                    <div>
+                                        <p className="font-medium">{material?.name || item.material_id}</p>
+                                        <p className="text-xs text-textSecondary">{item.quantity_per_unit} {material?.unit || 'un'} por peça</p>
+                                    </div>
+                                    <p className="font-semibold text-primary">{totalRequired.toFixed(2)} {material?.unit || 'un'}</p>
+                                </div>
+                            )
+                         })
                      ) : (
-                        <p className="text-sm text-textSecondary">Nenhuma lista de materiais (BOM) cadastrada para este produto.</p>
+                        <p className="text-sm text-textSecondary">Nenhuma lista de materiais (BOM) cadastrada para este produto/variante.</p>
                      )}
                 </div>
             </Section>

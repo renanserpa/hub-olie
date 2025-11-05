@@ -89,7 +89,11 @@ const product_variants: ProductVariant[] = [
     configuration: { size: 's1', tecido_externo: 'fc1', ziper: 'zc1' },
     price_modifier: 0,
     final_price: 299.90,
-    bom: [],
+    bom: [
+        { material_id: 'mat1', quantity_per_unit: 1.5 },
+        { material_id: 'mat2', quantity_per_unit: 1 },
+        { material_id: 'mat3', quantity_per_unit: 10 }
+    ],
   },
   {
     id: 'pv2',
@@ -99,7 +103,11 @@ const product_variants: ProductVariant[] = [
     configuration: { size: 's2', tecido_externo: 'fc2', ziper: 'zc2' },
     price_modifier: 20.00,
     final_price: 319.90,
-    bom: [],
+    bom: [
+        { material_id: 'mat1', quantity_per_unit: 1.8 },
+        { material_id: 'mat2', quantity_per_unit: 1.2 },
+        { material_id: 'mat3', quantity_per_unit: 12 }
+    ],
   },
 ];
 
@@ -118,7 +126,7 @@ const orders: Omit<Order, 'items' | 'customers'>[] = [
 // FIX: Updated production_orders to match the new ProductionOrder interface from types.ts.
 // FIX: Changed status values from English to Portuguese to match the ProductionOrderStatus type.
 const production_orders: ProductionOrder[] = [
-    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', product_name: 'Bolsa Tote Clássica', status: 'em_andamento', operator: 'Maria', quantity: 5, due_date: '2024-08-10', notes: 'Cliente pediu urgência.', created_at: '2024-08-01', updated_at: '2024-08-01', priority: 'alta', order_code: 'OP-2024-001', assigned_to: 'Maria', start_date: '2024-08-01', end_date: '2024-08-10' },
+    { id: 'po1', po_number: 'OP-2024-001', product_id: 'p1', variant_sku: 'BT-CLA-01-M-FC1-ZC1', product_name: 'Bolsa Tote Clássica', status: 'em_andamento', operator: 'Maria', quantity: 5, due_date: '2024-08-10', notes: 'Cliente pediu urgência.', created_at: '2024-08-01', updated_at: '2024-08-01', priority: 'alta', order_code: 'OP-2024-001', assigned_to: 'Maria', start_date: '2024-08-01', end_date: '2024-08-10' },
     { id: 'po2', po_number: 'OP-2024-002', product_id: 'p2', product_name: 'Nécessaire de Viagem', status: 'novo', operator: 'João', quantity: 10, due_date: '2024-08-15', notes: '', created_at: '2024-08-05', updated_at: '2024-08-05', priority: 'normal', order_code: 'OP-2024-002', assigned_to: 'João', start_date: '2024-08-05', end_date: '2024-08-15' },
     { id: 'po3', po_number: 'OP-2024-003', product_id: 'p3', product_name: 'Mochila Urbana', status: 'em_espera', operator: 'Maria', quantity: 2, due_date: '2024-08-05', notes: 'Verificar zíper.', created_at: '2024-07-28', updated_at: '2024-07-28', priority: 'normal', order_code: 'OP-2024-003', assigned_to: 'Maria', start_date: '2024-07-28', end_date: '2024-08-05' },
     { id: 'po4', po_number: 'OP-2024-004', product_id: 'p1', product_name: 'Bolsa Tote Clássica', status: 'finalizado', operator: 'João', quantity: 3, due_date: '2024-08-02', notes: '', created_at: '2024-07-25', updated_at: '2024-07-25', priority: 'normal', order_code: 'OP-2024-004', assigned_to: 'João', start_date: '2024-07-25', end_date: '2024-08-02' },
@@ -146,10 +154,16 @@ const config_supply_groups: MaterialGroup[] = [
     { id: 'sg2', name: 'Fechamentos', description: 'Zíperes, botões, etc.', is_active: true, created_at: new Date().toISOString() },
     { id: 'sg3', name: 'Aviamentos', description: 'Linhas, agulhas, etc.', is_active: true, created_at: new Date().toISOString() },
 ];
+
+const suppliers: Supplier[] = [
+    { id: 'sup1', name: 'Fornecedor de Tecidos S.A.', document: '12.345.678/0001-99', email: 'contato@tecidos.com', phone: '(11) 2222-3333', payment_terms: '30D', lead_time_days: 15, rating: 5, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: 'sup2', name: 'Zíperes & Cia', document: '98.765.432/0001-11', email: 'vendas@ziperes.com.br', phone: '(47) 3333-4444', payment_terms: '45D', lead_time_days: 10, rating: 4, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
 const config_materials: Material[] = [
-    { id: 'mat1', name: 'Linho Bege Cru', sku: 'TEC-LNH-BG-01', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1624833914853-33e4f7a7587a?q=80&w=2070&auto=format&fit=crop' },
-    { id: 'mat2', name: 'Zíper YKK #5 Dourado', sku: 'ZIP-YKK-5-DO', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1588185969094-1525a435d1d3?q=80&w=2070&auto=format&fit=crop' },
-    { id: 'mat3', name: 'Linha de Costura Branca', sku: 'LIN-COS-BR-01', group_id: 'sg3', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1599837563122-6b60012bd2b6?q=80&w=1974&auto=format&fit=crop' },
+    { id: 'mat1', name: 'Linho Bege Cru', sku: 'TEC-LNH-BG-01', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1624833914853-33e4f7a7587a?q=80&w=2070&auto=format&fit=crop', description: 'Tecido de linho misto, ideal para estrutura e acabamento sofisticado.', supplier_id: 'sup1', care_instructions: 'Lavar a seco.', technical_specs: { composition: '70% Linho, 30% Viscose', weight_gsm: 210 } },
+    { id: 'mat2', name: 'Zíper YKK #5 Dourado', sku: 'ZIP-YKK-5-DO', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1588185969094-1525a435d1d3?q=80&w=2070&auto=format&fit=crop', description: 'Zíper de nylon com dentes metálicos dourados, bitola 5, ideal para peças maiores.', supplier_id: 'sup2', technical_specs: { thickness_mm: 5, composition: 'Nylon e Metal' } },
+    { id: 'mat3', name: 'Linha de Costura Branca', sku: 'LIN-COS-BR-01', group_id: 'sg3', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://images.unsplash.com/photo-1599837563122-6b60012bd2b6?q=80&w=1974&auto=format&fit=crop', description: 'Linha de poliéster de alta resistência para costura de sintéticos.', supplier_id: 'sup2', technical_specs: { composition: '100% Poliéster' } },
 ];
 
 const task_statuses: TaskStatus[] = [
@@ -225,11 +239,6 @@ const marketing_segments: MarketingSegment[] = [
 const marketing_templates: MarketingTemplate[] = [
     { id: 'mt1', name: 'Template Lançamento', channel: 'email', content_preview: '<h1>Nova Coleção Chegou!</h1><p>Confira as novidades...</p>' },
     { id: 'mt2', name: 'Template Promo WhatsApp', channel: 'whatsapp', content_preview: 'Oi, {nome}! Temos uma oferta especial para você hoje! 🛍️' },
-];
-
-const suppliers: Supplier[] = [
-    { id: 'sup1', name: 'Fornecedor de Tecidos S.A.', document: '12.345.678/0001-99', email: 'contato@tecidos.com', phone: '(11) 2222-3333', payment_terms: '30D', lead_time_days: 15, rating: 5, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'sup2', name: 'Zíperes & Cia', document: '98.765.432/0001-11', email: 'vendas@ziperes.com.br', phone: '(47) 3333-4444', payment_terms: '45D', lead_time_days: 10, rating: 4, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const purchase_order_items: PurchaseOrderItem[] = [
@@ -660,7 +669,7 @@ export const sandboxDb = {
       const newStatus = allReceived ? 'received' : 'partial';
       await sandboxDb.updateDocument<PurchaseOrder>('purchase_orders', poId, { status: newStatus });
   },
-  uploadFile: async (file: File, module: string, category: string): Promise<{ id: string, webViewLink: string }> => {
+  uploadFile: async (file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> => {
       console.log(`🧱 SANDBOX: Simulating upload for file: ${file.name}`);
       const newAsset = {
           drive_file_id: `sb_drive_${generateId()}`,

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product } from '../../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant } from '../../types';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
 
@@ -12,6 +12,7 @@ export function useProduction() {
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -45,12 +46,13 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData] = await Promise.all([
+            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
+                dataService.getCollection<ProductVariant>('product_variants'),
             ]);
             
             setAllOrders(ordersData);
@@ -58,6 +60,7 @@ export function useProduction() {
             setAllQualityChecks(qualityData);
             setAllMaterials(materialsData);
             setAllProducts(productsData);
+            setAllVariants(variantsData);
 
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
@@ -71,12 +74,16 @@ export function useProduction() {
     }, [reload]);
 
     const ordersWithDetails = useMemo(() => {
-        return allOrders.map(order => ({
-            ...order,
-            tasks: allTasks.filter(t => t.production_order_id === order.id),
-            quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
-        }));
-    }, [allOrders, allTasks, allQualityChecks]);
+        return allOrders.map(order => {
+            const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku) : undefined;
+            return {
+                ...order,
+                variant,
+                tasks: allTasks.filter(t => t.production_order_id === order.id),
+                quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
+            };
+        });
+    }, [allOrders, allTasks, allQualityChecks, allVariants]);
     
     const filteredOrders = useMemo(() => {
         return ordersWithDetails.filter(order => {

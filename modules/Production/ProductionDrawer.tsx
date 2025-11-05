@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductionOrder } from '../../types';
+import { ProductionOrder, Material } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
@@ -7,9 +7,10 @@ import ProductionOrderDetailPanel from './ProductionOrderDetailPanel';
 
 
 interface ProductionDrawerProps {
-    order: (ProductionOrder & { product?: any, tasks?: any[] }) | null;
+    order: (ProductionOrder & { product?: any, tasks?: any[], variant?: any }) | null;
     isOpen: boolean;
     onClose: () => void;
+    allMaterials: Material[];
 }
 
 const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
@@ -36,14 +37,14 @@ const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
                 <div className="flex justify-between items-center p-4 border-b border-border flex-shrink-0">
                     <div>
                         <h2 className="text-xl font-bold text-textPrimary">Ordem de Produção {order.po_number}</h2>
-                        <p className="text-sm text-textSecondary">{order.product?.name}</p>
+                        <p className="text-sm text-textSecondary">{order.variant ? order.variant.name : order.product?.name}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}><X /></Button>
                 </div>
                 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <ProductionOrderDetailPanel order={order} />
+                    <ProductionOrderDetailPanel {...props} />
                 </div>
             </div>
         </div>

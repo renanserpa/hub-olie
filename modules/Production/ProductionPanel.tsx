@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useProduction } from './useProduction';
 import { Loader2 } from 'lucide-react';
-import ProductionDrawer from '../../components/production/ProductionDrawer';
+import ProductionDrawer from './ProductionDrawer';
 import ProductionTable from '../../components/production/ProductionTable';
 import ProductionDialog from '../../components/production/ProductionDialog';
 import ProductionKpiRow from '../../components/production/ProductionKpiRow';
@@ -29,7 +29,8 @@ export default function ProductionPanel() {
     isSaving,
     isAdvancedFilterOpen,
     setIsAdvancedFilterOpen,
-    clearFilters
+    clearFilters,
+    allMaterials,
   } = useProduction();
 
   const renderContent = () => {
@@ -66,9 +67,7 @@ export default function ProductionPanel() {
         order={selectedOrder}
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrderId(null)}
-        onUpdateTaskStatus={() => {}} // Placeholder
-        onCreateQualityCheck={() => {}} // Placeholder
-        allMaterials={[]} // Placeholder
+        allMaterials={allMaterials}
       />
       <ProductionDialog 
         isOpen={isCreateDialogOpen}
