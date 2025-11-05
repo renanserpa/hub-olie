@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant } from '../../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier } from '../../types';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
 
@@ -46,19 +46,28 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData] = await Promise.all([
+            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
+                dataService.getCollection<Supplier>('suppliers'),
             ]);
             
+            const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
+            const enrichedMaterials = materialsData.map(material => {
+                if (material.supplier_id) {
+                    return { ...material, supplier: suppliersById.get(material.supplier_id) };
+                }
+                return material;
+            });
+
             setAllOrders(ordersData);
             setAllTasks(tasksData);
             setAllQualityChecks(qualityData);
-            setAllMaterials(materialsData);
+            setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
 

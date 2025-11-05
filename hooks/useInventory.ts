@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { InventoryBalance, InventoryMovement, Material, Warehouse, InventoryMovementReason, InventoryMovementType } from '../types';
+import { InventoryBalance, InventoryMovement, Material, Warehouse, InventoryMovementReason, InventoryMovementType, Supplier } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -18,13 +18,22 @@ export function useInventory() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [balancesData, materialsData, warehousesData] = await Promise.all([
+            const [balancesData, materialsData, warehousesData, suppliersData] = await Promise.all([
                 dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)'),
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Warehouse>('warehouses'),
+                dataService.getCollection<Supplier>('suppliers'),
             ]);
             
-            setAllBalances(balancesData);
+            const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
+            const enrichedBalances = balancesData.map(balance => {
+                if (balance.material && balance.material.supplier_id) {
+                    balance.material.supplier = suppliersById.get(balance.material.supplier_id);
+                }
+                return balance;
+            });
+
+            setAllBalances(enrichedBalances);
             setAllMaterials(materialsData);
             setAllWarehouses(warehousesData);
             
@@ -41,8 +50,9 @@ export function useInventory() {
     }, [selectedMaterialId]);
 
     useEffect(() => {
-        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)', (data) => {
-            setAllBalances(data);
+        // The listener will call loadData to refetch and rejoin everything
+        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)', () => {
+            loadData();
         });
         loadData();
         return () => listener.unsubscribe();
@@ -107,11 +117,13 @@ export function useInventory() {
     const balancesByMaterial = useMemo(() => {
         if (!selectedMaterialId) return null;
         
-        const material = allMaterials.find(m => m.id === selectedMaterialId);
+        const balances = allBalances.filter(b => b.material_id === selectedMaterialId);
+        const materialFromBalance = balances[0]?.material;
+        const materialFromList = allMaterials.find(m => m.id === selectedMaterialId);
+        const material = materialFromBalance || materialFromList;
+
         if (!material) return null;
 
-        const balances = allBalances.filter(b => b.material_id === selectedMaterialId);
-        
         return { material, balances };
 
     }, [allBalances, allMaterials, selectedMaterialId]);

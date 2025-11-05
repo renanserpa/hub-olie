@@ -70,24 +70,4 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                      {bomToShow && bomToShow.length > 0 ? (
                          bomToShow.map((item: BOMComponent, index: number) => {
                             const material = allMaterials.find(m => m.id === item.material_id);
-                            const totalRequired = item.quantity_per_unit * order.quantity;
-                            return (
-                                <div key={index} className="p-2 border rounded-md bg-secondary/50 flex justify-between items-center text-sm">
-                                    <div>
-                                        <p className="font-medium">{material?.name || item.material_id}</p>
-                                        <p className="text-xs text-textSecondary">{item.quantity_per_unit} {material?.unit || 'un'} por peça</p>
-                                    </div>
-                                    <p className="font-semibold text-primary">{totalRequired.toFixed(2)} {material?.unit || 'un'}</p>
-                                </div>
-                            )
-                         })
-                     ) : (
-                        <p className="text-sm text-textSecondary">Nenhuma lista de materiais (BOM) cadastrada para este produto/variante.</p>
-                     )}
-                </div>
-            </Section>
-        </div>
-    );
-};
-
-export default ProductionOrderDetailPanel;
+                            const

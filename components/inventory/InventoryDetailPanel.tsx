@@ -1,7 +1,7 @@
 import React from 'react';
 import { InventoryBalance, InventoryMovement, Material, InventoryMovementReason, InventoryMovementType } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { ArrowDownLeft, ArrowUpRight, History, Edit, RotateCw, Warehouse } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, History, Edit, RotateCw, Warehouse, FileText } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import EmptyState from './EmptyState';
 import InventoryChart from './InventoryChart';
@@ -46,6 +46,16 @@ const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ material, b
                 <p className="text-sm text-textSecondary font-mono">{material.sku}</p>
             </CardHeader>
             <CardContent>
+                 <div className="mb-6">
+                    <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><FileText size={16}/> Detalhes do Material</h4>
+                    <div className="p-3 bg-secondary dark:bg-dark-secondary rounded-lg text-sm space-y-1 text-textSecondary dark:text-dark-textSecondary">
+                        <p><strong>Fornecedor:</strong> {material.supplier?.name || 'Não especificado'}</p>
+                        <p><strong>Composição:</strong> {material.technical_specs?.composition || 'N/A'}</p>
+                        <p><strong>Gramatura:</strong> {material.technical_specs?.weight_gsm ? `${material.technical_specs.weight_gsm} g/m²` : 'N/A'}</p>
+                        <p><strong>Cuidados:</strong> {material.care_instructions || 'N/A'}</p>
+                    </div>
+                </div>
+
                 <div className="mb-6">
                     <h4 className="font-semibold text-md mb-2 flex items-center gap-2"><Warehouse size={16}/> Saldo por Armazém</h4>
                     {balances.length > 0 ? (
