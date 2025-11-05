@@ -18,6 +18,14 @@ export interface User {
   role: UserRole;
 }
 
+// --- SYSTEM AUDIT ---
+export interface SystemAudit {
+    id: string;
+    key: string;
+    status: string;
+    details?: any;
+    created_at: string;
+}
 
 // --- CONTACTS ---
 export type ContactStage = 'Lead' | 'Cliente Ativo' | 'Contato Geral' | 'Fornecedor' | 'Inativo';
@@ -333,7 +341,7 @@ export interface Material {
 
 
 // --- SETTINGS ---
-export type SettingsCategory = 'integrations' | 'catalogs' | 'materials' | 'system' | 'appearance' | 'security';
+export type SettingsCategory = 'integrations' | 'catalogs' | 'materials' | 'system' | 'appearance' | 'security' | 'initializer';
 
 export interface FieldConfig {
     key: string;
@@ -834,4 +842,5 @@ export interface AppData {
     initializer_agents: InitializerAgent[];
     workflow_rules: WorkflowRule[];
     notifications: Notification[];
+    system_audit: SystemAudit[];
 }

@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { AppData, User } from './types';
+import React from 'react';
+import { User } from './types';
 import Toaster from './components/Toaster';
-import { toast } from './hooks/use-toast';
 import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
@@ -18,64 +17,36 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
-import DashboardPage from './pages/DashboardPage'; // Import new page
+import DashboardPage from './pages/DashboardPage';
 import { cn } from './lib/utils';
-import { useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
-import type { UserRole } from './services/authService';
 import { logout } from './services/authService';
 import { isSandbox } from './lib/runtime';
-import { dataService } from './services/dataService';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import NotificationBell from './components/NotificationBell';
+import { useApp } from './contexts/AppContext';
+import { useOlie } from './contexts/OlieContext';
 
 
 const MAIN_TABS = [
-    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
-    { id: 'initializer', label: 'Initializer', icon: Cpu },
-    { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
-    { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
-    { id: 'production', label: 'Produção', icon: Workflow },
-    { id: 'inventory', label: 'Estoque', icon: Package },
-    { id: 'purchases', label: 'Compras', icon: ShoppingBasket },
-    { id: 'logistics', label: 'Logística', icon: Truck },
-    { id: 'finance', label: 'Financeiro', icon: DollarSign },
-    { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare },
-    { id: 'marketing', label: 'Marketing', icon: Megaphone },
-    { id: 'contacts', label: 'Contatos', icon: Users },
-    { id: 'products', label: 'Produtos', icon: Package },
-    { id: 'settings', label: 'Configurações', icon: Settings },
+    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard, scope: 'Dashboard' },
+    { id: 'initializer', label: 'Initializer', icon: Cpu, scope: 'Initializer' },
+    { id: 'executive', label: 'Diretoria', icon: BarChartHorizontal, scope: 'ExecutiveDashboard' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2, scope: 'Analytics' },
+    { id: 'orders', label: 'Pedidos', icon: ShoppingCart, scope: 'Orders' },
+    { id: 'production', label: 'Produção', icon: Workflow, scope: 'Production' },
+    { id: 'inventory', label: 'Estoque', icon: Package, scope: 'Inventory' },
+    { id: 'purchases', label: 'Compras', icon: ShoppingBasket, scope: 'Purchases' },
+    { id: 'logistics', label: 'Logística', icon: Truck, scope: 'Logistics' },
+    { id: 'finance', label: 'Financeiro', icon: DollarSign, scope: 'Finance' },
+    { id: 'omnichannel', label: 'Omnichannel', icon: MessagesSquare, scope: 'Omnichannel' },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing' },
+    { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts' },
+    { id: 'products', label: 'Produtos', icon: Package, scope: 'Products' },
+    { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings' },
 ];
 
-const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
-    dashboard: ['AdminGeral', 'Administrativo', 'Financeiro'],
-    initializer: ['AdminGeral'],
-    executive: ['AdminGeral'],
-    analytics: ['AdminGeral', 'Financeiro', 'Administrativo'],
-    orders: ['AdminGeral', 'Vendas', 'Administrativo'],
-    production: ['AdminGeral', 'Producao'],
-    inventory: ['AdminGeral', 'Producao', 'Financeiro'],
-    purchases: ['AdminGeral', 'Financeiro'],
-    logistics: ['AdminGeral', 'Administrativo'],
-    finance: ['AdminGeral', 'Financeiro'],
-    omnichannel: ['AdminGeral', 'Vendas', 'Conteudo'],
-    marketing: ['AdminGeral', 'Conteudo'],
-    contacts: ['AdminGeral', 'Vendas', 'Administrativo'],
-    products: ['AdminGeral', 'Producao', 'Vendas', 'Administrativo'],
-    settings: ['AdminGeral', 'Administrativo'],
-};
-
-const DEFAULT_PAGE_BY_ROLE: Record<UserRole, string> = {
-    AdminGeral: 'dashboard',
-    Producao: 'production',
-    Vendas: 'orders',
-    Financeiro: 'analytics',
-    Administrativo: 'logistics',
-    Conteudo: 'marketing',
-};
-
-const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
+const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (
     <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-center">
         <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
         <h1 className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary">Acesso Negado</h1>
@@ -86,45 +57,28 @@ const AccessDeniedPage: React.FC<{ role: UserRole }> = ({ role }) => (
 );
 
 const App: React.FC = () => {
-    const { user, isLoading: isAuthLoading, error: authError } = useAuth();
+    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule } = useApp();
+    const { can, goto } = useOlie();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [activePage, setActivePage] = useState('orders');
-    const hasRedirected = useRef(false);
-
-    useEffect(() => {
-        if (user && !isAuthLoading && !hasRedirected.current) {
-            const defaultPage = DEFAULT_PAGE_BY_ROLE[user.role];
-            if (defaultPage) {
-                setActivePage(defaultPage);
-            }
-            hasRedirected.current = true;
-        }
-        if (!user && !isAuthLoading) {
-            hasRedirected.current = false;
-        }
-    }, [user, isAuthLoading]);
 
     useEffect(() => {
         if (!user) {
           setIsDataLoading(false);
           return;
         }
-        // Data is now loaded per-page via hooks, so this global load can be removed or simplified.
-        // For now, it acts as a simple loading gate.
         setIsDataLoading(true);
-        setTimeout(() => setIsDataLoading(false), 200); // Simulate quick load
+        setTimeout(() => setIsDataLoading(false), 200);
     }, [user]);
 
     const renderActivePage = () => {
         if (!user) return null;
 
-        const allowedRoles = PAGE_PERMISSIONS[activePage];
-        if (allowedRoles && !allowedRoles.includes(user.role)) {
+        if (!can(activeModule, 'read')) {
             return <AccessDeniedPage role={user.role} />;
         }
 
-        switch (activePage) {
+        switch (activeModule) {
             case 'dashboard':
                 return <DashboardPage />;
             case 'initializer':
@@ -174,10 +128,7 @@ const App: React.FC = () => {
         return <LoginPage />;
     }
     
-    const visibleTabs = MAIN_TABS.filter(tab => {
-        const allowedRoles = PAGE_PERMISSIONS[tab.id];
-        return allowedRoles ? allowedRoles.includes(user.role) : false;
-    });
+    const visibleTabs = MAIN_TABS.filter(tab => can(tab.scope, 'read'));
     
     return (
         <div className="min-h-screen font-sans bg-background dark:bg-dark-background">
@@ -194,9 +145,9 @@ const App: React.FC = () => {
                     </div>
                     <nav className="flex flex-col space-y-2">
                         {visibleTabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActivePage(tab.id)}
+                            <button key={tab.id} onClick={() => goto(tab.id)}
                                 className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors',
-                                    activePage === tab.id ? 'bg-primary text-white' : 'text-textSecondary dark:text-dark-textSecondary hover:bg-accent dark:hover:bg-dark-accent hover:text-textPrimary dark:hover:text-dark-textPrimary')}>
+                                    activeModule === tab.id ? 'bg-primary text-white' : 'text-textSecondary dark:text-dark-textSecondary hover:bg-accent dark:hover:bg-dark-accent hover:text-textPrimary dark:hover:text-dark-textPrimary')}>
                                 <tab.icon className="w-5 h-5" />
                                 <span>{tab.label}</span>
                             </button>

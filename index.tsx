@@ -1,9 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import { ThemeProvider } from './context/ThemeContext';
+import { AppContextProvider } from './contexts/AppContext';
+import { OlieContextProvider } from './contexts/OlieContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,11 +14,11 @@ const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
+      <AppContextProvider>
+        <OlieContextProvider>
           <App />
-        </AuthProvider>
-      </ThemeProvider>
+        </OlieContextProvider>
+      </AppContextProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );

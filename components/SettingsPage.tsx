@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Puzzle, Palette, Wrench, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Users } from 'lucide-react';
+import { Settings, Puzzle, Palette, Wrench, Monitor, Image as ImageIcon, Shield, Loader2, Paintbrush, Type as TypeIcon, Users, Cpu } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import IntegrationsTabContent from './IntegrationsTabContent';
 import TabContent from './TabContent';
@@ -11,14 +11,16 @@ import { AnySettingsItem, FieldConfig, SettingsCategory } from '../types';
 import PlaceholderContent from './PlaceholderContent';
 import { cn } from '../lib/utils';
 import { MaterialTabs } from './settings/materials/MaterialTabs';
+import { useOlie } from '../contexts/OlieContext';
+import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 
-const SETTINGS_TABS = [
-  { id: 'integrations', label: 'Integrações', icon: Puzzle },
-  { id: 'catalogs', label: 'Catálogos', icon: Palette },
-  { id: 'materials', label: 'Materiais', icon: Wrench },
-  { id: 'system', label: 'Sistema', icon: Monitor },
-  { id: 'appearance', label: 'Aparência', icon: ImageIcon },
-  { id: 'security', label: 'Segurança', icon: Shield },
+const SETTINGS_TABS_BASE = [
+  { id: 'integrations', label: 'Integrações', icon: Puzzle, scope: 'Settings' },
+  { id: 'catalogs', label: 'Catálogos', icon: Palette, scope: 'Settings' },
+  { id: 'materials', label: 'Materiais', icon: Wrench, scope: 'Settings' },
+  { id: 'system', label: 'Sistema', icon: Monitor, scope: 'Settings' },
+  { id: 'appearance', label: 'Aparência', icon: ImageIcon, scope: 'Settings' },
+  { id: 'security', label: 'Segurança', icon: Shield, scope: 'Settings' },
 ];
 
 const CATALOGS_SUB_TABS = [
@@ -40,11 +42,17 @@ const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 
 const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'select', options: [ {value: 'script', label: 'Script'}, {value: 'serif', label: 'Serif'}, {value: 'sans-serif', label: 'Sans-serif'}, {value: 'decorative', label: 'Decorativa'}, {value: 'handwritten', label: 'Manuscrita'}]}, { key: 'style', label: 'Estilo', type: 'select', options: [ {value: 'regular', label: 'Regular'}, {value: 'bold', label: 'Bold'}, {value: 'italic', label: 'Italic'}, {value: 'script', label: 'Script'}]}, { key: 'font_file_url', label: 'Arquivo da Fonte (.ttf, .otf)', type: 'file' }, { key: 'preview_url', label: 'URL da Imagem de Preview', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 
 const SettingsPage: React.FC = () => {
+    const { can } = useOlie();
     const [activeTab, setActiveTab] = useState('integrations');
     const [activeCatalogsSubTab, setActiveCatalogsSubTab] = useState(CATALOGS_SUB_TABS[0].id);
     const [activeCoresSubTab, setActiveCoresSubTab] = useState(CORES_SUB_TABS[0].id);
 
     const { settingsData, isLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
+
+    const SETTINGS_TABS = [...SETTINGS_TABS_BASE];
+    if (can('Initializer', 'read')) {
+        SETTINGS_TABS.splice(3, 0, { id: 'initializer', label: 'Initializer', icon: Cpu, scope: 'Initializer' });
+    }
 
     const handleTabChange = (tabId: string) => setActiveTab(tabId);
     
@@ -131,6 +139,7 @@ const SettingsPage: React.FC = () => {
                 </div>
             );
             case 'materials': return <MaterialTabs />;
+            case 'initializer': return <InitializerPanel />;
             case 'system': return <SystemTabContent initialSettings={settingsData.sistema} isAdmin={isAdmin} />;
             case 'appearance': return <AppearanceTabContent />;
             case 'security': return <SecurityTabContent />;
