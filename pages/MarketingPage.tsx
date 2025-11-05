@@ -5,6 +5,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import CampaignDialog from '../components/marketing/CampaignDialog';
 import MarketingTabs from '../components/marketing/MarketingTabs';
 import CampaignFilters from '../components/marketing/CampaignFilters';
+import SegmentDialog from '../components/marketing/SegmentDialog';
 
 const MarketingPage: React.FC = () => {
     const {
@@ -19,6 +20,11 @@ const MarketingPage: React.FC = () => {
         saveCampaign,
         filters,
         setFilters,
+        isSegmentDialogOpen,
+        editingSegment,
+        openSegmentDialog,
+        closeSegmentDialog,
+        saveSegment,
     } = useMarketing();
 
     return (
@@ -34,6 +40,8 @@ const MarketingPage: React.FC = () => {
                 segments={segments}
                 templates={templates}
                 isLoading={isLoading}
+                onNewSegment={() => openSegmentDialog()}
+                onEditSegment={openSegmentDialog}
             />
 
             {isDialogOpen && (
@@ -44,6 +52,15 @@ const MarketingPage: React.FC = () => {
                     campaign={editingCampaign}
                     segments={segments}
                     templates={templates}
+                />
+            )}
+
+            {isSegmentDialogOpen && (
+                <SegmentDialog
+                    isOpen={isSegmentDialogOpen}
+                    onClose={closeSegmentDialog}
+                    onSave={saveSegment}
+                    segment={editingSegment}
                 />
             )}
         </div>

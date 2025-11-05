@@ -528,11 +528,18 @@ export interface MarketingCampaign {
     scheduled_at?: string;
 }
 
+export interface MarketingSegmentRule {
+    id: string;
+    field: 'total_spent' | 'order_count' | 'last_purchase_days' | 'tags';
+    operator: 'greater_than' | 'less_than' | 'equals' | 'contains' | 'not_contains';
+    value: string | number;
+}
+
 export interface MarketingSegment {
     id: string;
     name: string;
     description: string;
-    rule_count: number;
+    rules: MarketingSegmentRule[];
     audience_size: number;
 }
 

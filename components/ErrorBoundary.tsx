@@ -1,4 +1,4 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -17,7 +17,8 @@ interface ErrorBoundaryState {
 // FIX: Explicitly extend React.Component to resolve the typing issue where `this.props` was not recognized.
 // Fix: Changed from `React.Component` to a named import `Component` to resolve type inference issue.
 // Fix: Changed to extend React.Component directly to resolve type inference issue with `this.props`.
-export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+// Fix: Changed from `React.Component` to a named import `Component` to resolve a type inference issue where `this.props` was not being correctly recognized.
+export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = {
     hasError: false,
     error: undefined,

@@ -14,3 +14,16 @@ export const campaignSchema = z.object({
   ),
   // KPIs are managed by the system, not in the form
 });
+
+export const segmentRuleSchema = z.object({
+  id: z.string(),
+  field: z.enum(['total_spent', 'order_count', 'last_purchase_days', 'tags']),
+  operator: z.enum(['greater_than', 'less_than', 'equals', 'contains', 'not_contains']),
+  value: z.union([z.string().min(1, "O valor não pode ser vazio."), z.number().min(0, "O valor não pode ser negativo.")]),
+});
+
+export const segmentSchema = z.object({
+  name: z.string().min(3, "O nome do segmento deve ter pelo menos 3 caracteres."),
+  description: z.string().optional(),
+  rules: z.array(segmentRuleSchema).min(1, "Adicione pelo menos uma regra para o segmento."),
+});

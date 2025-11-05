@@ -5,7 +5,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionTask, ProductionQualityCheck
+    WorkflowRule, Notification, Warehouse, ProductionTask, ProductionQualityCheck, MarketingSegmentRule
 } from '../types';
 
 // --- FAKE REALTIME EVENT BUS ---
@@ -172,9 +172,10 @@ const marketing_campaigns: MarketingCampaign[] = [
     { id: 'mc4', name: 'Newsletter de Conteúdo', status: 'draft', channels: ['email'], budget: 500, spent: 0, kpis: { sent: 0, delivered: 0, read: 0, clicked: 0, replies: 0, orders: 0, revenue: 0 }, description: 'Campanha recorrente de conteúdo para engajamento.', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
+// Fix: Replaced `rule_count` with `rules` array to match the `MarketingSegment` type.
 const marketing_segments: MarketingSegment[] = [
-    { id: 'ms1', name: 'Clientes VIP', description: 'Clientes com mais de 5 compras.', rule_count: 2, audience_size: 42 },
-    { id: 'ms2', name: 'Inativos (6 meses)', description: 'Clientes que não compram há 6 meses.', rule_count: 1, audience_size: 215 },
+    { id: 'ms1', name: 'Clientes VIP', description: 'Clientes com mais de 5 compras.', rules: [{ id: 'ms1-r1', field: 'order_count', operator: 'greater_than', value: 5 }, { id: 'ms1-r2', field: 'total_spent', operator: 'greater_than', value: 1500 }], audience_size: 42 },
+    { id: 'ms2', name: 'Inativos (6 meses)', description: 'Clientes que não compram há 6 meses.', rules: [{ id: 'ms2-r1', field: 'last_purchase_days', operator: 'greater_than', value: 180 }], audience_size: 215 },
 ];
 
 const marketing_templates: MarketingTemplate[] = [

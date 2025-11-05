@@ -22,6 +22,9 @@ export function useMarketing() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
 
+    const [isSegmentDialogOpen, setIsSegmentDialogOpen] = useState(false);
+    const [editingSegment, setEditingSegment] = useState<MarketingSegment | null>(null);
+
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -120,6 +123,35 @@ export function useMarketing() {
             setIsSaving(false);
         }
     };
+    
+    const openSegmentDialog = (segment: MarketingSegment | null = null) => {
+        setEditingSegment(segment);
+        setIsSegmentDialogOpen(true);
+    };
+    
+    const closeSegmentDialog = () => {
+        setEditingSegment(null);
+        setIsSegmentDialogOpen(false);
+    };
+
+    const saveSegment = async (segmentData: Omit<MarketingSegment, 'id' | 'audience_size'> | MarketingSegment) => {
+        setIsSaving(true);
+        try {
+            if ('id' in segmentData && segmentData.id) {
+                await dataService.updateDocument('marketing_segments', segmentData.id, segmentData);
+                toast({ title: "Sucesso!", description: `Segmento "${segmentData.name}" atualizado.` });
+            } else {
+                await dataService.addDocument('marketing_segments', segmentData as Omit<MarketingSegment, 'id'>);
+                toast({ title: "Sucesso!", description: "Novo segmento criado." });
+            }
+            loadData();
+            closeSegmentDialog();
+        } catch(e) {
+             toast({ title: "Erro!", description: "Não foi possível salvar o segmento.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return {
         isLoading,
@@ -135,5 +167,10 @@ export function useMarketing() {
         saveCampaign,
         filters,
         setFilters,
+        isSegmentDialogOpen,
+        editingSegment,
+        openSegmentDialog,
+        closeSegmentDialog,
+        saveSegment,
     };
 }

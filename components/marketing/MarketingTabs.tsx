@@ -14,6 +14,8 @@ interface MarketingTabsProps {
   segments: MarketingSegment[];
   templates: MarketingTemplate[];
   isLoading: boolean;
+  onNewSegment: () => void;
+  onEditSegment: (segment: MarketingSegment) => void;
 }
 
 const TABS: { id: MarketingTab, label: string, icon: React.ElementType }[] = [
@@ -23,7 +25,7 @@ const TABS: { id: MarketingTab, label: string, icon: React.ElementType }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
 ];
 
-const MarketingTabs: React.FC<MarketingTabsProps> = ({ campaigns, segments, templates, isLoading }) => {
+const MarketingTabs: React.FC<MarketingTabsProps> = ({ campaigns, segments, templates, isLoading, onNewSegment, onEditSegment }) => {
     const [activeTab, setActiveTab] = useState<MarketingTab>('campaigns');
     
     const renderContent = () => {
@@ -31,7 +33,7 @@ const MarketingTabs: React.FC<MarketingTabsProps> = ({ campaigns, segments, temp
             case 'campaigns':
                 return <CampaignList campaigns={campaigns} isLoading={isLoading} />;
             case 'segments':
-                return <SegmentManager segments={segments} isLoading={isLoading} />;
+                return <SegmentManager segments={segments} isLoading={isLoading} onNew={onNewSegment} onEdit={onEditSegment} />;
             case 'templates':
                 return <TemplateEditor templates={templates} isLoading={isLoading} />;
             case 'dashboard':
