@@ -1,4 +1,5 @@
-import React from 'react';
+// Fix: Import useState and useEffect from React.
+import React, { useState, useEffect } from 'react';
 import { User } from './types';
 import Toaster from './components/Toaster';
 import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard } from 'lucide-react';

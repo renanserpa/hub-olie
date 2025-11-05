@@ -50,6 +50,7 @@ import {
     InitializerSyncState,
     WorkflowRule,
     Notification,
+    SystemAudit,
 } from "../types";
 
 
@@ -215,6 +216,8 @@ export const supabaseService = {
         initializer_sync_state: [],
         workflow_rules: [],
         notifications: [],
+        // Fix: Added missing 'system_audit' property to satisfy the AppData type.
+        system_audit: [],
     };
 
     try {
@@ -223,7 +226,8 @@ export const supabaseService = {
             paletas_cores, forro, puxador, bordado, texturas,
             suppliers,
             initializer_agents, initializer_logs, initializer_sync_state,
-            notifications, workflow_rules
+            notifications, workflow_rules,
+            system_audit
         ] = await Promise.all([
             supabaseService.getCollection<FabricColor>('fabric_colors'), 
             supabaseService.getCollection<ZipperColor>('zipper_colors'), 
@@ -243,6 +247,7 @@ export const supabaseService = {
             supabaseService.getCollection<InitializerSyncState>('initializer_sync_state'),
             supabaseService.getCollection<Notification>('notifications'),
             supabaseService.getCollection<WorkflowRule>('workflow_rules'),
+            supabaseService.getCollection<SystemAudit>('system_audit'),
         ]);
         
         return {
@@ -271,6 +276,7 @@ export const supabaseService = {
             initializer_sync_state,
             notifications,
             workflow_rules,
+            system_audit,
         };
     } catch (error) {
         handleError(error, 'getSettings');
