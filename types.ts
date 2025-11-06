@@ -629,7 +629,6 @@ export interface LogisticsShipment {
 
 
 // --- PURCHASING ---
-// FIX: Export PurchaseOrderStatus type.
 export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
 
 export interface PurchaseOrder {
@@ -685,7 +684,6 @@ export interface MarketingCampaign {
     started_at?: string;
     completed_at?: string;
     scheduled_at?: string;
-    // FIX: Add missing segment_id and template_id properties.
     segment_id?: string;
     template_id?: string;
 }
@@ -869,7 +867,6 @@ export interface AppData {
     media_assets: MediaAsset[];
     orders: Order[];
     order_items: OrderItem[];
-    // FIX: Renamed 'contacts' to 'customers' to align with the database table name.
     customers: Contact[];
     products: Product[];
     product_variants: ProductVariant[];

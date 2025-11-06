@@ -19,7 +19,6 @@ import {
     ProductCategory,
     ProductionOrder,
     ProductionOrderStatus,
-    // FIX: Import missing production types
     ProductionQualityCheck,
     ProductionAudit,
     ProductionTask,
@@ -98,7 +97,6 @@ const addDocument = async <T extends { id?: string }>(table: string, docData: Om
     return data as T;
 };
 
-// FIX: Add addManyDocuments to support bulk creation of product variants.
 const addManyDocuments = async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>[]): Promise<T[]> => {
     const { data, error } = await supabase.from(table).insert(docData).select();
     if (error) handleError(error, `addManyDocuments(${table})`);
@@ -180,7 +178,6 @@ export const supabaseService = {
       };
   },
   
-// FIX: Add generic constraint to match the sandbox service signature, resolving the union type error.
   listenToDocument: <T extends { id: string }>(table: string, id: string, callback: (payload: T) => void) => {
       const channel = supabase.channel(`public:${table}:${id}`);
       channel
@@ -218,7 +215,6 @@ export const supabaseService = {
         production_routes: [],
         media_assets: [], orders: [],
         order_items: [],
-        // FIX: Renamed 'contacts' to 'customers' to align with the AppData type.
         customers: [], products: [], 
         product_variants: [], 
         product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] },
@@ -373,13 +369,11 @@ export const supabaseService = {
   },
   updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() }),
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection('production_orders', '*, products(*)'),
-  // FIX: Implement `updateProductionOrderStatus` to be used by the production module.
   updateProductionOrderStatus: (orderId: string, status: ProductionOrderStatus): Promise<ProductionOrder> => updateDocument<ProductionOrder>('production_orders', orderId, { status }),
   getTasks: (): Promise<Task[]> => supabaseService.getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
   getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)'),
-  // FIX: Update getInventoryMovements to support filtering by material or product variant.
   getInventoryMovements: async (itemId: string, itemType: 'material' | 'product'): Promise<InventoryMovement[]> => {
     const column = itemType === 'material' ? 'material_id' : 'product_variant_id';
     const { data, error } = await supabase.from('inventory_movements').select('*').eq(column, itemId).order('created_at', { ascending: false });
@@ -475,7 +469,6 @@ export const supabaseService = {
   },
   getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
   markNotificationAsRead: (id: string): Promise<Notification> => updateDocument<Notification>('notifications', id, { is_read: true }),
-// FIX: Add missing methods
     addMaterial: (data: any): Promise<Material> => addDocument('config_materials', data),
     addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument('config_supply_groups', data),
     getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection('production_routes'),

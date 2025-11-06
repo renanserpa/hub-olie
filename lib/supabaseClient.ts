@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { runtime } from './runtime';
 
-// FIX: Property 'env' does not exist on type 'ImportMeta'. Hardcoded values are used as a workaround.
-const supabaseUrl = "https://ijheukynkppcswgtrnwd.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let supabaseInstance: any;
 
 if (runtime.mode !== 'SANDBOX') {
     if (!supabaseUrl || !supabaseAnonKey) {
-      const errorMessage = "ERRO CRÍTICO: As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão definidas. Configure-as no painel do Vercel.";
+      const errorMessage = "ERRO CRÍTICO: As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão definidas. Configure-as no painel do Vercel para que a aplicação possa conectar ao banco de dados.";
       console.error(errorMessage);
+      // This will crash the app on purpose if the variables are not set, which is the desired behavior in production.
       throw new Error(errorMessage);
     }
     console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");

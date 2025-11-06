@@ -1,22 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
 import { ExecutiveKPI } from "../types";
 
-// FIX: Property 'env' does not exist on type 'ImportMeta'. Per guidelines, use process.env.API_KEY.
 const apiKey = process.env.API_KEY;
-// Inicializa com uma string vazia para não quebrar o build se a chave não estiver presente.
+// Initialize with an empty string to prevent build failure if the key is not present.
 const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 
-// Helper para verificar a chave de API em tempo de execução, antes de fazer a chamada.
+// Helper to check for the API key at runtime before making a call.
 const ensureApiKey = () => {
     if (!apiKey) {
-      console.error("CRITICAL: Gemini API Key (API_KEY) is not configured in the Vercel environment. AI features are disabled.");
+      const errorMessage = "CRITICAL: Gemini API Key (API_KEY) is not configured in the Vercel environment. AI features are disabled.";
+      console.error(errorMessage);
       throw new Error('A chave de API do Gemini não está configurada no ambiente.');
     }
 };
 
 export const geminiService = {
   generateDescription: async (name: string, currentDescription?: string): Promise<string> => {
-    ensureApiKey(); // Verifica a chave antes de usar
+    ensureApiKey(); // Check the key before use
     try {
       const prompt = `Você é um especialista em operações de e-commerce para uma marca de luxo.
 O nome de um status de pedido é "${name}".
@@ -39,7 +39,7 @@ Responda apenas com a descrição gerada, sem formatação extra ou frases como 
   },
 
   generateCampaignDescription: async (campaignName: string, campaignObjective: string): Promise<string> => {
-    ensureApiKey(); // Verifica a chave antes de usar
+    ensureApiKey(); // Check the key before use
     try {
       const prompt = `Você é um especialista em marketing digital para uma marca de luxo.
 O nome da campanha é "${campaignName}".
@@ -63,7 +63,7 @@ Responda apenas com a descrição gerada, sem formatação extra ou frases como 
 };
 
 export async function geminiGenerate(context: string, payload: any) {
-  ensureApiKey(); // Verifica a chave antes de usar
+  ensureApiKey(); // Check the key before use
   const prompt = `
   Gere o relatório completo do módulo ${context}.
   Ação: ${payload.action}.

@@ -1,2 +1,2 @@
-// This file has been removed as part of the Firebase purification patch v2.0.
-// It is no longer needed and can be safely deleted.
+// This file is obsolete and has been replaced by supabaseClient.ts.
+// It can be safely deleted from the project.
