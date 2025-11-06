@@ -12,27 +12,26 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: undefined,
-    };
-  }
+  // FIX: Initializing state as a class property resolves all errors related to
+  // `this.state` and `this.props` not being recognized by TypeScript. The constructor is no longer needed.
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: undefined,
+  };
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('💥 UI ErrorBoundary caught:', error, errorInfo);
   }
 
-  handleReload = () => {
+  private handleReload = () => {
     window.location.reload();
   };
 
-  render() {
+  public render() {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-screen bg-background text-center p-4">
