@@ -67,12 +67,22 @@ const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({ attributes, o
         return catalogs.cores_texturas[type].map(color => ({ value: color.id, label: color.name }));
     };
 
-    const handleMultiSelectChange = (attr: keyof Omit<Product['attributes'], 'embroidery'>, value: string[]) => {
+    const handleMultiSelectChange = (attr: keyof Omit<Product['attributes'], 'personalization'>, value: string[]) => {
         onAttributesChange({ ...attributes, [attr]: value });
     };
 
     const handleEmbroideryToggle = (enabled: boolean) => {
-        onAttributesChange({ ...attributes, embroidery: enabled });
+        // FIX: Correctly update the nested embroidery object within the personalization attribute.
+        onAttributesChange({
+            ...attributes,
+            personalization: {
+                ...attributes?.personalization,
+                embroidery: {
+                    ...(attributes?.personalization?.embroidery ?? { enabled: false }),
+                    enabled,
+                },
+            },
+        });
     };
 
     return (
@@ -118,7 +128,8 @@ const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({ attributes, o
                  <label className="flex items-center gap-3 text-sm text-textPrimary cursor-pointer font-medium">
                     <input 
                         type="checkbox"
-                        checked={!!attributes?.embroidery} 
+                        // FIX: Check the 'enabled' flag within the nested personalization and embroidery objects.
+                        checked={!!attributes?.personalization?.embroidery?.enabled} 
                         onChange={(e) => handleEmbroideryToggle(e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     />

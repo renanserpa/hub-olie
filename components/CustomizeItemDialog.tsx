@@ -182,7 +182,8 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                         )
                     })}
                      {/* Embroidery Section */}
-                    {product.attributes?.embroidery && (
+                    {/* FIX: Check for embroidery availability under the 'personalization' property and its 'enabled' flag. */}
+                    {product.attributes?.personalization?.embroidery?.enabled && (
                         <div>
                             <label className="font-semibold text-sm">Personalização (Bordado)</label>
                             <div className="p-4 border rounded-lg bg-secondary/50 space-y-3 mt-2">
