@@ -9,6 +9,7 @@ import { cn, calculateContrastRatio } from '../../lib/utils';
 import ProductVariantsTable from './ProductVariantsTable';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
+import { productSchema } from '../../lib/schemas/product';
 
 // --- MAIN DIALOG COMPONENT ---
 
@@ -42,9 +43,22 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const result = productSchema.safeParse(formData);
+
+        if (!result.success) {
+            const firstError = result.error.errors[0];
+            toast({
+                title: "Erro de Validação",
+                description: firstError.message,
+                variant: 'destructive'
+            });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            await onSave(formData as Product);
+            await onSave(result.data as Product);
         } catch (error) {
             // Error is handled by the hook
         } finally {
