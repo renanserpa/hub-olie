@@ -1,4 +1,3 @@
-'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { getData } from '../../services/bridge/olieBridgeService';
 import { generateExecutiveInsight } from '../../services/ai/olieAIService';

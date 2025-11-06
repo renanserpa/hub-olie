@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 // FIX: Corrected import path for useProduction hook.
 import { useProduction } from './useProduction';

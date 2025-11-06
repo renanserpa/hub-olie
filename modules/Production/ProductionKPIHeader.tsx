@@ -1,4 +1,3 @@
-'use client';
 import StatCard from '../../components/dashboard/StatCard';
 import { Workflow, Cog, CheckCircle, PauseCircle } from 'lucide-react';
 // FIX: Corrected import path for ProductionOrder type.

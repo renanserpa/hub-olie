@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { ProductionOrder } from '../../types';
 import { Card } from '../../components/ui/Card';

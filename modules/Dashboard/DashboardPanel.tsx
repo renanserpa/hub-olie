@@ -1,4 +1,3 @@
-'use client';
 import { useDashboard } from './useDashboard';
 import DashboardKPI from './DashboardKPI';
 import DashboardAIInsights from './DashboardAIInsights';

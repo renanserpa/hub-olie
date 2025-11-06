@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../../types';
 import { dataService } from '../../services/dataService';
@@ -12,9 +11,8 @@ export function useProduction() {
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    // FIX: Add state for product variants
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
-    const [allRoutes, setAllRoutes] = useState<ProductionRoute[]>([]);
-    const [allMolds, setAllMolds] = useState<MoldLibrary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -48,6 +46,7 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
+            // FIX: Fetch product variants along with other production data.
             const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
@@ -146,18 +145,68 @@ export function useProduction() {
     
     const updateTaskStatus = async (taskId: string, status: ProductionTaskStatus) => {
         setIsSaving(true);
-        // ... implementation
-        setIsSaving(false);
+        const task = allTasks.find(t => t.id === taskId);
+        if (!task) {
+            toast({ title: "Erro", description: "Tarefa não encontrada.", variant: "destructive" });
+            setIsSaving(false);
+            return;
+        }
+
+        const updateData: Partial<ProductionTask> = { status };
+        if (status === 'Em Andamento' && !task.started_at) {
+            updateData.started_at = new Date().toISOString();
+        } else if (status === 'Concluída' && !task.finished_at) {
+            updateData.finished_at = new Date().toISOString();
+        }
+
+        try {
+            await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
+            toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
+            await reload();
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const updateProductionOrderStatus = async (orderId: string, status: ProductionOrderStatus) => {
         setIsSaving(true);
-        // ... implementation
-        setIsSaving(false);
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) {
+            setIsSaving(false);
+            return;
+        }
+        
+        // Optimistic update for UI
+        setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+
+        try {
+            await dataService.updateProductionOrderStatus(orderId, status);
+            toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
+            await reload(); // Reload to get all data changes from triggers
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
+            // Revert optimistic update on failure by reloading
+            await reload();
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const createProductionOrder = async (orderData: Partial<Omit<ProductionOrder, 'id' | 'created_at' | 'updated_at'>>) => {
-        // ... implementation
+        setIsSaving(true);
+        try {
+            const po_number = `OP-MAN-${Date.now().toString().slice(-6)}`;
+            await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
+            toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
+            setIsCreateDialogOpen(false);
+            reload();
+        } catch(e) {
+            toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const createQualityCheck = async (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => {

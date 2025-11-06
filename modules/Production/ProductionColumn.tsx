@@ -1,4 +1,3 @@
-'use client';
 import React, { useState } from 'react';
 import ProductionTaskCard from './ProductionTaskCard';
 import { ProductionOrder } from '../../types';
