@@ -218,7 +218,8 @@ export const supabaseService = {
         production_routes: [],
         media_assets: [], orders: [],
         order_items: [],
-        contacts: [], products: [], 
+        // FIX: Renamed 'contacts' to 'customers' to align with the AppData type.
+        customers: [], products: [], 
         product_variants: [], 
         product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] },
         logistics_waves: [],

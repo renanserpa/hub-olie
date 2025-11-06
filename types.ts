@@ -869,7 +869,8 @@ export interface AppData {
     media_assets: MediaAsset[];
     orders: Order[];
     order_items: OrderItem[];
-    contacts: Contact[];
+    // FIX: Renamed 'contacts' to 'customers' to align with the database table name.
+    customers: Contact[];
     products: Product[];
     product_variants: ProductVariant[];
     product_categories: ProductCategory[];

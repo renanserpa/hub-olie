@@ -1,6 +1,9 @@
 // src/services/driveService.ts
 import { supabase } from '../lib/supabaseClient';
 
+// This public (anon) key is safe for client-side use and is used to authenticate with Supabase Edge Functions.
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZnZkb2VjcG1jbmxweGtsY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTU2OTEsImV4cCI6MjA3NjAzMTY5MX0.dpX90AmxL_JrxkYacPFkzQzhmCETDTa21Up5TdQgLLk";
+
 export async function uploadToDrive(file: File, module: string, category: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -14,9 +17,8 @@ export async function uploadToDrive(file: File, module: string, category: string
   const res = await fetch(`${functionsUrl}/upload_to_drive`, {
     method: "POST",
     headers: {
-        // The service key is required for calling Edge Functions that use it.
-        // This is a placeholder as the real key should be in a secure env var.
-        'Authorization': `Bearer ${"SUPABASE_SERVICE_KEY_PLACEHOLDER"}`
+        // Supabase Edge Functions are typically invoked with the 'anon' key in the Authorization header.
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
     },
     body: formData,
   });

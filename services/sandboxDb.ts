@@ -1,5 +1,7 @@
 import {
     AppData, Product, ProductCategory, Contact, Order, OrderItem, ProductionOrder, Task, TaskStatus,
+    // FIX: Import missing 'AnyProduct' type to resolve reference errors.
+    AnyProduct,
     // FIX: Added missing type imports
     ProductionTask, ProductionQualityCheck, SystemAudit,
     InventoryBalance, InventoryMovement, Conversation, Message, AnyContact,
@@ -21,7 +23,8 @@ const warehouses: Warehouse[] = [
     { id: 'w2', name: 'Armazém Secundário', location: 'Bloco C' },
 ];
 
-const contacts: Contact[] = [
+// FIX: Renamed 'contacts' to 'customers' to align with the database schema ('customers' table).
+const customers: Contact[] = [
     { id: 'c1', name: 'Ana Silva', document: '111.222.333-44', email: 'ana.silva@example.com', phone: '(11) 98765-4321', whatsapp: '5511987654321', instagram: '@anasilva', address: { city: 'São Paulo', state: 'SP', street: 'Rua das Flores, 123' }, phones: {}, stage: 'Cliente Ativo', tags: ['VIP', 'Bolsas'], created_at: new Date(Date.now() - 2 * 86400000).toISOString() },
     { id: 'c2', name: 'Bruno Costa', document: '222.333.444-55', email: 'bruno.costa@example.com', phone: '(21) 91234-5678', address: { city: 'Rio de Janeiro', state: 'RJ', street: 'Avenida Copacabana, 456' }, phones: {}, stage: 'Lead', tags: ['Instagram'], created_at: new Date(Date.now() - 5 * 86400000).toISOString() },
     { id: 'c3', name: 'Carla Dias', document: '333.444.555-66', email: 'carla.dias@example.com', phone: '(31) 95555-8888', address: { city: 'Belo Horizonte', state: 'MG', street: 'Praça da Liberdade, 789' }, phones: {}, stage: 'Cliente Ativo', tags: ['Nécessaires'], created_at: new Date(Date.now() - 10 * 86400000).toISOString() },
@@ -285,7 +288,8 @@ const db: AppData = {
     // FIX: Add missing 'system_audit' property to satisfy the AppData type.
     system_audit: [],
     warehouses,
-    contacts,
+    // FIX: Renamed 'contacts' to 'customers' to align with the database schema ('customers' table).
+    customers,
     product_categories,
     products,
     product_variants,
@@ -573,7 +577,7 @@ export const sandboxDb = {
         return JSON.parse(JSON.stringify(db.orders.map(o => ({
             ...o,
             items: db.order_items.filter(i => i.order_id === o.id),
-            customers: db.contacts.find(c => c.id === o.customer_id)
+            customers: db.customers.find(c => c.id === o.customer_id)
         }))));
     },
 
@@ -582,7 +586,7 @@ export const sandboxDb = {
         const order = await sandboxDb.getDocument<Order>('orders', id);
         if (!order) return null;
         const items = db.order_items.filter(i => i.order_id === id);
-        const customer = db.contacts.find(c => c.id === order.customer_id);
+        const customer = db.customers.find(c => c.id === order.customer_id);
         return JSON.parse(JSON.stringify({ ...order, items, customers: customer }));
     },
 
@@ -609,6 +613,28 @@ export const sandboxDb = {
 
     updateOrder: (orderId: string, data: Partial<Order>): Promise<Order> => sandboxDb.updateDocument('orders', orderId, data),
     
+    // FIX: Add missing methods to match supabaseService and resolve errors.
+    getContacts: (): Promise<Contact[]> => sandboxDb.getCollection('customers'),
+    getProducts: (): Promise<Product[]> => sandboxDb.getCollection('products'),
+    getProductCategories: (): Promise<ProductCategory[]> => sandboxDb.getCollection('product_categories'),
+    addProduct: (productData: AnyProduct) => sandboxDb.addDocument('products', productData),
+    updateProduct: (productId: string, productData: Product | AnyProduct) => {
+      const { id, category, ...updateData } = productData as Product;
+      return sandboxDb.updateDocument<Product>('products', productId, updateData);
+    },
+    getProductionOrders: (): Promise<ProductionOrder[]> => sandboxDb.getCollection('production_orders'),
+    getTasks: (): Promise<Task[]> => sandboxDb.getCollection('tasks'),
+    getTaskStatuses: (): Promise<TaskStatus[]> => sandboxDb.getCollection('task_statuses'),
+    getInventoryBalances: (): Promise<InventoryBalance[]> => sandboxDb.getCollection('inventory_balances'),
+    getMarketingCampaigns: (): Promise<MarketingCampaign[]> => sandboxDb.getCollection('marketing_campaigns'),
+    getMarketingSegments: (): Promise<MarketingSegment[]> => sandboxDb.getCollection('marketing_segments'),
+    getMarketingTemplates: (): Promise<MarketingTemplate[]> => sandboxDb.getCollection('marketing_templates'),
+    getAnalyticsKpis: (): Promise<AnalyticsKPI[]> => sandboxDb.getCollection('analytics_kpis'),
+    getNotifications: (): Promise<Notification[]> => sandboxDb.getCollection('notifications'),
+    markNotificationAsRead: (id: string): Promise<Notification> => sandboxDb.updateDocument<Notification>('notifications', id, { is_read: true }),
+    getProductionRoutes: (): Promise<ProductionRoute[]> => sandboxDb.getCollection('production_routes'),
+    getMoldLibrary: (): Promise<MoldLibrary[]> => sandboxDb.getCollection('mold_library'),
+
     // FIX: Update getInventoryMovements to support filtering by material or product variant.
     getInventoryMovements: (itemId: string, itemType: 'material' | 'product'): Promise<InventoryMovement[]> => {
         const allMovements = getCollection<InventoryMovement>('inventory_movements');
