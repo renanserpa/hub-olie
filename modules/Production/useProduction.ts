@@ -11,9 +11,7 @@ export function useProduction() {
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    // FIX: Add state for product variants
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
-    // FIX: Add state for production routes and molds.
     const [allRoutes, setAllRoutes] = useState<ProductionRoute[]>([]);
     const [allMolds, setAllMolds] = useState<MoldLibrary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +47,6 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            // FIX: Fetch product variants along with other production data.
             const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
@@ -76,7 +73,6 @@ export function useProduction() {
             setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
-            // FIX: Set state for routes and molds.
             setAllRoutes(routesData);
             setAllMolds(moldsData);
 
@@ -101,14 +97,11 @@ export function useProduction() {
                 ...order,
                 variant,
                 product,
-                // FIX: Use allRoutes state variable.
                 route: allRoutes.find(r => r.produto.toLowerCase() === product?.name.toLowerCase() && r.tamanho === sizeName),
                 tasks: allTasks.filter(t => t.production_order_id === order.id),
                 quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
             };
         });
-    // FIX: Add allVariants to the dependency array.
-    // FIX: Add allRoutes to the dependency array.
     }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes]);
     
     const filteredOrders = useMemo(() => {

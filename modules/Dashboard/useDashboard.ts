@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getData } from '../../services/bridge/olieBridgeService';
 import { generateExecutiveInsight } from '../../services/ai/olieAIService';
 import { log } from '../../lib/logger';
