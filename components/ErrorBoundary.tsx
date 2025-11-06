@@ -13,7 +13,6 @@ interface ErrorBoundaryState {
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // FIX: Changed state initialization to use the constructor to ensure `this.props` is correctly bound and available throughout the component lifecycle, resolving the error on line 54.
-  state: ErrorBoundaryState;
 
   constructor(props: ErrorBoundaryProps) {
     super(props);

@@ -1,15 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
-import { isSandbox } from './runtime';
+import { runtime } from './runtime';
 
-const SUPABASE_URL = "https://qrfvdoecpmcnlpxklcsu.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZnZkb2VjcG1jbmxweGtsY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTU2OTEsImV4cCI6MjA3NjAzMTY5MX0.dpX90AmxL_JrxkYacPFkzQzhmCETDTa21Up5TdQgLLk";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 let supabaseInstance: any;
 
-if (!isSandbox()) {
+if (runtime.mode !== 'SANDBOX') {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("ERRO: Variáveis de ambiente Supabase (NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY) não estão configuradas.");
+    }
     console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");
-    supabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    supabaseInstance = createClient(supabaseUrl!, supabaseAnonKey!, {
         auth: { persistSession: true },
     });
 } else {

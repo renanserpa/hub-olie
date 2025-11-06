@@ -37,8 +37,8 @@ export function useProducts() {
         setIsLoading(true);
         try {
             const [productsData, categoriesData, settings, variantsData, balancesData] = await Promise.all([
-                dataService.getProducts(),
-                dataService.getProductCategories(),
+                dataService.getCollection<Product>('products'),
+                dataService.getCollection<ProductCategory>('product_categories'),
                 dataService.getSettings(),
                 dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),

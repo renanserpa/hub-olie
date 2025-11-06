@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Product, AppData } from '../../types';
 import { Check, ChevronsUpDown } from 'lucide-react';

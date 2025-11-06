@@ -23,7 +23,7 @@ import DashboardPage from './pages/DashboardPage';
 import { cn } from './lib/utils';
 import LoginPage from './components/LoginPage';
 import { logout } from './services/authService';
-import { isSandbox } from './lib/runtime';
+import { runtime } from './lib/runtime';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import NotificationBell from './components/NotificationBell';
 import { useApp } from './contexts/AppContext';
@@ -136,19 +136,20 @@ const App: React.FC = () => {
         return <LoginPage />;
     }
     
+    const isSandbox = runtime.mode === 'SANDBOX';
     const visibleTabs = MAIN_TABS.filter(tab => can(tab.scope, 'read'));
     const activeTabInfo = MAIN_TABS.find(tab => tab.id === activeModule);
     
     return (
         <div className="min-h-screen font-sans bg-background dark:bg-dark-background">
-            {isSandbox() && (
+            {isSandbox && (
                 <div className="w-full text-center text-xs py-1 bg-amber-100 text-amber-800 border-b border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800 sticky top-0 z-50">
                     SANDBOX MODE (offline) — sem chamadas de rede
                 </div>
             )}
             <Toaster />
             <div className="flex">
-                <aside className={cn("w-64 bg-secondary dark:bg-dark-secondary border-r border-border dark:border-dark-border h-screen flex flex-col p-4 sticky", isSandbox() ? "top-[25px]" : "top-0")}>
+                <aside className={cn("w-64 bg-secondary dark:bg-dark-secondary border-r border-border dark:border-dark-border h-screen flex flex-col p-4 sticky", isSandbox ? "top-[25px]" : "top-0")}>
                     <div className="px-2 mb-8">
                         <h1 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">Olie Hub</h1>
                     </div>
@@ -168,7 +169,7 @@ const App: React.FC = () => {
                 </aside>
 
                 <main className="flex-1">
-                     <header className={cn("bg-background/80 dark:bg-dark-background/80 backdrop-blur-sm border-b border-border dark:border-dark-border z-10 sticky", isSandbox() ? "top-[25px]" : "top-0")}>
+                     <header className={cn("bg-background/80 dark:bg-dark-background/80 backdrop-blur-sm border-b border-border dark:border-dark-border z-10 sticky", isSandbox ? "top-[25px]" : "top-0")}>
                         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
                            <div className="relative w-full max-w-md">
                            </div>

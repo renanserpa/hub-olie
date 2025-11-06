@@ -450,7 +450,8 @@ export const sandboxDb = {
     },
     
     // FIX: Implement addManyDocuments to support bulk creation of variants.
-    addManyDocuments: async <T extends { id?: string }>(docsData: Omit<T, 'id'>[], table: string): Promise<T[]> => {
+// FIX: Swapped parameter order to match usage and supabaseService.
+    addManyDocuments: async <T extends { id?: string }>(table: string, docsData: Omit<T, 'id'>[]): Promise<T[]> => {
         console.log(`🧱 SANDBOX: addManyDocuments(${table})`);
         await delay(100);
         const newDocs = docsData.map(docData => ({ ...docData, id: generateId(), created_at: new Date().toISOString() })) as unknown as T[];

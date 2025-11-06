@@ -1,4 +1,4 @@
-import { isSandbox } from '../lib/runtime';
+import { runtime } from '../lib/runtime';
 import { sandboxDb } from './sandboxDb';
 import * as driveService from './driveService';
 import { dataService } from './dataService';
@@ -8,7 +8,7 @@ import { toast } from '../hooks/use-toast';
 export const mediaService = {
     async uploadFile(file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> {
         toast({ title: "Enviando arquivo...", description: file.name });
-        if (isSandbox()) {
+        if (runtime.mode === 'SANDBOX') {
             // FIX: Corrected to call sandboxDb as it contains the mock uploadFile implementation.
             return sandboxDb.uploadFile(file, module, category);
         }

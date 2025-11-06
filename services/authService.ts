@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { isSandbox } from '../lib/runtime';
+import { runtime } from '../lib/runtime';
 
 export type UserRole =
   | 'AdminGeral'
@@ -22,7 +22,7 @@ const sandboxUser: AuthUser = {
 };
 
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  if (isSandbox()) {
+  if (runtime.mode === 'SANDBOX') {
     console.log('🧱 SANDBOX: Simulating login.');
     await new Promise(res => setTimeout(res, 500));
     return sandboxUser;
@@ -61,7 +61,7 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
 };
 
 export const logout = async (): Promise<void> => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         console.log('🧱 SANDBOX: Simulating logout.');
         return;
     }
@@ -73,7 +73,7 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         return sandboxUser;
     }
 
@@ -107,7 +107,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void): (() => void) => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         // In sandbox mode, auth state is static, so we just call back with the user once.
         callback(sandboxUser);
         return () => {}; // Return a no-op unsubscribe function

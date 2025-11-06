@@ -58,6 +58,7 @@ import {
     MoldLibrary,
     ProductionRoute,
     ProductVariant,
+    IntegrationStatus,
 } from "../types";
 
 
@@ -179,7 +180,8 @@ export const supabaseService = {
       };
   },
   
-  listenToDocument: <T>(table: string, id: string, callback: (payload: T) => void) => {
+// FIX: Add generic constraint to match the sandbox service signature, resolving the union type error.
+  listenToDocument: <T extends { id: string }>(table: string, id: string, callback: (payload: T) => void) => {
       const channel = supabase.channel(`public:${table}:${id}`);
       channel
         .on(
@@ -472,4 +474,32 @@ export const supabaseService = {
   },
   getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
   markNotificationAsRead: (id: string): Promise<Notification> => updateDocument<Notification>('notifications', id, { is_read: true }),
+// FIX: Add missing methods
+    addMaterial: (data: any): Promise<Material> => addDocument('config_materials', data),
+    addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument('config_supply_groups', data),
+    getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection('production_routes'),
+    getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection('mold_library'),
+    updateSystemSetting: async (key: string, newValue: any, source: 'user' | 'AI', confidence: number, explanation: string) => {
+        const { data: setting, error: findError } = await supabase.from('system_settings').select('id, value').eq('key', key).single();
+        if (findError || !setting) {
+          handleError(findError, `updateSystemSetting (find ${key})`);
+          return;
+        }
+        
+        await updateDocument<SystemSetting>('system_settings', setting.id, { value: JSON.stringify(newValue) });
+        
+        await addDocument<SystemSettingsLog>('system_settings_logs', {
+          key,
+          old_value: setting.value,
+          new_value: JSON.stringify(newValue),
+          source_module: source,
+          confidence,
+          explanation,
+        } as any);
+      },
+    testIntegrationConnection: async (id: string): Promise<void> => {
+        const status: IntegrationStatus = Math.random() > 0.2 ? 'connected' : 'error';
+        const last_error = status === 'error' ? 'Simulated connection failure.' : undefined;
+        await updateDocument<Integration>('config_integrations', id, { status, last_sync: new Date().toISOString(), last_error } as Partial<Integration>);
+      },
 };

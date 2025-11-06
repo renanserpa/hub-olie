@@ -1,4 +1,4 @@
-import { isSandbox } from '../lib/runtime';
+import { runtime } from '../lib/runtime';
 import { storageSandbox } from './storageSandbox';
 
 // This is a placeholder for the real Supabase storage service.
@@ -18,12 +18,4 @@ const storageSupabase = {
  * Unified Storage Service.
  * Routes file operations to the appropriate service based on the runtime mode.
  */
-export const storageService = {
-    uploadFile: (file: File) => isSandbox() 
-        ? storageSandbox.uploadFile(file) 
-        : storageSupabase.uploadFile(file),
-
-    deleteFile: (url: string) => isSandbox() 
-        ? storageSandbox.deleteFile(url) 
-        : storageSupabase.deleteFile(url),
-};
+export const storageService = runtime.mode === 'SANDBOX' ? storageSandbox : storageSupabase;

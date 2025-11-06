@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from "../types";
-import { isSandbox } from '../lib/runtime';
+import { runtime } from '../lib/runtime';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -63,7 +63,7 @@ const logisticsSchema = {
 
 export const integrationsService = {
   generatePaymentLink: async (order: Order): Promise<{ payments: PaymentDetails }> => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         await delay(600);
         console.log(`🧱 SANDBOX: Mocking payment link for order #${order.number}`);
         return {
@@ -81,7 +81,7 @@ export const integrationsService = {
   },
 
   issueNFe: async (order: Order): Promise<{ fiscal: FiscalDetails }> => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         await delay(800);
         console.log(`🧱 SANDBOX: Mocking NFe for order #${order.number}`);
         return {
@@ -100,7 +100,7 @@ export const integrationsService = {
   },
 
   createShippingLabel: async (order: Order): Promise<{ logistics: LogisticsDetails }> => {
-    if (isSandbox()) {
+    if (runtime.mode === 'SANDBOX') {
         await delay(500);
         console.log(`🧱 SANDBOX: Mocking shipping label for order #${order.number}`);
         return {
