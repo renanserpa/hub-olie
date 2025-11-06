@@ -423,9 +423,28 @@ export const sandboxDb = {
     addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
         console.log(`🧱 SANDBOX: addDocument(${table})`);
         await delay(100);
-        // FIX: Changed the type assertion to 'as unknown as T' to resolve a complex TypeScript generic conversion error.
         const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString() } as unknown as T;
         (db as any)[table].push(newDoc);
+        
+        // SIMULATE TRIGGER for v4.2 pipeline
+        if (table === 'production_orders') {
+            console.log('🧱 SANDBOX: [TRIGGER] production_orders insert detected. Simulating inventory reservation.');
+            const po = newDoc as unknown as ProductionOrder;
+            const product = db.products.find(p => p.id === po.product_id);
+            if (product && product.base_bom) {
+                console.log(`🧱 SANDBOX: Reserving inventory for ${product.base_bom.length} BOM items.`);
+                for (const bomItem of product.base_bom) {
+                    const balance = db.inventory_balances.find(b => b.material_id === bomItem.material_id);
+                    if (balance) {
+                        const quantityToReserve = bomItem.quantity_per_unit * po.quantity;
+                        balance.reserved_stock += quantityToReserve;
+                        console.log(`🧱 SANDBOX: Reserved ${quantityToReserve} of material ${bomItem.material_id}. New reserved stock: ${balance.reserved_stock}`);
+                    }
+                }
+                emit('inventory_balances');
+            }
+        }
+        
         emit(table);
         return JSON.parse(JSON.stringify(newDoc));
     },

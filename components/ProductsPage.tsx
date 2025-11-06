@@ -35,6 +35,7 @@ const ProductsPage: React.FC = () => {
         updateProductStatus,
         selectedProductId,
         setSelectedProductId,
+        refresh,
     } = useProducts();
 
     const [activeProductTab, setActiveProductTab] = React.useState('list');
@@ -107,6 +108,7 @@ const ProductsPage: React.FC = () => {
                     appData={settingsData}
                     allVariants={allVariants}
                     inventoryBalances={inventoryBalances}
+                    onRefresh={refresh}
                 />
             )}
             

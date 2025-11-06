@@ -136,5 +136,7 @@ export function useProducts() {
         updateProductStatus,
         selectedProductId,
         setSelectedProductId,
+        // FIX: Expose the loadData function as 'refresh' so it can be used by components.
+        refresh: loadData,
     };
 }

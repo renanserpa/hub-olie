@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Product, ProductCategory, AnyProduct, AppData, ProductPart, ProductSize, BOMComponent, CombinationRule, Collection, ProductVariant, InventoryBalance } from '../../types';
-import { Loader2, Package, Ruler, Settings, Share2, List, Plus, Trash2, Info } from 'lucide-react';
+import { Loader2, Package, Ruler, Settings, Share2, List, Plus, Trash2, Info, GitBranch, Eye } from 'lucide-react';
 import TabLayout from '../ui/TabLayout';
 import { IconButton } from '../ui/IconButton';
 import { cn } from '../../lib/utils';
+import ProductVariantsPanel from './ProductVariantsPanel';
+import { dataService } from '../../services/dataService';
+import { toast } from '../../hooks/use-toast';
 
 interface ProductDialogProps {
     isOpen: boolean;
@@ -14,9 +17,9 @@ interface ProductDialogProps {
     product: Product | null;
     categories: ProductCategory[];
     appData: AppData;
-    // FIX: Add missing props to the interface.
     allVariants: ProductVariant[];
     inventoryBalances: InventoryBalance[];
+    onRefresh: () => void;
 }
 
 const getOptionsForSource = (source: ProductPart['options_source'] | undefined, appData: AppData): { id: string, name: string }[] => {
@@ -48,11 +51,12 @@ const SectionCard: React.FC<{ title: string; icon: React.ElementType; children: 
     </div>
 );
 
-const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, product, categories, appData, allVariants, inventoryBalances }) => {
+const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, product, categories, appData, allVariants, inventoryBalances, onRefresh }) => {
     const [formData, setFormData] = useState<Partial<Product>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('base');
     const [newImageUrl, setNewImageUrl] = useState('');
+    const [isGeneratingPO, setIsGeneratingPO] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -92,7 +96,6 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
             
             const updatedPart = { ...rule[part], [field]: value };
             
-            // FIX: Type-cast the updated part to correctly access its properties.
             if (field === 'part_key') {
                 if(part === 'condition') {
                     (updatedPart as CombinationRule['condition']).option_id = '';
@@ -140,8 +143,40 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
             setIsSubmitting(false);
         }
     };
+    
+    const handleGeneratePO = async () => {
+        if (!product) return;
+        setIsGeneratingPO(true);
+        try {
+            const po_number = `OP-AUTO-${product.base_sku}-${Date.now().toString().slice(-5)}`;
+            const newPO = {
+                po_number,
+                product_id: product.id,
+                quantity: 1, // as per prompt
+                status: 'novo' as const,
+                priority: 'normal' as const,
+                due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+            };
+            await dataService.addDocument('production_orders', newPO);
+            await dataService.addDocument('system_audit', {
+                key: 'PIPELINE_V4.2',
+                status: 'SUCCESS',
+                details: `OP ${po_number} gerada via Módulo de Produtos para ${product.name}`
+            } as any);
+            toast({ title: 'Ordem de Produção Gerada!', description: `A OP ${po_number} foi criada e os insumos foram reservados.` });
+        } catch (e) {
+            toast({ title: 'Erro', description: 'Não foi possível gerar a Ordem de Produção.', variant: 'destructive' });
+        } finally {
+            setIsGeneratingPO(false);
+        }
+    };
 
-    const TABS = [ { id: 'base', label: 'Informações Básicas', icon: Package }, { id: 'variants', label: 'Configuração de Variantes', icon: Settings }, ];
+    const TABS = [
+        { id: 'base', label: 'Base', icon: Package },
+        { id: 'skus', label: 'Variações & SKUs', icon: GitBranch },
+        { id: 'bom', label: 'BOM / Insumos', icon: List },
+        { id: 'personalization', label: 'Personalização', icon: Settings },
+    ];
     const inputStyle = "w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
     const labelStyle = "block text-sm font-medium text-textSecondary mb-1";
 
@@ -200,16 +235,46 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                             </div>
                         </div>
                     )}
-                    {activeTab === 'variants' && (
-                        <div className="space-y-6">
-                             <div className="p-3 bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200 text-sm rounded-lg flex items-start gap-3">
-                                <Info size={18} className="flex-shrink-0 mt-0.5"/>
-                                <div>
-                                    Defina aqui as regras de personalização do seu produto. Adicione tamanhos, partes configuráveis (como cores e tecidos) e regras de combinação.
-                                    <br />
-                                    Após salvar, você poderá gerar todos os SKUs de venda na aba <strong>'Variantes & SKUs'</strong>.
+                    {activeTab === 'skus' && product && (
+                        <ProductVariantsPanel
+                            product={product}
+                            allVariants={allVariants}
+                            appData={appData}
+                            isLoading={isSubmitting}
+                            onRefresh={onRefresh}
+                        />
+                    )}
+                    {activeTab === 'bom' && (
+                         <SectionCard title="Lista de Materiais (BOM)" icon={List} actions={
+                            product && (
+                                <Button type="button" size="sm" variant="outline" onClick={handleGeneratePO} disabled={isGeneratingPO}>
+                                    {isGeneratingPO && <Loader2 size={14} className="mr-2 animate-spin"/>}
+                                    Gerar OP
+                                </Button>
+                            )
+                        }>
+                            {(formData.base_bom || []).map((bom, index) => {
+                                const material = appData.config_materials.find(m => m.id === bom.material_id);
+                                const materialBalances = inventoryBalances.filter(b => b.material_id === bom.material_id);
+                                const stock = materialBalances.reduce((acc, b) => acc + (b.current_stock - b.reserved_stock), 0);
+                                return(
+                                <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                                    <div className="col-span-6"><select value={bom.material_id} onChange={(e) => handleArrayChange('base_bom', index, 'material_id', e.target.value)} className={cn(inputStyle, "mt-0")}><option value="">Selecione um material...</option>{appData.config_materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+                                    <div className="col-span-2 text-right"><span className="text-xs text-textSecondary">Estoque Disp: {stock.toFixed(2)}</span></div>
+                                    <div className="col-span-3"><input type="number" step="0.01" value={bom.quantity_per_unit} onChange={(e) => handleArrayChange('base_bom', index, 'quantity_per_unit', parseFloat(e.target.value))} placeholder="Qtd" className={cn(inputStyle, "mt-0")} /></div>
+                                    <div className="col-span-1 text-right"><IconButton type="button" onClick={() => removeFromArray('base_bom', index)} className="text-red-500"><Trash2 size={16} /></IconButton></div>
                                 </div>
-                            </div>
+                            )})}
+                        </SectionCard>
+                    )}
+                    {activeTab === 'personalization' && (
+                        <div className="space-y-6">
+                            <SectionCard title="Prévia Visual da Personalização" icon={Eye}>
+                                <div className="p-4 text-center border rounded-lg bg-background dark:bg-dark-background text-sm text-textSecondary">
+                                    <p>A pré-visualização de personalização em tempo real estará disponível em breve.</p>
+                                    <p className="mt-2 text-xs">(Contraste mínimo para bordado/hot-stamping: ≥ 4.5:1)</p>
+                                </div>
+                            </SectionCard>
 
                             <SectionCard title="Tamanhos Disponíveis" icon={Ruler} actions={<Button type="button" size="sm" variant="outline" onClick={() => addToArray('available_sizes', { id: `s_${Date.now()}`, name: '' })}><Plus size={14} className="mr-2"/>Adicionar</Button>}>
                                 {(formData.available_sizes || []).map((size, index) => (
@@ -227,16 +292,6 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                                         <div className="col-span-4"><input value={part.name} onChange={(e) => handleArrayChange('configurable_parts', index, 'name', e.target.value)} placeholder="Nome de Exibição" className={cn(inputStyle, "mt-0")} /></div>
                                         <div className="col-span-4"><select value={part.options_source} onChange={(e) => handleArrayChange('configurable_parts', index, 'options_source', e.target.value)} className={cn(inputStyle, "mt-0")}><option value="fabric_colors">Cores de Tecido</option><option value="zipper_colors">Cores de Zíper</option><option value="lining_colors">Cores de Forro</option><option value="puller_colors">Cores de Puxador</option><option value="bias_colors">Cores de Viés</option><option value="embroidery_colors">Cores de Bordado</option><option value="config_materials">Materiais</option></select></div>
                                         <div className="col-span-1 text-right"><IconButton type="button" onClick={() => removeFromArray('configurable_parts', index)} className="text-red-500"><Trash2 size={16} /></IconButton></div>
-                                    </div>
-                                ))}
-                            </SectionCard>
-                            
-                            <SectionCard title="Lista de Materiais (BOM)" icon={List} actions={<Button type="button" size="sm" variant="outline" onClick={() => addToArray('base_bom', { material_id: '', quantity_per_unit: 1 })}><Plus size={14} className="mr-2"/>Adicionar</Button>}>
-                                {(formData.base_bom || []).map((bom, index) => (
-                                    <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                                        <div className="col-span-8"><select value={bom.material_id} onChange={(e) => handleArrayChange('base_bom', index, 'material_id', e.target.value)} className={cn(inputStyle, "mt-0")}><option value="">Selecione um material...</option>{appData.config_materials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
-                                        <div className="col-span-3"><input type="number" value={bom.quantity_per_unit} onChange={(e) => handleArrayChange('base_bom', index, 'quantity_per_unit', parseFloat(e.target.value))} className={cn(inputStyle, "mt-0")} /></div>
-                                        <div className="col-span-1 text-right"><IconButton type="button" onClick={() => removeFromArray('base_bom', index)} className="text-red-500"><Trash2 size={16} /></IconButton></div>
                                     </div>
                                 ))}
                             </SectionCard>
