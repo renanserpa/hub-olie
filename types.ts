@@ -616,12 +616,15 @@ export interface LogisticsShipment {
 
 
 // --- PURCHASING ---
+// FIX: Export PurchaseOrderStatus type.
+export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
+
 export interface PurchaseOrder {
     id: string;
     po_number: string;
     supplier_id: string;
     supplier?: Supplier;
-    status: 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
+    status: PurchaseOrderStatus;
     items: PurchaseOrderItem[];
     total: number;
     created_at: string;

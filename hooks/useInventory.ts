@@ -73,11 +73,11 @@ export function useInventory() {
     }, [selectedItemId, selectedItemType]);
 
     const materialBalances = useMemo(() => {
-        const materialMap = new Map<string, { item: Material, current_stock: number, reserved_stock: number }>();
+        const materialMap = new Map<string, { material: Material, current_stock: number, reserved_stock: number }>();
         allBalances.filter(b => b.material_id).forEach(balance => {
             if (!balance.material) return;
             if (!materialMap.has(balance.material_id)) {
-                materialMap.set(balance.material_id, { item: balance.material, current_stock: 0, reserved_stock: 0 });
+                materialMap.set(balance.material_id, { material: balance.material, current_stock: 0, reserved_stock: 0 });
             }
             const entry = materialMap.get(balance.material_id)!;
             entry.current_stock += balance.current_stock;
@@ -85,7 +85,7 @@ export function useInventory() {
         });
         const filtered = Array.from(materialMap.values());
         if (!searchQuery) return filtered;
-        return filtered.filter(b => b.item.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.item.sku?.toLowerCase().includes(searchQuery.toLowerCase()));
+        return filtered.filter(b => b.material.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.material.sku?.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [allBalances, searchQuery]);
     
     const productBalances = useMemo(() => {
@@ -123,7 +123,7 @@ export function useInventory() {
     }, [allBalances, allMaterials, allVariants, selectedItemId, selectedItemType]);
 
     const kpiStats = useMemo(() => {
-        const lowStockItems = materialBalances.filter(b => (b.current_stock - b.reserved_stock) <= (b.item.low_stock_threshold || 10)).length;
+        const lowStockItems = materialBalances.filter(b => (b.material.current_stock - b.material.reserved_stock) <= (b.material.low_stock_threshold || 10)).length;
         const totalValue = allBalances.reduce((sum, balance) => {
             const item = balance.material || allVariants.find(v => v.id === balance.product_variant_id);
             const price = (item as Material)?.default_cost || (item as ProductVariant)?.final_price || 0;

@@ -27,7 +27,9 @@ const movementReasonLabels: Record<InventoryMovementReason, string> = {
     'AJUSTE_CONTAGEM': 'Ajuste de Contagem',
     'DEVOLUCAO_CLIENTE': 'Devolução de Cliente',
     'PERDA_AVARIA': 'Perda/Avaria',
-    'TRANSFERENCIA_INTERNA': 'Transferência Interna'
+    'TRANSFERENCIA_INTERNA': 'Transferência Interna',
+    // FIX: Add missing 'ENTRADA_PRODUCAO' reason label.
+    'ENTRADA_PRODUCAO': 'Entrada (Produção)'
 };
 
 const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({ material, balances, movements, isLoading }) => {

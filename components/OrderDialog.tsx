@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
-import { Contact, Product, OrderItem, ConfigJson, AppData } from '../types';
+// FIX: Added Order to imports
+import { Contact, Product, OrderItem, ConfigJson, AppData, Order } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
@@ -69,7 +70,7 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
         setItems(newItems);
     };
     
-    const handleCustomizationSave = (data: { config: Record<string, string>, variantName: string, finalPrice: number }) => {
+    const handleCustomizationSave = (data: { config: Record<string, any>, variantName: string, finalPrice: number }) => {
         if (customizingItemIndex !== null) {
             const newItems = [...items];
             const item = newItems[customizingItemIndex];
@@ -93,117 +94,121 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
             toast({ title: "Atenção", description: "Selecione um cliente e adicione pelo menos um item.", variant: 'destructive' });
             return;
         }
+        
         setIsSubmitting(true);
         try {
-            await dataService.addOrder({
+            const newOrderData: Partial<Order> = {
                 customer_id: contactId,
-                items: items.map(({ product, ...item }) => item) as OrderItem[],
-                status: 'pending_payment',
-                subtotal,
+                items: items as OrderItem[],
+                subtotal: subtotal,
                 discounts: discount,
                 shipping_fee: shippingCost,
-                total,
-                notes,
-                origin: 'manual',
-            });
+                total: total,
+                notes: notes,
+                status: 'pending_payment',
+                origin: 'Manual',
+            };
+            await dataService.addOrder(newOrderData);
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             onSave();
+            onClose();
         } catch (error) {
-            toast({ title: "Erro", description: "Não foi possível criar o pedido.", variant: 'destructive' });
+            toast({ title: "Erro!", description: "Não foi possível criar o pedido.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
         }
     };
-    
+
     const itemToCustomize = customizingItemIndex !== null ? items[customizingItemIndex] : null;
+    const productToCustomize = itemToCustomize?.product;
 
     return (
-        <>
-        <Modal isOpen={isOpen} onClose={onClose} title="Criar Novo Pedido">
-            <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+        <Modal isOpen={isOpen} onClose={onClose} title="Novo Pedido" className="max-w-3xl">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-textSecondary">Cliente</label>
-                    <select value={contactId} onChange={e => setContactId(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <label className="block text-sm font-medium text-textSecondary">Cliente *</label>
+                    <select value={contactId} onChange={e => setContactId(e.target.value)} required className="w-full mt-1 p-2 border border-border rounded-md bg-background focus:outline-none focus:ring-primary/50">
                         <option value="">Selecione um cliente</option>
                         {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                 </div>
 
                 <div>
-                    <h3 className="text-md font-semibold text-textPrimary mb-2">Itens</h3>
-                    <div className="space-y-3">
+                    <h3 className="text-md font-semibold">Itens do Pedido</h3>
+                    <div className="space-y-2 mt-2 max-h-60 overflow-y-auto pr-2">
                         {items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-2 items-start p-2 border rounded-lg bg-secondary/50">
+                            <div key={index} className="grid grid-cols-12 gap-2 items-center p-2 border rounded-lg bg-secondary/50">
                                 <div className="col-span-5">
-                                    <label className="text-xs font-medium text-textSecondary">Produto</label>
-                                    <select value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} required className="w-full text-sm p-1 border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/50">
-                                        <option value="">Selecione</option>
+                                    <select value={item.product_id} onChange={e => handleItemChange(index, 'product_id', e.target.value)} className="w-full text-sm p-1 border rounded-md bg-background">
+                                        <option value="">Selecione um produto</option>
                                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
-                                    {item.product_name && item.product && item.product_name !== item.product.name && (
-                                        <div className="text-xs text-primary mt-1 truncate" title={item.product_name}>
-                                            {item.product_name.replace(item.product.name, '').replace(' - ', '')}
-                                        </div>
-                                    )}
                                 </div>
-                                <div className="col-span-2">
-                                    <label className="text-xs font-medium text-textSecondary">Qtd</label>
-                                    <input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} min="1" required className="w-full text-sm p-1 border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/50" />
+                                <div className="col-span-1">
+                                    <input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} className="w-full text-sm p-1 border rounded-md bg-background" />
                                 </div>
-                                <div className="col-span-3 text-right">
-                                    <p className="text-xs text-textSecondary">Total</p>
-                                    <p className="text-sm font-medium">R$ {item.total?.toFixed(2) || '0.00'}</p>
+                                <div className="col-span-2 text-right">
+                                    <span className="text-sm">R$ {item.unit_price?.toFixed(2)}</span>
                                 </div>
-                                <div className="col-span-2 flex items-center justify-end gap-1">
-                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setCustomizingItemIndex(index)} disabled={!item.product_id || (!item.product?.available_sizes && !item.product?.configurable_parts)}><Settings size={14}/></Button>
-                                    <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500" onClick={() => handleRemoveItem(index)}><Trash2 size={14}/></Button>
+                                <div className="col-span-2 text-right font-semibold">
+                                    <span className="text-sm">R$ {item.total?.toFixed(2)}</span>
+                                </div>
+                                <div className="col-span-2 flex justify-end gap-1">
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => setCustomizingItemIndex(index)} disabled={!item.product?.configurable_parts} className="h-7 w-7 p-0">
+                                        <Settings size={14} />
+                                    </Button>
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveItem(index)} className="h-7 w-7 p-0 text-red-500">
+                                        <Trash2 size={14} />
+                                    </Button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleAddItem}><Plus className="w-3 h-3 mr-2" />Adicionar Item</Button>
+                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleAddItem}>
+                        <Plus className="w-3 h-3 mr-2" /> Adicionar Item
+                    </Button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 border-t pt-4">
-                    <div>
-                        <label className="block text-sm font-medium text-textSecondary">Subtotal</label>
-                        <p className="font-semibold text-lg">R$ {subtotal.toFixed(2)}</p>
-                    </div>
-                    <div>
-                        <label htmlFor="discount" className="block text-sm font-medium text-textSecondary">Desconto (R$)</label>
-                        <input id="discount" type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                     <div>
+                        <label className="block text-sm font-medium text-textSecondary">Desconto (R$)</label>
+                        <input type="number" step="0.01" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} className="w-full mt-1 p-2 border rounded-md bg-background" />
                     </div>
                      <div>
-                        <label htmlFor="shippingCost" className="block text-sm font-medium text-textSecondary">Frete (R$)</label>
-                        <input id="shippingCost" type="number" value={shippingCost} onChange={e => setShippingCost(parseFloat(e.target.value) || 0)} className="mt-1 w-full px-3 py-2 border border-border rounded-xl shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                        <label className="block text-sm font-medium text-textSecondary">Frete (R$)</label>
+                        <input type="number" step="0.01" value={shippingCost} onChange={e => setShippingCost(parseFloat(e.target.value) || 0)} className="w-full mt-1 p-2 border rounded-md bg-background" />
+                    </div>
+                     <div className="text-right">
+                        <p className="text-sm text-textSecondary">Total</p>
+                        <p className="font-bold text-2xl">R$ {total.toFixed(2)}</p>
                     </div>
                 </div>
+                
+                 <div>
+                    <label className="block text-sm font-medium text-textSecondary">Notas Internas</label>
+                    <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full mt-1 p-2 border rounded-md bg-background" />
+                </div>
 
-                 <div className="text-right">
-                    <p className="text-sm text-textSecondary">Total do Pedido</p>
-                    <p className="font-bold text-2xl text-primary">R$ {total.toFixed(2)}</p>
-                 </div>
-                 
-                 <div className="mt-6 flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Criar Pedido
+                        Salvar Pedido
                     </Button>
                 </div>
             </form>
+            
+            {productToCustomize && appData && (
+                 <CustomizeItemDialog
+                    isOpen={customizingItemIndex !== null}
+                    onClose={() => setCustomizingItemIndex(null)}
+                    onSave={handleCustomizationSave}
+                    initialConfig={itemToCustomize?.config_json || {}}
+                    product={productToCustomize}
+                    appData={appData}
+                />
+            )}
         </Modal>
-        {itemToCustomize && itemToCustomize.product && appData && (
-             <CustomizeItemDialog
-                isOpen={customizingItemIndex !== null}
-                onClose={() => setCustomizingItemIndex(null)}
-                onSave={handleCustomizationSave}
-                initialConfig={(itemToCustomize.config_json as Record<string, string>) || {}}
-                product={itemToCustomize.product}
-                appData={appData}
-            />
-        )}
-        </>
     );
 };
 

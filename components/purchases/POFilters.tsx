@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Search, X } from 'lucide-react';
 import { Button } from '../ui/Button';
+// FIX: Import the PurchaseOrderStatus type
 import { PurchaseOrderStatus } from '../../types';
 
 interface POFiltersProps {

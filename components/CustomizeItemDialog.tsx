@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, AppData, ProductPart } from '../types';
+import { Product, AppData, ProductPart, MonogramFont } from '../types';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 
@@ -23,14 +23,14 @@ const getOptionsForSource = (source: ProductPart['options_source'] | undefined, 
 interface CustomizeItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { config: Record<string, string>, variantName: string, finalPrice: number }) => void;
-  initialConfig: Record<string, string>;
+  onSave: (data: { config: Record<string, any>, variantName: string, finalPrice: number }) => void;
+  initialConfig: Record<string, any>;
   product: Product;
   appData: AppData;
 }
 
 const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClose, onSave, initialConfig, product, appData }) => {
-    const [configuration, setConfiguration] = useState<Record<string, string>>(initialConfig || {});
+    const [configuration, setConfiguration] = useState<Record<string, any>>(initialConfig || {});
 
     useEffect(() => {
         setConfiguration(initialConfig || {});
@@ -38,6 +38,16 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
     
     const handleSelectionChange = (key: string, value: string) => {
         setConfiguration(prev => ({...prev, [key]: value}));
+    };
+
+    const handleEmbroideryChange = (field: string, value: any) => {
+        setConfiguration(prev => ({
+            ...prev,
+            embroidery: {
+                ...(prev.embroidery || { enabled: false }),
+                [field]: value,
+            }
+        }));
     };
     
     // Calculate which options should be disabled based on combination rules
@@ -110,6 +120,12 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                 if (option) configParts.push(option.name);
             }
         });
+
+        if (configuration.embroidery?.enabled && configuration.embroidery?.text) {
+            configParts.push(`Bordado: "${configuration.embroidery.text}"`);
+            // Placeholder for price increase
+            // finalPrice += 15.0;
+        }
         
         if (configParts.length > 0) {
             variantName += ` - ${configParts.join(' / ')}`;
@@ -165,6 +181,60 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                             </div>
                         )
                     })}
+                     {/* Embroidery Section */}
+                    {product.attributes?.embroidery && (
+                        <div>
+                            <label className="font-semibold text-sm">Personalização (Bordado)</label>
+                            <div className="p-4 border rounded-lg bg-secondary/50 space-y-3 mt-2">
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input 
+                                type="checkbox"
+                                checked={!!configuration.embroidery?.enabled}
+                                onChange={e => handleEmbroideryChange('enabled', e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                Adicionar Bordado
+                            </label>
+
+                            {configuration.embroidery?.enabled && (
+                                <div className="space-y-3 pl-6 animate-fade-in-up" style={{animationDuration: '0.3s'}}>
+                                <div>
+                                    <label className="text-xs font-medium">Texto do Bordado</label>
+                                    <input 
+                                    type="text"
+                                    value={configuration.embroidery?.text || ''}
+                                    onChange={e => handleEmbroideryChange('text', e.target.value)}
+                                    className="w-full mt-1 p-2 border rounded-md bg-background"
+                                    maxLength={15}
+                                    placeholder="Ex: A.S."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium">Fonte</label>
+                                    <select 
+                                    value={configuration.embroidery?.font || ''}
+                                    onChange={e => handleEmbroideryChange('font', e.target.value)}
+                                    className="w-full mt-1 p-2 border rounded-md bg-background"
+                                    >
+                                    <option value="">Selecione a fonte</option>
+                                    {appData.catalogs.fontes_monogramas.map((font: MonogramFont) => (
+                                        <option key={font.id} value={font.id}>{font.name}</option>
+                                    ))}
+                                    </select>
+                                </div>
+                                {configuration.embroidery?.text && (
+                                    <div className="pt-2">
+                                        <p className="text-xs font-medium mb-1">Prévia:</p>
+                                        <div className="p-3 bg-background rounded text-center text-2xl" style={{ fontFamily: appData.catalogs.fontes_monogramas.find((f: MonogramFont) => f.id === configuration.embroidery?.font)?.name || 'serif' }}>
+                                            {configuration.embroidery.text}
+                                        </div>
+                                    </div>
+                                )}
+                                </div>
+                            )}
+                            </div>
+                        </div>
+                    )}
                 </div>
                  <div className="mt-6 flex justify-end gap-3 border-t pt-4">
                     <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>

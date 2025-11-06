@@ -7,7 +7,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus, MoldLibrary, ProductionRoute
+    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus, MoldLibrary, ProductionRoute, ProductionOrderStatus
 } from '../types';
 
 // --- SEED DATA ---
@@ -414,6 +414,16 @@ export const sandboxDb = {
         return JSON.parse(JSON.stringify(newDoc));
     },
     
+    // FIX: Implement addManyDocuments to support bulk creation of variants.
+    addManyDocuments: async <T extends { id?: string }>(docsData: Omit<T, 'id'>[], table: string): Promise<T[]> => {
+        console.log(`🧱 SANDBOX: addManyDocuments(${table})`);
+        await delay(100);
+        const newDocs = docsData.map(docData => ({ ...docData, id: generateId(), created_at: new Date().toISOString() })) as unknown as T[];
+        (db as any)[table].push(...newDocs);
+        emit(table);
+        return JSON.parse(JSON.stringify(newDocs));
+    },
+
     updateDocument: async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
         console.log(`🧱 SANDBOX: updateDocument(${table}, ${id})`);
         await delay(100);
@@ -544,6 +554,11 @@ export const sandboxDb = {
         return sandboxDb.updateDocument<Order>('orders', orderId, { status: newStatus });
     },
     
+    // FIX: Add missing updateProductionOrderStatus function.
+    updateProductionOrderStatus: (orderId: string, newStatus: ProductionOrderStatus): Promise<ProductionOrder> => {
+        return sandboxDb.updateDocument<ProductionOrder>('production_orders', orderId, { status: newStatus });
+    },
+
     addOrder: async (orderData: Partial<Order>): Promise<Order> => {
         const { items, ...orderRest } = orderData;
         const newOrder = await sandboxDb.addDocument<Order>('orders', orderRest as any);
@@ -558,9 +573,17 @@ export const sandboxDb = {
 
     updateOrder: (orderId: string, data: Partial<Order>): Promise<Order> => sandboxDb.updateDocument('orders', orderId, data),
     
-    getInventoryMovements: (materialId: string): Promise<InventoryMovement[]> => {
+    // FIX: Update getInventoryMovements to support filtering by material or product variant.
+    getInventoryMovements: (itemId: string, itemType: 'material' | 'product'): Promise<InventoryMovement[]> => {
         const allMovements = getCollection<InventoryMovement>('inventory_movements');
-        return Promise.resolve(allMovements.filter(m => m.material_id === materialId).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        const filteredMovements = allMovements.filter(m => {
+            if (itemType === 'material') {
+                return m.material_id === itemId;
+            } else {
+                return m.product_variant_id === itemId;
+            }
+        });
+        return Promise.resolve(filteredMovements.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     },
 
     addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> => {

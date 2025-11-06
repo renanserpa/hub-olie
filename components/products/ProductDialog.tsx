@@ -49,6 +49,7 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
     const [formData, setFormData] = useState<Partial<Product>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('base');
+    const [newImageUrl, setNewImageUrl] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -103,6 +104,27 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
             return { ...prev, combination_rules: newRules };
         });
     };
+
+    const addImage = () => {
+        if (newImageUrl.trim() && (URL.canParse?.(newImageUrl) || newImageUrl.startsWith('http'))) {
+            const newImages = [...(formData.images || []), newImageUrl];
+            setFormData(prev => ({ ...prev, images: newImages }));
+            setNewImageUrl('');
+        } else {
+            alert("Por favor, insira uma URL de imagem válida.");
+        }
+    };
+    
+    const removeImage = (index: number) => {
+        const newImages = (formData.images || []).filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, images: newImages }));
+    };
+
+    const handleImageChange = (index: number, value: string) => {
+        const newImages = [...(formData.images || [])];
+        newImages[index] = value;
+        setFormData(prev => ({ ...prev, images: newImages }));
+    };
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -133,6 +155,36 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                             <div className="space-y-4">
                                 <div><label className={labelStyle}>Nome do Produto Base *</label><input name="name" value={formData.name || ''} onChange={handleChange} required className={inputStyle} /></div>
                                 <div><label className={labelStyle}>Descrição</label><textarea name="description" value={formData.description || ''} onChange={handleChange} rows={4} className={inputStyle} /></div>
+                                <div>
+                                    <label className={labelStyle}>Imagens do Produto</label>
+                                    <div className="p-3 border rounded-lg bg-secondary/50 dark:bg-dark-secondary/50 space-y-3">
+                                        <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
+                                            {(formData.images || []).map((url, index) => (
+                                                <div key={index} className="flex items-center gap-2">
+                                                    <img src={url} alt={`Preview ${index + 1}`} className="w-10 h-10 object-cover rounded-md bg-white flex-shrink-0"/>
+                                                    <input 
+                                                        type="text" 
+                                                        value={url}
+                                                        onChange={(e) => handleImageChange(index, e.target.value)} 
+                                                        className="flex-grow p-1 text-xs border rounded-md bg-background"
+                                                    />
+                                                    <IconButton type="button" onClick={() => removeImage(index)} className="text-red-500 flex-shrink-0"><Trash2 size={16} /></IconButton>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-2 pt-2 border-t">
+                                            <input 
+                                                type="text" 
+                                                placeholder="https://exemplo.com/imagem.jpg" 
+                                                value={newImageUrl}
+                                                onChange={(e) => setNewImageUrl(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }}
+                                                className="flex-grow p-1.5 text-xs border rounded-md bg-background"
+                                            />
+                                            <Button type="button" size="sm" variant="outline" onClick={addImage}>Adicionar</Button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                              <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
@@ -149,7 +201,11 @@ const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, 
                         <div className="space-y-6">
                              <div className="p-3 bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-200 text-sm rounded-lg flex items-start gap-3">
                                 <Info size={18} className="flex-shrink-0 mt-0.5"/>
-                                <div>Configure aqui as opções que definem as variações (SKUs) deste produto. Estes dados serão usados no configurador de produtos da tela de Pedidos.</div>
+                                <div>
+                                    Defina aqui as regras de personalização do seu produto. Adicione tamanhos, partes configuráveis (como cores e tecidos) e regras de combinação.
+                                    <br />
+                                    Após salvar, você poderá gerar todos os SKUs de venda na aba <strong>'Variantes & SKUs'</strong>.
+                                </div>
                             </div>
 
                             <SectionCard title="Tamanhos Disponíveis" icon={Ruler} actions={<Button type="button" size="sm" variant="outline" onClick={() => addToArray('available_sizes', { id: `s_${Date.now()}`, name: '' })}><Plus size={14} className="mr-2"/>Adicionar</Button>}>

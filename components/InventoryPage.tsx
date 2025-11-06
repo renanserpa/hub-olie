@@ -14,11 +14,13 @@ const InventoryPage: React.FC = () => {
         isLoading,
         isLoadingMovements,
         isSaving,
-        aggregatedBalances,
+        materialBalances,
         searchQuery,
         setSearchQuery,
-        balancesByMaterial,
-        setSelectedMaterialId,
+        selectedItemDetails,
+        selectItem,
+        selectedItemId,
+        selectedItemType,
         movements,
         addInventoryMovement,
         transferStock,
@@ -60,20 +62,20 @@ const InventoryPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-7">
                      <InventoryBalanceList
-                        balances={aggregatedBalances}
+                        balances={materialBalances}
                         isLoading={isLoading}
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
-                        selectedMaterialId={balancesByMaterial?.material.id || null}
-                        onSelectMaterial={setSelectedMaterialId}
+                        selectedMaterialId={selectedItemType === 'material' ? selectedItemId : null}
+                        onSelectMaterial={(id) => selectItem(id, 'material')}
                      />
                 </div>
                 <div className="lg:col-span-5">
-                    {balancesByMaterial ? (
+                    {selectedItemDetails && selectedItemType === 'material' ? (
                         <InventoryDetailPanel
-                            key={balancesByMaterial.material.id}
-                            material={balancesByMaterial.material}
-                            balances={balancesByMaterial.balances}
+                            key={selectedItemDetails.item.id}
+                            material={selectedItemDetails.item as Material}
+                            balances={selectedItemDetails.balances}
                             movements={movements}
                             isLoading={isLoadingMovements}
                         />

@@ -28,7 +28,8 @@ export const dataService = {
 
   // FIX: Added addManyDocuments to support bulk operations like variant generation.
   addManyDocuments: <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>[]) =>
-    isSandbox() ? sandboxService.addManyDocuments<T>(table, docData) : realSupabaseService.addManyDocuments(table, docData),
+    // FIX: Swapped the arguments for the sandboxService call to match its function signature.
+    isSandbox() ? sandboxService.addManyDocuments<T>(docData, table) : realSupabaseService.addManyDocuments(table, docData),
   
   deleteDocument: (table: string, id: string) =>
     isSandbox() ? sandboxService.deleteDocument(table, id) : realSupabaseService.deleteDocument(table, id),
