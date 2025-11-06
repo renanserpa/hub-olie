@@ -62,7 +62,8 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
         }
 
         try {
-            await onSave(supplier ? { ...supplier, ...result.data } : result.data);
+            const dataToSave = supplier ? { ...supplier, ...result.data } : result.data;
+            await onSave(dataToSave as any);
         } catch(e) {
             // Error already toasted in hook
         } finally {

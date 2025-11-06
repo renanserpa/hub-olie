@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { runtime } from './runtime';
+import { runtime } from '../lib/runtime';
 
 // Hardcoded values to fix environment variable issues in this execution context.
 const supabaseUrl = "https://ijheukynkppcswgtrnwd.supabase.co";
