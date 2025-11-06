@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { ExecutiveKPI } from "../types";
 
+// FIX: Property 'env' does not exist on type 'ImportMeta'. Per guidelines, use process.env.API_KEY.
 const apiKey = process.env.API_KEY;
 // Inicializa com uma string vazia para não quebrar o build se a chave não estiver presente.
 const ai = new GoogleGenAI({ apiKey: apiKey || "" });
@@ -8,7 +9,7 @@ const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 // Helper para verificar a chave de API em tempo de execução, antes de fazer a chamada.
 const ensureApiKey = () => {
     if (!apiKey) {
-      console.error("CRITICAL: Gemini API Key (process.env.API_KEY) is not configured in the Vercel environment. AI features are disabled.");
+      console.error("CRITICAL: Gemini API Key (API_KEY) is not configured in the Vercel environment. AI features are disabled.");
       throw new Error('A chave de API do Gemini não está configurada no ambiente.');
     }
 };
