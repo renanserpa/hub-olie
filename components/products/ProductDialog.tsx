@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Product, ProductCategory, AnyProduct, AppData, ProductPart, ProductSize, BOMComponent, CombinationRule, Collection } from '../../types';
+import { Product, ProductCategory, AnyProduct, AppData, ProductPart, ProductSize, BOMComponent, CombinationRule, Collection, ProductVariant, InventoryBalance } from '../../types';
 import { Loader2, Package, Ruler, Settings, Share2, List, Plus, Trash2, Info } from 'lucide-react';
 import TabLayout from '../ui/TabLayout';
 import { IconButton } from '../ui/IconButton';
@@ -14,6 +14,9 @@ interface ProductDialogProps {
     product: Product | null;
     categories: ProductCategory[];
     appData: AppData;
+    // FIX: Add missing props to the interface.
+    allVariants: ProductVariant[];
+    inventoryBalances: InventoryBalance[];
 }
 
 const getOptionsForSource = (source: ProductPart['options_source'] | undefined, appData: AppData): { id: string, name: string }[] => {
@@ -45,7 +48,7 @@ const SectionCard: React.FC<{ title: string; icon: React.ElementType; children: 
     </div>
 );
 
-const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, product, categories, appData }) => {
+const ProductDialog: React.FC<ProductDialogProps> = ({ isOpen, onClose, onSave, product, categories, appData, allVariants, inventoryBalances }) => {
     const [formData, setFormData] = useState<Partial<Product>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('base');

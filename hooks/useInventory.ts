@@ -123,7 +123,8 @@ export function useInventory() {
     }, [allBalances, allMaterials, allVariants, selectedItemId, selectedItemType]);
 
     const kpiStats = useMemo(() => {
-        const lowStockItems = materialBalances.filter(b => (b.material.current_stock - b.material.reserved_stock) <= (b.material.low_stock_threshold || 10)).length;
+        // FIX: Correctly access stock levels from the aggregated balance object, not the material definition.
+        const lowStockItems = materialBalances.filter(b => (b.current_stock - b.reserved_stock) <= (b.material.low_stock_threshold || 10)).length;
         const totalValue = allBalances.reduce((sum, balance) => {
             const item = balance.material || allVariants.find(v => v.id === balance.product_variant_id);
             const price = (item as Material)?.default_cost || (item as ProductVariant)?.final_price || 0;

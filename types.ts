@@ -685,6 +685,9 @@ export interface MarketingCampaign {
     started_at?: string;
     completed_at?: string;
     scheduled_at?: string;
+    // FIX: Add missing segment_id and template_id properties.
+    segment_id?: string;
+    template_id?: string;
 }
 
 export interface MarketingSegmentRule {

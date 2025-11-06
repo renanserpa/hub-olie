@@ -1,5 +1,6 @@
 import React from 'react';
-import { ProductionOrder, Material } from '../../types';
+// FIX: Add missing type imports
+import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
@@ -11,6 +12,9 @@ interface ProductionDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     allMaterials: Material[];
+    // FIX: Add missing props to the interface
+    onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
+    onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
 }
 
 const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Sparkles } from 'lucide-react';
-import { ForecastData } from '../../hooks/useAnalyticsAI';
+// FIX: Import PredictionData type to correctly type the new prop.
+import { ForecastData, PredictionData } from '../../hooks/useAnalyticsAI';
 import { AnalyticsKPI } from '../../types';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -9,9 +10,11 @@ interface ForecastLineChartProps {
     title: string;
     kpi: AnalyticsKPI;
     forecast: ForecastData;
+    // FIX: Add prediction prop to receive the predicted value.
+    prediction: PredictionData;
 }
 
-const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forecast }) => {
+const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forecast, prediction }) => {
     const currentValue = Number(kpi.value);
     const trendFactor = kpi.trend || 0;
     
@@ -21,7 +24,8 @@ const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forec
         value: currentValue / (1 + trendFactor * (4 - i)),
     }));
     
-    const predictedValue = forecast.prediction > 0 ? forecast.prediction : currentValue * (1 + trendFactor); // A simple prediction if AI fails
+    // FIX: Use the 'prediction' prop to get the predicted value.
+    const predictedValue = prediction.prediction > 0 ? prediction.prediction : currentValue * (1 + trendFactor); // A simple prediction if AI fails
     
     const chartData = [
         ...historicalPoints,
@@ -54,28 +58,22 @@ const ForecastLineChart: React.FC<ForecastLineChartProps> = ({ title, kpi, forec
                                     backgroundColor: 'hsl(var(--background))',
                                     borderColor: 'hsl(var(--border))',
                                     borderRadius: '0.75rem',
+                                    backdropFilter: 'blur(4px)',
                                 }}
                             />
                             <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
-                            <Line
-                                type="monotone"
-                                dataKey="value"
-                                stroke="hsl(var(--primary))"
-                                strokeWidth={2}
-                                strokeDasharray="5 5"
-                                dot={false}
-                                activeDot={false}
-                                legendType="none"
-                                connectNulls // This will connect the last historical point to the prediction
-                                data={[{ name: 'P-0', value: currentValue }, { name: 'Previsto', value: predictedValue }]}
-                            />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
-                 <div className="mt-2 text-xs p-2 bg-primary/10 text-primary/80 rounded-md flex items-start gap-2">
-                    <Sparkles size={24} className="flex-shrink-0" />
-                    <span>{forecast.insight}</span>
-                </div>
+                {forecast && (
+                    <div className="mt-4 p-3 bg-primary/10 rounded-lg text-sm flex items-start gap-3">
+                        <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-primary">Análise Preditiva (IA)</p>
+                            <p className="text-textSecondary">{forecast.insight}</p>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

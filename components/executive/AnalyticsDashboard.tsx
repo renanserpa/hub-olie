@@ -19,9 +19,11 @@ interface AnalyticsDashboardProps {
 
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis, aiData, moduleName }) => {
     
-    // Find the first available KPI and its prediction for the forecast chart
-    const forecastKpi = kpis.find(kpi => aiData.forecasts[kpi.id]);
+    // FIX: Find a KPI that has both forecast and prediction data available.
+    const forecastKpi = kpis.find(kpi => aiData.forecasts[kpi.id] && aiData.predictions[kpi.id]);
     const forecast = forecastKpi ? aiData.forecasts[forecastKpi.id] : null;
+    // FIX: Get the corresponding prediction data to pass to the chart.
+    const prediction = forecastKpi ? aiData.predictions[forecastKpi.id] : null;
 
     return (
         <div className="space-y-6">
@@ -35,11 +37,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ kpis, aiData, m
                 )}
             </div>
             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-                 {forecastKpi && forecast ? (
+                 {/* FIX: Check for prediction data as well before rendering the forecast chart. */}
+                 {forecastKpi && forecast && prediction ? (
                     <ForecastLineChart
                         title={`Previsão IA - ${forecastKpi.name}`}
                         kpi={forecastKpi}
                         forecast={forecast}
+                        // FIX: Pass the prediction data to the chart component.
+                        prediction={prediction}
                     />
                  ) : (
                     <ModuleBarChart title={`Resumo de KPIs - ${moduleName}`} kpis={kpis} />

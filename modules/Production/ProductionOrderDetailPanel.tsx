@@ -1,5 +1,6 @@
 import React from 'react';
-import { ProductionOrder, Material, BOMComponent, ProductionRoute } from '../../types';
+// FIX: Add missing type imports
+import { ProductionOrder, Material, BOMComponent, ProductionRoute, ProductionTaskStatus, ProductionQualityCheck } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { cn } from '../../lib/utils';
 
@@ -20,6 +21,9 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 interface ProductionOrderDetailPanelProps {
     order: ProductionOrder & { product?: any, tasks?: any[], variant?: any, route?: ProductionRoute };
     allMaterials: Material[];
+    // FIX: Add missing props that are passed down from the parent drawer.
+    onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
+    onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
 }
 
 const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials }) => {
