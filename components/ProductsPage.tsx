@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Package, BookOpen, GitFork } from 'lucide-react';
+import { Loader2, Package, BookOpen } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
 import ProductDialog from './products/ProductDialog';
@@ -7,22 +7,20 @@ import ProductFilterBar from './products/ProductFilterBar';
 import ProductKanban from './products/ProductKanban';
 import TabLayout from './ui/TabLayout';
 import CatalogManagement from './products/CatalogManagement';
-import ProductVariantsPanel from './products/ProductVariantsPanel';
-// FIX: Import the 'Product' type.
 import { Product } from '../types';
 
 const PRODUCT_PAGE_TABS = [
-    { id: 'products', label: 'Produtos Base', icon: Package },
-    { id: 'variants', label: 'Variantes & SKUs', icon: GitFork },
-    { id: 'catalog', label: 'Dados Mestres (Catálogo)', icon: BookOpen },
+    { id: 'list', label: 'Lista de Produtos', icon: Package },
+    { id: 'settings', label: 'Configurações', icon: BookOpen },
 ];
-
 
 const ProductsPage: React.FC = () => {
     const {
         isLoading,
         isSaving,
         filteredProducts,
+        allVariants,
+        inventoryBalances,
         categories,
         settingsData,
         searchQuery,
@@ -39,15 +37,11 @@ const ProductsPage: React.FC = () => {
         setSelectedProductId,
     } = useProducts();
 
-    const [activeProductTab, setActiveProductTab] = React.useState('products');
+    const [activeProductTab, setActiveProductTab] = React.useState('list');
 
     const handleSelectProduct = (product: Product) => {
         setSelectedProductId(product.id);
         openDialog(product);
-    };
-    
-    const handleSelectProductForVariants = (productId: string) => {
-        setSelectedProductId(productId);
     };
 
     const renderProductsContent = () => {
@@ -61,18 +55,19 @@ const ProductsPage: React.FC = () => {
         if (viewMode === 'kanban') {
             return <ProductKanban 
                 products={filteredProducts} 
-                onCardClick={(product) => handleSelectProductForVariants(product.id)} 
+                onCardClick={handleSelectProduct} 
                 onStatusChange={updateProductStatus} 
                 selectedProductId={selectedProductId}
                 onEdit={openDialog}
             />;
         }
         return <ProductList 
-            products={filteredProducts} 
+            products={filteredProducts}
+            allVariants={allVariants}
             isLoading={isLoading} 
             onEdit={openDialog} 
             selectedProductId={selectedProductId}
-            onRowClick={handleSelectProductForVariants}
+            onRowClick={(product) => handleSelectProduct(product)}
         />;
     };
 
@@ -82,7 +77,7 @@ const ProductsPage: React.FC = () => {
                 <TabLayout tabs={PRODUCT_PAGE_TABS} activeTab={activeProductTab} onTabChange={setActiveProductTab} />
             </div>
 
-            {activeProductTab === 'products' && (
+            {activeProductTab === 'list' && (
                 <div>
                     <ProductFilterBar
                         searchQuery={searchQuery}
@@ -97,12 +92,8 @@ const ProductsPage: React.FC = () => {
                     </div>
                 </div>
             )}
-            
-            {activeProductTab === 'variants' && (
-                <ProductVariantsPanel productId={selectedProductId} />
-            )}
 
-            {activeProductTab === 'catalog' && (
+            {activeProductTab === 'settings' && (
                 <CatalogManagement />
             )}
             
@@ -114,6 +105,8 @@ const ProductsPage: React.FC = () => {
                     product={editingProduct}
                     categories={categories}
                     appData={settingsData}
+                    allVariants={allVariants}
+                    inventoryBalances={inventoryBalances}
                 />
             )}
             

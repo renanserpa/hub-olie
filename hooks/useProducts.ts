@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct, AppData, ProductStatus } from '../types';
+import { Product, ProductCategory, AnyProduct, AppData, ProductStatus, ProductVariant, InventoryBalance } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -7,6 +7,8 @@ export type ViewMode = 'list' | 'kanban';
 
 export function useProducts() {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
+    const [inventoryBalances, setInventoryBalances] = useState<InventoryBalance[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -17,7 +19,7 @@ export function useProducts() {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     
-    const [viewMode, setViewModeInternal] = useState<ViewMode>('kanban');
+    const [viewMode, setViewModeInternal] = useState<ViewMode>('list');
 
     useEffect(() => {
         const savedViewMode = sessionStorage.getItem('productsViewMode') as ViewMode;
@@ -34,14 +36,18 @@ export function useProducts() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [productsData, categoriesData, settings] = await Promise.all([
+            const [productsData, categoriesData, settings, variantsData, balancesData] = await Promise.all([
                 dataService.getProducts(),
                 dataService.getProductCategories(),
                 dataService.getSettings(),
+                dataService.getCollection<ProductVariant>('product_variants'),
+                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),
             ]);
             setAllProducts(productsData);
             setCategories(categoriesData);
             setSettingsData(settings);
+            setAllVariants(variantsData);
+            setInventoryBalances(balancesData);
         } catch (error) {
              toast({ title: "Erro!", description: "Não foi possível carregar os produtos.", variant: "destructive" });
         } finally {
@@ -114,6 +120,8 @@ export function useProducts() {
         isLoading,
         isSaving,
         filteredProducts,
+        allVariants,
+        inventoryBalances,
         categories,
         settingsData,
         searchQuery,

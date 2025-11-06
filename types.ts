@@ -241,7 +241,7 @@ export interface ZipperColor { id: string; name: string; hex: string; palette_id
 export interface BiasColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface LiningColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface PullerColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface EmbroideryColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; thread_type: string; }
+export interface EmbroideryColor { id: string; name: string; hex: string; palette_id: string; thread_type: string; is_active: boolean; }
 export interface FabricTexture { id: string; name: string; description: string; image_url: string; hex_code: string; fabric_color_id: string; supplier_sku: string; manufacturer_sku: string; manufacturer_id: string; distributor_id: string; is_active: boolean; }
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
 
@@ -254,7 +254,7 @@ export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Sus
 export interface ProductSize {
   id: string;
   name: string;
-  dimensions?: { width: number; height: number; depth: number };
+  dimensions?: { width?: number; height?: number; depth?: number; };
 }
 
 export interface ProductPart {
@@ -287,7 +287,19 @@ export interface ProductAttributes {
   zipper_color_ids?: string[];
   bias_color_ids?: string[];
   puller_color_ids?: string[];
-  embroidery?: boolean;
+  personalization?: {
+    embroidery?: {
+      enabled: boolean;
+      allowed_font_ids?: string[];
+      allowed_color_ids?: string[];
+      max_chars?: number;
+    };
+    hot_stamping?: {
+      enabled: boolean;
+      allowed_color_ids?: string[];
+      max_chars?: number;
+    }
+  }
 }
 
 export interface Product {
@@ -345,6 +357,7 @@ export interface ConfigJson {
     enabled: boolean;
     text: string;
     font: string;
+    color?: string;
   };
   notes?: string;
 }

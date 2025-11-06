@@ -9,93 +9,49 @@ import VariantGeneratorDialog from './VariantGeneratorDialog';
 import { toast } from '../../hooks/use-toast';
 
 interface ProductVariantsPanelProps {
-    productId: string | null;
+    product: Product | null;
+    variants: ProductVariant[];
+    appData: AppData | null;
+    isLoading: boolean;
+    onRefresh: () => void;
 }
 
-const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ productId }) => {
-    const [product, setProduct] = useState<Product | null>(null);
-    const [variants, setVariants] = useState<ProductVariant[]>([]);
-    const [appData, setAppData] = useState<AppData | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ product, variants, appData, isLoading, onRefresh }) => {
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const fetchData = async () => {
-        if (!productId) {
-            setVariants([]);
-            setProduct(null);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const [productData, allVariants, settingsData] = await Promise.all([
-                dataService.getDocument<Product>('products', productId),
-                dataService.getCollection<ProductVariant>('product_variants'),
-                dataService.getSettings()
-            ]);
-            setProduct(productData);
-            setVariants(allVariants.filter(v => v.product_base_id === productId));
-            setAppData(settingsData);
-        } catch (error) {
-            console.error("Failed to fetch variants data", error);
-            toast({ title: "Erro", description: "Não foi possível carregar os dados das variantes.", variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, [productId]);
-    
     const handleVariantsGenerated = async (newVariants: Omit<ProductVariant, 'id'>[]) => {
-        setIsLoading(true);
+        setIsSubmitting(true);
         try {
-            // FIX: Use addManyDocuments for bulk creation
             await dataService.addManyDocuments('product_variants', newVariants);
             toast({ title: "Sucesso!", description: `${newVariants.length} novas variantes foram geradas.` });
             setIsGeneratorOpen(false);
-            await fetchData(); // Refresh data
+            onRefresh(); // Refresh parent data
         } catch(error) {
             toast({ title: "Erro", description: "Não foi possível salvar as novas variantes.", variant: 'destructive' });
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
-
-    if (!productId) {
-        return (
-            <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
-                <Package className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-4 text-lg font-medium text-textPrimary">Selecione um Produto Base</h3>
-                <p className="mt-1 text-sm">Clique em um item na aba "Produtos Base" para visualizar e gerenciar suas variantes aqui.</p>
-            </div>
-        );
-    }
     
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <GitFork size={18} />
-                        Variantes de: {product?.name || '...'}
-                    </CardTitle>
-                    <p className="text-sm text-textSecondary mt-1">Todas as combinações únicas (SKUs) para o produto selecionado.</p>
-                </div>
-                <Button onClick={() => setIsGeneratorOpen(true)} disabled={!product}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Gerar Novas Variantes
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-textSecondary">Gerencie e gere todas as combinações (SKUs) para este produto base.</p>
+                <Button onClick={() => setIsGeneratorOpen(true)} disabled={!product || isSubmitting}>
+                    {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Plus className="w-4 h-4 mr-2" />}
+                    Gerar Variantes Válidas
                 </Button>
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <div className="flex justify-center items-center h-48">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                ) : (
-                    <ProductVariantsTable variants={variants} />
-                )}
-            </CardContent>
+            </div>
+            
+            {isLoading ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+            ) : (
+                <ProductVariantsTable variants={variants} />
+            )}
+           
             {product && appData && (
                 <VariantGeneratorDialog
                     isOpen={isGeneratorOpen}
@@ -105,7 +61,7 @@ const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ productId }
                     onGenerate={handleVariantsGenerated}
                 />
             )}
-        </Card>
+        </div>
     );
 };
 

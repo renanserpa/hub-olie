@@ -59,6 +59,17 @@ const products: Product[] = [
         id: 'p2', name: 'Nécessaire de Viagem', description: 'Perfeita para organizar seus itens de higiene e maquiagem em viagens.', 
         base_sku: 'NV-GRD-01', base_price: 129.90, category: 'Nécessaires', status: 'Ativo', images:[], 
         createdAt: new Date(Date.now() - 10 * 86400000).toISOString(), updatedAt: new Date().toISOString(), collection_ids: ['col1', 'col2'],
+        // FIX: The 'embroidery' object must be nested inside a 'personalization' property to match the ProductAttributes type.
+        attributes: {
+            personalization: {
+                embroidery: {
+                    enabled: true,
+                    allowed_font_ids: ['mf1'],
+                    allowed_color_ids: ['ec1', 'ec3'],
+                    max_chars: 15,
+                }
+            }
+        },
         configurable_parts: [
             { id: 'part3', key: 'tecido_externo', name: 'Tecido Externo', options_source: 'fabric_colors' },
             { id: 'part4', key: 'ziper', name: 'Zíper', options_source: 'zipper_colors' },
@@ -113,7 +124,7 @@ const product_variants: ProductVariant[] = [
 
 const order_items: OrderItem[] = [
     { id: 'oi1', order_id: 'o1', product_id: 'p1', product_name: 'Bolsa Tote Clássica', quantity: 1, unit_price: 299.90, total: 299.90, config_json: { fabricColor: 'Bege' } },
-    { id: 'oi2', order_id: 'o2', product_id: 'p2', product_name: 'Nécessaire de Viagem', quantity: 2, unit_price: 129.90, total: 259.80, config_json: { embroidery: { enabled: true, text: 'CD', font: 'mf1' } } },
+    { id: 'oi2', order_id: 'o2', product_id: 'p2', product_name: 'Nécessaire de Viagem', quantity: 2, unit_price: 129.90, total: 259.80, config_json: { embroidery: { enabled: true, text: 'CD', font: 'mf1', color: '#E6B800' } } },
     { id: 'oi3', order_id: 'o2', product_id: 'p3', product_name: 'Mochila Urbana', quantity: 1, unit_price: 450.00, total: 450.00 },
 ];
 
@@ -144,6 +155,11 @@ const zipper_colors: ZipperColor[] = [
 ];
 const bias_colors: BiasColor[] = [
     { id: 'bc1', name: 'Viés Caramelo', hex: '#D2691E', palette_id: 'pal1', is_active: true },
+];
+const embroidery_colors: EmbroideryColor[] = [
+    { id: 'ec1', name: 'Linha Ouro', hex: '#E6B800', palette_id: 'pal1', is_active: true, thread_type: 'metallic' },
+    { id: 'ec2', name: 'Linha Prata', hex: '#C0C0C0', palette_id: 'pal1', is_active: true, thread_type: 'metallic' },
+    { id: 'ec3', name: 'Linha Preta', hex: '#222222', palette_id: 'pal1', is_active: true, thread_type: 'polyester' },
 ];
 const config_fonts: MonogramFont[] = [
     { id: 'mf1', name: 'Brush Script', style: 'script', category: 'script', preview_url: '', font_file_url: '', is_active: true },
@@ -302,7 +318,7 @@ const db: AppData = {
             vies: bias_colors,
             forro: [],
             puxador: [],
-            bordado: [],
+            bordado: embroidery_colors,
             texturas: [],
         },
         fontes_monogramas: config_fonts,

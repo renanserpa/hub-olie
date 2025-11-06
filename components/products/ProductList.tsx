@@ -1,8 +1,5 @@
-
-
-
 import React from 'react';
-import { Product } from '../../types';
+import { Product, ProductVariant } from '../../types';
 import { Card, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { PackageOpen, Edit } from 'lucide-react';
@@ -11,23 +8,24 @@ import { cn } from '../../lib/utils';
 
 interface ProductListProps {
     products: Product[];
+    allVariants: ProductVariant[];
     isLoading: boolean;
     onEdit: (product: Product) => void;
     selectedProductId: string | null;
-    onRowClick: (productId: string) => void;
+    onRowClick: (product: Product) => void;
 }
 
 const SkeletonRow: React.FC = () => (
     <tr className="animate-pulse">
-        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/2"></div></td>
+        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
         <td className="p-4"><div className="h-4 bg-gray-200 rounded w-1/4"></div></td>
         <td className="p-4"><div className="h-8 bg-gray-200 rounded w-20"></div></td>
     </tr>
 );
 
-const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit, selectedProductId, onRowClick }) => {
+const ProductList: React.FC<ProductListProps> = ({ products, allVariants, isLoading, onEdit, selectedProductId, onRowClick }) => {
     return (
         <Card>
             <CardContent className="p-0">
@@ -48,35 +46,43 @@ const ProductList: React.FC<ProductListProps> = ({ products, isLoading, onEdit, 
                         <table className="w-full text-sm text-left">
                             <thead className="bg-secondary">
                                 <tr>
-                                    <th className="p-4 font-semibold text-textSecondary">Nome</th>
                                     <th className="p-4 font-semibold text-textSecondary">SKU</th>
-                                    <th className="p-4 font-semibold text-textSecondary">Categoria</th>
-                                    <th className="p-4 font-semibold text-textSecondary">Preço Base</th>
+                                    <th className="p-4 font-semibold text-textSecondary">Nome do Produto</th>
+                                    <th className="p-4 font-semibold text-textSecondary">Coleção</th>
+                                    <th className="p-4 font-semibold text-textSecondary">Tamanhos</th>
+                                    <th className="p-4 font-semibold text-textSecondary">Variantes</th>
+                                    <th className="p-4 font-semibold text-textSecondary">Status</th>
                                     <th className="p-4 font-semibold text-textSecondary text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {products.map(product => (
-                                    <tr 
-                                        key={product.id} 
-                                        onClick={() => onRowClick(product.id)}
-                                        className={cn(
-                                            "border-b border-border cursor-pointer",
-                                            selectedProductId === product.id ? 'bg-accent/80' : 'hover:bg-accent/50'
-                                        )}
-                                    >
-                                        <td className="p-4 font-medium text-textPrimary">{product.name}</td>
-                                        <td className="p-4 font-mono text-xs">{product.base_sku}</td>
-                                        <td className="p-4"><Badge variant="secondary">{product.category || 'N/A'}</Badge></td>
-                                        <td className="p-4">R$ {product.base_price.toFixed(2)}</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(product); }}>
-                                                <Edit size={14} className="mr-2" />
-                                                Editar
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {products.map(product => {
+                                    const variantCount = allVariants.filter(v => v.product_base_id === product.id).length;
+                                    const availableSizes = product.available_sizes?.map(s => s.name).join(', ') || 'N/A';
+                                    return (
+                                        <tr 
+                                            key={product.id} 
+                                            onClick={() => onRowClick(product)}
+                                            className={cn(
+                                                "border-b border-border cursor-pointer",
+                                                selectedProductId === product.id ? 'bg-accent/80' : 'hover:bg-accent/50'
+                                            )}
+                                        >
+                                            <td className="p-4 font-mono text-xs">{product.base_sku}</td>
+                                            <td className="p-4 font-medium text-textPrimary">{product.name}</td>
+                                            <td className="p-4"><Badge variant="secondary">{product.category || 'N/A'}</Badge></td>
+                                            <td className="p-4 text-xs">{availableSizes}</td>
+                                            <td className="p-4 text-xs">{variantCount} variantes</td>
+                                            <td className="p-4"><Badge variant={product.status === 'Ativo' ? 'ativo' : 'inativo'}>{product.status}</Badge></td>
+                                            <td className="p-4 text-right">
+                                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(product); }}>
+                                                    <Edit size={14} className="mr-2" />
+                                                    Editar
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
