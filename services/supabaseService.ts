@@ -18,6 +18,7 @@ import {
     Product,
     ProductCategory,
     ProductionOrder,
+    ProductionOrderStatus,
     // FIX: Import missing production types
     ProductionQualityCheck,
     ProductionAudit,
@@ -56,6 +57,7 @@ import {
     SystemAudit,
     MoldLibrary,
     ProductionRoute,
+    ProductVariant,
 } from "../types";
 
 
@@ -93,6 +95,13 @@ const addDocument = async <T extends { id?: string }>(table: string, docData: Om
     const { data, error } = await supabase.from(table).insert(docData).select().single();
     if (error) handleError(error, `addDocument(${table})`);
     return data as T;
+};
+
+// FIX: Add addManyDocuments to support bulk creation of product variants.
+const addManyDocuments = async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>[]): Promise<T[]> => {
+    const { data, error } = await supabase.from(table).insert(docData).select();
+    if (error) handleError(error, `addManyDocuments(${table})`);
+    return (data as T[]) || [];
 };
 
 const updateDocument = async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
@@ -145,6 +154,7 @@ export const supabaseService = {
   },
   getDocument,
   addDocument,
+  addManyDocuments,
   updateDocument,
   deleteDocument,
   
@@ -202,17 +212,13 @@ export const supabaseService = {
         config_supply_groups: [],
         config_materials: [],
         warehouses: [],
-        // FIX: Add missing properties mold_library and production_routes to satisfy AppData type
         mold_library: [],
         production_routes: [],
         media_assets: [], orders: [],
-        // FIX: Added missing 'order_items' to AppData to align with sandbox DB structure.
         order_items: [],
         contacts: [], products: [], 
-        // FIX: Add missing 'product_variants' to satisfy the AppData type.
         product_variants: [], 
         product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] },
-        // FIX: Added missing logistics properties
         logistics_waves: [],
         logistics_shipments: [],
         inventory_balances: [], inventory_movements: [],
@@ -234,9 +240,7 @@ export const supabaseService = {
         initializer_sync_state: [],
         workflow_rules: [],
         notifications: [],
-        // Fix: Added missing 'system_audit' property to satisfy the AppData type.
         system_audit: [],
-        // FIX: Add missing 'production_audit' property to satisfy the AppData type.
         production_audit: [],
     };
 
@@ -366,17 +370,20 @@ export const supabaseService = {
   },
   updateOrder: async (orderId: string, data: Partial<Order>): Promise<Order> => updateDocument('orders', orderId, { ...data, updated_at: new Date().toISOString() }),
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection('production_orders', '*, products(*)'),
+  // FIX: Implement `updateProductionOrderStatus` to be used by the production module.
+  updateProductionOrderStatus: (orderId: string, status: ProductionOrderStatus): Promise<ProductionOrder> => updateDocument<ProductionOrder>('production_orders', orderId, { status }),
   getTasks: (): Promise<Task[]> => supabaseService.getCollection('tasks'),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection('task_statuses'),
   updateTask: (taskId: string, data: Partial<Task>): Promise<Task> => updateDocument('tasks', taskId, data),
-  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)'),
-  getInventoryMovements: async (materialId: string): Promise<InventoryMovement[]> => {
-    const { data, error } = await supabase.from('inventory_movements').select('*').eq('material_id', materialId).order('created_at', { ascending: false });
+  getInventoryBalances: (): Promise<InventoryBalance[]> => supabaseService.getCollection('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)'),
+  // FIX: Update getInventoryMovements to support filtering by material or product variant.
+  getInventoryMovements: async (itemId: string, itemType: 'material' | 'product'): Promise<InventoryMovement[]> => {
+    const column = itemType === 'material' ? 'material_id' : 'product_variant_id';
+    const { data, error } = await supabase.from('inventory_movements').select('*').eq(column, itemId).order('created_at', { ascending: false });
     if (error) { handleError(error, 'getInventoryMovements'); return []; }
     return data || [];
   },
   addInventoryMovement: async (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => addDocument('inventory_movements', { ...movementData, created_at: new Date().toISOString() }),
-  // FIX: Added placeholder transferStock function. In a real app, this would be a transactional RPC call.
   transferStock: (transferData: any): Promise<void> => { console.warn("Supabase transferStock is not implemented and should be an RPC function."); return Promise.resolve(); },
   getProducts: (): Promise<Product[]> => supabaseService.getCollection('products'),
   getProductCategories: (): Promise<ProductCategory[]> => supabaseService.getCollection('product_categories'),
@@ -464,6 +471,5 @@ export const supabaseService = {
     return { accounts, categories, transactions, payables, receivables };
   },
   getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
-  // FIX: Explicitly specify the generic type for updateDocument to ensure correct type checking for `is_read`.
   markNotificationAsRead: (id: string): Promise<Notification> => updateDocument<Notification>('notifications', id, { is_read: true }),
 };

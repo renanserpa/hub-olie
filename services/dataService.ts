@@ -1,7 +1,7 @@
 import { isSandbox } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse, ProductionRoute, MoldLibrary } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, ProductionOrderStatus, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse, ProductionRoute, MoldLibrary } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations
@@ -25,6 +25,10 @@ export const dataService = {
 
   addDocument: <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>) =>
     isSandbox() ? sandboxService.addDocument<T>(table, docData) : realSupabaseService.addDocument(table, docData),
+
+  // FIX: Added addManyDocuments to support bulk operations like variant generation.
+  addManyDocuments: <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>[]) =>
+    isSandbox() ? sandboxService.addManyDocuments<T>(table, docData) : realSupabaseService.addManyDocuments(table, docData),
   
   deleteDocument: (table: string, id: string) =>
     isSandbox() ? sandboxService.deleteDocument(table, id) : realSupabaseService.deleteDocument(table, id),
@@ -92,6 +96,7 @@ export const dataService = {
   updateOrder: (orderId: string, data: Partial<Order>) => isSandbox() ? sandboxService.updateOrder(orderId, data) : realSupabaseService.updateOrder(orderId, data),
 
   getProductionOrders: () => isSandbox() ? sandboxService.getCollection<ProductionOrder>('production_orders') : realSupabaseService.getProductionOrders(),
+  updateProductionOrderStatus: (orderId: string, newStatus: ProductionOrderStatus) => isSandbox() ? sandboxService.updateProductionOrderStatus(orderId, newStatus) : realSupabaseService.updateProductionOrderStatus(orderId, newStatus),
   getProductionRoutes: () => isSandbox() ? sandboxService.getCollection<ProductionRoute>('production_routes') : Promise.resolve([]),
   getMoldLibrary: () => isSandbox() ? sandboxService.getCollection<MoldLibrary>('mold_library') : Promise.resolve([]),
   
@@ -100,9 +105,9 @@ export const dataService = {
   updateTask: (taskId: string, data: Partial<Task>) => isSandbox() ? sandboxService.updateDocument<Task>('tasks', taskId, data) : realSupabaseService.updateTask(taskId, data),
 
   getInventoryBalances: () => isSandbox() ? sandboxService.getCollection<InventoryBalance>('inventory_balances') : realSupabaseService.getInventoryBalances(),
-  getInventoryMovements: (materialId: string) => isSandbox() ? sandboxService.getInventoryMovements(materialId) : realSupabaseService.getInventoryMovements(materialId),
+  // FIX: Update getInventoryMovements to accept itemType to allow fetching movements for products and materials.
+  getInventoryMovements: (itemId: string, itemType: 'material' | 'product') => isSandbox() ? sandboxService.getInventoryMovements(itemId, itemType) : realSupabaseService.getInventoryMovements(itemId, itemType),
   addInventoryMovement: (movementData: Omit<InventoryMovement, 'id' | 'created_at'>) => isSandbox() ? sandboxService.addInventoryMovement(movementData) : realSupabaseService.addInventoryMovement(movementData),
-  // FIX: Added transferStock to the service to match its usage in useInventory hook.
   transferStock: (transferData: any) => isSandbox() ? sandboxService.transferStock(transferData) : realSupabaseService.transferStock(transferData),
   
   getProducts: () => isSandbox() ? sandboxService.getCollection<Product>('products') : realSupabaseService.getProducts(),

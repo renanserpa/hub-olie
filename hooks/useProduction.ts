@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -11,6 +11,8 @@ export function useProduction() {
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
+    // FIX: Add state for product variants
+    const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -32,15 +34,17 @@ export function useProduction() {
         setViewModeInternal(mode);
     };
 
-    const loadData = useCallback(async () => {
+    const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData] = await Promise.all([
+            // FIX: Fetch product variants along with other production data.
+            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
+                dataService.getCollection<ProductVariant>('product_variants'),
             ]);
             
             setAllOrders(ordersData);
@@ -48,6 +52,7 @@ export function useProduction() {
             setAllQualityChecks(qualityData);
             setAllMaterials(materialsData);
             setAllProducts(productsData);
+            setAllVariants(variantsData);
 
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
@@ -57,16 +62,19 @@ export function useProduction() {
     }, []);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        reload();
+    }, [reload]);
 
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => ({
             ...order,
+            // FIX: Add variant details to each order.
+            variant: allVariants.find(v => v.sku === order.variant_sku),
             tasks: allTasks.filter(t => t.production_order_id === order.id),
             quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
         }));
-    }, [allOrders, allTasks, allQualityChecks]);
+    // FIX: Add allVariants to the dependency array.
+    }, [allOrders, allTasks, allQualityChecks, allVariants]);
     
     const filteredOrders = useMemo(() => {
         return ordersWithDetails.filter(order => {
@@ -120,7 +128,7 @@ export function useProduction() {
         try {
             await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
             toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
-            await loadData();
+            await reload();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
         } finally {
@@ -131,16 +139,22 @@ export function useProduction() {
     const updateProductionOrderStatus = async (orderId: string, status: ProductionOrderStatus) => {
         setIsSaving(true);
         const order = allOrders.find(o => o.id === orderId);
-        if (!order) return;
+        if (!order) {
+            setIsSaving(false);
+            return;
+        }
         
+        // Optimistic update for UI
         setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
 
         try {
-            await dataService.updateDocument<ProductionOrder>('production_orders', orderId, { status });
-            toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado para "${status}".` });
+            await dataService.updateProductionOrderStatus(orderId, status);
+            toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
+            await reload(); // Reload to get all data changes from triggers
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
-            loadData(); // Revert
+            // Revert optimistic update on failure by reloading
+            await reload();
         } finally {
             setIsSaving(false);
         }
@@ -153,7 +167,7 @@ export function useProduction() {
             await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
             toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
             setIsCreateDialogOpen(false);
-            loadData();
+            reload();
         } catch(e) {
             toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
@@ -169,7 +183,7 @@ export function useProduction() {
                 created_at: new Date().toISOString()
             });
             toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
-            await loadData();
+            await reload();
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
         } finally {
@@ -197,5 +211,6 @@ export function useProduction() {
         setViewMode,
         isCreateDialogOpen,
         setIsCreateDialogOpen,
+        reload,
     };
 }

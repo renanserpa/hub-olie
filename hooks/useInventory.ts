@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { InventoryBalance, InventoryMovement, Material, Warehouse, InventoryMovementReason, InventoryMovementType, Supplier } from '../types';
+import { InventoryBalance, InventoryMovement, Material, Warehouse, ProductVariant, Supplier } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
 export function useInventory() {
     const [allBalances, setAllBalances] = useState<InventoryBalance[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
+    const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
     const [allWarehouses, setAllWarehouses] = useState<Warehouse[]>([]);
     const [movements, setMovements] = useState<InventoryMovement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -13,14 +14,16 @@ export function useInventory() {
     const [isLoadingMovements, setIsLoadingMovements] = useState(false);
     
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [selectedItemType, setSelectedItemType] = useState<'material' | 'product'>('material');
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [balancesData, materialsData, warehousesData, suppliersData] = await Promise.all([
-                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)'),
+            const [balancesData, materialsData, variantsData, warehousesData, suppliersData] = await Promise.all([
+                dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)'),
                 dataService.getCollection<Material>('config_materials'),
+                dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<Warehouse>('warehouses'),
                 dataService.getCollection<Supplier>('suppliers'),
             ]);
@@ -35,38 +38,30 @@ export function useInventory() {
 
             setAllBalances(enrichedBalances);
             setAllMaterials(materialsData);
+            setAllVariants(variantsData);
             setAllWarehouses(warehousesData);
             
-            if (materialsData.length > 0 && selectedMaterialId === null) {
-                setSelectedMaterialId(materialsData[0].id);
-            } else if (materialsData.length === 0) {
-                setSelectedMaterialId(null);
-            }
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar o estoque.", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
-    }, [selectedMaterialId]);
+    }, []);
 
     useEffect(() => {
-        // The listener will call loadData to refetch and rejoin everything
-        const listener = dataService.listenToCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*), warehouse:warehouses(*)', () => {
-            loadData();
-        });
         loadData();
-        return () => listener.unsubscribe();
     }, [loadData]);
     
     useEffect(() => {
         const fetchMovements = async () => {
-            if (!selectedMaterialId) {
+            if (!selectedItemId) {
                 setMovements([]);
                 return;
             }
             setIsLoadingMovements(true);
             try {
-                const movementsData = await dataService.getInventoryMovements(selectedMaterialId);
+                // FIX: Pass both selectedItemId and selectedItemType to dataService
+                const movementsData = await dataService.getInventoryMovements(selectedItemId, selectedItemType);
                 setMovements(movementsData);
             } catch (error) {
                  toast({ title: 'Erro!', description: 'Não foi possível carregar os movimentos.', variant: 'destructive' });
@@ -75,74 +70,73 @@ export function useInventory() {
             }
         };
         fetchMovements();
-        
-         const listener = dataService.listenToCollection<InventoryMovement>(`inventory_movements?material_id=eq.${selectedMaterialId}`, undefined, (data) => {
-             setMovements(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-        });
-        return () => listener.unsubscribe();
+    }, [selectedItemId, selectedItemType]);
 
-    }, [selectedMaterialId]);
-
-    const aggregatedBalances = useMemo(() => {
-        const materialMap = new Map<string, { material: Material, current_stock: number, reserved_stock: number }>();
-
-        allBalances.forEach(balance => {
+    const materialBalances = useMemo(() => {
+        const materialMap = new Map<string, { item: Material, current_stock: number, reserved_stock: number }>();
+        allBalances.filter(b => b.material_id).forEach(balance => {
             if (!balance.material) return;
-            
             if (!materialMap.has(balance.material_id)) {
-                materialMap.set(balance.material_id, {
-                    material: balance.material,
-                    current_stock: 0,
-                    reserved_stock: 0,
-                });
+                materialMap.set(balance.material_id, { item: balance.material, current_stock: 0, reserved_stock: 0 });
             }
-            
             const entry = materialMap.get(balance.material_id)!;
             entry.current_stock += balance.current_stock;
             entry.reserved_stock += balance.reserved_stock;
         });
-
         const filtered = Array.from(materialMap.values());
-        
-        if (!searchQuery) {
-            return filtered;
-        }
-        const lowercasedQuery = searchQuery.toLowerCase();
-        return filtered.filter(balance =>
-            balance.material.name.toLowerCase().includes(lowercasedQuery) ||
-            balance.material.sku?.toLowerCase().includes(lowercasedQuery)
-        );
+        if (!searchQuery) return filtered;
+        return filtered.filter(b => b.item.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.item.sku?.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [allBalances, searchQuery]);
     
-    const balancesByMaterial = useMemo(() => {
-        if (!selectedMaterialId) return null;
+    const productBalances = useMemo(() => {
+        const variantMap = new Map<string, { item: ProductVariant, current_stock: number, reserved_stock: number }>();
+         allBalances.filter(b => b.product_variant_id).forEach(balance => {
+            const variant = allVariants.find(v => v.id === balance.product_variant_id);
+            if (!variant) return;
+            if (!variantMap.has(variant.id)) {
+                variantMap.set(variant.id, { item: variant, current_stock: 0, reserved_stock: 0 });
+            }
+            const entry = variantMap.get(variant.id)!;
+            entry.current_stock += balance.current_stock;
+            entry.reserved_stock += balance.reserved_stock;
+        });
+        const filtered = Array.from(variantMap.values());
+        if (!searchQuery) return filtered;
+        return filtered.filter(b => b.item.name.toLowerCase().includes(searchQuery.toLowerCase()) || b.item.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+    }, [allBalances, allVariants, searchQuery]);
+    
+    const selectedItemDetails = useMemo(() => {
+        if (!selectedItemId) return null;
         
-        const balances = allBalances.filter(b => b.material_id === selectedMaterialId);
-        const materialFromBalance = balances[0]?.material;
-        const materialFromList = allMaterials.find(m => m.id === selectedMaterialId);
-        const material = materialFromBalance || materialFromList;
+        const balances = allBalances.filter(b => (selectedItemType === 'material' ? b.material_id : b.product_variant_id) === selectedItemId);
+        let item: Material | ProductVariant | undefined;
+        if(selectedItemType === 'material') {
+            item = allMaterials.find(m => m.id === selectedItemId);
+        } else {
+            item = allVariants.find(v => v.id === selectedItemId);
+        }
 
-        if (!material) return null;
+        if (!item) return null;
 
-        return { material, balances };
+        return { item, balances };
 
-    }, [allBalances, allMaterials, selectedMaterialId]);
+    }, [allBalances, allMaterials, allVariants, selectedItemId, selectedItemType]);
 
     const kpiStats = useMemo(() => {
-        const lowStockItems = aggregatedBalances.filter(b => (b.current_stock - b.reserved_stock) <= 10).length;
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        // This is a simplified calculation, a real app would fetch movements for all materials
-        const transfersThisMonth = movements.filter(m => m.type === 'transfer' && new Date(m.created_at) >= firstDayOfMonth).length;
+        const lowStockItems = materialBalances.filter(b => (b.current_stock - b.reserved_stock) <= (b.item.low_stock_threshold || 10)).length;
+        const totalValue = allBalances.reduce((sum, balance) => {
+            const item = balance.material || allVariants.find(v => v.id === balance.product_variant_id);
+            const price = (item as Material)?.default_cost || (item as ProductVariant)?.final_price || 0;
+            return sum + (balance.current_stock * price);
+        }, 0);
 
         return {
-            totalValue: 0, // Placeholder, would need material cost
+            totalValue,
             lowStockItems,
-            totalItems: allMaterials.length,
-            transfersThisMonth,
+            totalItems: allMaterials.length + allVariants.length,
+            transfersThisMonth: 0, // Simplified for now
         };
-    }, [aggregatedBalances, allMaterials.length, movements]);
+    }, [materialBalances, allBalances, allMaterials, allVariants]);
 
 
     const addInventoryMovement = useCallback(async (movementData: any) => {
@@ -150,40 +144,51 @@ export function useInventory() {
         try {
             await dataService.addInventoryMovement(movementData);
             toast({ title: 'Sucesso!', description: 'Movimento de estoque registrado.' });
+            loadData();
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível registrar o movimento.', variant: 'destructive' });
             throw error;
         } finally {
             setIsSaving(false);
         }
-    }, []);
+    }, [loadData]);
     
     const transferStock = useCallback(async (transferData: any) => {
         setIsSaving(true);
         try {
             await dataService.transferStock(transferData);
              toast({ title: 'Sucesso!', description: 'Transferência de estoque registrada.' });
+             loadData();
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível registrar a transferência.', variant: 'destructive' });
             throw error;
         } finally {
             setIsSaving(false);
         }
-    }, []);
+    }, [loadData]);
+    
+    const selectItem = (id: string, type: 'material' | 'product') => {
+        setSelectedItemId(id);
+        setSelectedItemType(type);
+    };
 
     return {
         isLoading,
         isLoadingMovements,
         isSaving,
-        aggregatedBalances,
+        materialBalances,
+        productBalances,
         searchQuery,
         setSearchQuery,
-        balancesByMaterial,
-        setSelectedMaterialId,
+        selectedItemDetails,
+        selectItem,
+        selectedItemId,
+        selectedItemType,
         movements,
         addInventoryMovement,
         transferStock,
         allMaterials,
+        allVariants,
         allWarehouses,
         kpiStats,
     };

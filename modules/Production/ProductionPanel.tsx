@@ -1,20 +1,22 @@
 'use client';
-import React, { useMemo } from 'react';
+import React from 'react';
+// FIX: Corrected import path for useProduction hook.
 import { useProduction } from './useProduction';
 import { Loader2 } from 'lucide-react';
 import ProductionDrawer from './ProductionDrawer';
 import ProductionTable from '../../components/production/ProductionTable';
 import ProductionDialog from '../../components/production/ProductionDialog';
 import ProductionKpiRow from '../../components/production/ProductionKpiRow';
-import ProductionFilterBar from '../../components/production/ProductionFilterBar';
-import ProductionKanban from '../../components/production/ProductionKanban';
-import AdvancedFilterPanel from '../../components/production/AdvancedFilterPanel';
+import ProductionKanban from './ProductionKanban';
+import ProductionTimeline from './ProductionTimeline';
 
 export default function ProductionPanel() {
   const { 
     filteredOrders,
     isLoading, 
     updateProductionOrderStatus, 
+    updateTaskStatus,
+    createQualityCheck,
     selectedOrder, 
     setSelectedOrderId,
     kpis,
@@ -26,11 +28,8 @@ export default function ProductionPanel() {
     setIsCreateDialogOpen,
     createProductionOrder,
     allProducts,
-    isSaving,
-    isAdvancedFilterOpen,
-    setIsAdvancedFilterOpen,
-    clearFilters,
     allMaterials,
+    isSaving,
   } = useProduction();
 
   const renderContent = () => {
@@ -41,6 +40,8 @@ export default function ProductionPanel() {
     switch (viewMode) {
         case 'table':
             return <ProductionTable orders={filteredOrders} onOrderSelect={setSelectedOrderId} />;
+        case 'list':
+            return <ProductionTimeline orders={filteredOrders} />;
         case 'kanban':
         default:
             return <ProductionKanban orders={filteredOrders} onStatusChange={updateProductionOrderStatus} onCardClick={setSelectedOrderId} />;
@@ -50,14 +51,14 @@ export default function ProductionPanel() {
 
   return (
     <div className="space-y-6">
-      <ProductionFilterBar 
+      {/* <ProductionFilterBar 
         filters={filters}
         onFiltersChange={setFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onNewOrderClick={() => setIsCreateDialogOpen(true)}
-        onAdvancedFilterClick={() => setIsAdvancedFilterOpen(true)}
-      />
+        onAdvancedFilterClick={() => {}}
+      /> */}
 
       <ProductionKpiRow kpis={kpis} />
       
@@ -68,6 +69,9 @@ export default function ProductionPanel() {
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrderId(null)}
         allMaterials={allMaterials}
+        // FIX: Pass down the required handler functions to the drawer.
+        onUpdateTaskStatus={updateTaskStatus}
+        onCreateQualityCheck={createQualityCheck}
       />
       <ProductionDialog 
         isOpen={isCreateDialogOpen}
@@ -75,14 +79,6 @@ export default function ProductionPanel() {
         onSave={createProductionOrder}
         products={allProducts}
         isSaving={isSaving}
-      />
-      <AdvancedFilterPanel
-        isOpen={isAdvancedFilterOpen}
-        onClose={() => setIsAdvancedFilterOpen(false)}
-        filters={filters}
-        onFiltersChange={setFilters}
-        onClearFilters={clearFilters}
-        products={allProducts}
       />
     </div>
   );
