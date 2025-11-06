@@ -375,7 +375,7 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total: number;
-  config_json?: ConfigJson | Record<string, string>;
+  config_json?: ConfigJson | Record<string, any>;
   product?: Product;
 }
 

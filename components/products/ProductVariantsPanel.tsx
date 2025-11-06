@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Product, ProductVariant, AppData } from '../../types';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Plus, GitFork, Loader2, Package } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { dataService } from '../../services/dataService';
 import ProductVariantsTable from './ProductVariantsTable';
 import VariantGeneratorDialog from './VariantGeneratorDialog';
 import { toast } from '../../hooks/use-toast';
 
 interface ProductVariantsPanelProps {
-    product: Product | null;
-    variants: ProductVariant[];
-    appData: AppData | null;
+    product: Product;
+    allVariants: ProductVariant[];
+    appData: AppData;
     isLoading: boolean;
     onRefresh: () => void;
 }
 
-const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ product, variants, appData, isLoading, onRefresh }) => {
+const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ product, allVariants, appData, isLoading, onRefresh }) => {
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const productVariants = allVariants.filter(v => v.product_base_id === product.id);
 
     const handleVariantsGenerated = async (newVariants: Omit<ProductVariant, 'id'>[]) => {
         setIsSubmitting(true);
@@ -49,18 +50,16 @@ const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ product, va
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
             ) : (
-                <ProductVariantsTable variants={variants} />
+                <ProductVariantsTable variants={productVariants} />
             )}
            
-            {product && appData && (
-                <VariantGeneratorDialog
-                    isOpen={isGeneratorOpen}
-                    onClose={() => setIsGeneratorOpen(false)}
-                    product={product}
-                    appData={appData}
-                    onGenerate={handleVariantsGenerated}
-                />
-            )}
+            <VariantGeneratorDialog
+                isOpen={isGeneratorOpen}
+                onClose={() => setIsGeneratorOpen(false)}
+                product={product}
+                appData={appData}
+                onGenerate={handleVariantsGenerated}
+            />
         </div>
     );
 };
