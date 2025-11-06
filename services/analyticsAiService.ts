@@ -1,7 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ExecutiveKPI, AnalyticsKPI, AnalyticsSnapshot } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY;
+// Inicializa com uma string vazia para não quebrar o build se a chave não estiver presente.
+const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+
+// Helper para verificar a chave de API em tempo de execução, antes de fazer a chamada.
+const ensureApiKey = () => {
+    if (!apiKey) {
+      console.error("CRITICAL: Gemini API Key (process.env.API_KEY) is not configured in the Vercel environment. AI features are disabled.");
+      throw new Error('A chave de API do Gemini não está configurada no ambiente.');
+    }
+};
 
 const anomalySchema = {
   type: Type.OBJECT,
@@ -23,6 +33,7 @@ const trendSchema = {
 
 export const analyticsAiService = {
   anomalyDetectorAI: async (kpi: AnalyticsKPI, history: AnalyticsSnapshot[]): Promise<{ isAnomaly: boolean; reason: string; }> => {
+    ensureApiKey();
     const historyValues = history.map(s => s.value).join(', ');
     const prompt = `You are a data scientist. Given a time series of a KPI ending with the current value, determine if the last value is an anomaly. An anomaly is a significant deviation (e.g., > 2 standard deviations from the mean of the historical data, or a >20% change from the previous value).
     KPI Name: "${kpi.name}"
@@ -45,6 +56,7 @@ export const analyticsAiService = {
   },
 
   trendPredictorAI: async (kpi: AnalyticsKPI, history: AnalyticsSnapshot[]): Promise<{ prediction: number; confidence: string; }> => {
+    ensureApiKey();
     const historyValues = history.map(s => s.value).join(', ');
     const prompt = `You are a data scientist. Given the following time series data for the KPI "${kpi.name}", perform a simple linear regression to predict the single next value in the series. Also, state your confidence level based on the data's stability.
     Data (oldest to newest): [${historyValues}, ${kpi.value}]
@@ -65,6 +77,7 @@ export const analyticsAiService = {
   },
 
   generateForecastInsight: async (kpi: AnalyticsKPI): Promise<{ metric: string; trend: string; confidence: number; insight: string; }> => {
+    ensureApiKey();
     // This is a stub function as requested
     console.log(`🤖 [AI Service] Generating forecast insight for: ${kpi.name}`);
     await new Promise(res => setTimeout(res, 200 + Math.random() * 300)); // Simulate AI processing
@@ -77,6 +90,7 @@ export const analyticsAiService = {
   },
 
   insightGeneratorAI: async (kpis: (ExecutiveKPI | AnalyticsKPI)[]): Promise<string> => {
+    ensureApiKey();
     try {
       const kpiSummary = kpis.map(k => `${k.name}: ${k.value} (tendência: ${k.trend ? (k.trend * 100).toFixed(1) + '%' : 'N/A'})`).join('\n');
       const prompt = `Você é um consultor de negócios sênior (C-level) analisando os KPIs trimestrais da marca de luxo "Olie".
@@ -103,6 +117,7 @@ Fale em Português do Brasil. Seja direto e profissional. A resposta deve conter
   },
 
   logAnalyzerAI: async (logs: string[]): Promise<string> => {
+    ensureApiKey();
     const logData = logs.join('\n');
     const prompt = `You are GeminiAI, an expert AI system auditor. Analyze the following execution logs from the AtlasAI Crew. Identify the root cause of any failures and suggest corrective actions.
     Logs:
