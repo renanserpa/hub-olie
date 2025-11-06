@@ -50,8 +50,10 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
         const result = supplierSchema.safeParse(formData);
         if (!result.success) {
             const newErrors: Record<string, string> = {};
-            result.error.errors.forEach(err => {
-                if(err.path[0]) newErrors[err.path[0]] = err.message;
+            // FIX: Use `result.error.issues` instead of `result.error.errors`.
+            result.error.issues.forEach(err => {
+                // FIX: Convert path segment to string to use as a record key, resolving "Type 'symbol' cannot be used as an index type" error.
+                if(err.path[0]) newErrors[err.path[0].toString()] = err.message;
             });
             setErrors(newErrors);
             toast({ title: "Erro de Validação", description: "Verifique os campos do formulário.", variant: 'destructive'});

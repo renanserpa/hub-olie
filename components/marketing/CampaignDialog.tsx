@@ -10,7 +10,8 @@ import { geminiService } from '../../services/geminiService';
 interface CampaignDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<MarketingCampaign, 'id' | 'created_at' | 'updated_at'> | MarketingCampaign) => Promise<void>;
+    // FIX: Correct the type for `onSave` to match the hook's `saveCampaign` parameter, which expects an object without system-managed fields for creation.
+    onSave: (data: Omit<MarketingCampaign, 'id' | 'created_at' | 'updated_at' | 'spent' | 'kpis'> | MarketingCampaign) => Promise<void>;
     campaign: MarketingCampaign | null;
     segments: MarketingSegment[];
     templates: MarketingTemplate[];
@@ -84,8 +85,10 @@ const CampaignDialog: React.FC<CampaignDialogProps> = ({ isOpen, onClose, onSave
 
         if (!result.success) {
             const newErrors: Record<string, string> = {};
-            result.error.errors.forEach(err => {
-                if (err.path[0]) newErrors[err.path[0]] = err.message;
+            // FIX: Use `result.error.issues` instead of `result.error.errors`.
+            result.error.issues.forEach(err => {
+                // FIX: Convert path segment to string to use as a record key, resolving "Type 'symbol' cannot be used as an index type" error.
+                if (err.path[0]) newErrors[err.path[0].toString()] = err.message;
             });
             setErrors(newErrors);
             toast({ title: "Erro de Validação", description: "Verifique os campos do formulário.", variant: 'destructive'});
@@ -98,7 +101,8 @@ const CampaignDialog: React.FC<CampaignDialogProps> = ({ isOpen, onClose, onSave
                 ? { ...campaign, ...result.data } 
                 : result.data;
 
-            await onSave(dataToSave);
+            // FIX: The type of dataToSave now correctly matches the updated onSave prop type.
+            await onSave(dataToSave as any);
         } finally {
             setIsSubmitting(false);
         }

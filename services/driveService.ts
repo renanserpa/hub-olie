@@ -2,7 +2,7 @@
 import { supabase } from '../lib/supabaseClient';
 
 // This public (anon) key is safe for client-side use and is used to authenticate with Supabase Edge Functions.
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZnZkb2VjcG1jbmxweGtsY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTU2OTEsImV4cCI6MjA3NjAzMTY5MX0.dpX90AmxL_JrxkYacPFkzQzhmCETDTa21Up5TdQgLLk";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
 
 export async function uploadToDrive(file: File, module: string, category: string) {
   const formData = new FormData();
@@ -12,7 +12,7 @@ export async function uploadToDrive(file: File, module: string, category: string
 
   // In a real project, this URL would come from environment variables.
   // We assume the URL is known for this implementation.
-  const functionsUrl = "https://qrfvdoecpmcnlpxklcsu.supabase.co/functions/v1";
+  const functionsUrl = "https://ijheukynkppcswgtrnwd.supabase.co/functions/v1";
 
   const res = await fetch(`${functionsUrl}/upload_to_drive`, {
     method: "POST",
