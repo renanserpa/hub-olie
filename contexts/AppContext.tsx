@@ -61,7 +61,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       }
     });
     return () => { isMounted = false; unsubscribe(); };
-  }, [isLoading]);
+  }, []);
 
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {
