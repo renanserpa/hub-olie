@@ -17,8 +17,7 @@ interface ProductionDrawerProps {
     onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
 }
 
-const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
-    const { order, isOpen, onClose } = props;
+const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onClose, allMaterials, onUpdateTaskStatus, onCreateQualityCheck }) => {
     
     if (!order) return null;
 
@@ -48,7 +47,12 @@ const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
                 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <ProductionOrderDetailPanel {...props} />
+                    <ProductionOrderDetailPanel 
+                        order={order} 
+                        allMaterials={allMaterials}
+                        onUpdateTaskStatus={onUpdateTaskStatus}
+                        onCreateQualityCheck={onCreateQualityCheck}
+                    />
                 </div>
             </div>
         </div>

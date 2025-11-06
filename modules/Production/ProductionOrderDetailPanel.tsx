@@ -21,12 +21,11 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 interface ProductionOrderDetailPanelProps {
     order: ProductionOrder & { product?: any, tasks?: any[], variant?: any, route?: ProductionRoute };
     allMaterials: Material[];
-    // FIX: Add missing props that are passed down from the parent drawer.
     onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
     onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
 }
 
-const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials }) => {
+const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({ order, allMaterials, onUpdateTaskStatus, onCreateQualityCheck }) => {
     
     const bomToShow: BOMComponent[] | undefined = order.variant?.bom && order.variant.bom.length > 0 
         ? order.variant.bom 
