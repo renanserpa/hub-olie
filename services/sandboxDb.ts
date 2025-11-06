@@ -407,7 +407,8 @@ export const sandboxDb = {
     addDocument: async <T extends { id?: string }>(table: string, docData: Omit<T, 'id'>): Promise<T> => {
         console.log(`🧱 SANDBOX: addDocument(${table})`);
         await delay(100);
-        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString() } as T;
+        // FIX: Changed the type assertion to 'as unknown as T' to resolve a complex TypeScript generic conversion error.
+        const newDoc = { ...docData, id: generateId(), created_at: new Date().toISOString() } as unknown as T;
         (db as any)[table].push(newDoc);
         emit(table);
         return JSON.parse(JSON.stringify(newDoc));

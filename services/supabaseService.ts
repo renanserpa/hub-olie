@@ -211,7 +211,11 @@ export const supabaseService = {
         contacts: [], products: [], 
         // FIX: Add missing 'product_variants' to satisfy the AppData type.
         product_variants: [], 
-        product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] }, inventory_balances: [], inventory_movements: [],
+        product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] },
+        // FIX: Added missing logistics properties
+        logistics_waves: [],
+        logistics_shipments: [],
+        inventory_balances: [], inventory_movements: [],
         marketing_campaigns: [], marketing_segments: [], marketing_templates: [],
         suppliers: [], purchase_orders: [], purchase_order_items: [],
         analytics_kpis: [],
