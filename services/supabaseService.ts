@@ -164,7 +164,6 @@ export const supabaseService = {
   deleteDocument,
   
   listenToCollection: <T>(table: string, join: string | undefined, callback: (payload: T[]) => void) => {
-      // Perform an initial fetch to load the current data immediately.
       const initialFetch = async () => {
           const data = await supabaseService.getCollection<T>(table, join);
           callback(data);
@@ -177,8 +176,6 @@ export const supabaseService = {
           'postgres_changes',
           { event: '*', schema: 'public', table: table },
           async (payload: any) => {
-            // When a change is detected, refetch the entire collection to ensure consistency,
-            // especially when joins are involved.
             console.log(`Change detected in ${table}, refetching...`, payload);
             const data = await supabaseService.getCollection<T>(table, join);
             callback(data);
