@@ -68,8 +68,13 @@ const handleError = (error: any, context: string) => {
         console.warn(`[dataService] Supabase query failed because table for "${context}" does not exist.`);
         return new Error(`Missing Table: ${context}`);
     }
-    console.error(`Error in ${context}:`, error);
-    throw new Error(`Supabase operation failed in ${context}.`);
+    const errorMessage = error.message || 'An unknown error occurred';
+    console.error(`Error in ${context}: ${errorMessage}`, {
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+    });
+    throw new Error(`Supabase operation failed in ${context}: ${errorMessage}`);
 };
 
 // --- Generic Helpers ---

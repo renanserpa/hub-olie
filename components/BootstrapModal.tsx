@@ -4,13 +4,12 @@ import { Button } from './ui/Button';
 import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
-const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v4.0)
--- Este script limpa e recria a estrutura de acesso de forma segura.
+const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v4.1)
+-- Adiciona tabelas de analytics e suas políticas de segurança.
 
 -- 1. LIMPEZA (Opcional, mas recomendado para garantir um estado limpo)
 DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP TABLE IF EXISTS public.user_roles CASCADE;
-
 
 -- 2. CRIAÇÃO DAS TABELAS DE CONTROLE DE ACESSO
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -42,7 +41,6 @@ CREATE POLICY "AdminGeral gerencia roles" ON public.user_roles FOR ALL
 USING ( (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'AdminGeral' );
 
 -- 4. INSERÇÃO DO ADMIN NAS TABELAS PÚBLICAS (após o passo manual)
--- Este bloco irá funcionar corretamente após o metadado do usuário ser configurado manualmente.
 DO $$
 DECLARE
   admin_user_id UUID;
@@ -54,6 +52,39 @@ BEGIN
     RAISE NOTICE 'Registros públicos para o AdminGeral criados/validados com sucesso.';
   END IF;
 END $$;
+
+-- 5. CRIAÇÃO DE TABELAS DE DADOS (PARA DASHBOARD)
+CREATE TABLE IF NOT EXISTS public.analytics_kpis (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module TEXT NOT NULL,
+    name TEXT NOT NULL,
+    value TEXT NOT NULL,
+    trend NUMERIC,
+    unit TEXT,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.executive_ai_insights (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module TEXT NOT NULL,
+    type TEXT NOT NULL,
+    insight TEXT NOT NULL,
+    period TEXT,
+    generated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. POLÍTICAS DE SEGURANÇA PARA AS NOVAS TABELAS
+ALTER TABLE public.analytics_kpis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.executive_ai_insights ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Permitir leitura para usuários autenticados (KPIs)"
+ON public.analytics_kpis FOR SELECT
+USING ( auth.role() = 'authenticated' );
+
+CREATE POLICY "Permitir leitura para usuários autenticados (Insights)"
+ON public.executive_ai_insights FOR SELECT
+USING ( auth.role() = 'authenticated' );
 `;
 
 interface BootstrapModalProps {
