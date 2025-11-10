@@ -1,13 +1,13 @@
 // src/services/driveService.ts
 import { supabase } from '../lib/supabaseClient';
 
-// Obter a chave anon do mesmo local que o resto da aplicação, via env vars.
-// FIX: Property 'env' does not exist on type 'ImportMeta'. Hardcoded value is used as a workaround.
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
+// Production-ready: Credentials and URLs are sourced from environment variables.
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 export async function uploadToDrive(file: File, module: string, category: string) {
-  if (!supabaseAnonKey) {
-      throw new Error("A chave anônima do Supabase (VITE_SUPABASE_ANON_KEY) não está configurada.");
+  if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("As variáveis de ambiente do Supabase (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY) não estão configuradas.");
   }
     
   const formData = new FormData();
@@ -15,10 +15,7 @@ export async function uploadToDrive(file: File, module: string, category: string
   formData.append("module", module);
   formData.append("category", category);
 
-  // In a real project, this URL would come from environment variables.
-  // We assume the URL is known for this implementation.
-  // FIX: Property 'env' does not exist on type 'ImportMeta'. Hardcoded value is used as a workaround.
-  const functionsUrl = `https://ijheukynkppcswgtrnwd.supabase.co/functions/v1`;
+  const functionsUrl = `${supabaseUrl}/functions/v1`;
 
   const res = await fetch(`${functionsUrl}/upload_to_drive`, {
     method: "POST",
