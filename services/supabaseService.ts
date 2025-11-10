@@ -77,8 +77,6 @@ const handleError = (error: any, context: string) => {
     throw new Error(`Supabase operation failed in ${context}: ${errorMessage}`);
 };
 
-// --- Generic Helpers ---
-
 // This internal helper can return an Error object for specific handling
 const getCollectionInternal = async <T>(table: string, join?: string): Promise<T[] | Error> => {
     const query = join ? supabase.from(table).select(join) : supabase.from(table).select('*');
@@ -88,6 +86,7 @@ const getCollectionInternal = async <T>(table: string, join?: string): Promise<T
     }
     return (data as T[]) || [];
 };
+
 
 const getDocument = async <T>(table: string, id: string): Promise<T | null> => {
     const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
@@ -149,25 +148,36 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
 
 // --- App-specific Methods ---
 export const supabaseService = {
-  // Public-facing getCollection is resilient and returns empty array on failure
   getCollection: async <T>(table: string, join?: string): Promise<T[]> => {
     try {
-        const result = await getCollectionInternal<T>(table, join);
-        if (result instanceof Error) {
-            return [];
+        const query = join ? supabase.from(table).select(join) : supabase.from(table).select('*');
+        const { data, error } = await query;
+
+        if (error) {
+            // Throw the error to be handled by the central catch block.
+            // This unifies handling for network errors (which throw) and API errors.
+            throw error;
         }
-        return result;
-    } catch (error) {
-        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        return (data as T[]) || [];
+    } catch (error: any) {
+        // Specifically catch network/CORS errors
+        if (error?.message?.includes('Failed to fetch')) {
             console.error(
-                `[dataService] Network error fetching "${table}". This could be a CORS issue, a paused Supabase project, or a network problem. Check your Supabase dashboard. Returning an empty array as a fallback.`,
+                `[dataService] Network error fetching "${table}". This is likely a CORS issue or a paused Supabase project. Check your Supabase dashboard's CORS settings and ensure the project is active. Returning an empty array as a fallback.`,
                 error
             );
-            return []; // Gracefully handle network error by returning empty array
+            return [];
         }
-        // For any other unexpected errors, re-throw to be caught by ErrorBoundary or local catch blocks
-        console.error(`[dataService] Unhandled exception in getCollection("${table}"):`, error);
-        throw error;
+        
+        // Handle "table does not exist" gracefully
+        if (error?.code === '42P01') {
+            console.warn(`[dataService] Table "${table}" does not exist. This may be expected during development. Returning an empty array.`);
+            return [];
+        }
+
+        // Any other error is unexpected and should be surfaced to the user/ErrorBoundary.
+        console.error(`[dataService] Unhandled Supabase error in getCollection("${table}"):`, error);
+        throw new Error(`Failed to fetch data from "${table}": ${error.message}`);
     }
   },
   getDocument,
