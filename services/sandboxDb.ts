@@ -54,7 +54,13 @@ export const production_routesSeed: ProductionRoute[] = [];
 const db: AppData = {
     production_audit: [],
     production_quality_checks: [],
-    production_tasks: [],
+    production_tasks: [
+        { id: 'task1', production_order_id: 'po2', name: 'Corte do Tecido', status: 'Concluída', started_at: '2025-11-03T10:00:00Z', finished_at: '2025-11-03T11:30:00Z' },
+        { id: 'task2', production_order_id: 'po2', name: 'Costura Principal', status: 'Concluída', started_at: '2025-11-03T11:30:00Z', finished_at: '2025-11-04T14:00:00Z' },
+        { id: 'task3', production_order_id: 'po2', name: 'Aplicação de Zíper', status: 'Em Andamento', started_at: '2025-11-04T14:00:00Z' },
+        { id: 'task4', production_order_id: 'po2', name: 'Acabamento e Limpeza', status: 'Pendente' },
+        { id: 'task5', production_order_id: 'po2', name: 'Inspeção Final', status: 'Pendente' },
+    ],
     system_audit: [],
     warehouses: warehousesSeed,
     customers: customersSeed,

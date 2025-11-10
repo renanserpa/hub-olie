@@ -1,15 +1,11 @@
 import StatCard from '../../components/dashboard/StatCard';
 import { Workflow, Cog, CheckCircle, PauseCircle } from 'lucide-react';
-// FIX: Corrected import path for ProductionOrder type.
 import { ProductionOrder } from '../../types';
 
 export default function ProductionKPIHeader({ orders }: { orders: ProductionOrder[] }) {
   const total = orders.length;
-  // FIX: Use correct Portuguese status values for comparison
   const completed = orders.filter((o: ProductionOrder) => o.status === 'finalizado').length;
-  // FIX: Use correct Portuguese status values for comparison
   const inProgress = orders.filter((o: ProductionOrder) => o.status === 'em_andamento').length;
-  // FIX: Use correct Portuguese status values for comparison
   const paused = orders.filter((o: ProductionOrder) => o.status === 'em_espera').length;
 
   return (

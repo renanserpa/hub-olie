@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -11,13 +11,23 @@ export function useProduction() {
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    // FIX: Add state for product variants
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
+    const [allRoutes, setAllRoutes] = useState<ProductionRoute[]>([]);
+    const [allMolds, setAllMolds] = useState<MoldLibrary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-    const [filters, setFilters] = useState<{ search: string; status: ProductionOrderStatus[] }>({ search: '', status: [] });
+    const [filters, setFilters] = useState<{
+        search: string;
+        status: ProductionOrderStatus[];
+        productId?: string;
+        startDate?: string;
+        endDate?: string;
+        minQty?: number | '';
+        maxQty?: number | '';
+    }>({ search: '', status: [] });
+    const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
 
     const [viewMode, setViewModeInternal] = useState<ProductionViewMode>('kanban');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -37,22 +47,34 @@ export function useProduction() {
     const reload = useCallback(async () => {
         setIsLoading(true);
         try {
-            // FIX: Fetch product variants along with other production data.
-            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData] = await Promise.all([
+            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
                 dataService.getCollection<ProductionTask>('production_tasks'),
                 dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
+                dataService.getCollection<Supplier>('suppliers'),
+                dataService.getProductionRoutes(),
+                dataService.getMoldLibrary(),
             ]);
             
+            const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
+            const enrichedMaterials = materialsData.map(material => {
+                if (material.supplier_id) {
+                    return { ...material, supplier: suppliersById.get(material.supplier_id) };
+                }
+                return material;
+            });
+
             setAllOrders(ordersData);
             setAllTasks(tasksData);
             setAllQualityChecks(qualityData);
-            setAllMaterials(materialsData);
+            setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
+            setAllRoutes(routesData);
+            setAllMolds(moldsData);
 
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
@@ -66,15 +88,21 @@ export function useProduction() {
     }, [reload]);
 
     const ordersWithDetails = useMemo(() => {
-        return allOrders.map(order => ({
-            ...order,
-            // FIX: Add variant details to each order.
-            variant: allVariants.find(v => v.sku === order.variant_sku),
-            tasks: allTasks.filter(t => t.production_order_id === order.id),
-            quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
-        }));
-    // FIX: Add allVariants to the dependency array.
-    }, [allOrders, allTasks, allQualityChecks, allVariants]);
+        return allOrders.map(order => {
+            const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku) : undefined;
+            const product = allProducts.find(p => p.id === order.product_id);
+            const sizeName = variant?.configuration.size ? product?.available_sizes?.find(s => s.id === variant.configuration.size)?.name : undefined;
+            
+            return {
+                ...order,
+                variant,
+                product,
+                route: allRoutes.find(r => r.produto.toLowerCase() === product?.name.toLowerCase() && r.tamanho === sizeName),
+                tasks: allTasks.filter(t => t.production_order_id === order.id),
+                quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
+            };
+        });
+    }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes]);
     
     const filteredOrders = useMemo(() => {
         return ordersWithDetails.filter(order => {
@@ -83,8 +111,14 @@ export function useProduction() {
                                 (order.product && order.product.name.toLowerCase().includes(filters.search.toLowerCase()));
             
             const statusMatch = filters.status.length === 0 || filters.status.includes(order.status);
+
+            const productMatch = !filters.productId || order.product_id === filters.productId;
+            const startDateMatch = !filters.startDate || new Date(order.created_at) >= new Date(filters.startDate);
+            const endDateMatch = !filters.endDate || new Date(order.created_at) <= new Date(filters.endDate);
+            const minQtyMatch = filters.minQty === '' || filters.minQty === undefined || order.quantity >= filters.minQty;
+            const maxQtyMatch = filters.maxQty === '' || filters.maxQty === undefined || order.quantity <= filters.maxQty;
             
-            return searchMatch && statusMatch;
+            return searchMatch && statusMatch && productMatch && startDateMatch && endDateMatch && minQtyMatch && maxQtyMatch;
         });
     }, [ordersWithDetails, filters]);
 
@@ -190,6 +224,10 @@ export function useProduction() {
             setIsSaving(false);
         }
     };
+    
+    const clearFilters = () => {
+        setFilters({ search: '', status: [] });
+    };
 
     return {
         allOrders: ordersWithDetails,
@@ -211,6 +249,9 @@ export function useProduction() {
         setViewMode,
         isCreateDialogOpen,
         setIsCreateDialogOpen,
+        isAdvancedFilterOpen,
+        setIsAdvancedFilterOpen,
+        clearFilters,
         reload,
     };
 }

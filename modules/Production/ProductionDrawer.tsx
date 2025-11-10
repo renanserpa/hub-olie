@@ -39,7 +39,7 @@ const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onCl
                 <div className="flex justify-between items-center p-4 border-b border-border flex-shrink-0">
                     <div>
                         <h2 className="text-xl font-bold text-textPrimary">Ordem de Produção {order.po_number}</h2>
-                        <p className="text-sm text-textSecondary">{order.variant ? order.variant.name : order.product?.name}</p>
+                        <p className="text-sm text-textSecondary">{order.variant?.name || order.product?.name}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}><X /></Button>
                 </div>
