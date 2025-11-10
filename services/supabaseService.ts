@@ -151,11 +151,24 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
 export const supabaseService = {
   // Public-facing getCollection is resilient and returns empty array on failure
   getCollection: async <T>(table: string, join?: string): Promise<T[]> => {
-    const result = await getCollectionInternal<T>(table, join);
-    if (result instanceof Error) {
-        return [];
+    try {
+        const result = await getCollectionInternal<T>(table, join);
+        if (result instanceof Error) {
+            return [];
+        }
+        return result;
+    } catch (error) {
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+            console.error(
+                `[dataService] Network error fetching "${table}". This could be a CORS issue, a paused Supabase project, or a network problem. Check your Supabase dashboard. Returning an empty array as a fallback.`,
+                error
+            );
+            return []; // Gracefully handle network error by returning empty array
+        }
+        // For any other unexpected errors, re-throw to be caught by ErrorBoundary or local catch blocks
+        console.error(`[dataService] Unhandled exception in getCollection("${table}"):`, error);
+        throw error;
     }
-    return result;
   },
   getDocument,
   addDocument,
