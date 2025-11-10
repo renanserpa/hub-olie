@@ -128,25 +128,6 @@ export function useProducts() {
         }
     }, [loadData]);
 
-    const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
-        try {
-            await mutationFn;
-            toast({ title: "Sucesso!", description: successMsg });
-            // Real-time listener handles refresh
-        } catch (e) {
-            toast({ title: "Erro!", description: (e as Error).message, variant: "destructive" });
-        }
-    };
-
-    const addCategory = (item: Omit<ProductCategory, 'id'>) => handleMutation(dataService.addDocument('product_categories', item), `Categoria adicionada.`);
-    const updateCategory = (item: ProductCategory) => handleMutation(dataService.updateDocument('product_categories', item.id, item), `Categoria atualizada.`);
-    const deleteCategory = (id: string) => handleMutation(dataService.deleteDocument('product_categories', id), `Categoria excluída.`);
-    
-    const addCollection = (item: Omit<Collection, 'id'>) => handleMutation(dataService.addDocument('collections', item), `Coleção adicionada.`);
-    const updateCollection = (item: Collection) => handleMutation(dataService.updateDocument('collections', item.id, item), `Coleção atualizada.`);
-    const deleteCollection = (id: string) => handleMutation(dataService.deleteDocument('collections', id), `Coleção excluída.`);
-
-
     return {
         isLoading,
         isSaving,
@@ -169,8 +150,5 @@ export function useProducts() {
         selectedProductId,
         setSelectedProductId,
         refresh: loadData,
-        // CRUD for Catalog Management
-        addCategory, updateCategory, deleteCategory,
-        addCollection, updateCollection, deleteCollection
     };
 }

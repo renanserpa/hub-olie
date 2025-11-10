@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2, BookOpen, Layers } from 'lucide-react';
+import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2, BookOpen, Layers, Link2, Hand, Scissors, Paintbrush2, ScanSearch } from 'lucide-react';
 import TabLayout from '../ui/TabLayout';
 import TabContent from '../TabContent';
 import { useSettings } from '../../hooks/useSettings';
@@ -7,7 +7,8 @@ import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collec
 import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
 import { MaterialTabs } from '../settings/materials/MaterialTabs';
-import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
+import { useCollections } from '../../hooks/useCollections';
 
 const CATALOG_TABS = [
   { id: 'categories', label: 'Categorias & Coleções', icon: BookOpen },
@@ -22,9 +23,13 @@ const PERSONALIZATION_SUB_TABS = [
 ];
 
 const CORES_SUB_TABS = [
-    { id: 'tecido', label: 'Tecido' }, { id: 'ziper', label: 'Zíper' }, { id: 'forro', label: 'Forro' },
-    { id: 'puxador', label: 'Puxador' }, { id: 'vies', label: 'Viés' }, { id: 'bordado', label: 'Bordado' },
-    { id: 'texturas', label: 'Texturas' },
+    { id: 'tecido', label: 'Tecido', icon: Layers },
+    { id: 'ziper', label: 'Zíper', icon: Link2 },
+    { id: 'forro', label: 'Forro', icon: Layers },
+    { id: 'puxador', label: 'Puxador', icon: Hand },
+    { id: 'vies', label: 'Viés', icon: Scissors },
+    { id: 'bordado', label: 'Bordado', icon: Paintbrush2 },
+    { id: 'texturas', label: 'Texturas', icon: ScanSearch },
 ];
 
 // --- Field Configurations ---
@@ -42,12 +47,9 @@ const CatalogManagement: React.FC = () => {
     const [activeCoresSubTab, setActiveCoresSubTab] = useState(CORES_SUB_TABS[0].id);
     
     const { settingsData, isLoading: isSettingsLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
-    const { 
-        categories, collections, 
-        addCategory, updateCategory, deleteCategory, 
-        addCollection, updateCollection, deleteCollection 
-    } = useProducts();
-    const isLoading = isSettingsLoading; // Main loader is from settings
+    const { categories, addCategory, updateCategory, deleteCategory, isLoading: isCategoriesLoading } = useCategories();
+    const { collections, addCollection, updateCollection, deleteCollection, isLoading: isCollectionsLoading } = useCollections();
+    const isLoading = isSettingsLoading || isCategoriesLoading || isCollectionsLoading;
 
     const createCrudHandlers = (category: SettingsCategory, subTab: string | null = null, subSubTab: string | null = null) => ({
         onAdd: (item: Omit<AnySettingsItem, 'id'>, fileData?: Record<string, File | null>) => handleAdd(category, item, subTab, subSubTab, fileData),
@@ -114,18 +116,18 @@ const CatalogManagement: React.FC = () => {
         switch (activeTab) {
             case 'categories':
                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory as any} onUpdate={updateCategory as any} onDelete={deleteCategory} isAdmin={true} />
-                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection as any} onUpdate={updateCollection as any} onDelete={deleteCollection} isAdmin={true} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory as any} onUpdate={updateCategory as any} onDelete={deleteCategory} isAdmin={isAdmin} />
+                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection as any} onUpdate={updateCollection as any} onDelete={deleteCollection} isAdmin={isAdmin} />
                     </div>
                 );
             case 'personalization':
                 return (
                     <div className="grid grid-cols-12 gap-6 items-start">
-                        <div className="col-span-3">
+                        <div className="col-span-12 md:col-span-3">
                              <TabLayoutVertical tabs={PERSONALIZATION_SUB_TABS} activeTab={activePersonalizationSubTab} onTabChange={setActivePersonalizationSubTab} />
                         </div>
-                        <div className="col-span-9">
+                        <div className="col-span-12 md:col-span-9">
                             {renderPersonalizationContent()}
                         </div>
                     </div>
@@ -162,17 +164,21 @@ const TabLayoutVertical: React.FC<{tabs: any[], activeTab: string, onTabChange: 
 );
 const TabLayoutHorizontal: React.FC<{tabs: any[], activeTab: string, onTabChange: (id: string) => void}> = ({tabs, activeTab, onTabChange}) => (
      <div className="border-b border-border dark:border-dark-border">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-            {tabs.map(tab => (
-                <button key={tab.id} onClick={() => onTabChange(tab.id)}
-                    className={cn(
-                        'whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm focus:outline-none',
-                        activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-textSecondary hover:text-textPrimary'
-                    )}
-                >
-                    {tab.label}
-                </button>
-            ))}
+        <nav className="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
+            {tabs.map(tab => {
+                const Icon = tab.icon;
+                return (
+                    <button key={tab.id} onClick={() => onTabChange(tab.id)}
+                        className={cn(
+                            'flex items-center gap-2 whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm focus:outline-none',
+                            activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-textSecondary hover:text-textPrimary'
+                        )}
+                    >
+                        {Icon && <Icon size={14} />}
+                        {tab.label}
+                    </button>
+                )
+            })}
         </nav>
     </div>
 );
