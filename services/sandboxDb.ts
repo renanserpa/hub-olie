@@ -28,9 +28,17 @@ export const zipper_colorsSeed: ZipperColor[] = [];
 export const bias_colorsSeed: BiasColor[] = [];
 export const embroidery_colorsSeed: EmbroideryColor[] = [];
 export const config_fontsSeed: MonogramFont[] = [];
-export const config_supply_groupsSeed: MaterialGroup[] = [];
+export const config_supply_groupsSeed: MaterialGroup[] = [
+  { id: 'sg1', name: 'Tecidos', description: 'Tecidos para parte externa e interna', is_active: true, created_at: new Date().toISOString() },
+  { id: 'sg2', name: 'Metais', description: 'Zíperes, cursores, puxadores', is_active: true, created_at: new Date().toISOString() },
+  { id: 'sg3', name: 'Linhas', description: 'Linhas para costura e bordado', is_active: true, created_at: new Date().toISOString() },
+];
 export const suppliersSeed: Supplier[] = [];
-export const config_materialsSeed: Material[] = [];
+export const config_materialsSeed: Material[] = [
+  { id: 'mat1', name: 'Nylon 600', sku: 'NYL600', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString() },
+  { id: 'mat2', name: 'Zíper n.5', sku: 'ZIP05', group_id: 'sg2', unit: 'm', is_active: true, created_at: new Date().toISOString() },
+  { id: 'mat3', name: 'Cursor n.5', sku: 'CUR05', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString() },
+];
 export const task_statusesSeed: TaskStatus[] = [];
 export const tasksSeed: Task[] = [];
 export const production_auditSeed: ProductionAudit[] = [];
