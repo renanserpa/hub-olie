@@ -4,10 +4,10 @@ import { Button } from './ui/Button';
 import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
-const bootstrapSqlScript = `-- Script de Bootstrap Idempotente para Usuários
+const bootstrapSqlScript = `-- Script de Bootstrap Automático para Usuários v2.0
 -- Este script pode ser executado várias vezes sem causar erros.
 
--- 1. Cria a tabela de perfis se ela não existir.
+-- 1. Cria as tabelas de controle de acesso se não existirem.
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL UNIQUE,
@@ -15,33 +15,32 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Cria a tabela de permissões se ela não existir.
 CREATE TABLE IF NOT EXISTS public.user_roles (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Habilita Row Level Security (RLS).
+-- 2. Habilita Row Level Security (RLS) para segurança.
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- 4. Remove políticas antigas para garantir uma criação limpa.
-DROP POLICY IF EXISTS "Allow authenticated users to read profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow individual user to read their own role" ON public.user_roles;
-DROP POLICY IF EXISTS "Allow admins to manage profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Allow admins to manage roles" ON public.user_roles;
+-- 3. Limpa políticas antigas para garantir uma aplicação limpa.
+DROP POLICY IF EXISTS "Permite leitura de perfis" ON public.profiles;
+DROP POLICY IF EXISTS "Permite leitura da própria função" ON public.user_roles;
+DROP POLICY IF EXISTS "Admins gerenciam perfis" ON public.profiles;
+DROP POLICY IF EXISTS "Admins gerenciam funções" ON public.user_roles;
 
--- 5. Cria as políticas de acesso.
-CREATE POLICY "Allow authenticated users to read profiles"
+-- 4. Cria as políticas de acesso essenciais.
+CREATE POLICY "Permite leitura de perfis"
 ON public.profiles FOR SELECT
 USING ( auth.role() = 'authenticated' );
 
-CREATE POLICY "Allow individual user to read their own role"
+CREATE POLICY "Permite leitura da própria função"
 ON public.user_roles FOR SELECT
 USING (auth.uid() = user_id);
 
--- Cria uma função helper para checar a permissão de admin.
+-- Cria uma função helper para verificar o papel de Admin de forma segura.
 CREATE OR REPLACE FUNCTION get_user_role(p_user_id UUID)
 RETURNS TEXT AS $$
 DECLARE
@@ -52,24 +51,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Cria as políticas de admin.
-CREATE POLICY "Allow admins to manage profiles"
+CREATE POLICY "Admins gerenciam perfis"
 ON public.profiles FOR ALL
 USING ( get_user_role(auth.uid()) = 'AdminGeral' );
 
-CREATE POLICY "Allow admins to manage roles"
+CREATE POLICY "Admins gerenciam funções"
 ON public.user_roles FOR ALL
 USING ( get_user_role(auth.uid()) = 'AdminGeral' );
 
--- 6. INSERÇÃO DO PRIMEIRO ADMINISTRADOR --
--- ATENÇÃO: Substitua 'SEU_USER_ID_AQUI' abaixo pelo User ID copiado do painel de Autenticação.
-INSERT INTO public.profiles (id, email, role)
-VALUES ('SEU_USER_ID_AQUI', 'serparenan@gmail.com', 'AdminGeral')
-ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('SEU_USER_ID_AQUI', 'AdminGeral')
-ON CONFLICT (user_id) DO NOTHING;
+-- 5. INSERÇÃO AUTOMÁTICA DO ADMINISTRADOR
+-- Este bloco encontra o ID do usuário pelo email e o configura como AdminGeral.
+-- Não é necessário editar este script.
+DO $$
+DECLARE
+  admin_user_id UUID;
+BEGIN
+  -- Encontra o ID do usuário administrador na tabela de autenticação.
+  SELECT id INTO admin_user_id FROM auth.users WHERE email = 'serparenan@gmail.com' LIMIT 1;
+
+  -- Se o usuário existir, insere/atualiza suas permissões.
+  IF admin_user_id IS NOT NULL THEN
+    -- Garante que o perfil existe.
+    INSERT INTO public.profiles (id, email, role)
+    VALUES (admin_user_id, 'serparenan@gmail.com', 'AdminGeral')
+    ON CONFLICT (id) DO UPDATE SET role = 'AdminGeral';
+
+    -- Garante que a permissão existe (essencial para o login).
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (admin_user_id, 'AdminGeral')
+    ON CONFLICT (user_id) DO UPDATE SET role = 'AdminGeral';
+
+    RAISE NOTICE 'Usuário administrador "serparenan@gmail.com" configurado com sucesso.';
+  ELSE
+    RAISE WARNING 'AVISO: O usuário "serparenan@gmail.com" não foi encontrado na tabela auth.users. Por favor, crie este usuário no painel de Autenticação do Supabase e execute este script novamente.';
+  END IF;
+END $$;
 `;
 
 interface BootstrapModalProps {
@@ -90,13 +107,13 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
             <AlertTriangle className="w-8 h-8 mt-0.5 flex-shrink-0" />
             <div>
                 <h4 className="font-semibold">Ação Necessária</h4>
-                <p>Detectamos que as tabelas de usuários e permissões não existem ou estão inacessíveis. Siga os passos abaixo para finalizar a configuração.</p>
+                <p>Detectamos que as tabelas de permissões do seu banco de dados não estão configuradas. Para resolver, siga os passos abaixo.</p>
             </div>
         </div>
         
         <div className="space-y-2">
-            <p><strong>Passo 1:</strong> No seu painel do Supabase, vá para a seção "Authentication" e copie o "User ID" do seu usuário <strong>serparenan@gmail.com</strong>.</p>
-            <p><strong>Passo 2:</strong> Vá para a seção "SQL Editor", clique em "+ New query", cole o script abaixo, **substitua o texto 'SEU_USER_ID_AQUI'** pelo ID que você copiou e clique em "RUN".</p>
+            <p><strong>Passo 1:</strong> Confirme que você criou o usuário <strong>serparenan@gmail.com</strong> no painel de "Authentication" do seu projeto Supabase.</p>
+            <p><strong>Passo 2:</strong> Vá para a seção "SQL Editor", clique em "+ New query", copie e cole o script abaixo e clique em "RUN". **Não é necessário editar o script.**</p>
         </div>
 
         <div className="relative bg-secondary dark:bg-dark-secondary p-4 rounded-lg max-h-60 overflow-y-auto">
@@ -106,7 +123,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
             <pre className="text-xs whitespace-pre-wrap font-mono">{bootstrapSqlScript}</pre>
         </div>
 
-        <p>Após executar o script, feche este aviso e tente fazer o login novamente.</p>
+        <p>Após executar o script com sucesso, feche este aviso e tente fazer o login novamente.</p>
 
         <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose}>Entendi, vou executar o script</Button>
