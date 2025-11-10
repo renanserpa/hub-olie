@@ -2,12 +2,12 @@ import React from 'react';
 import { Loader2, Package, BookOpen } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import ProductList from './products/ProductList';
-import ProductDialog from './products/ProductDialog';
 import ProductFilterBar from './products/ProductFilterBar';
 import ProductKanban from './products/ProductKanban';
 import TabLayout from './ui/TabLayout';
 import CatalogManagement from './products/CatalogManagement';
 import { Product } from '../types';
+import ProductDrawer from './products/ProductDrawer';
 
 const PRODUCT_PAGE_TABS = [
     { id: 'list', label: 'Lista de Produtos', icon: Package },
@@ -99,7 +99,7 @@ const ProductsPage: React.FC = () => {
             )}
             
             {isDialogOpen && settingsData && (
-                <ProductDialog
+                <ProductDrawer
                     isOpen={isDialogOpen}
                     onClose={closeDialog}
                     onSave={saveProduct}
