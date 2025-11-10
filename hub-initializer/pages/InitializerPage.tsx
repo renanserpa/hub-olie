@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Cpu } from 'lucide-react';
 import SystemMonitor from '../components/SystemMonitor';
 import DataSeedingPanel from '../components/DataSeedingPanel';
+import ConnectionTestPanel from '../components/ConnectionTestPanel';
 
 const InitializerPage: React.FC = () => {
   const { agents } = useAgentSync();
@@ -22,6 +23,7 @@ const InitializerPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <ExecutionPanel />
           <DataSeedingPanel />
+          <ConnectionTestPanel />
           <SystemMonitor />
         </div>
 

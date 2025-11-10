@@ -32,6 +32,9 @@ export function useInitializer() {
   });
   const [isSeeding, setIsSeeding] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
 
   const isAdminGeral = useMemo(
     () => (user?.role === 'AdminGeral'),
@@ -124,6 +127,19 @@ export function useInitializer() {
     }
   };
 
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    const result = await dataService.testConnection();
+    setTestResult(result);
+    setIsTesting(false);
+    toast({
+        title: result.success ? "Teste Concluído" : "Falha no Teste",
+        description: result.message,
+        variant: result.success ? 'default' : 'destructive',
+    });
+  };
+
   async function logAudit(data: InitStatus) {
     try {
       const payload = `[${new Date().toISOString()}] SYNC → ENV:${data.env} SUPABASE:${data.supabaseConnected} MODS:${data.modulesDetected.length} WARN:${data.warnings?.length ?? 0}\n`;
@@ -156,5 +172,5 @@ export function useInitializer() {
 
   useEffect(() => { runInitialization(); }, []);
 
-  return { status, reload: runInitialization, hardReload, isAdminGeral, isSeeding, handleSeedDatabase, handleUpload, isProcessing };
+  return { status, reload: runInitialization, hardReload, isAdminGeral, isSeeding, handleSeedDatabase, handleUpload, isProcessing, isTesting, testResult, handleTestConnection };
 }

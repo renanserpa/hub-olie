@@ -507,4 +507,26 @@ export const supabaseService = {
         const last_error = status === 'error' ? 'Simulated connection failure.' : undefined;
         await updateDocument<Integration>('config_integrations', id, { status, last_sync: new Date().toISOString(), last_error } as Partial<Integration>);
       },
+    testConnection: async (): Promise<{ success: boolean; message: string }> => {
+        try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError || !session?.user) {
+                throw new Error("Sessão de usuário não encontrada. Faça o login novamente.");
+            }
+
+            const { error: rlsError } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', session.user.id)
+                .single();
+
+            if (rlsError) {
+                throw new Error(`Falha na verificação de RLS (Row Level Security): ${rlsError.message}. Verifique as políticas de acesso da tabela 'profiles'.`);
+            }
+
+            return { success: true, message: "Conexão, autenticação e políticas RLS validadas com sucesso." };
+        } catch (error) {
+            return { success: false, message: (error as Error).message };
+        }
+    },
 };

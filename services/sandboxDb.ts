@@ -540,4 +540,10 @@ export const sandboxDb = {
         emit('media_assets');
         return { id: newAsset.drive_file_id, webViewLink: newAsset.url_public };
     },
+
+    testConnection: async (): Promise<{ success: boolean; message: string }> => {
+        console.log("🧱 SANDBOX: Simulating connection test.");
+        await delay(300);
+        return { success: true, message: "Modo Sandbox: Conexão simulada com sucesso." };
+    },
 };
