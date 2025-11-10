@@ -1,12 +1,9 @@
 import React from 'react';
-import { useProduction } from './useProduction';
+import { useProduction, ProductionViewMode } from './useProduction';
 import { Loader2 } from 'lucide-react';
 import ProductionDrawer from './ProductionDrawer';
-import ProductionTable from '../../components/production/ProductionTable';
-import ProductionDialog from '../../components/production/ProductionDialog';
 import ProductionKpiRow from '../../components/production/ProductionKpiRow';
 import ProductionKanban from './ProductionKanban';
-import ProductionTimeline from './ProductionTimeline';
 import { useApp } from '../../contexts/AppContext';
 
 export default function ProductionPanel() {
@@ -20,49 +17,22 @@ export default function ProductionPanel() {
     selectedOrder, 
     setSelectedOrderId,
     kpis,
-    filters,
-    setFilters,
-    viewMode,
-    setViewMode,
-    isCreateDialogOpen,
-    setIsCreateDialogOpen,
-    createProductionOrder,
-    allProducts,
     allMaterials,
-    isSaving,
   } = useProduction();
 
-  const renderContent = () => {
-    if (isLoading) {
-      return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-    }
-    
-    switch (viewMode) {
-        case 'table':
-            return <ProductionTable orders={filteredOrders} onOrderSelect={setSelectedOrderId} />;
-        case 'list':
-            return <ProductionTimeline orders={filteredOrders} />;
-        case 'kanban':
-        default:
-            return <ProductionKanban orders={filteredOrders} onStatusChange={updateProductionOrderStatus} onCardClick={setSelectedOrderId} />;
-    }
-  };
-
-
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+  
   return (
     <div className="space-y-6">
-      {/* <ProductionFilterBar 
-        filters={filters}
-        onFiltersChange={setFilters}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onNewOrderClick={() => setIsCreateDialogOpen(true)}
-        onAdvancedFilterClick={() => {}}
-      /> */}
-
       <ProductionKpiRow kpis={kpis} />
       
-      {renderContent()}
+      <ProductionKanban 
+        orders={filteredOrders} 
+        onStatusChange={updateProductionOrderStatus} 
+        onCardClick={setSelectedOrderId} 
+      />
     
       <ProductionDrawer
         order={selectedOrder}
@@ -72,13 +42,6 @@ export default function ProductionPanel() {
         onUpdateTaskStatus={updateTaskStatus}
         onCreateQualityCheck={createQualityCheck}
         user={user}
-      />
-      <ProductionDialog 
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSave={createProductionOrder}
-        products={allProducts}
-        isSaving={isSaving}
       />
     </div>
   );
