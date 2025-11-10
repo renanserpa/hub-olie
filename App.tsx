@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from './types';
 import Toaster from './components/Toaster';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -63,6 +63,7 @@ const App: React.FC = () => {
     const { can, goto } = useOlie();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -149,22 +150,48 @@ const App: React.FC = () => {
             )}
             <Toaster />
             <div className="flex">
-                <aside className={cn("w-64 bg-secondary dark:bg-dark-secondary border-r border-border dark:border-dark-border h-screen flex flex-col p-4 sticky", isSandbox ? "top-[25px]" : "top-0")}>
-                    <div className="px-2 mb-8">
-                        <h1 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">Olie Hub</h1>
+                <aside className={cn(
+                    "bg-secondary dark:bg-dark-secondary border-r border-border dark:border-dark-border h-screen flex flex-col p-4 sticky transition-all duration-300 ease-in-out", 
+                    isSidebarCollapsed ? "w-20" : "w-64",
+                    isSandbox ? "top-[25px]" : "top-0"
+                )}>
+                    <div className={cn("px-2 mb-8 transition-all h-8", isSidebarCollapsed && "px-0 text-center")}>
+                         {isSidebarCollapsed ? (
+                            <Cpu className="w-8 h-8 mx-auto text-primary"/>
+                        ) : (
+                            <h1 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">Olie Hub</h1>
+                        )}
                     </div>
                     <nav className="flex flex-col space-y-2">
                         {visibleTabs.map(tab => (
                             <button key={tab.id} onClick={() => goto(tab.id)}
+                                title={isSidebarCollapsed ? tab.label : undefined}
                                 className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors',
-                                    activeModule === tab.id ? 'bg-primary text-white' : 'text-textSecondary dark:text-dark-textSecondary hover:bg-accent dark:hover:bg-dark-accent hover:text-textPrimary dark:hover:text-dark-textPrimary')}>
-                                <tab.icon className="w-5 h-5" />
-                                <span>{tab.label}</span>
+                                    activeModule === tab.id ? 'bg-primary text-white' : 'text-textSecondary dark:text-dark-textSecondary hover:bg-accent dark:hover:bg-dark-accent hover:text-textPrimary dark:hover:text-dark-textPrimary',
+                                    isSidebarCollapsed && "justify-center"
+                                )}>
+                                <tab.icon className="w-5 h-5 flex-shrink-0" />
+                                {!isSidebarCollapsed && <span>{tab.label}</span>}
                             </button>
                         ))}
                     </nav>
-                     <div className="mt-auto">
-                        <Button variant="outline" className="w-full" onClick={logout}>Sair</Button>
+                     <div className="mt-auto pt-4 border-t border-border dark:border-dark-border space-y-2">
+                         <Button
+                            variant="ghost"
+                            className="w-full text-textSecondary"
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            title={isSidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+                        >
+                            {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            onClick={logout}
+                            title="Sair"
+                        >
+                            {isSidebarCollapsed ? <LogOut className="h-5 w-5" /> : <span>Sair</span>}
+                        </Button>
                     </div>
                 </aside>
 
