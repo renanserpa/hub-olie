@@ -10,10 +10,9 @@ import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 import PlaceholderContent from './PlaceholderContent';
 import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';
 import SuppliersTabContent from './settings/suppliers/SuppliersTabContent';
+import OperationalParamsTabContent from './settings/OperationalParamsTabContent';
 
-// FIX: New placeholder components for the expanded settings sections.
 const OrganizationTabContent: React.FC = () => <PlaceholderContent title="Dados da Organização" requiredTable="company_profile" icon={Building}><p className="mt-1 text-sm text-textSecondary">Gerencie os dados cadastrais da sua empresa, como CNPJ, endereço fiscal e contatos.</p></PlaceholderContent>;
-const OperationalParamsTabContent: React.FC = () => <PlaceholderContent title="Parâmetros Operacionais" requiredTable="system_settings (expanded)" icon={SlidersHorizontal}><p className="mt-1 text-sm text-textSecondary">Defina regras de negócio e parâmetros para os módulos de Produção, Financeiro e Logística.</p></PlaceholderContent>;
 const AuditTabContent: React.FC = () => <PlaceholderContent title="Logs de Auditoria" requiredTable="system_audit" icon={BarChart}><p className="mt-1 text-sm text-textSecondary">Visualize um registro de todas as ações importantes realizadas no sistema.</p></PlaceholderContent>;
 
 

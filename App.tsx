@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from './types';
 import Toaster from './components/Toaster';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen, ChevronsLeft, ChevronsRight, LogOut, Loader2 } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -22,7 +22,6 @@ import DashboardPage from './pages/DashboardPage';
 import { cn } from './lib/utils';
 import LoginPage from './components/LoginPage';
 import { logout } from './services/authService';
-import { runtime } from './lib/runtime';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import NotificationBell from './components/NotificationBell';
 import { useApp } from './contexts/AppContext';
@@ -110,129 +109,107 @@ const App: React.FC = () => {
             case 'products':
                 return <ProductsPage />;
             case 'orders':
+                return <OrdersPage user={user as User} />;
             default:
-                return <OrdersPage user={user} />;
+                return <DashboardPage />;
         }
     };
     
-    if (isAuthLoading || (user && isDataLoading)) {
+    if (isAuthLoading) {
         return (
-            <div className="flex justify-center items-center h-screen bg-background dark:bg-dark-background">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-dashed rounded-full animate-spin border-primary"></div>
-                    <p className="mt-4 text-lg font-semibold text-textSecondary dark:text-dark-textSecondary">Carregando Olie Hub...</p>
-                </div>
+            <div className="flex justify-center items-center h-screen bg-secondary dark:bg-dark-secondary">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
             </div>
         );
     }
     
+    if (authError) {
+        return (
+             <div className="flex flex-col items-center justify-center h-screen text-center bg-secondary dark:bg-dark-secondary">
+                <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+                <h1 className="text-2xl font-bold">Erro de Autenticação</h1>
+                <p className="text-red-600 mt-2 max-w-md">{authError}</p>
+             </div>
+        )
+    }
+
     if (!user) {
         return <LoginPage />;
     }
     
-    const isSandbox = runtime.mode === 'SANDBOX';
     const visibleTabs = MAIN_TABS.filter(tab => can(tab.scope, 'read'));
-    const activeTabInfo = MAIN_TABS.find(tab => tab.id === activeModule);
-    
-    return (
-        <div className="min-h-screen font-sans bg-background dark:bg-dark-background">
-            {isSandbox && (
-                <div className="w-full text-center text-xs py-1 bg-amber-100 text-amber-800 border-b border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800 sticky top-0 z-50">
-                    SANDBOX MODE (offline) — sem chamadas de rede
-                </div>
-            )}
-            <Toaster />
-            <div className="flex">
-                <aside className={cn(
-                    "bg-secondary dark:bg-dark-secondary border-r border-border dark:border-dark-border h-screen flex flex-col p-4 sticky transition-all duration-300 ease-in-out", 
-                    isSidebarCollapsed ? "w-20" : "w-64",
-                    isSandbox ? "top-[25px]" : "top-0"
-                )}>
-                    <div className={cn("px-2 mb-8 transition-all h-8", isSidebarCollapsed && "px-0 text-center")}>
-                         {isSidebarCollapsed ? (
-                            <Cpu className="w-8 h-8 mx-auto text-primary"/>
-                        ) : (
-                            <h1 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">Olie Hub</h1>
-                        )}
-                    </div>
-                    <nav className="flex flex-col space-y-2">
-                        {visibleTabs.map(tab => (
-                            <button key={tab.id} onClick={() => goto(tab.id)}
-                                title={isSidebarCollapsed ? tab.label : undefined}
-                                className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors',
-                                    activeModule === tab.id ? 'bg-primary text-white' : 'text-textSecondary dark:text-dark-textSecondary hover:bg-accent dark:hover:bg-dark-accent hover:text-textPrimary dark:hover:text-dark-textPrimary',
-                                    isSidebarCollapsed && "justify-center"
-                                )}>
-                                <tab.icon className="w-5 h-5 flex-shrink-0" />
-                                {!isSidebarCollapsed && <span>{tab.label}</span>}
-                            </button>
-                        ))}
-                    </nav>
-                     <div className="mt-auto pt-4 border-t border-border dark:border-dark-border space-y-2">
-                         <Button
-                            variant="ghost"
-                            className="w-full text-textSecondary"
-                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            title={isSidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-                        >
-                            {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            className="w-full" 
-                            onClick={logout}
-                            title="Sair"
-                        >
-                            {isSidebarCollapsed ? <LogOut className="h-5 w-5" /> : <span>Sair</span>}
-                        </Button>
-                    </div>
-                </aside>
 
-                <main className="flex-1">
-                     <header className={cn("bg-background/80 dark:bg-dark-background/80 backdrop-blur-sm border-b border-border dark:border-dark-border z-10 sticky", isSandbox ? "top-[25px]" : "top-0")}>
-                        <div className="container mx-auto px-6 h-20 flex justify-between items-center">
-                           <div className="relative w-full max-w-md">
-                           </div>
-                            <div className="flex items-center gap-4">
-                                <ThemeToggle />
-                                <NotificationBell />
-                                {user && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
-                                            {user.email.substring(0, 2).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-sm text-textPrimary dark:text-dark-textPrimary truncate">{user.email.split('@')[0]}</p>
-                                            <p className="text-xs text-textSecondary dark:text-dark-textSecondary">{user.role.replace('AdminGeral', 'Admin')}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </header>
-                    <div className="container mx-auto p-4 sm:p-6">
-                        {isAIEnabled && (
-                            <div className="mb-4 flex items-center gap-2 text-sm text-blue-800 bg-blue-100 p-3 rounded-lg dark:bg-blue-900/30 dark:text-blue-200">
-                                <Lightbulb size={16} />
-                                <span>**IA Ativa** — Insights preditivos fornecidos pelo Gemini Layer.</span>
-                            </div>
-                        )}
-                        {activeTabInfo && can(activeTabInfo.scope, 'read') && (
-                            <div className="mb-6">
-                                 <div className="flex items-center gap-3">
-                                    <activeTabInfo.icon className="text-primary" size={28}/>
-                                    <h1 className="text-3xl font-bold text-textPrimary">{activeTabInfo.label}</h1>
-                                </div>
-                                <p className="text-textSecondary mt-1">{activeTabInfo.description}</p>
-                            </div>
-                        )}
-                        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-4" role="alert" onClick={() => setError(null)}>{error}</div>}
-                        {renderActivePage()}
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error('Failed to log out', error);
+        }
+    }
+
+    return (
+        <div className="flex h-screen bg-secondary dark:bg-dark-secondary text-textPrimary dark:text-dark-textPrimary">
+            {/* Sidebar */}
+            <aside className={cn("flex flex-col bg-card dark:bg-dark-card border-r border-border dark:border-dark-border transition-all duration-300", isSidebarCollapsed ? "w-20" : "w-64")}>
+                <div className={cn("flex items-center h-16 border-b border-border dark:border-dark-border px-4", isSidebarCollapsed ? "justify-center" : "justify-between")}>
+                    {!isSidebarCollapsed && <h1 className="text-xl font-bold">Olie Hub</h1>}
+                    <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+                        {isSidebarCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
+                    </Button>
+                </div>
+                <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+                    {visibleTabs.map(tab => {
+                        const Icon = tab.icon;
+                        return (
+                            <Button
+                                key={tab.id}
+                                variant={activeModule === tab.id ? "secondary" : "ghost"}
+                                className={cn("w-full flex justify-start items-center gap-3", isSidebarCollapsed && "justify-center")}
+                                onClick={() => setActiveModule(tab.id)}
+                                title={tab.label}
+                            >
+                                <Icon className="w-5 h-5" />
+                                {!isSidebarCollapsed && <span>{tab.label}</span>}
+                            </Button>
+                        )
+                    })}
+                </nav>
+                <div className="p-2 border-t border-border dark:border-dark-border">
+                    <Button variant="ghost" className={cn("w-full flex justify-start items-center gap-3", isSidebarCollapsed && "justify-center")} onClick={handleLogout} title="Sair">
+                        <LogOut className="w-5 h-5" />
+                        {!isSidebarCollapsed && <span>Sair</span>}
+                    </Button>
+                </div>
+            </aside>
+            
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                <header className="flex items-center justify-between h-16 px-6 border-b border-border dark:border-dark-border bg-card dark:bg-dark-card flex-shrink-0">
+                    <div>
+                        <h2 className="text-xl font-semibold">{MAIN_TABS.find(t => t.id === activeModule)?.label}</h2>
+                        <p className="text-sm text-textSecondary dark:text-dark-textSecondary">{MAIN_TABS.find(t => t.id === activeModule)?.description}</p>
                     </div>
-                </main>
-            </div>
+                    <div className="flex items-center gap-4">
+                        <NotificationBell />
+                        <ThemeToggle />
+                        {/* User Profile - simplified */}
+                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center font-semibold text-sm">
+                            {user.email.charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+                </header>
+                <div className="flex-1 overflow-y-auto p-6">
+                    {isDataLoading ? (
+                        <div className="flex justify-center items-center h-full">
+                            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                        </div>
+                    ) : renderActivePage()}
+                </div>
+            </main>
+            
+            <Toaster />
         </div>
     );
 };
-
+// FIX: Add default export to resolve module loading error in index.tsx.
 export default App;

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { listenAuthChanges, getCurrentUser } from '../services/authService';
 import { AuthUser } from '../types';
-import { isSandbox } from '../lib/runtime';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -46,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // For Supabase, we check the session. For Sandbox, we just set the user directly.
+    // For Supabase, we check the session.
     checkInitialAuth();
 
     // The listener handles subsequent changes (login/logout).

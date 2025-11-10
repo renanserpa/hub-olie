@@ -14,8 +14,9 @@ export function usePurchasing() {
     const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
     const [allPOs, setAllPOs] = useState<PurchaseOrder[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
-
     const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
+    const [selectedPOItems, setSelectedPOItems] = useState<PurchaseOrderItem[]>([]);
+    const [isLoadingItems, setIsLoadingItems] = useState(false);
 
     const isAdmin = user?.role === 'AdminGeral' || user?.role === 'Financeiro';
 
@@ -24,10 +25,7 @@ export function usePurchasing() {
         try {
             console.log("[PURCHASING] Loading tables...");
             const { suppliers, purchase_orders } = await dataService.getPurchasingData();
-            const [materials, poItems] = await Promise.all([
-                dataService.getCollection<Material>('config_materials'),
-                dataService.getCollection<PurchaseOrderItem>('purchase_order_items')
-            ]);
+            const materials = await dataService.getCollection<Material>('config_materials');
 
             const loadedTables: string[] = [];
             const missingTables: string[] = [];
@@ -36,11 +34,7 @@ export function usePurchasing() {
 
             if(suppliers) { setAllSuppliers(suppliers); loadedTables.push('suppliers'); } else { missingTables.push('suppliers'); }
             if(purchase_orders) { 
-                const posWithItems = purchase_orders.map(po => ({
-                    ...po,
-                    items: poItems.filter(item => item.po_id === po.id)
-                }));
-                setAllPOs(posWithItems); 
+                setAllPOs(purchase_orders);
                 loadedTables.push('purchase_orders'); 
             } else { 
                 missingTables.push('purchase_orders'); 
@@ -76,6 +70,28 @@ export function usePurchasing() {
         };
     }, [loadData]);
 
+    useEffect(() => {
+        if (!selectedPOId) {
+            setSelectedPOItems([]);
+            return;
+        }
+
+        const fetchItems = async () => {
+            setIsLoadingItems(true);
+            try {
+                const items = await dataService.getPurchaseOrderItems(selectedPOId);
+                setSelectedPOItems(items);
+            } catch (error) {
+                toast({ title: "Erro", description: "Não foi possível carregar os itens do pedido de compra.", variant: "destructive" });
+            } finally {
+                setIsLoadingItems(false);
+            }
+        };
+
+        fetchItems();
+    }, [selectedPOId]);
+
+
     const posWithDetails = useMemo(() => {
         return allPOs.map(po => ({
             ...po,
@@ -84,8 +100,10 @@ export function usePurchasing() {
     }, [allPOs, allSuppliers]);
 
     const selectedPO = useMemo(() => {
-        return posWithDetails.find(po => po.id === selectedPOId) || null;
-    }, [posWithDetails, selectedPOId]);
+        const po = posWithDetails.find(po => po.id === selectedPOId);
+        if (!po) return null;
+        return { ...po, items: selectedPOItems };
+    }, [posWithDetails, selectedPOId, selectedPOItems]);
 
 
     // --- MUTATIONS ---
@@ -139,6 +157,7 @@ export function usePurchasing() {
     return {
         isLoading,
         isSaving,
+        isLoadingItems,
         isAdmin,
         activeTab,
         setActiveTab,

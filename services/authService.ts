@@ -1,21 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
-import { runtime } from '../lib/runtime';
-// FIX: Import UserRole and AuthUser from the centralized types.ts file to remove duplication and fix type errors.
 import { UserRole, AuthUser } from '../types';
 
-const sandboxUser: AuthUser = {
-  uid: 'sandbox-user-01',
-  email: 'admin@sandbox.olie',
-  role: 'AdminGeral',
-};
-
 export const login = async (email: string, password: string): Promise<AuthUser> => {
-  if (runtime.mode === 'SANDBOX') {
-    console.log('🧱 SANDBOX: Simulating login.');
-    await new Promise(res => setTimeout(res, 500));
-    return sandboxUser;
-  }
-
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
 
   if (loginError) {
@@ -65,10 +51,6 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
 };
 
 export const logout = async (): Promise<void> => {
-    if (runtime.mode === 'SANDBOX') {
-        console.log('🧱 SANDBOX: Simulating logout.');
-        return;
-    }
     const { error } = await supabase.auth.signOut();
     if (error) {
         console.error("Error signing out:", error);
@@ -77,10 +59,6 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
-    if (runtime.mode === 'SANDBOX') {
-        return sandboxUser;
-    }
-
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session?.user) {
@@ -127,12 +105,6 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 };
 
 export const listenAuthChanges = (callback: (user: AuthUser | null) => void): (() => void) => {
-    if (runtime.mode === 'SANDBOX') {
-        // In sandbox mode, auth state is static, so we just call back with the user once.
-        callback(sandboxUser);
-        return () => {}; // Return a no-op unsubscribe function
-    }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {

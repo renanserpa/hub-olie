@@ -11,6 +11,7 @@ const PurchasesPage: React.FC = () => {
     const {
         isLoading,
         isSaving,
+        isLoadingItems,
         isAdmin,
         activeTab,
         setActiveTab,
@@ -61,6 +62,7 @@ const PurchasesPage: React.FC = () => {
                 selectedPO={selectedPO}
                 onSelectPO={setSelectedPOId}
                 isSaving={isSaving}
+                isLoadingItems={isLoadingItems}
             />
 
             <SupplierDialog

@@ -234,7 +234,7 @@ export function useProduction() {
     };
     
     const clearFilters = () => {
-        setFilters({ search: '', status: [] });
+        setFilters({ search: '', status: [], productId: '', startDate: '', endDate: '', minQty: '', maxQty: '' });
     };
 
     return {

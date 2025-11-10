@@ -1,21 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
-import { runtime } from './runtime';
+import { runtime } from '../lib/runtime';
 
-// Production-ready: Credentials are sourced from environment variables for Vite.
-// See /reports/vercel_env_checklist.md for configuration details.
-// FIX: Replaced import.meta.env with hardcoded values to resolve build errors.
+// Hardcoded values to fix environment variable issues in this execution context.
 const supabaseUrl = "https://ijheukynkppcswgtrnwd.supabase.co";
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
-
 
 let supabaseInstance: any;
 
 if (runtime.mode !== 'SANDBOX') {
     if (!supabaseUrl || !supabaseAnonKey) {
-      const errorMessage = "ERRO CRÍTICO: As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão definidas. Configure-as no painel do Vercel para que a aplicação possa conectar ao banco de dados.";
-      console.error(errorMessage);
-      // This will crash the app on purpose if the variables are not set, which is the desired behavior in production.
-      throw new Error(errorMessage);
+      console.error("ERRO CRÍTICO: As constantes do Supabase (URL/ANON_KEY) não estão definidas no código-fonte.");
+      // Throw an error to stop execution if keys are somehow missing
+      throw new Error("Supabase URL and Key are required but missing in the source code.");
     }
     console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
@@ -45,6 +41,23 @@ if (runtime.mode !== 'SANDBOX') {
         signOut: () => Promise.resolve({ error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: new Error("No session in Sandbox mode.") }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+      functions: {
+        invoke: async (functionName: string, { body }: any) => {
+          console.log(`[MOCK supabase.functions.invoke] Called '${functionName}' with body:`, body);
+          await new Promise(res => setTimeout(res, 500)); // Simulate network
+          // Return mock data based on function name
+          if (functionName === 'generate-payment-link') {
+            return { data: { payments: { status: 'pending', method: 'link', checkoutUrl: `#mock-link-${Date.now()}` } }, error: null };
+          }
+          if (functionName === 'issue-nfe') {
+            return { data: { fiscal: { status: 'authorized', nfeNumber: '12345', pdfUrl: '#mock-pdf' } }, error: null };
+          }
+          if (functionName === 'create-shipping-label') {
+            return { data: { logistics: { status: 'label_created', tracking: `MOCKTRACK${Date.now()}`, labelUrl: '#mock-label' } }, error: null };
+          }
+          return { data: { message: `Mock response for ${functionName}` }, error: null };
+        }
       }
     };
     supabaseInstance = mockSupabase;

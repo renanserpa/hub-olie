@@ -14,9 +14,10 @@ interface PurchaseOrdersTabProps {
     onNewClick: () => void;
     onReceiveClick: () => void;
     isSaving: boolean;
+    isLoadingItems: boolean;
 }
 
-const PurchaseOrdersTab: React.FC<PurchaseOrdersTabProps> = ({ purchaseOrders, selectedPO, onSelectPO, onNewClick, onReceiveClick, isSaving }) => {
+const PurchaseOrdersTab: React.FC<PurchaseOrdersTabProps> = ({ purchaseOrders, selectedPO, onSelectPO, onNewClick, onReceiveClick, isSaving, isLoadingItems }) => {
     // This is a simplified state for now. In a real app, this would come from a hook.
     const [filters, setFilters] = React.useState({ search: '', status: [] });
 
@@ -40,7 +41,7 @@ const PurchaseOrdersTab: React.FC<PurchaseOrdersTabProps> = ({ purchaseOrders, s
             </div>
             <div className="lg:col-span-5">
                 {selectedPO ? (
-                    <PODetailPanel po={selectedPO} key={selectedPO.id} onReceiveClick={onReceiveClick} isSaving={isSaving}/>
+                    <PODetailPanel po={selectedPO} key={selectedPO.id} onReceiveClick={onReceiveClick} isSaving={isSaving} isLoadingItems={isLoadingItems}/>
                 ) : (
                     <Card className="sticky top-20 h-[calc(100vh-18rem)] flex items-center justify-center">
                         <div className="text-center text-textSecondary">

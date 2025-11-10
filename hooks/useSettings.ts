@@ -3,7 +3,8 @@ import { AppData, AnySettingsItem, SettingsCategory, SystemSetting } from '../ty
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
-import { storageService } from '../services/storageService';
+// FIX: Correct the import to use 'mediaService' which provides the upload functionality, and alias it to 'storageService' to avoid further changes.
+import { mediaService as storageService } from '../services/mediaService';
 
 export function useSettings() {
     const { user } = useAuth();
@@ -60,7 +61,8 @@ export function useSettings() {
         }
     };
 
-    const uploadFilesAndUpdateItem = async (item: any, fileData?: Record<string, File | null>) => {
+    // FIX: Add module and category parameters to pass to the upload service.
+    const uploadFilesAndUpdateItem = async (item: any, fileData: Record<string, File | null> | undefined, module: SettingsCategory, uploadCategory: string) => {
         const itemToSubmit = { ...item };
         if (!fileData) return itemToSubmit;
 
@@ -68,15 +70,18 @@ export function useSettings() {
             const file = fileData[key];
             if (file) {
                 toast({ title: "Enviando arquivo...", description: `Enviando ${file.name}` });
-                const { url } = await storageService.uploadFile(file); 
-                itemToSubmit[key] = url;
+                // FIX: Pass all required arguments to uploadFile and use the correct return property 'webViewLink'.
+                const result = await storageService.uploadFile(file, module, uploadCategory); 
+                itemToSubmit[key] = result.webViewLink;
             }
         }
         return itemToSubmit;
     };
 
     const handleAdd = async (category: SettingsCategory, item: Omit<AnySettingsItem, 'id'>, subTab: string | null, subSubTab: string | null, fileData?: Record<string, File | null>) => {
-        const processedItem = await uploadFilesAndUpdateItem(item, fileData);
+        // FIX: Pass module and category info to the uploader function.
+        const uploadCategory = subSubTab || subTab || 'default';
+        const processedItem = await uploadFilesAndUpdateItem(item, fileData, category, uploadCategory);
         return performMutation(
             dataService.addSetting(category, processedItem, subTab, subSubTab),
             'Item adicionado com sucesso.',
@@ -85,7 +90,9 @@ export function useSettings() {
     };
 
     const handleUpdate = async (category: SettingsCategory, item: AnySettingsItem, subTab: string | null, subSubTab: string | null, fileData?: Record<string, File | null>) => {
-        const processedItem = await uploadFilesAndUpdateItem(item, fileData);
+        // FIX: Pass module and category info to the uploader function.
+        const uploadCategory = subSubTab || subTab || 'default';
+        const processedItem = await uploadFilesAndUpdateItem(item, fileData, category, uploadCategory);
         return performMutation(
             dataService.updateSetting(category, processedItem.id, processedItem, subTab, subSubTab),
             'Item atualizado com sucesso.',

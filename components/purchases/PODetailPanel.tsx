@@ -3,11 +3,13 @@ import { PurchaseOrder } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import POItemTable from './POItemTable';
+import { Loader2 } from 'lucide-react';
 
 interface PODetailPanelProps {
     po: PurchaseOrder & { supplier?: any, items: any[] };
     onReceiveClick: () => void;
     isSaving: boolean;
+    isLoadingItems: boolean;
 }
 
 const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
@@ -17,7 +19,7 @@ const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label
     </div>
 );
 
-const PODetailPanel: React.FC<PODetailPanelProps> = ({ po, onReceiveClick, isSaving }) => {
+const PODetailPanel: React.FC<PODetailPanelProps> = ({ po, onReceiveClick, isSaving, isLoadingItems }) => {
     const canReceive = po.status === 'issued' || po.status === 'partial';
 
     return (
@@ -38,7 +40,13 @@ const PODetailPanel: React.FC<PODetailPanelProps> = ({ po, onReceiveClick, isSav
 
                 <div className="mb-6">
                     <h4 className="font-semibold text-md mb-2">Itens do Pedido</h4>
-                    <POItemTable items={po.items} />
+                    {isLoadingItems ? (
+                        <div className="flex justify-center items-center h-24">
+                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <POItemTable items={po.items} />
+                    )}
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t">

@@ -1,15 +1,6 @@
-export type RuntimeMode = 'SANDBOX' | 'SUPABASE';
+// FIX: Add content to this file to make it a valid module.
+import { ENV } from './env';
 
-// This is the master switch. To reconnect to the live Supabase backend,
-// change this to 'SUPABASE' and redeploy.
-// FIX: Changed to a const object to provide a more robust and conventional
-// way of managing runtime configuration, preventing accidental reassignment.
-export const runtime: { mode: RuntimeMode } = {
-  mode: 'SUPABASE',
+export const runtime = {
+  mode: ENV.APP_ENV,
 };
-
-/**
- * Checks if the application is currently running in Sandbox (offline) mode.
- * @returns {boolean} True if in SANDBOX mode, false otherwise.
- */
-export const isSandbox = (): boolean => runtime.mode === 'SANDBOX';

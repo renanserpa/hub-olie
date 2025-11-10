@@ -1,47 +1,31 @@
+import { supabase } from '../lib/supabaseClient';
 import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from "../types";
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-const generateId = () => Math.random().toString(36).substring(2, 10);
+// Helper function to invoke Supabase Edge Functions
+async function invokeEdgeFunction<T>(functionName: string, payload: any): Promise<T> {
+  console.log(`📡 [integrationsService] Invoking Edge Function: ${functionName}`, payload);
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body: payload,
+  });
+
+  if (error) {
+    console.error(`[integrationsService] Error invoking ${functionName}:`, error);
+    throw new Error(`Failed to execute integration function ${functionName}: ${error.message}`);
+  }
+
+  return data;
+}
 
 export const integrationsService = {
   generatePaymentLink: async (order: Order): Promise<{ payments: PaymentDetails }> => {
-    await delay(600);
-    console.log(`[INTEGRATION MOCK] Mocking payment link for order #${order.number}`);
-    return {
-        payments: {
-            status: 'pending',
-            method: 'link',
-            checkoutUrl: `https://mock.olie.com/pay/${generateId()}`,
-            transactionId: `txn_mock_${generateId()}`
-        }
-    };
+    return invokeEdgeFunction<{ payments: PaymentDetails }>('generate-payment-link', { order });
   },
 
   issueNFe: async (order: Order): Promise<{ fiscal: FiscalDetails }> => {
-    await delay(800);
-    console.log(`[INTEGRATION MOCK] Mocking NFe for order #${order.number}`);
-    return {
-        fiscal: {
-            status: 'authorized',
-            nfeNumber: String(Math.floor(100000 + Math.random() * 900000)),
-            serie: '1',
-            pdfUrl: '#mock-danfe',
-            xmlUrl: '#mock-xml'
-        }
-    };
+    return invokeEdgeFunction<{ fiscal: FiscalDetails }>('issue-nfe', { order });
   },
 
   createShippingLabel: async (order: Order): Promise<{ logistics: LogisticsDetails }> => {
-    await delay(500);
-    console.log(`[INTEGRATION MOCK] Mocking shipping label for order #${order.number}`);
-    return {
-        logistics: {
-            status: 'shipped',
-            carrier: 'Correios (Mock)',
-            service: 'SEDEX',
-            tracking: `MCK${Date.now()}BR`,
-            labelUrl: '#mock-label'
-        }
-    };
+    return invokeEdgeFunction<{ logistics: LogisticsDetails }>('create-shipping-label', { order });
   }
 };

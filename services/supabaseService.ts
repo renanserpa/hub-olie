@@ -448,13 +448,17 @@ export const supabaseService = {
   getMarketingCampaigns: (): Promise<MarketingCampaign[]> => supabaseService.getCollection('marketing_campaigns'),
   getMarketingSegments: (): Promise<MarketingSegment[]> => supabaseService.getCollection('marketing_segments'),
   getMarketingTemplates: (): Promise<MarketingTemplate[]> => supabaseService.getCollection('marketing_templates'),
-  getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[], purchase_order_items: PurchaseOrderItem[] }> => {
-    const [suppliers, purchase_orders, purchase_order_items] = await Promise.all([
+  getPurchasingData: async (): Promise<{ suppliers: Supplier[], purchase_orders: PurchaseOrder[] }> => {
+    const [suppliers, purchase_orders] = await Promise.all([
         supabaseService.getCollection<Supplier>('suppliers'),
         supabaseService.getCollection<PurchaseOrder>('purchase_orders', '*, supplier:suppliers(*)'),
-        supabaseService.getCollection<PurchaseOrderItem>('purchase_order_items'),
     ]);
-    return { suppliers, purchase_orders, purchase_order_items };
+    return { suppliers, purchase_orders };
+  },
+  getPurchaseOrderItems: async (poId: string): Promise<PurchaseOrderItem[]> => {
+    const { data, error } = await supabase.from('purchase_order_items').select('*, material:config_materials(*)').eq('po_id', poId);
+    if (error) { handleError(error, `getPurchaseOrderItems(${poId})`); return []; }
+    return data || [];
   },
   createPO: async (poData: { supplier_id: string, items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material_name' | 'material'>[] }) => {
         const po_number = `PC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
