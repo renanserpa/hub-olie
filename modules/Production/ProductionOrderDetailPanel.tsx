@@ -154,6 +154,7 @@ const ProductionOrderDetailPanel: React.FC<ProductionOrderDetailPanelProps> = ({
                      {bomToShow && bomToShow.length > 0 ? (
                          bomToShow.map((item: BOMComponent, index: number) => {
                             const material = allMaterials.find(m => m.id === item.material_id);
+                            if (!material) return <tr key={index}><td colSpan={3}>Material não encontrado (ID: {item.material_id})</td></tr>;
                             return (
                                 <div key={index} className="flex justify-between items-center text-sm p-2 bg-background rounded">
                                     <div>

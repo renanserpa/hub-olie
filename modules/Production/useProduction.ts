@@ -44,13 +44,9 @@ export function useProduction() {
         setViewModeInternal(mode);
     };
 
-    const reload = useCallback(async () => {
-        setIsLoading(true);
+    const loadAuxData = useCallback(async () => {
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
-                dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
-                dataService.getCollection<ProductionTask>('production_tasks'),
-                dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
+            const [materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
@@ -67,25 +63,38 @@ export function useProduction() {
                 return material;
             });
 
-            setAllOrders(ordersData);
-            setAllTasks(tasksData);
-            setAllQualityChecks(qualityData);
             setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
             setAllRoutes(routesData);
             setAllMolds(moldsData);
-
         } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
+             toast({ title: "Erro!", description: "Não foi possível carregar os dados de apoio de produção.", variant: "destructive" });
         }
     }, []);
 
+
     useEffect(() => {
-        reload();
-    }, [reload]);
+        setIsLoading(true);
+        loadAuxData();
+
+        const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', (data) => {
+            setAllOrders(data as ProductionOrder[]);
+            setIsLoading(false);
+        });
+        const tasksListener = dataService.listenToCollection('production_tasks', undefined, (data) => {
+            setAllTasks(data as ProductionTask[]);
+        });
+        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, (data) => {
+            setAllQualityChecks(data as ProductionQualityCheck[]);
+        });
+
+        return () => {
+            ordersListener.unsubscribe();
+            tasksListener.unsubscribe();
+            qualityListener.unsubscribe();
+        };
+    }, [loadAuxData]);
 
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => {
@@ -162,7 +171,7 @@ export function useProduction() {
         try {
             await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
             toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
-            await reload();
+            // Realtime will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
         } finally {
@@ -184,11 +193,10 @@ export function useProduction() {
         try {
             await dataService.updateProductionOrderStatus(orderId, status);
             toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
-            await reload(); // Reload to get all data changes from triggers
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
             // Revert optimistic update on failure by reloading
-            await reload();
+            setAllOrders(allOrders);
         } finally {
             setIsSaving(false);
         }
@@ -201,7 +209,7 @@ export function useProduction() {
             await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
             toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
             setIsCreateDialogOpen(false);
-            reload();
+            // Realtime will handle refresh
         } catch(e) {
             toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
@@ -217,7 +225,7 @@ export function useProduction() {
                 created_at: new Date().toISOString()
             });
             toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
-            await reload();
+            // Realtime will handle refresh
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
         } finally {
@@ -252,6 +260,6 @@ export function useProduction() {
         isAdvancedFilterOpen,
         setIsAdvancedFilterOpen,
         clearFilters,
-        reload,
+        reload: loadAuxData, // Expose aux data reload
     };
 }
