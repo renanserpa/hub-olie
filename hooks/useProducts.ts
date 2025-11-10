@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCategory, AnyProduct, AppData, ProductStatus, ProductVariant, InventoryBalance } from '../types';
+import { Product, ProductCategory, AnyProduct, AppData, ProductStatus, ProductVariant, InventoryBalance, Collection } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -10,6 +10,7 @@ export function useProducts() {
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
     const [inventoryBalances, setInventoryBalances] = useState<InventoryBalance[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
+    const [collections, setCollections] = useState<Collection[]>([]);
     const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -36,15 +37,17 @@ export function useProducts() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [productsData, categoriesData, settings, variantsData, balancesData] = await Promise.all([
+            const [productsData, categoriesData, collectionsData, settings, variantsData, balancesData] = await Promise.all([
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductCategory>('product_categories'),
+                dataService.getCollection<Collection>('collections'),
                 dataService.getSettings(),
                 dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),
             ]);
             setAllProducts(productsData);
             setCategories(categoriesData);
+            setCollections(collectionsData);
             setSettingsData(settings);
             setAllVariants(variantsData);
             setInventoryBalances(balancesData);
@@ -57,11 +60,15 @@ export function useProducts() {
 
     useEffect(() => {
         loadData();
-        const listener = dataService.listenToCollection('products', undefined, (payload) => {
-            console.log('Realtime update on products detected, refreshing...');
-            loadData();
-        });
-        return () => listener.unsubscribe();
+        const productsListener = dataService.listenToCollection('products', undefined, () => loadData());
+        const categoriesListener = dataService.listenToCollection('product_categories', undefined, () => loadData());
+        const collectionsListener = dataService.listenToCollection('collections', undefined, () => loadData());
+        
+        return () => {
+            productsListener.unsubscribe();
+            categoriesListener.unsubscribe();
+            collectionsListener.unsubscribe();
+        };
     }, [loadData]);
 
 
@@ -99,7 +106,7 @@ export function useProducts() {
                 await dataService.addDocument('products', { ...(productData as AnyProduct), status: 'Rascunho' });
                 toast({ title: "Sucesso!", description: "Novo produto criado." });
             }
-            loadData();
+            // Real-time listener handles refresh
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o produto.", variant: "destructive" });
@@ -121,6 +128,25 @@ export function useProducts() {
         }
     }, [loadData]);
 
+    const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
+        try {
+            await mutationFn;
+            toast({ title: "Sucesso!", description: successMsg });
+            // Real-time listener handles refresh
+        } catch (e) {
+            toast({ title: "Erro!", description: (e as Error).message, variant: "destructive" });
+        }
+    };
+
+    const addCategory = (item: Omit<ProductCategory, 'id'>) => handleMutation(dataService.addDocument('product_categories', item), `Categoria adicionada.`);
+    const updateCategory = (item: ProductCategory) => handleMutation(dataService.updateDocument('product_categories', item.id, item), `Categoria atualizada.`);
+    const deleteCategory = (id: string) => handleMutation(dataService.deleteDocument('product_categories', id), `Categoria excluída.`);
+    
+    const addCollection = (item: Omit<Collection, 'id'>) => handleMutation(dataService.addDocument('collections', item), `Coleção adicionada.`);
+    const updateCollection = (item: Collection) => handleMutation(dataService.updateDocument('collections', item.id, item), `Coleção atualizada.`);
+    const deleteCollection = (id: string) => handleMutation(dataService.deleteDocument('collections', id), `Coleção excluída.`);
+
+
     return {
         isLoading,
         isSaving,
@@ -128,6 +154,7 @@ export function useProducts() {
         allVariants,
         inventoryBalances,
         categories,
+        collections,
         settingsData,
         searchQuery,
         setSearchQuery,
@@ -141,7 +168,9 @@ export function useProducts() {
         updateProductStatus,
         selectedProductId,
         setSelectedProductId,
-        // FIX: Expose the loadData function as 'refresh' so it can be used by components.
         refresh: loadData,
+        // CRUD for Catalog Management
+        addCategory, updateCategory, deleteCategory,
+        addCollection, updateCollection, deleteCollection
     };
 }

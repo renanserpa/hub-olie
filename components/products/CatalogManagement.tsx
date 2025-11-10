@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2 } from 'lucide-react';
+import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2, BookOpen, Layers } from 'lucide-react';
 import TabLayout from '../ui/TabLayout';
 import TabContent from '../TabContent';
 import { useSettings } from '../../hooks/useSettings';
-import { AnySettingsItem, FieldConfig, SettingsCategory } from '../../types';
+import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection } from '../../types';
 import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
 import { MaterialTabs } from '../settings/materials/MaterialTabs';
+import { useProducts } from '../../hooks/useProducts';
 
 const CATALOG_TABS = [
-  { id: 'personalization', label: 'Personalização', icon: Palette, scope: 'Settings' },
-  { id: 'materials', label: 'Materiais de Produção', icon: Wrench, scope: 'Settings' },
+  { id: 'categories', label: 'Categorias & Coleções', icon: BookOpen },
+  { id: 'personalization', label: 'Personalização', icon: Palette },
+  { id: 'materials', label: 'Materiais de Produção', icon: Wrench },
 ];
 
 const PERSONALIZATION_SUB_TABS = [
@@ -26,6 +28,8 @@ const CORES_SUB_TABS = [
 ];
 
 // --- Field Configurations ---
+const categoryFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome da Categoria', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }];
+const collectionFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome da Coleção', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }];
 const paletteFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const colorFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor (Hex)', type: 'color' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [ {value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}, {value: 'cotton', label: 'Algodão'}, {value: 'metallic', label: 'Metálica'}]} ];
@@ -37,7 +41,13 @@ const CatalogManagement: React.FC = () => {
     const [activePersonalizationSubTab, setActivePersonalizationSubTab] = useState(PERSONALIZATION_SUB_TABS[0].id);
     const [activeCoresSubTab, setActiveCoresSubTab] = useState(CORES_SUB_TABS[0].id);
     
-    const { settingsData, isLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
+    const { settingsData, isLoading: isSettingsLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
+    const { 
+        categories, collections, 
+        addCategory, updateCategory, deleteCategory, 
+        addCollection, updateCollection, deleteCollection 
+    } = useProducts();
+    const isLoading = isSettingsLoading; // Main loader is from settings
 
     const createCrudHandlers = (category: SettingsCategory, subTab: string | null = null, subSubTab: string | null = null) => ({
         onAdd: (item: Omit<AnySettingsItem, 'id'>, fileData?: Record<string, File | null>) => handleAdd(category, item, subTab, subSubTab, fileData),
@@ -102,6 +112,13 @@ const CatalogManagement: React.FC = () => {
         if (!settingsData) return <div className="text-center text-red-500">Falha ao carregar dados do catálogo.</div>;
 
         switch (activeTab) {
+            case 'categories':
+                 return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory as any} onUpdate={updateCategory as any} onDelete={deleteCategory} isAdmin={true} />
+                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection as any} onUpdate={updateCollection as any} onDelete={deleteCollection} isAdmin={true} />
+                    </div>
+                );
             case 'personalization':
                 return (
                     <div className="grid grid-cols-12 gap-6 items-start">

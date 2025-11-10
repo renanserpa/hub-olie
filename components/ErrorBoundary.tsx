@@ -12,8 +12,11 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Initialize state as a class property to resolve errors where 'state' and 'props' were not found on the component instance.
-  state: ErrorBoundaryState = { hasError: false, error: undefined };
+  // FIX: Refactor to use a constructor to explicitly initialize state and ensure `this.props` is available.
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: undefined };
+  }
 
   public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // This lifecycle method is called to update state so the next render will show the fallback UI.
@@ -30,7 +33,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
   };
 
   public render() {
-    // FIX: Check `this.state.hasError` to render fallback UI. `this.state` is now correctly defined.
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-screen bg-background text-center p-4">
@@ -42,7 +44,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
             <details className="mt-2 mb-4 text-xs text-red-600 bg-secondary p-3 rounded-xl max-w-full text-left">
               <summary className="cursor-pointer font-medium">Detalhes do Erro</summary>
               <pre className="mt-2 whitespace-pre-wrap break-all">
-                  {/* FIX: Access `this.state.error` to display error details. */}
                   {String(this.state.error?.stack || this.state.error || '')}
               </pre>
             </details>
@@ -52,7 +53,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
         </div>
       );
     }
-    // FIX: Render children if there's no error. `this.props` is now correctly available.
+    
     return this.props.children;
   }
 }
