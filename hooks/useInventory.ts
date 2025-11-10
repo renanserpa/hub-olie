@@ -50,6 +50,19 @@ export function useInventory() {
 
     useEffect(() => {
         loadData();
+
+        const handleDataChange = () => {
+            console.log('Realtime update detected in inventory module, refreshing...');
+            loadData();
+        };
+
+        const balanceListener = dataService.listenToCollection('inventory_balances', undefined, handleDataChange);
+        const movementListener = dataService.listenToCollection('inventory_movements', undefined, handleDataChange);
+
+        return () => {
+            balanceListener.unsubscribe();
+            movementListener.unsubscribe();
+        };
     }, [loadData]);
     
     useEffect(() => {
