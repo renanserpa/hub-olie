@@ -35,10 +35,19 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
     .eq('user_id', loginData.user.id)
     .single();
 
-  if (roleError || !roleData) {
+  if (roleError) {
+    if (roleError.code === '42P01') { // 42P01: undefined_table
+        throw new Error('BOOTSTRAP_REQUIRED: Tabelas de usuário não encontradas.');
+    }
+    // Any other error, or if no row is found (PGRST116)
     await supabase.auth.signOut();
     console.error("Error fetching user role or role not found:", roleError);
-    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Contate o administrador.");
+    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Se este for o primeiro acesso, siga as instruções de inicialização.");
+  }
+  
+  if (!roleData) { // Fallback in case role is null but no error
+    await supabase.auth.signOut();
+    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Se este for o primeiro acesso, siga as instruções de inicialização.");
   }
 
   return {
@@ -81,7 +90,10 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       .single();
       
     if (roleError || !roleData) {
-       if (roleError.code !== 'PGRST116') {
+       if (roleError.code === '42P01') { // Table does not exist
+            throw new Error('BOOTSTRAP_REQUIRED: Tabelas de usuário não encontradas.');
+       }
+       if (roleError.code !== 'PGRST116') { // PGRST116 means no row was found
           console.error("Error fetching role for current user:", roleError);
        }
        return null;
