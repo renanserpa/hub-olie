@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { listenAuthChanges, getCurrentUser, AuthUser } from '../services/authService';
+import { listenAuthChanges, getCurrentUser } from '../services/authService';
+import { AuthUser } from '../types';
 import { isSandbox } from '../lib/runtime';
 
 interface AuthContextType {

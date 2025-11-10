@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { AuthUser, getCurrentUser, listenAuthChanges } from '../services/authService';
+import { getCurrentUser, listenAuthChanges } from '../services/authService';
+// FIX: Import AuthUser from types.ts to use the centralized type definition.
+import { AuthUser } from '../types';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
 const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {

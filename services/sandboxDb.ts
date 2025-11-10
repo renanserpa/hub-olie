@@ -14,40 +14,40 @@ import {
 const generateId = () => crypto.randomUUID();
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-const warehouses: Warehouse[] = [];
-const customers: Contact[] = [];
-const product_categories: ProductCategory[] = [];
-const collectionsSeed: Collection[] = [];
-const products: Product[] = [];
-const product_variants: ProductVariant[] = [];
-const order_items: OrderItem[] = [];
-const orders: Omit<Order, 'items' | 'customers'>[] = [];
-const production_orders: ProductionOrder[] = [];
-const fabric_colors: FabricColor[] = [];
-const zipper_colors: ZipperColor[] = [];
-const bias_colors: BiasColor[] = [];
-const embroidery_colors: EmbroideryColor[] = [];
-const config_fonts: MonogramFont[] = [];
-const config_supply_groups: MaterialGroup[] = [];
-const suppliers: Supplier[] = [];
-const config_materials: Material[] = [];
-const task_statuses: TaskStatus[] = [];
-const tasks: Task[] = [];
-const production_audit: ProductionAudit[] = [];
-const inventory_balances: InventoryBalance[] = [];
-const inventory_movements: InventoryMovement[] = [];
-const system_settings: SystemSetting[] = [];
-const conversations: Conversation[] = [];
-const messages: Message[] = [];
-const logistics_waves: LogisticsWave[] = [];
-const logistics_shipments: LogisticsShipment[] = [];
-const marketing_campaigns: MarketingCampaign[] = [];
-const marketing_segments: MarketingSegment[] = [];
-const marketing_templates: MarketingTemplate[] = [];
-const purchase_order_items: PurchaseOrderItem[] = [];
-const purchase_orders: PurchaseOrder[] = [];
-const mold_library: MoldLibrary[] = [];
-const production_routes: ProductionRoute[] = [];
+export const warehousesSeed: Warehouse[] = [];
+export const customersSeed: Contact[] = [];
+export const product_categoriesSeed: ProductCategory[] = [];
+export const collectionsSeed: Collection[] = [];
+export const productsSeed: Product[] = [];
+export const product_variantsSeed: ProductVariant[] = [];
+export const order_itemsSeed: OrderItem[] = [];
+export const ordersSeed: Omit<Order, 'items' | 'customers'>[] = [];
+export const production_ordersSeed: ProductionOrder[] = [];
+export const fabric_colorsSeed: FabricColor[] = [];
+export const zipper_colorsSeed: ZipperColor[] = [];
+export const bias_colorsSeed: BiasColor[] = [];
+export const embroidery_colorsSeed: EmbroideryColor[] = [];
+export const config_fontsSeed: MonogramFont[] = [];
+export const config_supply_groupsSeed: MaterialGroup[] = [];
+export const suppliersSeed: Supplier[] = [];
+export const config_materialsSeed: Material[] = [];
+export const task_statusesSeed: TaskStatus[] = [];
+export const tasksSeed: Task[] = [];
+export const production_auditSeed: ProductionAudit[] = [];
+export const inventory_balancesSeed: InventoryBalance[] = [];
+export const inventory_movementsSeed: InventoryMovement[] = [];
+export const system_settingsSeed: SystemSetting[] = [];
+export const conversationsSeed: Conversation[] = [];
+export const messagesSeed: Message[] = [];
+export const logistics_wavesSeed: LogisticsWave[] = [];
+export const logistics_shipmentsSeed: LogisticsShipment[] = [];
+export const marketing_campaignsSeed: MarketingCampaign[] = [];
+export const marketing_segmentsSeed: MarketingSegment[] = [];
+export const marketing_templatesSeed: MarketingTemplate[] = [];
+export const purchase_order_itemsSeed: PurchaseOrderItem[] = [];
+export const purchase_ordersSeed: PurchaseOrder[] = [];
+export const mold_librarySeed: MoldLibrary[] = [];
+export const production_routesSeed: ProductionRoute[] = [];
 
 // --- IN-MEMORY DATABASE ---
 // This object aggregates all our seed data into a single "database"
@@ -56,52 +56,52 @@ const db: AppData = {
     production_quality_checks: [],
     production_tasks: [],
     system_audit: [],
-    warehouses,
-    customers,
+    warehouses: warehousesSeed,
+    customers: customersSeed,
     profiles: [],
-    product_categories,
-    products,
-    product_variants,
-    order_items,
-    orders: orders as any,
-    production_orders,
-    task_statuses,
-    tasks,
-    inventory_balances,
-    inventory_movements,
-    sistema: system_settings,
-    logistics_waves,
-    logistics_shipments,
-    marketing_campaigns,
-    marketing_segments,
-    marketing_templates,
-    suppliers,
-    purchase_orders,
-    purchase_order_items,
+    product_categories: product_categoriesSeed,
+    products: productsSeed,
+    product_variants: product_variantsSeed,
+    order_items: order_itemsSeed,
+    orders: ordersSeed as any,
+    production_orders: production_ordersSeed,
+    task_statuses: task_statusesSeed,
+    tasks: tasksSeed,
+    inventory_balances: inventory_balancesSeed,
+    inventory_movements: inventory_movementsSeed,
+    sistema: system_settingsSeed,
+    logistics_waves: logistics_wavesSeed,
+    logistics_shipments: logistics_shipmentsSeed,
+    marketing_campaigns: marketing_campaignsSeed,
+    marketing_segments: marketing_segmentsSeed,
+    marketing_templates: marketing_templatesSeed,
+    suppliers: suppliersSeed,
+    purchase_orders: purchase_ordersSeed,
+    purchase_order_items: purchase_order_itemsSeed,
     collections: collectionsSeed,
-    mold_library,
-    production_routes,
+    mold_library: mold_librarySeed,
+    production_routes: production_routesSeed,
     catalogs: {
         paletas_cores: [],
         cores_texturas: {
-            tecido: fabric_colors,
-            ziper: zipper_colors,
-            vies: bias_colors,
+            tecido: fabric_colorsSeed,
+            ziper: zipper_colorsSeed,
+            vies: bias_colorsSeed,
             forro: [],
             puxador: [],
-            bordado: embroidery_colors,
+            bordado: embroidery_colorsSeed,
             texturas: [],
         },
-        fontes_monogramas: config_fonts,
+        fontes_monogramas: config_fontsSeed,
     },
-    config_supply_groups,
-    config_materials,
+    config_supply_groups: config_supply_groupsSeed,
+    config_materials: config_materialsSeed,
     logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
     system_settings_logs: [],
     config_integrations: [],
     integration_logs: [],
     media_assets: [],
-    omnichannel: { conversations: conversations, messages: messages, quotes: [] },
+    omnichannel: { conversations: conversationsSeed, messages: messagesSeed, quotes: [] },
     analytics_kpis: [],
     analytics_snapshots: [],
     executive_kpis: [],
