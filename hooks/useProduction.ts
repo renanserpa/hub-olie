@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -85,6 +85,21 @@ export function useProduction() {
 
     useEffect(() => {
         reload();
+
+        const handleDataChange = () => {
+            console.log('Realtime update detected in production module, refreshing...');
+            reload();
+        };
+        
+        const ordersListener = dataService.listenToCollection('production_orders', undefined, handleDataChange);
+        const tasksListener = dataService.listenToCollection('production_tasks', undefined, handleDataChange);
+        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, handleDataChange);
+
+        return () => {
+            ordersListener.unsubscribe();
+            tasksListener.unsubscribe();
+            qualityListener.unsubscribe();
+        };
     }, [reload]);
 
     const ordersWithDetails = useMemo(() => {
@@ -162,7 +177,7 @@ export function useProduction() {
         try {
             await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
             toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
-            await reload();
+            // Realtime will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
         } finally {
@@ -184,7 +199,7 @@ export function useProduction() {
         try {
             await dataService.updateProductionOrderStatus(orderId, status);
             toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
-            await reload(); // Reload to get all data changes from triggers
+            // Realtime will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
             // Revert optimistic update on failure by reloading
@@ -201,7 +216,7 @@ export function useProduction() {
             await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
             toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
             setIsCreateDialogOpen(false);
-            reload();
+            // Realtime will handle refresh
         } catch(e) {
             toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
@@ -217,7 +232,7 @@ export function useProduction() {
                 created_at: new Date().toISOString()
             });
             toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
-            await reload();
+            // Realtime will handle refresh
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
         } finally {

@@ -31,6 +31,13 @@ export function useFinance() {
 
     useEffect(() => {
         loadData();
+
+        const listener = dataService.listenToCollection('finance_transactions', undefined, () => {
+            console.log('Realtime update on finance_transactions detected, refreshing...');
+            loadData();
+        });
+
+        return () => listener.unsubscribe();
     }, [loadData]);
     
     const saveTransaction = async (data: Omit<FinanceTransaction, 'id' | 'created_at'> | FinanceTransaction) => {
@@ -42,7 +49,7 @@ export function useFinance() {
                  await dataService.addDocument('finance_transactions', data as Omit<FinanceTransaction, 'id'>);
                  toast({ title: "Sucesso!", description: "Nova transação registrada." });
             }
-            loadData(); // refresh
+            // Realtime listener will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar a transação.", variant: "destructive" });
             throw error;

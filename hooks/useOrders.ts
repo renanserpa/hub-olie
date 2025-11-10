@@ -53,6 +53,21 @@ export function useOrders() {
 
     useEffect(() => {
         loadData();
+        
+        const ordersListener = dataService.listenToCollection('orders', undefined, (payload) => {
+            console.log('Realtime update on orders detected, refreshing...');
+            loadData();
+        });
+
+        const itemsListener = dataService.listenToCollection('order_items', undefined, (payload) => {
+            console.log('Realtime update on order_items detected, refreshing...');
+            loadData();
+        });
+
+        return () => {
+            ordersListener.unsubscribe();
+            itemsListener.unsubscribe();
+        };
     }, [loadData]);
 
     const filteredOrders = useMemo(() => {

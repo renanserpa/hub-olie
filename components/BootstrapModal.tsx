@@ -110,8 +110,8 @@ BEGIN
     EXECUTE 'DROP POLICY IF EXISTS "Permitir escrita para usuários autenticados" ON public.' || quote_ident(tbl_name) || ';';
     
     -- Aplica política de acesso total para qualquer usuário logado.
-    -- ATENÇÃO: Em um ambiente de produção real, as políticas seriam mais restritivas.
-    -- Esta política resolve os erros de 'violates row-level security policy' para o ambiente de desenvolvimento.
+    -- ATENÇÃO: Em um ambiente de produção real, as políticas deveriam ser mais restritivas e baseadas em papéis (roles).
+    -- Esta política permissiva resolve os erros de 'violates row-level security policy' para o ambiente de desenvolvimento/homologação.
     EXECUTE 'CREATE POLICY "Permitir acesso total para usuários autenticados" ON public.' || quote_ident(tbl_name) || ' FOR ALL USING (auth.role() = ''authenticated'') WITH CHECK (auth.role() = ''authenticated'');';
 
   END LOOP;

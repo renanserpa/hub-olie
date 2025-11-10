@@ -59,6 +59,21 @@ export function usePurchasing() {
 
     useEffect(() => {
         loadData();
+
+        const handleDataChange = () => {
+            console.log('Realtime update detected in purchasing module, refreshing...');
+            loadData();
+        };
+
+        const suppliersListener = dataService.listenToCollection('suppliers', undefined, handleDataChange);
+        const poListener = dataService.listenToCollection('purchase_orders', undefined, handleDataChange);
+        const poItemsListener = dataService.listenToCollection('purchase_order_items', undefined, handleDataChange);
+
+        return () => {
+            suppliersListener.unsubscribe();
+            poListener.unsubscribe();
+            poItemsListener.unsubscribe();
+        };
     }, [loadData]);
 
     const posWithDetails = useMemo(() => {
@@ -84,7 +99,7 @@ export function usePurchasing() {
                 await dataService.addDocument('suppliers', supplierData as Omit<Supplier, 'id'>);
                 toast({ title: "Sucesso!", description: "Novo fornecedor criado." });
             }
-            loadData();
+            // Realtime listener will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar o fornecedor.", variant: "destructive" });
             throw error;
@@ -98,7 +113,7 @@ export function usePurchasing() {
         try {
             await dataService.createPO(poData);
             toast({ title: "Sucesso!", description: "Novo Pedido de Compra criado." });
-            loadData();
+            // Realtime listener will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível criar o Pedido de Compra.", variant: "destructive" });
             throw error;
@@ -112,7 +127,7 @@ export function usePurchasing() {
         try {
             await dataService.receivePOItems(poId, receivedItems);
             toast({ title: "Sucesso!", description: "Recebimento de materiais registrado." });
-            loadData();
+            // Realtime listener will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível registrar o recebimento.", variant: "destructive" });
             throw error;

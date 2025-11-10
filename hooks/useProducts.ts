@@ -57,6 +57,11 @@ export function useProducts() {
 
     useEffect(() => {
         loadData();
+        const listener = dataService.listenToCollection('products', undefined, (payload) => {
+            console.log('Realtime update on products detected, refreshing...');
+            loadData();
+        });
+        return () => listener.unsubscribe();
     }, [loadData]);
 
 

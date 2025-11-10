@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, LogisticsWave, LogisticsShipment, LogisticsTab } from '../types';
+import { Order, LogisticsWave, LogisticsShipment, LogisticsTab } from '../../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +35,21 @@ export function useLogistics() {
 
     useEffect(() => {
         loadData();
+
+        const ordersListener = dataService.listenToCollection('orders', undefined, () => {
+            console.log('Realtime update on orders detected for logistics, refreshing...');
+            loadData();
+        });
+
+        const wavesListener = dataService.listenToCollection('logistics_waves', undefined, () => {
+            console.log('Realtime update on logistics_waves detected, refreshing...');
+            loadData();
+        });
+
+        return () => {
+            ordersListener.unsubscribe();
+            wavesListener.unsubscribe();
+        };
     }, [loadData]);
 
     const pickingQueue = useMemo(() => {
