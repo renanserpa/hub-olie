@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Order, PaymentDetails, FiscalDetails, LogisticsDetails } from "../types";
 import { runtime } from '../lib/runtime';
 
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Use process.env.API_KEY as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));

@@ -2,7 +2,9 @@
 import { supabase } from '../lib/supabaseClient';
 
 // Production-ready: Credentials and URLs are sourced from environment variables.
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Use process.env instead.
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Use process.env instead.
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 export async function uploadToDrive(file: File, module: string, category: string) {

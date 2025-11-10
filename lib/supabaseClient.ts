@@ -3,7 +3,9 @@ import { runtime } from './runtime';
 
 // Production-ready: Credentials are sourced from environment variables.
 // See /reports/vercel_env_checklist.md for configuration details.
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Use process.env instead.
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
+// Fix: Property 'env' does not exist on type 'ImportMeta'. Use process.env instead.
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 let supabaseInstance: any;

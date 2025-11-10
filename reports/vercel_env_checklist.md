@@ -22,9 +22,9 @@ Estas variáveis são usadas no código do navegador e **precisam** do prefixo `
 
 ### [ ] Variáveis da API do Google Gemini
 
-Esta variável é usada pelo SDK da Google e **não deve** ter o prefixo `VITE_`.
+Esta variável é usada no código do navegador para funcionalidades de IA e **precisa** do prefixo `VITE_`.
 
--   [ ] **`API_KEY`**
+-   [ ] **`VITE_API_KEY`**
     -   **Descrição:** Sua chave de API para acessar os modelos do Google Gemini.
     -   **Valor:** Obtenha sua chave no Google AI Studio.
 
@@ -37,7 +37,7 @@ Esta variável é usada pelo SDK da Google e **não deve** ter o prefixo `VITE_`
 3.  No menu lateral, selecione **Environment Variables**.
 4.  Para cada uma das variáveis acima:
     -   Clique em **Add New**.
-    -   Insira o `Name` (ex: `VITE_SUPABASE_URL` ou `API_KEY`).
+    -   Insira o `Name` (ex: `VITE_SUPABASE_URL` ou `VITE_API_KEY`).
     -   Insira o `Value` correspondente.
     -   Certifique-se de que a variável estará disponível em todos os ambientes (Production, Preview, Development).
 5.  Salve as alterações.
