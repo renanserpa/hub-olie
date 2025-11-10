@@ -8,31 +8,48 @@ export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [groups, setGroups] = useState<MaterialGroup[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
+  const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const [mats, gps, sups] = await Promise.all([
-        materialsService.getMaterials(),
-        materialsService.getMaterialGroups(),
+      // Initial fetch remains the same
+      const [sups] = await Promise.all([
         dataService.getCollection<Supplier>('suppliers'),
       ]);
-      setMaterials(mats);
-      setGroups(gps);
       setSuppliers(sups);
     } catch (e) {
-      toast({ title: "Erro", description: "Não foi possível carregar os dados de materiais.", variant: "destructive" });
-    } finally {
-      setLoading(false);
+      toast({ title: "Erro", description: "Não foi possível carregar dados de apoio.", variant: "destructive" });
     }
   }, []);
+
+  useEffect(() => {
+    loadInitialData();
+    
+    // Subscribe to realtime updates for materials and groups
+    const materialsListener = dataService.listenToCollection<Material>('config_materials', '*, config_supply_groups(name)', (data) => {
+      setMaterials(data);
+      setLoading(false);
+    });
+
+    const groupsListener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, (data) => {
+      setGroups(data);
+      setLoading(false);
+    });
+
+    // Unsubscribe on cleanup
+    return () => {
+      materialsListener.unsubscribe();
+      groupsListener.unsubscribe();
+    };
+  }, [loadInitialData]);
+
 
   async function createMaterial(data: any) {
     try {
       await materialsService.addMaterial(data);
       toast({ title: "Sucesso!", description: "Novo material criado." });
-      await refresh();
+      // No manual refresh needed, realtime listener will update state
     } catch (e) {
       toast({ title: "Erro", description: "Não foi possível criar o material.", variant: "destructive" });
     }
@@ -42,15 +59,11 @@ export function useMaterials() {
     try {
       await materialsService.addMaterialGroup(data);
       toast({ title: "Sucesso!", description: "Novo grupo de suprimento criado." });
-      await refresh();
+       // No manual refresh needed, realtime listener will update state
     } catch (e) {
       toast({ title: "Erro", description: "Não foi possível criar o grupo.", variant: "destructive" });
     }
   }
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { materials, groups, suppliers, loading, refresh, createMaterial, createGroup };
+  return { materials, groups, suppliers, loading, createMaterial, createGroup };
 }

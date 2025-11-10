@@ -57,7 +57,6 @@ const CreatePODialog: React.FC<CreatePODialogProps> = ({ isOpen, onClose, onSave
     const handleSubmit = async () => {
         const poValidation = createPOSchema.safeParse({ supplier_id: supplierId });
         if (!poValidation.success) {
-            // FIX: Use `poValidation.error.issues` instead of `poValidation.error.errors`.
             toast({ title: 'Erro', description: poValidation.error.issues[0].message, variant: 'destructive' });
             return;
         }
@@ -65,7 +64,6 @@ const CreatePODialog: React.FC<CreatePODialogProps> = ({ isOpen, onClose, onSave
         const validatedItems = items.map(item => poItemSchema.safeParse(item));
         const firstError = validatedItems.find(res => !res.success);
         if (firstError && !firstError.success) {
-            // FIX: Use `firstError.error.issues` instead of `firstError.error.errors`.
             toast({ title: 'Erro nos Itens', description: firstError.error.issues[0].message, variant: 'destructive' });
             return;
         }

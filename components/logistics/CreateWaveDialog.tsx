@@ -41,7 +41,6 @@ const CreateWaveDialog: React.FC<CreateWaveDialogProps> = ({ isOpen, onClose, or
         try {
             const validation = createWaveSchema.safeParse({ orderIds: selectedOrderIds });
             if (!validation.success) {
-                // FIX: Use `validation.error.issues` instead of `validation.error.errors`.
                 toast({ title: 'Erro de Validação', description: validation.error.issues[0].message, variant: 'destructive' });
                 return;
             }

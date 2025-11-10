@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { BarChart2 } from 'lucide-react';
 import { ExecutiveKPI } from '../../types';
 import { cn } from '../../lib/utils';
-// FIX: Imported 'CartesianGrid' from 'recharts' to resolve the 'Cannot find name' error.
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, CartesianGrid } from 'recharts';
 
 interface ExecutiveChartCardProps {

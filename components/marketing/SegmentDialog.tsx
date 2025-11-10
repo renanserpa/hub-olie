@@ -44,7 +44,6 @@ const SegmentDialog: React.FC<SegmentDialogProps> = ({ isOpen, onClose, onSave, 
 
         if (!result.success) {
             const newErrors: Record<string, string> = {};
-            // FIX: Use `result.error.issues` instead of `result.error.errors`.
             result.error.issues.forEach(err => {
                 if (err.path[0]) newErrors[err.path[0].toString()] = err.message;
             });

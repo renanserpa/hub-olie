@@ -153,7 +153,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
             <AlertTriangle className="w-8 h-8 mt-0.5 flex-shrink-0" />
             <div>
                 <h4 className="font-semibold">Ação Necessária para Ativação</h4>
-                <p>Detectamos que seu banco de dados está incompleto. Siga os passos abaixo para configurar a plataforma.</p>
+                <p>Detectamos que seu banco de dados está incompleto ou com permissões incorretas. Siga os passos abaixo para configurar a plataforma.</p>
             </div>
         </div>
         

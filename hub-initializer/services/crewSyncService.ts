@@ -63,8 +63,7 @@ export async function ingestModuleMarkdown(file: File, addLog: (log: Omit<Initia
 export async function executeAgent(agent: string, payload: any) {
   const actionDescription = `${payload.action} no contexto ${payload.context}`;
   
-  // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
-  await dataService.addDocument<InitializerLog>('initializer_logs', {
+  await dataService.addDocument('initializer_logs', {
     agent_name: agent,
     action: actionDescription,
     status: 'running',
@@ -184,8 +183,7 @@ export async function executeAgent(agent: string, payload: any) {
     const agents = await dataService.getCollection<InitializerAgent>('initializer_agents');
     const agentData = agents.find(a => a.name === agent);
 
-    // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
-    await dataService.addDocument<InitializerLog>('initializer_logs', {
+    await dataService.addDocument('initializer_logs', {
       agent_name: agent,
       action: actionDescription,
       status: 'success',
@@ -199,17 +197,4 @@ export async function executeAgent(agent: string, payload: any) {
 
   } catch (error) {
     console.error(`[AGENT] Erro ao executar ${agent}:`, error);
-    sendLog(agent, `ERRO: ${actionDescription} - ${(error as Error).message}`);
-    // FIX: Removed explicit cast to satisfy generic constraints of addDocument.
-    await dataService.addDocument<InitializerLog>('initializer_logs', {
-      agent_name: agent,
-      action: actionDescription,
-      status: 'error',
-      module: payload.context,
-      timestamp: new Date().toISOString(),
-      metadata: {
-        error: (error as Error).message
-      }
-    });
-  }
-}
+    sendLog(
