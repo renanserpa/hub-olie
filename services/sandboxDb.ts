@@ -251,7 +251,7 @@ const marketing_campaigns: MarketingCampaign[] = [
 ];
 
 const marketing_segments: MarketingSegment[] = [
-    { id: 'ms1', name: 'Clientes VIP', description: 'Clientes com mais de 5 compras.', rules: [{ id: 'ms1-r1', field: 'order_count', operator: 'greater_than', value: 5 }, { id: 'ms1-r2', field: 'total_spent', operator: 'greater_than', value: 1500 }], audience_size: 42 },
+    { id: 'ms1', name: 'Clientes VIP', description: 'Clientes com mais de 5 compras.', rules: [{ id: 'ms1-r1', field: 'total_spent', operator: 'greater_than', value: 1500 }, { id: 'ms1-r2', field: 'order_count', operator: 'greater_than', value: 5 }], audience_size: 42 },
     { id: 'ms2', name: 'Inativos (6 meses)', description: 'Clientes que não compram há 6 meses.', rules: [{ id: 'ms2-r1', field: 'last_purchase_days', operator: 'greater_than', value: 180 }], audience_size: 215 },
 ];
 
@@ -488,7 +488,7 @@ export const sandboxDb = {
         emit(table);
     },
 
-    listenToCollection: <T>(table: string, handler: (payload: T[]) => void) => {
+    listenToCollection: <T>(table: string, join: string | undefined, handler: (payload: T[]) => void) => {
         console.log(`🧱 SANDBOX: listenToCollection(${table})`);
         return subscribe(table, handler);
     },
