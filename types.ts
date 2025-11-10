@@ -641,6 +641,21 @@ export interface LogisticsShipment {
     created_at: string;
 }
 
+export interface LogisticsPickTask {
+    id: string;
+    wave_id: string;
+    order_id: string;
+    order_item_id: string;
+    product_name?: string;
+    variant_sku?: string;
+    quantity: number;
+    picked_quantity: number;
+    status: 'pending' | 'picked';
+    picker_id?: string;
+    picked_at?: string;
+    created_at: string;
+}
+
 
 // --- PURCHASING ---
 export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';

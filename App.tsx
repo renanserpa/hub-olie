@@ -11,7 +11,6 @@ import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
 import SettingsPage from './components/SettingsPage';
-import CatalogPage from './pages/CatalogPage';
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
@@ -76,12 +75,6 @@ const App: React.FC = () => {
 
     const renderActivePage = () => {
         if (!user) return null;
-
-        // The 'catalog' page is now part of 'products', but we might have old bookmarks.
-        // Let's redirect to 'products' if 'catalog' is requested.
-        if (activeModule === 'catalog') {
-            return <ProductsPage />;
-        }
 
         if (!can(activeModule, 'read')) {
             return <AccessDeniedPage role={user.role} />;

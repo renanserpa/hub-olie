@@ -25,53 +25,25 @@ export function useMarketing() {
     const [isSegmentDialogOpen, setIsSegmentDialogOpen] = useState(false);
     const [editingSegment, setEditingSegment] = useState<MarketingSegment | null>(null);
 
-    const loadData = useCallback(async () => {
+    useEffect(() => {
         setIsLoading(true);
-        try {
-            console.log("[MARKETING] Loading tables...");
-            const [campaignsData, segmentsData, templatesData] = await Promise.all([
-                dataService.getMarketingCampaigns(),
-                dataService.getMarketingSegments(),
-                dataService.getMarketingTemplates(),
-            ]);
-
-            const loadedTables = [];
-            const missingTables = [];
-
-            if (Array.isArray(campaignsData)) {
-                setCampaigns(campaignsData);
-                loadedTables.push('marketing_campaigns');
-            } else {
-                missingTables.push('marketing_campaigns');
-            }
-            if (Array.isArray(segmentsData)) {
-                setSegments(segmentsData);
-                loadedTables.push('marketing_segments');
-            } else {
-                missingTables.push('marketing_segments');
-            }
-            if (Array.isArray(templatesData)) {
-                setTemplates(templatesData);
-                loadedTables.push('marketing_templates');
-            } else {
-                missingTables.push('marketing_templates');
-            }
-            
-            console.log(`[MARKETING] Loaded tables: ${loadedTables.join(', ')}`);
-            if (missingTables.length > 0) {
-                 console.warn(`[MARKETING] Missing tables: ${missingTables.join(', ')}`);
-            }
-
-        } catch (error) {
-             toast({ title: "Erro!", description: "Não foi possível carregar os dados de marketing.", variant: "destructive" });
-        } finally {
+        const campaignsListener = dataService.listenToCollection('marketing_campaigns', undefined, (data) => {
+            setCampaigns(data as MarketingCampaign[]);
             setIsLoading(false);
+        });
+        const segmentsListener = dataService.listenToCollection('marketing_segments', undefined, (data) => {
+            setSegments(data as MarketingSegment[]);
+        });
+        const templatesListener = dataService.listenToCollection('marketing_templates', undefined, (data) => {
+            setTemplates(data as MarketingTemplate[]);
+        });
+
+        return () => {
+            campaignsListener.unsubscribe();
+            segmentsListener.unsubscribe();
+            templatesListener.unsubscribe();
         }
     }, []);
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
     
     const filteredCampaigns = useMemo(() => {
         return campaigns.filter(campaign => {
@@ -115,7 +87,6 @@ export function useMarketing() {
                 await dataService.addDocument('marketing_campaigns', newCampaignData);
                 toast({ title: "Sucesso!", description: "Nova campanha criada." });
             }
-            loadData();
             closeDialog();
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível salvar a campanha.", variant: "destructive" });
@@ -144,10 +115,26 @@ export function useMarketing() {
                 await dataService.addDocument('marketing_segments', segmentData as Omit<MarketingSegment, 'id'>);
                 toast({ title: "Sucesso!", description: "Novo segmento criado." });
             }
-            loadData();
             closeSegmentDialog();
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível salvar o segmento.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const saveTemplate = async (templateData: Omit<MarketingTemplate, 'id'> | MarketingTemplate) => {
+        setIsSaving(true);
+        try {
+             if ('id' in templateData && templateData.id) {
+                await dataService.updateDocument('marketing_templates', templateData.id, templateData);
+                toast({ title: "Sucesso!", description: `Template "${templateData.name}" atualizado.` });
+            } else {
+                await dataService.addDocument('marketing_templates', templateData as Omit<MarketingTemplate, 'id'>);
+                toast({ title: "Sucesso!", description: "Novo template criado." });
+            }
+        } catch(e) {
+            toast({ title: "Erro!", description: "Não foi possível salvar o template.", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
@@ -172,5 +159,6 @@ export function useMarketing() {
         openSegmentDialog,
         closeSegmentDialog,
         saveSegment,
+        saveTemplate,
     };
 }

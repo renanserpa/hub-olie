@@ -44,13 +44,9 @@ export function useProduction() {
         setViewModeInternal(mode);
     };
 
-    const reload = useCallback(async () => {
-        setIsLoading(true);
+    const loadAuxData = useCallback(async () => {
         try {
-            const [ordersData, tasksData, qualityData, materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
-                dataService.getCollection<ProductionOrder>('production_orders', '*, product:products(*)'),
-                dataService.getCollection<ProductionTask>('production_tasks'),
-                dataService.getCollection<ProductionQualityCheck>('production_quality_checks'),
+            const [materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
@@ -67,40 +63,38 @@ export function useProduction() {
                 return material;
             });
 
-            setAllOrders(ordersData);
-            setAllTasks(tasksData);
-            setAllQualityChecks(qualityData);
             setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
             setAllRoutes(routesData);
             setAllMolds(moldsData);
-
         } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar os dados de produção.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
+             toast({ title: "Erro!", description: "Não foi possível carregar os dados de apoio de produção.", variant: "destructive" });
         }
     }, []);
 
-    useEffect(() => {
-        reload();
 
-        const handleDataChange = () => {
-            console.log('Realtime update detected in production module, refreshing...');
-            reload();
-        };
-        
-        const ordersListener = dataService.listenToCollection('production_orders', undefined, handleDataChange);
-        const tasksListener = dataService.listenToCollection('production_tasks', undefined, handleDataChange);
-        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, handleDataChange);
+    useEffect(() => {
+        setIsLoading(true);
+        loadAuxData();
+
+        const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', (data) => {
+            setAllOrders(data as ProductionOrder[]);
+            setIsLoading(false);
+        });
+        const tasksListener = dataService.listenToCollection('production_tasks', undefined, (data) => {
+            setAllTasks(data as ProductionTask[]);
+        });
+        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, (data) => {
+            setAllQualityChecks(data as ProductionQualityCheck[]);
+        });
 
         return () => {
             ordersListener.unsubscribe();
             tasksListener.unsubscribe();
             qualityListener.unsubscribe();
         };
-    }, [reload]);
+    }, [loadAuxData]);
 
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => {
@@ -199,11 +193,10 @@ export function useProduction() {
         try {
             await dataService.updateProductionOrderStatus(orderId, status);
             toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
-            // Realtime will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
             // Revert optimistic update on failure by reloading
-            await reload();
+            setAllOrders(allOrders);
         } finally {
             setIsSaving(false);
         }
@@ -267,6 +260,6 @@ export function useProduction() {
         isAdvancedFilterOpen,
         setIsAdvancedFilterOpen,
         clearFilters,
-        reload,
+        reload: loadAuxData, // Expose aux data reload
     };
 }

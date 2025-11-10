@@ -20,32 +20,38 @@ export function useOmnichannel(user: User) {
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [assigneeFilter, setAssigneeFilter] = useState<'all' | 'mine' | 'unassigned'>('all');
 
-    useEffect(() => {
-        const fetchAllData = async () => {
-            setIsLoading(true);
-            try {
-                 const [contactsData, ordersData, conversationsData, messagesData] = await Promise.all([
-                    dataService.getContacts(),
-                    dataService.getOrders(),
-                    dataService.getCollection<Conversation>('conversations'),
-                    dataService.getCollection<Message>('messages'),
-                 ]);
-                 setAllContacts(contactsData);
-                 setAllOrders(ordersData);
-                 if (Array.isArray(conversationsData)) {
-                    setConversations(conversationsData.sort((a, b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt)));
-                 }
-                 if(Array.isArray(messagesData)) {
-                    setMessages(messagesData);
-                 }
-            } catch(e) {
-                 toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchAllData();
+    const loadAuxData = useCallback(async () => {
+        try {
+            const [contactsData, ordersData] = await Promise.all([
+                dataService.getContacts(),
+                dataService.getOrders(),
+            ]);
+            setAllContacts(contactsData);
+            setAllOrders(ordersData);
+        } catch(e) {
+            toast({ title: 'Erro!', description: 'Não foi possível carregar dados de apoio do omnichannel.', variant: 'destructive' });
+        }
     }, []);
+
+    useEffect(() => {
+        setIsLoading(true);
+        loadAuxData();
+
+        const convListener = dataService.listenToCollection<Conversation>('conversations', undefined, (data) => {
+            setConversations(data.sort((a, b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt)));
+            setIsLoading(false);
+        });
+
+        const msgListener = dataService.listenToCollection<Message>('messages', undefined, (data) => {
+            setMessages(data);
+        });
+        
+        return () => {
+            convListener.unsubscribe();
+            msgListener.unsubscribe();
+        };
+
+    }, [loadAuxData]);
 
 
     const filteredConversations = useMemo(() => {

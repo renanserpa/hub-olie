@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../Modal';
+import Modal from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Product, ProductionOrderStatus } from '../../types';
 import { toast } from '../../hooks/use-toast';
