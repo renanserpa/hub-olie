@@ -1,19 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { runtime } from '../lib/runtime';
-
-export type UserRole =
-  | 'AdminGeral'
-  | 'Administrativo'
-  | 'Producao'
-  | 'Vendas'
-  | 'Financeiro'
-  | 'Conteudo';
-
-export interface AuthUser {
-  uid: string;
-  email: string;
-  role: UserRole;
-}
+// FIX: Import UserRole and AuthUser from the centralized types.ts file to remove duplication and fix type errors.
+import { UserRole, AuthUser } from '../types';
 
 const sandboxUser: AuthUser = {
   uid: 'sandbox-user-01',

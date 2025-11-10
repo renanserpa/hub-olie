@@ -18,6 +18,13 @@ export interface User {
   team_id?: string;
 }
 
+// FIX: Add AuthUser interface to centralize user-related types and resolve import errors.
+export interface AuthUser {
+  uid: string;
+  email: string;
+  role: UserRole;
+}
+
 export interface CompanyProfile {
   id: string;
   legal_name: string;
