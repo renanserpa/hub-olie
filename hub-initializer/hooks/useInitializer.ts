@@ -1,13 +1,13 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { ENV } from '../../../lib/env';
-import { log } from '../../../lib/logger';
-import { useApp } from '../../../contexts/AppContext';
-import { supabase } from '../../../lib/supabaseClient';
-import { useOlie } from '../../../contexts/OlieContext';
-import { dataService } from '../../../services/dataService';
-import { InitializerLog, SystemSetting } from '../../../types';
-import { seedDatabase } from '../../../services/seedingService';
-import { toast } from '../../../hooks/use-toast';
+// FIX: Import React hooks to resolve 'Cannot find name' errors.
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { ENV } from '../../lib/env';
+import { log } from '../../lib/logger';
+import { useApp } from '../../contexts/AppContext';
+import { supabase } from '../../lib/supabaseClient';
+import { useOlie } from '../../contexts/OlieContext';
+import { dataService } from '../../services/dataService';
+import { InitializerLog, SystemSetting } from '../../types';
+import { toast } from '../../hooks/use-toast';
 import { ingestAgentMarkdown, ingestModuleMarkdown } from '../services/crewSyncService';
 
 export interface InitStatus {
@@ -30,7 +30,6 @@ export function useInitializer() {
     settings: {},
     warnings: [],
   });
-  const [isSeeding, setIsSeeding] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -110,23 +109,6 @@ export function useInitializer() {
     log.info('[Initializer] System ready:', result);
   }
   
-  const handleSeedDatabase = async () => {
-    if (!isAdminGeral) {
-        toast({ title: 'Acesso Negado', description: 'Apenas AdminGeral pode popular o banco.', variant: 'destructive' });
-        return;
-    }
-    setIsSeeding(true);
-    try {
-        await seedDatabase();
-        // Force a full app refresh to reload all data from the newly seeded database
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (e) {
-        // Toast is already handled in the service
-    } finally {
-        setIsSeeding(false);
-    }
-  };
-
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
@@ -172,5 +154,5 @@ export function useInitializer() {
 
   useEffect(() => { runInitialization(); }, []);
 
-  return { status, reload: runInitialization, hardReload, isAdminGeral, isSeeding, handleSeedDatabase, handleUpload, isProcessing, isTesting, testResult, handleTestConnection };
+  return { status, reload: runInitialization, hardReload, isAdminGeral, handleUpload, isProcessing, isTesting, testResult, handleTestConnection };
 }

@@ -7,7 +7,6 @@ import AgentStatusCard from '../components/AgentStatusCard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Cpu } from 'lucide-react';
 import SystemMonitor from '../components/SystemMonitor';
-import DataSeedingPanel from '../components/DataSeedingPanel';
 import ConnectionTestPanel from '../components/ConnectionTestPanel';
 
 const InitializerPage: React.FC = () => {
@@ -22,7 +21,6 @@ const InitializerPage: React.FC = () => {
         {/* Left Column (Main Panel) */}
         <div className="lg:col-span-2 space-y-6">
           <ExecutionPanel />
-          <DataSeedingPanel />
           <ConnectionTestPanel />
           <SystemMonitor />
         </div>
