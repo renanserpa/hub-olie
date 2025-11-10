@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Puzzle, Image as ImageIcon, Shield, Loader2, Cpu, Building, Users, SlidersHorizontal, BarChart } from 'lucide-react';
+import { Settings, Puzzle, Image as ImageIcon, Shield, Loader2, Cpu, Building, Users, SlidersHorizontal, BarChart, ShoppingBasket } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import IntegrationsTabContent from './IntegrationsTabContent';
 import AppearanceTabContent from './AppearanceTabContent';
@@ -9,6 +9,7 @@ import { useOlie } from '../contexts/OlieContext';
 import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 import PlaceholderContent from './PlaceholderContent';
 import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';
+import SuppliersTabContent from './settings/suppliers/SuppliersTabContent';
 
 // FIX: New placeholder components for the expanded settings sections.
 const OrganizationTabContent: React.FC = () => <PlaceholderContent title="Dados da Organização" requiredTable="company_profile" icon={Building}><p className="mt-1 text-sm text-textSecondary">Gerencie os dados cadastrais da sua empresa, como CNPJ, endereço fiscal e contatos.</p></PlaceholderContent>;
@@ -20,6 +21,7 @@ const SETTINGS_TABS_BASE = [
   // FIX: Added new tabs for a more robust settings module.
   { id: 'organization', label: 'Organização', icon: Building, scope: 'Settings' },
   { id: 'teams', label: 'Equipes & Permissões', icon: Users, scope: 'Settings' },
+  { id: 'suppliers', label: 'Fornecedores', icon: ShoppingBasket, scope: 'Purchases' },
   { id: 'operational_params', label: 'Parâmetros', icon: SlidersHorizontal, scope: 'Settings' },
   { id: 'integrations', label: 'Integrações', icon: Puzzle, scope: 'Settings' },
   { id: 'appearance', label: 'Aparência', icon: ImageIcon, scope: 'Settings' },
@@ -45,6 +47,7 @@ const SettingsPage: React.FC = () => {
         switch (activeTab) {
             case 'organization': return <OrganizationTabContent />;
             case 'teams': return <TeamsAndPermissionsTabContent />;
+            case 'suppliers': return <SuppliersTabContent />;
             case 'operational_params': return <OperationalParamsTabContent />;
             case 'integrations': return <IntegrationsTabContent />;
             case 'appearance': return <AppearanceTabContent />;
