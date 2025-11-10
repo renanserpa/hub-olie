@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Megaphone, Users, LayoutTemplate, BarChart2 } from 'lucide-react';
+import { Megaphone, Users, LayoutTemplate, BarChart2, Wrench } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { MarketingCampaign, MarketingSegment, MarketingTemplate } from '../../types';
 import CampaignList from './CampaignList';
-import SegmentManager from './SegmentManager';
-import TemplateEditor from './TemplateEditor';
 import DashboardPanel from './DashboardPanel';
+import MarketingSettingsTab from './MarketingSettingsTab';
 
-type MarketingTab = 'campaigns' | 'segments' | 'templates' | 'dashboard';
+type MarketingTab = 'campaigns' | 'settings' | 'dashboard';
 
 interface MarketingTabsProps {
   campaigns: MarketingCampaign[];
@@ -20,22 +19,19 @@ interface MarketingTabsProps {
 
 const TABS: { id: MarketingTab, label: string, icon: React.ElementType }[] = [
     { id: 'campaigns', label: 'Campanhas', icon: Megaphone },
-    { id: 'segments', label: 'Segmentos', icon: Users },
-    { id: 'templates', label: 'Templates', icon: LayoutTemplate },
+    { id: 'settings', label: 'Dados Mestres', icon: Wrench },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
 ];
 
-const MarketingTabs: React.FC<MarketingTabsProps> = ({ campaigns, segments, templates, isLoading, onNewSegment, onEditSegment }) => {
+const MarketingTabs: React.FC<MarketingTabsProps> = (props) => {
     const [activeTab, setActiveTab] = useState<MarketingTab>('campaigns');
     
     const renderContent = () => {
         switch (activeTab) {
             case 'campaigns':
-                return <CampaignList campaigns={campaigns} isLoading={isLoading} />;
-            case 'segments':
-                return <SegmentManager segments={segments} isLoading={isLoading} onNew={onNewSegment} onEdit={onEditSegment} />;
-            case 'templates':
-                return <TemplateEditor templates={templates} isLoading={isLoading} />;
+                return <CampaignList campaigns={props.campaigns} isLoading={props.isLoading} />;
+            case 'settings':
+                return <MarketingSettingsTab {...props} />;
             case 'dashboard':
                 return <DashboardPanel />;
             default:

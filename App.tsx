@@ -43,7 +43,7 @@ const MAIN_TABS = [
     { id: 'marketing', label: 'Marketing', icon: Megaphone, scope: 'Marketing', description: 'Gerencie campanhas, segmente públicos e analise resultados.' },
     { id: 'contacts', label: 'Contatos', icon: Users, scope: 'Contacts', description: 'Gerencie seus clientes e fornecedores.' },
     { id: 'products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie produtos, variações e os dados mestres do catálogo.' },
-    { id: 'settings', label: 'Configurações', icon: Settings, scope: 'Settings', description: 'Gerencie os dados mestres e configurações globais da plataforma.' },
+    { id: 'settings', label: 'Sistema', icon: Settings, scope: 'Settings', description: 'Gerencie parâmetros globais, integrações e segurança da plataforma.' },
 ];
 
 const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (

@@ -6,14 +6,15 @@ import { useSettings } from '../../hooks/useSettings';
 import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection } from '../../types';
 import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
-import { MaterialTabs } from '../settings/materials/MaterialTabs';
 import { useCategories } from '../../hooks/useCategories';
 import { useCollections } from '../../hooks/useCollections';
+import { MaterialList } from '../settings/materials/MaterialList';
+import { MaterialDialog } from '../settings/materials/MaterialDialog';
 
 const CATALOG_TABS = [
   { id: 'categories', label: 'Categorias & Coleções', icon: BookOpen },
   { id: 'personalization', label: 'Personalização', icon: Palette },
-  { id: 'materials', label: 'Materiais de Produção', icon: Wrench },
+  { id: 'materials', label: 'Insumos', icon: Wrench },
 ];
 
 const PERSONALIZATION_SUB_TABS = [
@@ -133,7 +134,14 @@ const CatalogManagement: React.FC = () => {
                     </div>
                 );
             case 'materials':
-                return <MaterialTabs />;
+                return (
+                     <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <MaterialDialog />
+                        </div>
+                        <MaterialList />
+                    </div>
+                );
             default:
                 return null;
         }
