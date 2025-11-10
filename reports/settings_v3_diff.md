@@ -26,7 +26,8 @@ A arquitetura de dados da v3.0 é modular e projetada para "progressive enhancem
 
 | Tabela | Descrição |
 | :--- | :--- |
-| `config_basic_materials`| Catálogo de todos os insumos e materiais básicos. |
+| `config_materials`| Catálogo de todos os insumos e materiais básicos. |
+| `config_supply_groups`| Categorias para os materiais básicos (ex: "Tecidos", "Metais"). |
 | `config_fonts` | Catálogo de fontes para monogramas e bordados. |
 | `fabric_colors`| Catálogo de cores de tecido disponíveis. |
 | `zipper_colors`| Catálogo de cores de zíper disponíveis. |
@@ -38,7 +39,6 @@ A arquitetura de dados da v3.0 é modular e projetada para "progressive enhancem
 | :--- | :--- | :--- |
 | `config_color_palettes`| Catálogos | Agrupador de cores (ex: "Coleção Verão 2025"). |
 | `lining_colors`, `puller_colors`, etc. | Catálogos | Demais catálogos de cores e texturas. |
-| `config_supply_groups`| Materiais | Categorias para os materiais básicos (ex: "Tecidos", "Metais"). |
 | `system_settings` | Sistema | Tabela Key-Value para parâmetros globais (frete, etc.). |
 | `media_assets` | Aparência| Tabela para gerenciar a biblioteca de mídias. |
 
@@ -46,7 +46,7 @@ A arquitetura de dados da v3.0 é modular e projetada para "progressive enhancem
 
 ```mermaid
 erDiagram
-    config_supply_groups ||--|{ config_basic_materials : "agrupa"
+    config_supply_groups ||--|{ config_materials : "agrupa"
     config_color_palettes ||--o{ fabric_colors : "contém"
     config_color_palettes ||--o{ zipper_colors : "contém"
     products }o--o{ fabric_colors : "pode usar"
@@ -57,7 +57,7 @@ erDiagram
         uuid id PK
         text name
     }
-    config_basic_materials {
+    config_materials {
         uuid id PK
         text name
         uuid supply_group_id FK
