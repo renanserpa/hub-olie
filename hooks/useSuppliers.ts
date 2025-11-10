@@ -12,25 +12,14 @@ export function useSuppliers() {
 
     const canWrite = can('Purchases', 'write') || can('Settings', 'write');
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await dataService.getCollection<Supplier>('suppliers');
-            setSuppliers(data);
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar os fornecedores.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        loadData();
+        setIsLoading(true);
         const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, (newSuppliers) => {
-            setSuppliers(newSuppliers);
+            setSuppliers(newSuppliers.sort((a, b) => a.name.localeCompare(b.name)));
+            setIsLoading(false);
         });
         return () => listener.unsubscribe();
-    }, [loadData]);
+    }, []);
 
 
     const saveSupplier = async (supplierData: Omit<Supplier, 'id' | 'created_at' | 'updated_at'> | Supplier) => {
@@ -54,6 +43,23 @@ export function useSuppliers() {
             setIsSaving(false);
         }
     };
+    
+    const deleteSupplier = async (id: string) => {
+         if (!canWrite) {
+            toast({ title: 'Acesso Negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+            throw new Error('Permission denied');
+        }
+        setIsSaving(true);
+        try {
+            await dataService.deleteDocument('suppliers', id);
+            toast({ title: "Sucesso!", description: "Fornecedor excluído." });
+        } catch (error) {
+             toast({ title: "Erro!", description: "Não foi possível excluir o fornecedor.", variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return {
         suppliers,
@@ -61,6 +67,6 @@ export function useSuppliers() {
         isSaving,
         canWrite,
         saveSupplier,
-        refresh: loadData,
+        deleteSupplier,
     };
 }
