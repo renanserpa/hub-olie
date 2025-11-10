@@ -37,7 +37,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [isAIEnabled, setIsAIEnabled] = useState(true); // AI Layer is active
+  const [isAIEnabled, setIsAIEnabled] = useState(false); // AI Layer is disabled
   const hasRedirected = useRef(false);
   const { theme, toggleTheme } = useTheme();
 
