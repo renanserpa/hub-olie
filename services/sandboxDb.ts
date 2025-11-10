@@ -32,12 +32,17 @@ export const config_supply_groupsSeed: MaterialGroup[] = [
   { id: 'sg1', name: 'Tecidos', description: 'Tecidos para parte externa e interna', is_active: true, created_at: new Date().toISOString() },
   { id: 'sg2', name: 'Metais', description: 'Zíperes, cursores, puxadores', is_active: true, created_at: new Date().toISOString() },
   { id: 'sg3', name: 'Linhas', description: 'Linhas para costura e bordado', is_active: true, created_at: new Date().toISOString() },
+  { id: 'sg4', name: 'Estruturantes', description: 'Mantas, espumas e outros materiais de estrutura.', is_active: true, created_at: new Date().toISOString() },
+  { id: 'sg5', name: 'Aviamentos', description: 'Outros pequenos componentes.', is_active: false, created_at: new Date().toISOString() },
 ];
 export const suppliersSeed: Supplier[] = [];
 export const config_materialsSeed: Material[] = [
-  { id: 'mat1', name: 'Nylon 600', sku: 'NYL600', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString() },
-  { id: 'mat2', name: 'Zíper n.5', sku: 'ZIP05', group_id: 'sg2', unit: 'm', is_active: true, created_at: new Date().toISOString() },
-  { id: 'mat3', name: 'Cursor n.5', sku: 'CUR05', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString() },
+  { id: 'mat1', name: 'Nylon 600', sku: 'NYL600', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2017/08/24/21/23/texture-2678545_1280.jpg' },
+  { id: 'mat2', name: 'Zíper n.5', sku: 'ZIP05', group_id: 'sg2', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2016/11/29/08/11/denim-1868353_1280.jpg' },
+  { id: 'mat3', name: 'Cursor n.5', sku: 'CUR05', group_id: 'sg2', unit: 'un', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2017/01/31/22/38/background-2028249_1280.png' },
+  { id: 'mat4', name: 'Manta R1', sku: 'MANR1', group_id: 'sg4', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2017/02/01/16/32/pocket-2030709_1280.png' },
+  { id: 'mat5', name: 'Linha de Poliamida', sku: 'LIN01', group_id: 'sg3', unit: 'un', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2015/09/21/20/39/sewing-machine-950921_1280.jpg' },
+  { id: 'mat6', name: 'Forro Nylon Emborrachado', sku: 'NYLEMB', group_id: 'sg1', unit: 'm', is_active: true, created_at: new Date().toISOString(), url_public: 'https://cdn.pixabay.com/photo/2016/02/16/17/23/fabric-1203673_1280.jpg' },
 ];
 export const task_statusesSeed: TaskStatus[] = [];
 export const tasksSeed: Task[] = [];
