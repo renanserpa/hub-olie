@@ -339,6 +339,8 @@ export const supabaseService = {
   
   getMaterials: (): Promise<Material[]> => supabaseService.getCollection('config_materials', '*, config_supply_groups(name)'),
   getMaterialGroups: (): Promise<MaterialGroup[]> => supabaseService.getCollection('config_supply_groups'),
+  addMaterial: (data: any): Promise<Material> => addDocument('config_materials', data),
+  addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument('config_supply_groups', data),
 
   getOrders: async (): Promise<Order[]> => {
     const ordersData = await supabaseService.getCollection<Order>('orders', '*, customers(*)');
@@ -485,8 +487,6 @@ export const supabaseService = {
   },
   getNotifications: (): Promise<Notification[]> => supabaseService.getCollection('notifications'),
   markNotificationAsRead: (id: string): Promise<Notification> => updateDocument<Notification>('notifications', id, { is_read: true }),
-    addMaterial: (data: any): Promise<Material> => addDocument('config_materials', data),
-    addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument('config_supply_groups', data),
     getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection('production_routes'),
     getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection('mold_library'),
     updateSystemSetting: async (key: string, newValue: any, source: 'user' | 'AI', confidence: number, explanation: string) => {

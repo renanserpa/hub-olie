@@ -53,7 +53,9 @@ export const production_routesSeed: ProductionRoute[] = [];
 // This object aggregates all our seed data into a single "database"
 const db: AppData = {
     production_audit: [],
-    production_quality_checks: [],
+    production_quality_checks: [
+        { id: 'qc1', production_order_id: 'po2', inspector: 'admin@olie.com', result: 'Aprovado', notes: 'Costura reforçada conforme especificação.', created_at: '2025-11-04T15:00:00Z' },
+    ],
     production_tasks: [
         { id: 'task1', production_order_id: 'po2', name: 'Corte do Tecido', status: 'Concluída', started_at: '2025-11-03T10:00:00Z', finished_at: '2025-11-03T11:30:00Z' },
         { id: 'task2', production_order_id: 'po2', name: 'Costura Principal', status: 'Concluída', started_at: '2025-11-03T11:30:00Z', finished_at: '2025-11-04T14:00:00Z' },
@@ -169,17 +171,14 @@ const getTableNameForSetting = (category: SettingsCategory, subTab: string | nul
 
 
 export const sandboxDb = {
-    getCollection: <T>(table: string): Promise<T[]> => {
+    getCollection: async <T>(table: string): Promise<T[]> => {
         console.log(`🧱 SANDBOX: getCollection(${table})`);
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const data = getCollection<T>(table);
-                 if (data.length === 0) {
-                    console.warn(`[sandboxDb] No data found for table "${table}". Returning empty array.`);
-                }
-                resolve(JSON.parse(JSON.stringify(data)));
-            }, 200);
-        });
+        await delay(200);
+        const data = getCollection<T>(table);
+         if (data.length === 0) {
+            console.warn(`[sandboxDb] No data found for table "${table}". Returning empty array.`);
+        }
+        return JSON.parse(JSON.stringify(data));
     },
 
     getDocument: async <T extends { id: string }>(table: string, id: string): Promise<T | null> => {
