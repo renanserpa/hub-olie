@@ -1,6 +1,5 @@
 import React from 'react';
-// FIX: Add missing type imports
-import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck } from '../../types';
+import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
@@ -8,16 +7,16 @@ import ProductionOrderDetailPanel from './ProductionOrderDetailPanel';
 
 
 interface ProductionDrawerProps {
-    order: (ProductionOrder & { product?: any, tasks?: any[], variant?: any }) | null;
+    order: (ProductionOrder & { product?: any, tasks?: any[], variant?: any, quality_checks?: ProductionQualityCheck[] }) | null;
     isOpen: boolean;
     onClose: () => void;
     allMaterials: Material[];
-    // FIX: Add missing props to the interface
     onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
     onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
+    user: AuthUser | null;
 }
 
-const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onClose, allMaterials, onUpdateTaskStatus, onCreateQualityCheck }) => {
+const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onClose, allMaterials, onUpdateTaskStatus, onCreateQualityCheck, user }) => {
     
     if (!order) return null;
 
@@ -52,6 +51,7 @@ const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onCl
                         allMaterials={allMaterials}
                         onUpdateTaskStatus={onUpdateTaskStatus}
                         onCreateQualityCheck={onCreateQualityCheck}
+                        user={user}
                     />
                 </div>
             </div>

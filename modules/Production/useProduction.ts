@@ -210,7 +210,19 @@ export function useProduction() {
     };
 
     const createQualityCheck = async (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => {
-       // ... implementation
+        setIsSaving(true);
+        try {
+            await dataService.addDocument<ProductionQualityCheck>('production_quality_checks', {
+                ...check,
+                created_at: new Date().toISOString()
+            });
+            toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
+            await reload();
+        } catch(e) {
+             toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const clearFilters = () => {

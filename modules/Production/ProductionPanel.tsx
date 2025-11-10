@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Corrected import path for useProduction hook.
 import { useProduction } from './useProduction';
 import { Loader2 } from 'lucide-react';
 import ProductionDrawer from './ProductionDrawer';
@@ -8,8 +7,10 @@ import ProductionDialog from '../../components/production/ProductionDialog';
 import ProductionKpiRow from '../../components/production/ProductionKpiRow';
 import ProductionKanban from './ProductionKanban';
 import ProductionTimeline from './ProductionTimeline';
+import { useApp } from '../../contexts/AppContext';
 
 export default function ProductionPanel() {
+  const { user } = useApp();
   const { 
     filteredOrders,
     isLoading, 
@@ -68,9 +69,9 @@ export default function ProductionPanel() {
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrderId(null)}
         allMaterials={allMaterials}
-        // FIX: Pass down the required handler functions to the drawer.
         onUpdateTaskStatus={updateTaskStatus}
         onCreateQualityCheck={createQualityCheck}
+        user={user}
       />
       <ProductionDialog 
         isOpen={isCreateDialogOpen}
