@@ -35,19 +35,21 @@ export const login = async (email: string, password: string): Promise<AuthUser> 
     .eq('user_id', loginData.user.id)
     .single();
 
-  if (roleError) {
-    if (roleError.code === '42P01') { // 42P01: undefined_table
+  // Handle database errors (but not 'row not found')
+  if (roleError && roleError.code !== 'PGRST116') {
+    if (roleError.code === '42P01') { // table not found
         throw new Error('BOOTSTRAP_REQUIRED: Tabelas de usuário não encontradas.');
     }
-    // Any other error, or if no row is found (PGRST116)
+    // Any other unexpected database error
     await supabase.auth.signOut();
-    console.error("Error fetching user role or role not found:", roleError);
-    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Se este for o primeiro acesso, siga as instruções de inicialização.");
+    console.error("Database error fetching user role:", roleError);
+    throw new Error(`Erro de banco de dados ao buscar permissões: ${roleError.message}`);
   }
   
-  if (!roleData) { // Fallback in case role is null but no error
+  // Handle user authenticated but no role assigned
+  if (!roleData) {
     await supabase.auth.signOut();
-    throw new Error("Sem permissão: seu usuário não tem um papel de acesso definido. Se este for o primeiro acesso, siga as instruções de inicialização.");
+    throw new Error("Acesso negado: Seu usuário foi autenticado, mas não possui uma função (role) definida no banco de dados. Contate o administrador.");
   }
 
   return {
@@ -89,14 +91,21 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       .eq('user_id', user.id)
       .single();
       
+    // Case 1: Table doesn't exist, this is a fatal setup error for the app.
+    if (roleError?.code === '42P01') {
+        throw new Error('BOOTSTRAP_REQUIRED: Tabelas de usuário não encontradas.');
+    }
+
+    // Case 2: Any other database error OR no role found for a valid session.
+    // In either case, the session is invalid from the app's perspective and should be cleared.
     if (roleError || !roleData) {
-       if (roleError.code === '42P01') { // Table does not exist
-            throw new Error('BOOTSTRAP_REQUIRED: Tabelas de usuário não encontradas.');
+       if (roleError && roleError.code !== 'PGRST116') { // Log only unexpected errors
+          console.error("Error fetching role for current user, signing out:", roleError);
+       } else {
+          console.warn("User has a valid session but no role in user_roles table. Signing out to clear invalid state.");
        }
-       if (roleError.code !== 'PGRST116') { // PGRST116 means no row was found
-          console.error("Error fetching role for current user:", roleError);
-       }
-       return null;
+       await supabase.auth.signOut(); // Clean up the invalid session state
+       return null; // Return null to complete the sign-out process in the UI
     }
 
     return {
