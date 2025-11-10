@@ -40,10 +40,10 @@ const ProductsPage: React.FC = () => {
 
     const [activeProductTab, setActiveProductTab] = React.useState('list');
 
-    const handleSelectProduct = (product: Product) => {
+    const handleSelectProduct = React.useCallback((product: Product) => {
         setSelectedProductId(product.id);
         openDialog(product);
-    };
+    }, [openDialog, setSelectedProductId]);
 
     const renderProductsContent = () => {
         if (isLoading) {

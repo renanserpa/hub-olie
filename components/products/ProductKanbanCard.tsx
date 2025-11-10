@@ -11,7 +11,7 @@ interface ProductKanbanCardProps {
     isSelected: boolean;
 }
 
-const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onClick, onEdit, isSelected }) => {
+const ProductKanbanCard: React.FC<ProductKanbanCardProps> = React.memo(({ product, onClick, onEdit, isSelected }) => {
     
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         e.dataTransfer.setData('productId', product.id);
@@ -58,6 +58,6 @@ const ProductKanbanCard: React.FC<ProductKanbanCardProps> = ({ product, onClick,
             </div>
         </div>
     );
-};
+});
 
 export default ProductKanbanCard;

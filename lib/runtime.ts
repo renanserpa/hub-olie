@@ -5,7 +5,7 @@ export type RuntimeMode = 'SANDBOX' | 'SUPABASE';
 // FIX: Changed to a const object to provide a more robust and conventional
 // way of managing runtime configuration, preventing accidental reassignment.
 export const runtime: { mode: RuntimeMode } = {
-  mode: 'SANDBOX',
+  mode: 'SUPABASE',
 };
 
 /**

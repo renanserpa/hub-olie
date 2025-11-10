@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getData } from '../../services/bridge/olieBridgeService';
-import { generateExecutiveInsight } from '../../services/ai/olieAIService';
 import { log } from '../../lib/logger';
 import { useApp } from '../../contexts/AppContext';
 import { useOlie } from '../../contexts/OlieContext';
@@ -56,13 +55,11 @@ export function useDashboard() {
         const kpisData = await getData('analytics_kpis') as AnalyticsKPI[];
         const insightsData = await getData('executive_ai_insights') as ExecutiveInsightType[];
         
-        await generateExecutiveInsight({ kpis: kpisData.map(k => ({...k, value: Number(k.value)} as KPI)) });
-
         setData({
           kpis: kpisData.map(k => ({...k, value: Number(k.value)} as KPI)),
           insights: insightsData,
           systemStatus: {
-            env: 'SANDBOX',
+            env: 'SUPABASE', // Updated for production
             lastSync: new Date().toISOString(),
             supabaseConnected: true,
           },
@@ -71,6 +68,7 @@ export function useDashboard() {
         log.info('[Dashboard] Dados carregados com sucesso.');
     } catch (error) {
         log.error('[Dashboard] Erro ao carregar dados:', error);
+        setData(prev => ({ ...prev, systemStatus: { ...prev.systemStatus, supabaseConnected: false }}));
     } finally {
         setLoading(false);
     }
