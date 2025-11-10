@@ -7,7 +7,7 @@ import {
     MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem,
     OrderPayment, OrderTimelineEvent, OrderNote, AnalyticsKPI, ExecutiveKPI, AIInsight, OrderStatus, AnySettingsItem, SettingsCategory, FinanceAccount, FinanceCategory, FinancePayable, FinanceReceivable, FinanceTransaction, SystemSettingsLog, Integration, IntegrationLog, MediaAsset,
     MaterialGroup, Material, InitializerLog, InitializerSyncState, InitializerAgent, ColorPalette, LiningColor, PullerColor, EmbroideryColor, FabricTexture,
-    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus, MoldLibrary, ProductionRoute, ProductionOrderStatus
+    WorkflowRule, Notification, Warehouse, ProductionAudit, Collection, AnalyticsSnapshot, BOMComponent, ProductVariant, IntegrationStatus, MoldLibrary, ProductionRoute, ProductionOrderStatus, UserProfile
 } from '../types';
 
 // --- SEED DATA ---
@@ -58,6 +58,7 @@ const db: AppData = {
     system_audit: [],
     warehouses,
     customers,
+    profiles: [],
     product_categories,
     products,
     product_variants,
@@ -242,6 +243,20 @@ export const sandboxDb = {
              console.warn(`[sandboxDb] deleteDocument: ID ${id} not found in ${table}`);
         }
         emit(table);
+    },
+
+    addUser: async (userData: any): Promise<UserProfile> => {
+        console.log(`🧱 SANDBOX: addUser()`);
+        await delay(100);
+        const newUser: UserProfile = {
+            id: generateId(),
+            email: userData.email,
+            role: userData.role,
+            created_at: new Date().toISOString()
+        };
+        (db as any).profiles.push(newUser);
+        emit('profiles');
+        return JSON.parse(JSON.stringify(newUser));
     },
 
     listenToCollection: <T>(table: string, join: string | undefined, handler: (payload: T[]) => void) => {

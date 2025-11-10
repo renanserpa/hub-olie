@@ -1,7 +1,7 @@
 import { runtime } from '../lib/runtime';
 import { sandboxDb as sandboxService } from './sandboxDb';
 import { supabaseService as realSupabaseService } from './supabaseService';
-import { Order, Contact, Product, AnyProduct, ProductionOrder, ProductionOrderStatus, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse, ProductionRoute, MoldLibrary } from '../types';
+import { Order, Contact, Product, AnyProduct, ProductionOrder, ProductionOrderStatus, Task, TaskStatus, InventoryBalance, InventoryMovement, ProductCategory, SystemSetting, AnySettingsItem, SettingsCategory, OrderStatus, LogisticsWave, LogisticsShipment, MarketingCampaign, MarketingSegment, MarketingTemplate, Supplier, PurchaseOrder, PurchaseOrderItem, AnalyticsKPI, Material, MaterialGroup, Notification, Warehouse, ProductionRoute, MoldLibrary, UserProfile } from '../types';
 
 /**
  * This Data Service acts as a facade, routing all data operations

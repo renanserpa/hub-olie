@@ -8,10 +8,10 @@ import { useSettings } from '../hooks/useSettings';
 import { useOlie } from '../contexts/OlieContext';
 import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 import PlaceholderContent from './PlaceholderContent';
+import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';
 
 // FIX: New placeholder components for the expanded settings sections.
 const OrganizationTabContent: React.FC = () => <PlaceholderContent title="Dados da Organização" requiredTable="company_profile" icon={Building}><p className="mt-1 text-sm text-textSecondary">Gerencie os dados cadastrais da sua empresa, como CNPJ, endereço fiscal e contatos.</p></PlaceholderContent>;
-const TeamsAndPermissionsTabContent: React.FC = () => <PlaceholderContent title="Equipes & Permissões" requiredTable="teams, user_roles" icon={Users}><p className="mt-1 text-sm text-textSecondary">Gerencie usuários, crie equipes e defina os níveis de acesso para cada função na plataforma.</p></PlaceholderContent>;
 const OperationalParamsTabContent: React.FC = () => <PlaceholderContent title="Parâmetros Operacionais" requiredTable="system_settings (expanded)" icon={SlidersHorizontal}><p className="mt-1 text-sm text-textSecondary">Defina regras de negócio e parâmetros para os módulos de Produção, Financeiro e Logística.</p></PlaceholderContent>;
 const AuditTabContent: React.FC = () => <PlaceholderContent title="Logs de Auditoria" requiredTable="system_audit" icon={BarChart}><p className="mt-1 text-sm text-textSecondary">Visualize um registro de todas as ações importantes realizadas no sistema.</p></PlaceholderContent>;
 
@@ -28,7 +28,7 @@ const SETTINGS_TABS_BASE = [
 
 const SettingsPage: React.FC = () => {
     const { can } = useOlie();
-    const [activeTab, setActiveTab] = useState('organization');
+    const [activeTab, setActiveTab] = useState('teams');
     const { settingsData, isLoading, isAdmin } = useSettings();
 
     const SETTINGS_TABS = [...SETTINGS_TABS_BASE];

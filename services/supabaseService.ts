@@ -58,6 +58,7 @@ import {
     ProductionRoute,
     ProductVariant,
     IntegrationStatus,
+    UserProfile,
 } from "../types";
 
 
@@ -215,7 +216,9 @@ export const supabaseService = {
         production_routes: [],
         media_assets: [], orders: [],
         order_items: [],
-        customers: [], products: [], 
+        customers: [],
+        profiles: [],
+        products: [], 
         product_variants: [], 
         product_categories: [], collections: [], production_orders: [], production_tasks: [], production_quality_checks: [], task_statuses: [], tasks: [], omnichannel: { conversations: [], messages: [], quotes: [] },
         logistics_waves: [],
@@ -321,6 +324,14 @@ export const supabaseService = {
       return Promise.all(updates);
   },
 
+  getUsers: (): Promise<UserProfile[]> => supabaseService.getCollection('profiles'),
+  updateUser: (userId: string, data: Partial<UserProfile>): Promise<UserProfile> => updateDocument('profiles', userId, data),
+  addUser: (userData: any): Promise<UserProfile> => {
+      const err = new Error('User creation from client is insecure and not implemented. This requires a Supabase Edge Function to call `supabase.auth.admin.createUser()` and then insert into profiles.');
+      handleError(err, 'addUser');
+      return Promise.reject(err);
+  },
+  
   getMaterials: (): Promise<Material[]> => supabaseService.getCollection('config_materials', '*, config_supply_groups(name)'),
   getMaterialGroups: (): Promise<MaterialGroup[]> => supabaseService.getCollection('config_supply_groups'),
 
