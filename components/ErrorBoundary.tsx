@@ -13,9 +13,11 @@ interface ErrorBoundaryState {
 
 // FIX: The ErrorBoundary class must extend React.Component and be typed with its Props and State interfaces.
 // This makes it a valid React component, giving it access to `this.props` and `this.state`, and allows it to be used with children in JSX.
+// Fix: Extend React.Component to make ErrorBoundary a valid class component.
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // FIX: The constructor is necessary to initialize state. It must call `super(props)` before any other statement.
   // This resolves errors where `this.props` is unavailable and allows `this.state` to be set.
+  // Fix: Add a constructor to initialize state.
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
