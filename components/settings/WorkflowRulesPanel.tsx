@@ -25,9 +25,15 @@ const WorkflowRulesPanel: React.FC = () => {
                         return (
                             <div key={rule.id} className="p-4 border rounded-lg flex items-start gap-4">
                                 {isCognitive ? (
-                                    <BrainCircuit className="w-5 h-5 text-purple-500 mt-1 flex-shrink-0" title="Regra Cognitiva (IA)" />
+                                    // FIX: The `title` prop is not valid on Lucide icons. Wrapped with a span to provide a tooltip.
+                                    <span title="Regra Cognitiva (IA)">
+                                        <BrainCircuit className="w-5 h-5 text-purple-500 mt-1 flex-shrink-0" />
+                                    </span>
                                 ) : (
-                                    <Zap className="w-5 h-5 text-primary mt-1 flex-shrink-0" title="Regra Padrão" />
+                                    // FIX: The `title` prop is not valid on Lucide icons. Wrapped with a span to provide a tooltip.
+                                    <span title="Regra Padrão">
+                                        <Zap className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                                    </span>
                                 )}
                                 <div className="flex-1">
                                     <h4 className="font-semibold">{rule.name}</h4>
