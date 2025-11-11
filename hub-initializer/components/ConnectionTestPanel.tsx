@@ -14,8 +14,6 @@ export default function ConnectionTestPanel() {
         toast({ title: "Sincronizando...", description: "Recarregando a aplicação para buscar os novos dados do banco." });
         // Use um pequeno atraso para permitir que o toast apareça antes do recarregamento da página.
         setTimeout(() => {
-            // FIX: The `true` argument for a hard reload is deprecated and causes a TypeScript error.
-            // A standard reload is sufficient for this purpose.
             window.location.reload();
         }, 500);
     };

@@ -78,29 +78,25 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
-
-    // The listener handles initial session and subsequent changes.
+    const checkInitialAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (isMounted) setUser(currentUser);
+      } catch (e) {
+        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    checkInitialAuth();
     const unsubscribe = listenAuthChanges((authUser) => {
       if (isMounted) {
         setUser(authUser);
-        if(isLoading) setIsLoading(false);
+        if (isLoading) setIsLoading(false);
       }
     });
-    
-    // Safety net in case the listener doesn't fire or there's an issue
-    const timer = setTimeout(() => {
-        if(isMounted && isLoading) {
-            console.warn("Auth listener timed out. Setting loading to false.");
-            setIsLoading(false);
-        }
-    }, 5000);
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-      clearTimeout(timer);
-    };
-  }, [isLoading]);
+    return () => { isMounted = false; unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {

@@ -14,6 +14,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (id UUID PRIMARY KEY REFERENCES auth.
 CREATE TABLE IF NOT EXISTS public.user_roles (user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, role TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());
 
 -- 2️⃣ CRIAÇÃO DE TODAS AS TABELAS DE NEGÓCIO
+-- Módulo: Acesso e Segurança (RBAC)
+CREATE TABLE IF NOT EXISTS public.system_roles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT UNIQUE NOT NULL, description TEXT);
+CREATE TABLE IF NOT EXISTS public.system_permissions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), role TEXT NOT NULL, scope TEXT NOT NULL, read BOOLEAN DEFAULT false, write BOOLEAN DEFAULT false, update BOOLEAN DEFAULT false, "delete" BOOLEAN DEFAULT false, UNIQUE(role, scope));
+
 -- Módulo: Produtos
 CREATE TABLE IF NOT EXISTS public.product_categories (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.collections (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, created_at TIMESTAMPTZ DEFAULT now());
@@ -70,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.analytics_kpis (id UUID PRIMARY KEY DEFAULT ge
 CREATE TABLE IF NOT EXISTS public.analytics_snapshots (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), kpi_id UUID, value NUMERIC, recorded_at TIMESTAMPTZ);
 CREATE TABLE IF NOT EXISTS public.executive_kpis (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, name TEXT, value NUMERIC, trend NUMERIC, unit TEXT, period TEXT, description TEXT);
 CREATE TABLE IF NOT EXISTS public.executive_ai_insights (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, type TEXT, insight TEXT, period TEXT, generated_at TIMESTAMPTZ);
-CREATE TABLE IF NOT EXISTS public.analytics_login_events (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), event_name TEXT, user_email TEXT, metadata JSONB, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.analytics_login_events (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), event_name TEXT, method TEXT, user_id UUID, metadata JSONB, created_at TIMESTAMPTZ DEFAULT now());
 
 -- Módulos: Configurações e Sistema
 CREATE TABLE IF NOT EXISTS public.system_settings (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), key TEXT NOT NULL UNIQUE, value TEXT, category TEXT, description TEXT);
@@ -92,10 +96,13 @@ CREATE TABLE IF NOT EXISTS public.integration_logs (id UUID PRIMARY KEY DEFAULT 
 CREATE TABLE IF NOT EXISTS public.initializer_agents (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT, role TEXT, category TEXT, status TEXT, last_heartbeat TIMESTAMPTZ, health_score NUMERIC);
 CREATE TABLE IF NOT EXISTS public.initializer_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), agent_name TEXT, module TEXT, action TEXT, status TEXT, "timestamp" TIMESTAMPTZ, metadata JSONB);
 CREATE TABLE IF NOT EXISTS public.initializer_sync_state (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, last_commit TEXT, last_diff TEXT, updated_at TIMESTAMPTZ);
-CREATE TABLE IF NOT EXISTS public.workflow_rules (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT, description TEXT, trigger TEXT, action TEXT, is_active BOOLEAN);
+CREATE TABLE IF NOT EXISTS public.workflow_rules (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT, description TEXT, trigger TEXT, action TEXT, is_active BOOLEAN, type TEXT);
 CREATE TABLE IF NOT EXISTS public.notifications (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), title TEXT, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.system_settings_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), key TEXT, old_value TEXT, new_value TEXT, source_module TEXT, confidence NUMERIC, explanation TEXT, created_at TIMESTAMPTZ DEFAULT now());
-
+CREATE TABLE IF NOT EXISTS public.system_settings_history (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), setting_id UUID, setting_key TEXT, old_value TEXT, new_value TEXT, changed_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.webhook_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), integration_id UUID, payload JSONB, status TEXT, retry_count INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.system_roles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT UNIQUE NOT NULL, description TEXT);
+CREATE TABLE IF NOT EXISTS public.system_permissions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), role TEXT NOT NULL, scope TEXT NOT NULL, read BOOLEAN DEFAULT false, write BOOLEAN DEFAULT false, update BOOLEAN DEFAULT false, "delete" BOOLEAN DEFAULT false, UNIQUE(role, scope));
 
 -- 3️⃣ APLICAÇÃO DE POLÍTICAS RLS PERMISSIVAS PARA TODAS AS TABELAS
 DO $$
