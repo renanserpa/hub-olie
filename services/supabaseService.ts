@@ -523,22 +523,54 @@ export const supabaseService = {
     getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection('production_routes'),
     getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection('mold_library'),
     updateSystemSetting: async (key: string, newValue: any, source: 'user' | 'AI', confidence: number, explanation: string) => {
-        const { data: setting, error: findError } = await supabase.from('system_settings').select('id, value').eq('key', key).single();
-        if (findError || !setting) {
+        // Use a regular query instead of .single() to avoid errors on no-match
+        const { data: settings, error: findError } = await supabase.from('system_settings').select('id, value').eq('key', key);
+        
+        if (findError) {
           handleError(findError, `updateSystemSetting (find ${key})`);
           return;
         }
-        
-        await updateDocument<SystemSetting>('system_settings', setting.id, { value: JSON.stringify(newValue) });
-        
-        await addDocument<SystemSettingsLog>('system_settings_logs', {
-          key,
-          old_value: setting.value,
-          new_value: JSON.stringify(newValue),
-          source_module: source,
-          confidence,
-          explanation,
-        } as any);
+
+        const setting = settings && settings.length > 0 ? settings[0] : null;
+
+        if (setting) {
+            // --- UPDATE PATH ---
+            await updateDocument<SystemSetting>('system_settings', setting.id, { value: JSON.stringify(newValue) });
+            
+            await addDocument<SystemSettingsLog>('system_settings_logs', {
+              key,
+              old_value: setting.value,
+              new_value: JSON.stringify(newValue),
+              source_module: source,
+              confidence,
+              explanation,
+            } as any);
+
+        } else {
+            // --- CREATE PATH ---
+            console.log(`[dataService] Setting with key "${key}" not found. Creating new setting.`);
+            
+            // Heuristic to determine category based on key name for better organization
+            const category = key.toLowerCase().includes('freight') || key.toLowerCase().includes('logistics') ? 'logistica' : 'sistema';
+
+            const newSettingData: Omit<SystemSetting, 'id'> = {
+                key,
+                value: JSON.stringify(newValue),
+                category,
+                description: `Parâmetro gerado automaticamente pela IA para ${key}.`
+            };
+
+            const newSetting = await addDocument<SystemSetting>('system_settings', newSettingData as any);
+            
+            await addDocument<SystemSettingsLog>('system_settings_logs', {
+              key,
+              old_value: 'null',
+              new_value: newSetting.value,
+              source_module: source,
+              confidence,
+              explanation,
+            } as any);
+        }
       },
     testIntegrationConnection: async (id: string): Promise<void> => {
         const status: IntegrationStatus = Math.random() > 0.2 ? 'connected' : 'error';
