@@ -7,9 +7,10 @@ import { Badge } from '../ui/Badge';
 interface SuppliersTableProps {
     suppliers: Supplier[];
     onEdit: (supplier: Supplier) => void;
+    canWrite: boolean;
 }
 
-const SuppliersTable: React.FC<SuppliersTableProps> = ({ suppliers, onEdit }) => {
+const SuppliersTable: React.FC<SuppliersTableProps> = ({ suppliers, onEdit, canWrite }) => {
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
@@ -20,7 +21,7 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({ suppliers, onEdit }) =>
                         <th className="p-4 font-semibold text-textSecondary">Lead Time</th>
                         <th className="p-4 font-semibold text-textSecondary">Rating</th>
                         <th className="p-4 font-semibold text-textSecondary">Status</th>
-                        <th className="p-4 font-semibold text-textSecondary text-right">Ações</th>
+                        {canWrite && <th className="p-4 font-semibold text-textSecondary text-right">Ações</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -44,12 +45,14 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({ suppliers, onEdit }) =>
                                     {supplier.is_active ? 'Ativo' : 'Inativo'}
                                 </Badge>
                             </td>
-                            <td className="p-4 text-right">
-                                <Button variant="ghost" size="sm" onClick={() => onEdit(supplier)}>
-                                    <Edit size={14} className="mr-2" />
-                                    Editar
-                                </Button>
-                            </td>
+                            {canWrite && (
+                                <td className="p-4 text-right">
+                                    <Button variant="ghost" size="sm" onClick={() => onEdit(supplier)}>
+                                        <Edit size={14} className="mr-2" />
+                                        Editar
+                                    </Button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>

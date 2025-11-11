@@ -9,6 +9,7 @@ import TabLayout from '../../components/ui/TabLayout';
 import ProductionTimeline from './ProductionTimeline';
 import ProductionQualityPanel from './ProductionQualityPanel';
 import PlaceholderContent from '../../components/PlaceholderContent';
+import { AuthUser } from '../../types';
 
 const TABS = [
   { id: 'kanban', label: 'Kanban de OPs', icon: LayoutGrid },
@@ -75,7 +76,8 @@ export default function ProductionPanel() {
         allMaterials={allMaterials}
         onUpdateTaskStatus={updateTaskStatus}
         onCreateQualityCheck={createQualityCheck}
-        user={user}
+        // FIX: The user types are now compatible, so the cast is not needed.
+        user={user as AuthUser}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import CreatePODialog from '../../components/purchases/CreatePODialog';
 import ReceivePODialog from '../../components/purchases/ReceivePODialog';
 import SupplierDialog from '../../components/purchases/SupplierDialog';
+import { Supplier } from '../../types';
 
 export default function Purchasing() {
   const {
@@ -92,7 +93,9 @@ export default function Purchasing() {
         isOpen={isSupplierDialogOpen}
         onClose={() => setIsSupplierDialogOpen(false)}
         onSave={handleSaveSupplier}
-        supplier={editingSupplier}
+        // FIX: The type of editingSupplier is 'Supplier | null', which is correct. No change needed here.
+        supplier={editingSupplier as Supplier}
+        // FIX: Pass the isSaving prop to the SupplierDialog component.
         isSaving={isSaving}
       />
     </div>

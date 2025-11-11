@@ -118,8 +118,9 @@ const CatalogManagement: React.FC = () => {
             case 'categories':
                  return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory as any} onUpdate={updateCategory as any} onDelete={deleteCategory} isAdmin={isAdmin} />
-                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection as any} onUpdate={updateCollection as any} onDelete={deleteCollection} isAdmin={isAdmin} />
+                        {/* FIX: Removed 'as any' casts as ProductCategory/Collection are now part of AnySettingsItem */}
+                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory} onUpdate={updateCategory} onDelete={deleteCategory} isAdmin={isAdmin} />
+                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection} onUpdate={updateCollection} onDelete={deleteCollection} isAdmin={isAdmin} />
                     </div>
                 );
             case 'personalization':

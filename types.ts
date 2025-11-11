@@ -12,7 +12,8 @@ export type UserRole =
   | 'Conteudo';
 
 export interface User {
-  uid: string;
+  // FIX: Changed from uid to id for consistency with UserProfile
+  id: string;
   email: string;
   role: UserRole;
   team_id?: string;
@@ -20,7 +21,8 @@ export interface User {
 
 // FIX: Add AuthUser interface to centralize user-related types and resolve import errors.
 export interface AuthUser {
-  uid: string;
+  // FIX: Changed from uid to id for consistency with UserProfile
+  id: string;
   email: string;
   role: UserRole;
 }
@@ -260,9 +262,22 @@ export interface EmbroideryColor { id: string; name: string; hex: string; thread
 export interface FabricTexture { id: string; name: string; description: string; image_url: string; hex_code: string; fabric_color_id: string; supplier_sku: string; manufacturer_sku: string; manufacturer_id: string; distributor_id: string; is_active: boolean; }
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
 
+export interface ProductCategory {
+    id: string;
+    name: string;
+    description?: string;
+}
+
+export interface Collection {
+    id: string;
+    name: string;
+    description?: string;
+}
+
 export type AnySettingsItem =
     | ColorPalette | FabricColor | ZipperColor | BiasColor | MonogramFont | MaterialGroup | Material
-    | LiningColor | PullerColor | EmbroideryColor | FabricTexture;
+    // FIX: Add ProductCategory and Collection to the union type to resolve assignment errors in CatalogManagement.
+    | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection;
 
 export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
@@ -351,18 +366,6 @@ export interface ProductVariant {
 }
 
 export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
-
-export interface ProductCategory {
-    id: string;
-    name: string;
-    description?: string;
-}
-
-export interface Collection {
-    id: string;
-    name: string;
-    description?: string;
-}
 
 export interface ConfigJson {
   fabricColor?: string;
@@ -477,6 +480,8 @@ export interface ProductionTask {
   started_at?: string;
   finished_at?: string;
   notes?: string;
+  // FIX: Add optional created_at property to resolve sorting error in useProduction hook.
+  created_at?: string;
 }
 
 export interface ProductionQualityCheck {

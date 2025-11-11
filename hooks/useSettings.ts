@@ -4,7 +4,7 @@ import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
 // FIX: Correct the import to use 'mediaService' which provides the upload functionality, and alias it to 'storageService' to avoid further changes.
-import { mediaService as storageService } from '../services/mediaService';
+import { mediaService } from '../services/mediaService';
 
 export function useSettings() {
     const { user } = useAuth();
@@ -71,7 +71,7 @@ export function useSettings() {
             if (file) {
                 toast({ title: "Enviando arquivo...", description: `Enviando ${file.name}` });
                 // FIX: Pass all required arguments to uploadFile and use the correct return property 'webViewLink'.
-                const result = await storageService.uploadFile(file, module, uploadCategory); 
+                const result = await mediaService.uploadFile(file, module, uploadCategory); 
                 itemToSubmit[key] = result.webViewLink;
             }
         }

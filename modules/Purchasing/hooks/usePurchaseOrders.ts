@@ -1,6 +1,6 @@
 // modules/Purchasing/hooks/usePurchaseOrders.ts
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { PurchaseOrder, PurchaseOrderItem, Supplier } from '../../../types';
+import { PurchaseOrder, PurchaseOrderItem, Supplier, Material } from '../../../types';
 import { dataService } from '../../../services/dataService';
 import { toast } from '../../../hooks/use-toast';
 import { useOlie } from '../../../contexts/OlieContext';
@@ -56,11 +56,22 @@ export function usePurchaseOrders() {
         return { ...po, items: selectedPOItems, supplier: suppliers.find(s => s.id === po.supplier_id) };
     }, [purchaseOrders, suppliers, selectedPOId, selectedPOItems]);
 
-    const createPO = async (poData: { supplier_id: string; items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material_name' | 'material'>[] }) => {
+    const createPO = async (poData: { supplier_id: string; items: Omit<PurchaseOrderItem, 'id' | 'po_id' | 'material' | 'material_name' | 'received_quantity' | 'total'>[] }) => {
         if (!canWrite) throw new Error("Acesso negado");
         setIsSaving(true);
         try {
-            await dataService.createPO(poData);
+            // FIX: Enrich the items with required data before sending to dataService.
+            const materials = await dataService.getCollection<Material>('config_materials');
+            const materialMap = new Map(materials.map(m => [m.id, m.name]));
+
+            const itemsWithDetails = poData.items.map(item => ({
+                ...item,
+                material_name: materialMap.get(item.material_id) || 'Desconhecido',
+                total: item.quantity * item.unit_price,
+                received_quantity: 0,
+            }));
+
+            await dataService.createPO({ supplier_id: poData.supplier_id, items: itemsWithDetails });
             toast({ title: "Sucesso!", description: "Pedido de Compra criado." });
         } catch (error) {
             toast({ title: "Erro!", description: (error as Error).message, variant: "destructive" });

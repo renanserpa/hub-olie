@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { listenAuthChanges, getCurrentUser } from '../services/authService';
-import { AuthUser } from '../types';
+import { AuthUser, UserProfile } from '../types';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const currentUser = await getCurrentUser();
         if (isMounted) {
+          // FIX: The user types are now compatible due to the id/uid alignment. No cast needed.
           setUser(currentUser);
         }
       } catch (e) {
@@ -51,6 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // The listener handles subsequent changes (login/logout).
     const unsubscribe = listenAuthChanges((authUser) => {
       if (isMounted) {
+        // FIX: The user types are now compatible due to the id/uid alignment. No cast needed.
         setUser(authUser);
         // If a change comes from the listener, the initial load is definitely complete.
         if (isLoading) setIsLoading(false);

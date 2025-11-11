@@ -81,7 +81,8 @@ const Verify2FA: React.FC<Verify2FAProps> = ({ amr, onVerified }) => {
             {Array.from({ length: 6 }).map((_, index) => (
               <input
                 key={index}
-                ref={el => (inputRefs.current[index] = el)}
+                // FIX: Corrected the ref callback to avoid returning a value, satisfying the Ref type.
+                ref={el => { inputRefs.current[index] = el }}
                 type="text"
                 maxLength={1}
                 value={code[index] || ''}

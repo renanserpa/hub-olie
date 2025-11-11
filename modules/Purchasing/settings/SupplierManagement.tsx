@@ -32,7 +32,7 @@ export default function SupplierManagement({ onNewClick, onEditClick }: Supplier
                 <Button onClick={onNewClick}><Plus className="w-4 h-4 mr-2" />Novo Fornecedor</Button>
             </CardHeader>
             <CardContent>
-                <SuppliersTable suppliers={suppliers} onEdit={onEditClick} canWrite={true}/>
+                <SuppliersTable suppliers={suppliers as any[]} onEdit={onEditClick} canWrite={true}/>
             </CardContent>
         </Card>
     );

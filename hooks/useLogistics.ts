@@ -70,7 +70,8 @@ export function useLogistics() {
                 wave_number: waveNumber,
                 status: 'pending',
                 order_ids: orderIds,
-                created_by: user!.uid,
+                // FIX: Changed user.uid to user.id to align with the updated User type.
+                created_by: user!.id,
                 created_at: new Date().toISOString(),
             };
             await dataService.addDocument('logistics_waves', newWave);

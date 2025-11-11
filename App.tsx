@@ -1,6 +1,6 @@
 // Fix: Import useState and useEffect from React.
 import React, { useState, useEffect } from 'react';
-import { User } from './types';
+import { User, UserProfile } from './types';
 import Toaster from './components/Toaster';
 import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen, ChevronsLeft, ChevronsRight, LogOut, Loader2 } from 'lucide-react';
 import { Button } from './components/ui/Button';
@@ -102,7 +102,8 @@ const App: React.FC = () => {
             case 'finance':
                 return <FinancePage />;
             case 'omnichannel':
-                return <OmnichannelPage user={user as User} />;
+                // FIX: Removed 'as User' cast as UserProfile is now compatible with User type.
+                return <OmnichannelPage user={user} />;
             case 'marketing':
                 return <MarketingPage />;
             case 'contacts':
@@ -110,7 +111,8 @@ const App: React.FC = () => {
             case 'products':
                 return <ProductsPage />;
             case 'orders':
-                return <OrdersPage user={user as User} />;
+                // FIX: Removed 'as User' cast as UserProfile is now compatible with User type.
+                return <OrdersPage user={user} />;
             default:
                 return <DashboardPage />;
         }

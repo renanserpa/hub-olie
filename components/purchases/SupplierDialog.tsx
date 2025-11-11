@@ -12,12 +12,12 @@ interface SupplierDialogProps {
     onClose: () => void;
     onSave: (data: Omit<Supplier, 'id' | 'created_at' | 'updated_at'> | Supplier) => Promise<void>;
     supplier: Supplier | null;
+    isSaving: boolean;
 }
 
-const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave, supplier }) => {
+const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave, supplier, isSaving }) => {
     const [formData, setFormData] = useState<Partial<Supplier>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (supplier) {
@@ -44,7 +44,6 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
         setErrors({});
 
         const result = supplierSchema.safeParse(formData);
@@ -56,7 +55,6 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
             });
             setErrors(newErrors);
             toast({ title: "Erro de Validação", description: "Verifique os campos do formulário.", variant: 'destructive'});
-            setIsSubmitting(false);
             return;
         }
 
@@ -65,8 +63,6 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
             await onSave(dataToSave as any);
         } catch(e) {
             // Error already toasted in hook
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -146,9 +142,9 @@ const SupplierDialog: React.FC<SupplierDialogProps> = ({ isOpen, onClose, onSave
 
 
                 <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Salvar
                     </Button>
                 </div>

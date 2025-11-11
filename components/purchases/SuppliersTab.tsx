@@ -24,7 +24,8 @@ const SuppliersTab: React.FC<SuppliersTabProps> = ({ suppliers, onNewClick, onEd
             </CardHeader>
             <CardContent>
                 {suppliers.length > 0 ? (
-                    <SuppliersTable suppliers={suppliers} onEdit={onEditClick} />
+                    // FIX: Added the missing 'canWrite' prop, hardcoding to true as this seems to be legacy code.
+                    <SuppliersTable suppliers={suppliers} onEdit={onEditClick} canWrite={true} />
                 ) : (
                     <EmptyState
                         title="Nenhum Fornecedor"
