@@ -55,7 +55,8 @@ const ProductionSettingsPanel: React.FC = () => {
                 return <TabContent 
                     title="Rotas de Produção"
                     category="sistema" // dummy category for type compliance
-                    data={routesForTable as AnySettingsItem[]}
+                    // FIX: Cast to 'unknown' first to allow conversion to AnySettingsItem[], as the data shape is modified for display.
+                    data={routesForTable as unknown as AnySettingsItem[]}
                     fields={routeFieldConfig}
                     onAdd={(item) => handleAddOrUpdate(addRoute, item)}
                     onUpdate={(item) => handleAddOrUpdate(updateRoute, item)}
@@ -66,7 +67,8 @@ const ProductionSettingsPanel: React.FC = () => {
                 return <TabContent 
                     title="Biblioteca de Moldes"
                     category="sistema" // dummy
-                    data={allMolds as AnySettingsItem[]}
+                    // FIX: Cast to 'unknown' first to allow conversion to AnySettingsItem[], resolving the type error.
+                    data={allMolds as unknown as AnySettingsItem[]}
                     fields={moldFieldConfig}
                     onAdd={addMold as any}
                     onUpdate={updateMold as any}

@@ -275,7 +275,6 @@ export function useProduction() {
         filteredOrders,
         allMaterials,
         allProducts,
-        // FIX: Add missing properties to return object.
         allRoutes,
         allMolds,
         isLoading,
@@ -289,7 +288,6 @@ export function useProduction() {
         updateProductionOrderStatus,
         createQualityCheck,
         createProductionOrder,
-        // FIX: Add missing functions to return object.
         addRoute, updateRoute, deleteRoute,
         addMold, updateMold, deleteMold,
         viewMode,

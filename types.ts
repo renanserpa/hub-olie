@@ -313,7 +313,10 @@ export interface Collection {
 export type AnySettingsItem =
     | ColorPalette | FabricColor | ZipperColor | BiasColor | MonogramFont | MaterialGroup | Material
     // FIX: Add ProductCategory and Collection to the union type to resolve assignment errors in CatalogManagement.
-    | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection;
+    | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection
+    // FIX: Add ProductionRoute and MoldLibrary to support the production settings panel's TabContent component.
+    | ProductionRoute
+    | MoldLibrary;
 
 export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
@@ -674,7 +677,6 @@ export interface InventoryMovement {
 }
 
 // --- LOGISTICS ---
-// FIX: Add missing Logistics types
 export type LogisticsTab = 'queue' | 'picking' | 'shipment' | 'settings';
 export type ShipmentStatus = 'pending' | 'quoted' | 'label_created' | 'in_transit' | 'delivered';
 
