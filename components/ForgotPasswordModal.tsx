@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { Loader2, Mail } from 'lucide-react';
 import { sendPasswordResetEmail } from '../services/authService';
 import { toast } from '../hooks/use-toast';
+import { analyticsService } from '../services/analyticsService';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
     setIsLoading(true);
     try {
       await sendPasswordResetEmail(email);
+      analyticsService.trackEvent('password_reset_request', { email });
       setIsSent(true);
     } catch (error) {
       toast({
@@ -43,6 +45,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Recuperar Senha">
+      <div aria-live="polite">
         {isSent ? (
             <div className="text-center">
                 <Mail className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -65,6 +68,8 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        aria-required="true"
+                        aria-label="Endereço de e-mail para recuperação"
                         placeholder="seu@email.com"
                         className="w-full px-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
                     />
@@ -78,6 +83,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
                 </div>
             </form>
         )}
+        </div>
     </Modal>
   );
 };

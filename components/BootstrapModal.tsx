@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS public.analytics_kpis (id UUID PRIMARY KEY DEFAULT ge
 CREATE TABLE IF NOT EXISTS public.analytics_snapshots (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), kpi_id UUID, value NUMERIC, recorded_at TIMESTAMPTZ);
 CREATE TABLE IF NOT EXISTS public.executive_kpis (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, name TEXT, value NUMERIC, trend NUMERIC, unit TEXT, period TEXT, description TEXT);
 CREATE TABLE IF NOT EXISTS public.executive_ai_insights (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, type TEXT, insight TEXT, period TEXT, generated_at TIMESTAMPTZ);
+CREATE TABLE IF NOT EXISTS public.analytics_login_events (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), event_name TEXT, user_email TEXT, metadata JSONB, created_at TIMESTAMPTZ DEFAULT now());
 
 -- Módulos: Configurações e Sistema
 CREATE TABLE IF NOT EXISTS public.system_settings (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), key TEXT NOT NULL UNIQUE, value TEXT, category TEXT, description TEXT);

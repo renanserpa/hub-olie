@@ -928,6 +928,7 @@ export interface AppData {
     analytics_snapshots: AnalyticsSnapshot[];
     executive_kpis: ExecutiveKPI[];
     executive_ai_insights: AIInsight[];
+    analytics_login_events: any[];
     
     finance_accounts: FinanceAccount[];
     finance_categories: FinanceCategory[];

@@ -264,6 +264,8 @@ export const supabaseService = {
         analytics_snapshots: [],
         executive_kpis: [],
         executive_ai_insights: [],
+        // FIX: Add missing 'analytics_login_events' property to satisfy the AppData type.
+        analytics_login_events: [],
         finance_accounts: [],
         finance_categories: [],
         finance_transactions: [],
