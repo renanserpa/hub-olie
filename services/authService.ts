@@ -115,11 +115,23 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
 export const listenAuthChanges = (callback: (user: UserProfile | null) => void): (() => void) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await getCurrentUser();
-          callback(profile);
-        } else if (event === 'SIGNED_OUT') {
+        if (!session?.user) {
           callback(null);
+          return;
+        }
+        
+        try {
+            const profile = await getProfile(session.user.id);
+            if (profile) {
+                callback(profile);
+            } else {
+                console.warn("Auth session exists but profile is missing. Signing out.");
+                await supabase.auth.signOut();
+                callback(null);
+            }
+        } catch (e) {
+            console.error("Error fetching profile in auth listener:", e);
+            callback(null);
         }
       }
     );

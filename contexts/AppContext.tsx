@@ -67,7 +67,6 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     if (user) {
         setIsWelcomeModalOpen(false);
         try {
-            // FIX: Explicitly provided the 'UserProfile' generic type to ensure TypeScript correctly infers the type of the update payload, allowing the 'last_login' property.
             await dataService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
             setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
         } catch (error) {
@@ -79,24 +78,30 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
-    const checkInitialAuth = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (isMounted) setUser(currentUser);
-      } catch (e) {
-        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    checkInitialAuth();
+    
+    // The listener fires immediately with the session status, handling both initial load and changes.
     const unsubscribe = listenAuthChanges((authUser) => {
       if (isMounted) {
         setUser(authUser);
-        if (isLoading) setIsLoading(false);
+        if (isLoading) {
+            setIsLoading(false);
+        }
       }
     });
-    return () => { isMounted = false; unsubscribe(); };
+
+    // Safety net in case the listener doesn't fire
+    const timer = setTimeout(() => {
+        if (isMounted && isLoading) {
+            console.warn("Auth listener timeout. Forcefully disabling loader.");
+            setIsLoading(false);
+        }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
