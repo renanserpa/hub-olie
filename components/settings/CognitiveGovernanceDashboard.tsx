@@ -7,25 +7,36 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import StatCard from '../dashboard/StatCard';
 import { useGovernance, AISuggestion } from '../../hooks/useGovernance';
 import { Button } from '../ui/Button';
+import { useAnomalies } from '../../hooks/useAnomalies';
 
 const AnomalyFeed: React.FC = () => {
-    // This is a simulated feed for demonstration (Idea #012)
-    const [anomalies, setAnomalies] = useState<SystemAudit[]>([]);
+    const { anomalies, isLoading } = useAnomalies();
 
-    useEffect(() => {
-        const mockAnomalies: SystemAudit[] = [
-            { id: '1', key: 'RBAC_ANOMALY', status: 'critical', details: { user: 'vendas@olie.com.br', attempted_scope: 'Finance', count: 5 }, created_at: new Date().toISOString() },
-            { id: '2', key: 'INTEGRATION_FAILURE', status: 'high', details: { integration: 'NFe Service', error: 'Authentication Failed' }, created_at: new Date(Date.now() - 3600000).toISOString() },
-        ];
-        setAnomalies(mockAnomalies);
-    }, []);
+    if (isLoading) {
+        return <Loader2 className="w-4 h-4 animate-spin" />;
+    }
+
+    if (anomalies.length === 0) {
+        return <p className="text-xs text-textSecondary p-3 bg-secondary rounded-lg">Nenhuma anomalia detectada recentemente.</p>
+    }
+    
+    const renderDetails = (details: any) => {
+        if (!details) return 'Nenhum detalhe disponível.';
+        if (details.user && details.attempted_scope) {
+            return `Usuário ${details.user} tentou acessar ${details.attempted_scope} (${details.count || 1}x).`;
+        }
+        if (details.integration && details.error) {
+            return `Integração ${details.integration}: ${details.error}.`;
+        }
+        return JSON.stringify(details);
+    }
 
     return (
         <div className="space-y-2">
             {anomalies.map(anomaly => (
                 <div key={anomaly.id} className="p-2 border border-red-500/30 bg-red-500/10 rounded-lg text-xs">
                     <p className="font-semibold text-red-700 flex items-center gap-1"><ShieldAlert size={14}/> {anomaly.key}</p>
-                    <p className="text-red-600/80">{anomaly.details.user} tentou acessar {anomaly.details.attempted_scope} ({anomaly.details.count}x)</p>
+                    <p className="text-red-600/80">{renderDetails(anomaly.details)}</p>
                 </div>
             ))}
         </div>

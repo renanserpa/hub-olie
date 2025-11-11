@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { AppData, AnySettingsItem, SettingsCategory, SystemSetting } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
-import { useAuth } from '../context/AuthContext';
+import { useApp } from '../contexts/AppContext';
 // FIX: Correct the import to use 'mediaService' which provides the upload functionality, and alias it to 'storageService' to avoid further changes.
 import { mediaService } from '../services/mediaService';
 
 export function useSettings() {
-    const { user } = useAuth();
+    const { user } = useApp();
     const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 

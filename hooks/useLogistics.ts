@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Order, LogisticsWave, LogisticsShipment, LogisticsTab, LogisticsPickTask } from '../../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
-import { useAuth } from '../context/AuthContext';
+import { useApp } from '../contexts/AppContext';
 
 export function useLogistics() {
-    const { user } = useAuth();
+    const { user } = useApp();
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<LogisticsTab>('queue');
     
@@ -72,7 +72,6 @@ export function useLogistics() {
                 wave_number: waveNumber,
                 status: 'pending',
                 order_ids: orderIds,
-                // FIX: Changed user.uid to user.id to align with the updated User type.
                 created_by: user!.id,
                 created_at: new Date().toISOString(),
             };

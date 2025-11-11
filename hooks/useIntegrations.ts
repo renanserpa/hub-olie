@@ -3,6 +3,7 @@ import { dataService } from '../services/dataService';
 import { Integration, IntegrationLog, WebhookLog } from '../types';
 import { toast } from './use-toast';
 import { integrationsService } from "../services/integrationsService";
+import { supabase } from "../lib/supabaseClient";
 
 export function useIntegrations() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -75,18 +76,19 @@ export function useIntegrations() {
   };
   
   const retryWebhook = async (logId: string) => {
-    const log = webhookLogs.find(l => l.id === logId);
-    if (!log) return;
-
     try {
-      // Simulate retry: Update status to 'success' and increment retry_count
-      await dataService.updateDocument<WebhookLog>('webhook_logs', logId, {
-        status: 'success',
-        retry_count: (log.retry_count || 0) + 1,
-      });
-      toast({ title: 'Reprocessado!', description: 'O webhook foi reprocessado com sucesso (simulado).' });
-    } catch(e) {
-      toast({ title: 'Erro', description: 'Não foi possível reprocessar o webhook.', variant: 'destructive' });
+        const { data, error } = await supabase.functions.invoke('retry-webhook-handler', {
+            body: { logId },
+        });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        toast({ title: 'Sucesso!', description: data.message || 'Webhook enviado para reprocessamento.' });
+        // Realtime listener will handle the UI update.
+    } catch (e) {
+        toast({ title: 'Erro', description: (e as Error).message || 'Não foi possível reprocessar o webhook.', variant: 'destructive' });
     }
   };
 

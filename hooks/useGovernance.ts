@@ -3,6 +3,7 @@ import { geminiService } from "../services/geminiService";
 import { dataService } from "../services/dataService";
 import { SystemSettingsLog, SystemSetting, SystemSettingsHistory } from "../types";
 import { toast } from "./use-toast";
+import { supabase } from "../lib/supabaseClient";
 
 export interface AISuggestion {
   key: string;
@@ -37,7 +38,13 @@ export function useGovernance() {
     try {
       const kpis = await dataService.getCollection('analytics_kpis');
       const settings = await dataService.getCollection<SystemSetting>('system_settings');
-      const result = await geminiService.generateSystemOptimizations(kpis, settings);
+      
+      const { data: result, error } = await supabase.functions.invoke('ai-governance', {
+        body: { kpis, settings }
+      });
+
+      if (error) throw error;
+      
       setSuggestions(result);
       if (result.length > 0) {
         toast({ title: 'Análise da IA Concluída', description: `${result.length} sugestão(ões) gerada(s).`});

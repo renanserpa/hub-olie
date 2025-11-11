@@ -559,6 +559,15 @@ export const supabaseService = {
         new_value: newValueString,
         changed_by: source === 'AI' ? 'AI' : user?.email || 'user',
     } as any);
+    await addDocument<SystemAudit>('system_audit', {
+        key: 'SETTING_UPDATE',
+        status: source === 'AI' ? 'AUTO_APPLIED' : 'MANUAL_APPLIED',
+        details: {
+            setting_key: key,
+            source: source,
+            changed_by: source === 'AI' ? 'AI' : user?.email || 'user'
+        }
+    } as any);
   },
   testConnection: async (): Promise<{ success: boolean; message: string }> => {
     try {
