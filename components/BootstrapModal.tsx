@@ -66,8 +66,9 @@ CREATE TABLE IF NOT EXISTS public.marketing_templates (id UUID PRIMARY KEY DEFAU
 CREATE TABLE IF NOT EXISTS public.logistics_waves (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), wave_number TEXT NOT NULL, status TEXT, order_ids UUID[], created_by UUID, created_at TIMESTAMPTZ);
 CREATE TABLE IF NOT EXISTS public.logistics_shipments (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), order_id UUID, order_number TEXT, customer_name TEXT, status TEXT, tracking_code TEXT, created_at TIMESTAMPTZ);
 CREATE TABLE IF NOT EXISTS public.logistics_pick_tasks (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), wave_id UUID REFERENCES public.logistics_waves(id) ON DELETE CASCADE, order_id UUID REFERENCES public.orders(id), order_item_id UUID REFERENCES public.order_items(id), product_name TEXT, variant_sku TEXT, quantity INT NOT NULL, picked_quantity INT DEFAULT 0, status TEXT NOT NULL DEFAULT 'pending', picker_id UUID, picked_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT now());
-CREATE TABLE IF NOT EXISTS public.conversations (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), "customerId" UUID, "customerName" TEXT, "customerHandle" TEXT, channel TEXT, status TEXT, "assigneeId" UUID, priority TEXT, tags TEXT[], "unreadCount" INT, "lastMessageAt" TIMESTAMPTZ, title TEXT, "quoteId" UUID);
-CREATE TABLE IF NOT EXISTS public.messages (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), "conversationId" UUID, direction TEXT, content TEXT, "authorName" TEXT, "createdAt" TIMESTAMPTZ, status TEXT);
+CREATE TABLE IF NOT EXISTS public.quotes (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), status TEXT NOT NULL, items JSONB, totals JSONB, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.conversations (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), "customerId" UUID, "customerName" TEXT, "customerHandle" TEXT, channel TEXT, status TEXT, "assigneeId" UUID, priority TEXT, tags TEXT[], "unreadCount" INT, "lastMessageAt" TIMESTAMPTZ, title TEXT, "quoteId" UUID REFERENCES public.quotes(id) ON DELETE SET NULL);
+CREATE TABLE IF NOT EXISTS public.messages (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), "conversationId" UUID REFERENCES public.conversations(id) ON DELETE CASCADE, direction TEXT, content TEXT, "authorName" TEXT, "createdAt" TIMESTAMPTZ, status TEXT);
 
 -- Módulos: Analytics e Executivo
 CREATE TABLE IF NOT EXISTS public.analytics_kpis (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), module TEXT, name TEXT, value TEXT, trend NUMERIC, unit TEXT, description TEXT, created_at TIMESTAMPTZ DEFAULT now());
@@ -187,7 +188,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
              <h5 className="font-bold text-lg">Passo 2: Executar o Script de Inicialização Completo</h5>
             <p className="text-sm">Após configurar o administrador, copie e execute o script abaixo no **SQL Editor** do Supabase para criar e configurar TODAS as tabelas e permissões.</p>
             <div className="relative bg-secondary dark:bg-dark-secondary p-4 rounded-lg max-h-40 overflow-y-auto">
-                <Button size="sm" onClick={handleCopy} className="absolute top-2 right-2">
+                <Button size="sm" onClick={handleCopy} className="absolute top-2 right-2 z-10">
                     <Copy className="w-4 h-4 mr-2" /> Copiar Script
                 </Button>
                 <pre className="text-xs whitespace-pre-wrap font-mono">{bootstrapSqlScript}</pre>
