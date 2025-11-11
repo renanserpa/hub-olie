@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { login } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import BootstrapModal from './BootstrapModal';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBootstrapModalOpen, setIsBootstrapModalOpen] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,27 +65,40 @@ const LoginPage: React.FC = () => {
               <form onSubmit={handleLogin} className="space-y-6">
                   <div>
                       <label htmlFor="email" className="block text-sm font-medium text-primary mb-1">Email</label>
-                      <input 
-                          type="email" 
-                          id="email" 
-                          value={email} 
-                          onChange={(e) => setEmail(e.target.value)} 
-                          required 
-                          placeholder="admin@admin"
-                          className="w-full px-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
-                      />
+                      <div className="relative">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                              <Mail className="h-4 w-4 text-gray-400" />
+                          </div>
+                          <input 
+                              type="email" 
+                              id="email" 
+                              value={email} 
+                              onChange={(e) => setEmail(e.target.value)} 
+                              required 
+                              placeholder="admin@admin.com"
+                              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
+                          />
+                      </div>
                   </div>
                   <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-primary mb-1">Senha</label>
-                      <input 
-                          type="password" 
-                          id="password" 
-                          value={password} 
-                          onChange={(e) => setPassword(e.target.value)} 
-                          required 
-                          placeholder="••••••"
-                          className="w-full px-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
-                      />
+                      <div className="flex justify-between items-center mb-1">
+                          <label htmlFor="password" className="block text-sm font-medium text-primary">Senha</label>
+                          <button type="button" onClick={() => setIsForgotPasswordOpen(true)} className="text-xs text-primary hover:underline font-medium">Esqueceu a senha?</button>
+                      </div>
+                      <div className="relative">
+                           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                              <Lock className="h-4 w-4 text-gray-400" />
+                          </div>
+                          <input 
+                              type="password" 
+                              id="password" 
+                              value={password} 
+                              onChange={(e) => setPassword(e.target.value)} 
+                              required 
+                              placeholder="••••••"
+                              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-dark-secondary border border-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-textPrimary dark:text-dark-textPrimary"
+                          />
+                      </div>
                   </div>
 
                   <div className="pt-2">
@@ -112,6 +127,10 @@ const LoginPage: React.FC = () => {
       <BootstrapModal 
         isOpen={isBootstrapModalOpen}
         onClose={() => setIsBootstrapModalOpen(false)}
+      />
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
       />
     </>
   );

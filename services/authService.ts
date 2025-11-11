@@ -58,6 +58,20 @@ export const logout = async (): Promise<void> => {
     }
 };
 
+export const sendPasswordResetEmail = async (email: string): Promise<void> => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin, // Redirect user back to the app after reset
+  });
+
+  if (error) {
+    console.error("Error sending password reset email:", error);
+    if (error.message.includes("For security purposes, you can only request this once every")) {
+        throw new Error("Muitas tentativas de redefinição. Por favor, aguarde um momento antes de tentar novamente.");
+    }
+    throw new Error(error.message);
+  }
+};
+
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
