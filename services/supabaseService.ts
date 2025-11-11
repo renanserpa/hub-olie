@@ -66,6 +66,8 @@ import {
     ExecutiveKPI,
     // FIX: Import missing PurchaseOrderStatus type.
     PurchaseOrderStatus,
+    SystemSettingsHistory,
+    ActivityItem,
 } from "../types";
 
 
@@ -319,10 +321,29 @@ export const supabaseService = {
             config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit,
         };
   },
+  
+  getRoles: (): Promise<any[]> => supabaseService.getCollection('system_roles'),
+  getPermissions: async (): Promise<any[]> => supabaseService.getCollection('system_permissions'),
+  updatePermissions: async (permissions: any[]) => {
+    const { error } = await supabase.from('system_permissions').upsert(permissions, { onConflict: 'role,scope' });
+    if (error) handleError(error, 'updatePermissions');
+  },
+  getWebhookLogs: (): Promise<any[]> => supabaseService.getCollection('webhook_logs'),
+  updateWorkflowRule: (ruleId: string, isActive: boolean) => updateDocument<WorkflowRule>('workflow_rules', ruleId, { is_active: isActive }),
+  getSettingsHistory: async (settingKey: string): Promise<any[]> => {
+    const { data, error } = await supabase.from('system_settings_history').select('*').eq('setting_key', settingKey).order('created_at', { ascending: false });
+    if (error) handleError(error, 'getSettingsHistory');
+    return data || [];
+  },
+  revertSettingValue: async (historyId: string) => {
+    const historyEntry = await getDocument<SystemSettingsHistory>('system_settings_history', historyId);
+    if (!historyEntry) throw new Error("History entry not found");
 
-  getPermissions: async (): Promise<any[]> => {
-      // For Idea #002. This table won't exist yet, so getCollection will return []
-      return supabaseService.getCollection('system_permissions');
+    const { data: currentSetting } = await supabase.from('system_settings').select('id, value').eq('key', historyEntry.setting_key).single();
+    if (!currentSetting) throw new Error(`Setting with key ${historyEntry.setting_key} not found`);
+
+    // This will trigger the logging function again, creating a new history entry for the revert action.
+    await supabaseService.updateSystemSetting(historyEntry.setting_key, JSON.parse(historyEntry.new_value), 'user', 1.0, `Revertido para a versão de ${new Date(historyEntry.created_at).toLocaleString('pt-BR')}`);
   },
 
   addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
@@ -368,8 +389,8 @@ export const supabaseService = {
   
   getMaterials: (): Promise<Material[]> => supabaseService.getCollection('config_materials', '*, config_supply_groups(name)'),
   getMaterialGroups: (): Promise<MaterialGroup[]> => supabaseService.getCollection('config_supply_groups'),
-  addMaterial: (data: any): Promise<Material> => addDocument('config_materials', data),
-  addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument('config_supply_groups', data),
+  addMaterial: (data: any): Promise<Material> => addDocument<Material>('config_materials', data),
+  addMaterialGroup: (data: any): Promise<MaterialGroup> => addDocument<MaterialGroup>('config_supply_groups', data),
 
   getOrders: async (): Promise<Order[]> => {
     const ordersData = await supabaseService.getCollection<Order>('orders', '*, customers(*)');
@@ -523,17 +544,17 @@ export const supabaseService = {
   updateSystemSetting: async (key: string, value: any, source: 'user' | 'AI', confidence: number, explanation: string) => {
     const { data: currentSetting } = await supabase.from('system_settings').select('id, value').eq('key', key).single();
     if (!currentSetting) throw new Error(`Setting with key ${key} not found`);
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const newValueString = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const newValueString = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
     
     await updateDocument<SystemSetting>('system_settings', currentSetting.id, { value: newValueString });
-    await addDocument<SystemSettingsLog>('system_settings_logs', {
-        key,
+    await addDocument<SystemSettingsHistory>('system_settings_history', {
+        setting_id: currentSetting.id,
+        setting_key: key,
         old_value: currentSetting.value,
         new_value: newValueString,
-        source_module: source,
-        confidence,
-        explanation
+        changed_by: source === 'AI' ? 'AI' : user?.email || 'user',
     } as any);
   },
   testConnection: async (): Promise<{ success: boolean; message: string }> => {

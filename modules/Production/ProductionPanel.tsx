@@ -77,7 +77,7 @@ export default function ProductionPanel() {
         onUpdateTaskStatus={updateTaskStatus}
         onCreateQualityCheck={createQualityCheck}
         // FIX: The user types are now compatible, so the cast is not needed.
-        user={user as AuthUser}
+        user={user}
       />
     </div>
   );

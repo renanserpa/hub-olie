@@ -82,7 +82,7 @@ const Verify2FA: React.FC<Verify2FAProps> = ({ amr, onVerified }) => {
               <input
                 key={index}
                 // FIX: Corrected the ref callback to avoid returning a value, satisfying the Ref type.
-                ref={el => { inputRefs.current[index] = el }}
+                ref={el => { inputRefs.current[index] = el; }}
                 type="text"
                 maxLength={1}
                 value={code[index] || ''}

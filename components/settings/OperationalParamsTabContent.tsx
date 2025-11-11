@@ -3,15 +3,17 @@ import { SystemSetting } from '../../types';
 import { useSettings } from '../../hooks/useSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Loader2, SlidersHorizontal, Info } from 'lucide-react';
+import { Loader2, SlidersHorizontal, Info, History } from 'lucide-react';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
 import { cn } from '../../lib/utils';
+import SettingsHistoryModal from './SettingsHistoryModal';
 
 const OperationalParamsTabContent: React.FC = () => {
-    const { settingsData, isLoading, isAdmin } = useSettings();
+    const { settingsData, isLoading, isAdmin, refresh } = useSettings();
     const [localSettings, setLocalSettings] = useState<SystemSetting[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [historyModalKey, setHistoryModalKey] = useState<string | null>(null);
 
     useEffect(() => {
         if (settingsData?.sistema) {
@@ -55,9 +57,13 @@ const OperationalParamsTabContent: React.FC = () => {
                 toast({ title: 'Nenhuma Alteração', description: 'Nenhum parâmetro foi modificado.' });
                 return;
             }
+            for (const setting of changedSettings) {
+                await dataService.updateSystemSetting(setting.key, JSON.parse(setting.value), 'user', 1.0, 'Alteração manual de parâmetro.');
+            }
 
-            await dataService.updateSystemSettings(changedSettings);
             toast({ title: 'Sucesso!', description: 'Parâmetros operacionais salvos.' });
+            refresh();
+
         } catch (e) {
             toast({ title: 'Erro!', description: 'Não foi possível salvar os parâmetros.', variant: 'destructive' });
         } finally {
@@ -99,11 +105,12 @@ const OperationalParamsTabContent: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {localSettings.map(setting => (
                     <Card key={setting.id}>
-                        <CardHeader>
+                        <CardHeader className="flex-row items-start justify-between">
                             <CardTitle className="text-base flex items-center gap-2">
                                 <SlidersHorizontal size={16} />
                                 {setting.description}
                             </CardTitle>
+                            <Button variant="ghost" size="sm" onClick={() => setHistoryModalKey(setting.key)}><History size={14} className="mr-1"/> Histórico</Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
                              {(() => {
@@ -113,10 +120,9 @@ const OperationalParamsTabContent: React.FC = () => {
                                         return Object.entries(parsed).map(([key, value]) => renderField(setting, key, value));
                                     }
                                 } catch (e) { /* Fall through for non-JSON values */ }
-                                // Render as a single textarea if not a JSON object
                                 return (
                                      <div>
-                                        <label className="block text-xs font-medium text-textSecondary">Valor (JSON)</label>
+                                        <label className="block text-xs font-medium text-textSecondary">Valor</label>
                                         <textarea 
                                             value={setting.value} 
                                             onChange={(e) => handleFieldChange(setting.id, 'value', e.target.value)}
@@ -139,6 +145,14 @@ const OperationalParamsTabContent: React.FC = () => {
                        Salvar Parâmetros
                     </Button>
                 </div>
+            )}
+            {historyModalKey && (
+                <SettingsHistoryModal
+                    isOpen={!!historyModalKey}
+                    onClose={() => setHistoryModalKey(null)}
+                    settingKey={historyModalKey}
+                    onRevertSuccess={() => { setHistoryModalKey(null); refresh(); }}
+                />
             )}
         </div>
     );

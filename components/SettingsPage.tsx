@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 // FIX: Imported the missing 'Shield' icon.
-import { Users, SlidersHorizontal, Sparkles, Puzzle, ImageIcon, BarChart, Cpu, Shield } from 'lucide-react';
+import { Users, SlidersHorizontal, Sparkles, Puzzle, ImageIcon, BarChart, Cpu, Shield, Zap } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import { useOlie } from '../contexts/OlieContext';
 import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';
@@ -11,6 +11,8 @@ import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 import OperationalParamsTabContent from './settings/OperationalParamsTabContent';
 import SecurityTabContent from './SecurityTabContent';
 import { GovernancePanel } from './settings/GovernancePanel';
+import WorkflowRulesPanel from './settings/WorkflowRulesPanel';
+import SettingsAnalyticsPanel from './settings/SettingsAnalyticsPanel';
 
 const AuditTabContent: React.FC = () => <PlaceholderContent title="Logs de Auditoria" requiredTable="system_audit" icon={BarChart}><p className="mt-1 text-sm text-textSecondary">Visualize um registro de todas as ações importantes realizadas no sistema.</p></PlaceholderContent>;
 
@@ -18,9 +20,11 @@ const SETTINGS_TABS_BASE = [
   { id: 'teams', label: 'Equipes & Permissões', icon: Users, scope: 'Settings' },
   { id: 'parameters', label: 'Parâmetros Operacionais', icon: SlidersHorizontal, scope: 'Settings' },
   { id: 'governance', label: 'Governança IA', icon: Sparkles, scope: 'Settings' },
+  { id: 'automations', label: 'Automações', icon: Zap, scope: 'Settings' },
   { id: 'integrations', label: 'Integrações', icon: Puzzle, scope: 'Settings' },
   { id: 'appearance', label: 'Aparência', icon: ImageIcon, scope: 'Settings' },
   { id: 'security', label: 'Segurança (RBAC)', icon: Shield, scope: 'Settings'},
+  { id: 'analytics', label: 'Analytics', icon: BarChart, scope: 'Settings' },
   { id: 'audit', label: 'Auditoria', icon: BarChart, scope: 'Settings' },
 ];
 
@@ -42,9 +46,11 @@ const SettingsPage: React.FC = () => {
             case 'teams': return <TeamsAndPermissionsTabContent />;
             case 'parameters': return <OperationalParamsTabContent />;
             case 'governance': return <div className="max-w-3xl mx-auto"><GovernancePanel /></div>;
+            case 'automations': return <WorkflowRulesPanel />;
             case 'integrations': return <IntegrationsTabContent />;
             case 'appearance': return <AppearanceTabContent />;
             case 'security': return <SecurityTabContent />;
+            case 'analytics': return <SettingsAnalyticsPanel />;
             case 'audit': return <AuditTabContent />;
             case 'initializer': return <InitializerPanel />;
             default: return null;

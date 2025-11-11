@@ -1,7 +1,7 @@
 import React, { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
 import { useApp } from './AppContext';
 import { DefaultRBAC, RBACMatrix } from '../lib/rbac';
-import { UserRole } from '../types';
+import { UserRole, SystemPermission } from '../types';
 import { dataService } from '../services/dataService';
 
 type Permission = 'read' | 'write' | 'update' | 'delete';
@@ -31,13 +31,21 @@ export const OlieContextProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (user) {
         setIsLoadingPermissions(true);
         try {
-          // Idea #002: Fetch permissions from the database
           const remotePermissions = await dataService.getPermissions();
           if (remotePermissions && remotePermissions.length > 0) {
-            // Here you would transform the flat list from DB into the RBACMatrix structure
-            // For now, we'll assume it's correctly formatted or just keep the default
-            console.log("Permissions loaded from database (simulation).");
-            // setPermissions(formattedPermissions);
+            const newMatrix: RBACMatrix = {};
+            remotePermissions.forEach((p: SystemPermission) => {
+                if (!newMatrix[p.role]) {
+                    newMatrix[p.role] = {};
+                }
+                if (newMatrix[p.role]) {
+                    (newMatrix[p.role] as any)[p.scope] = {
+                        read: p.read, write: p.write, update: p.update, delete: p.delete
+                    };
+                }
+            });
+            console.log("Permissions loaded from database.");
+            setPermissions(newMatrix);
           } else {
              console.log("No dynamic permissions found, using default RBAC.");
              setPermissions(DefaultRBAC);

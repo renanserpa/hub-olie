@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { dataService } from '../services/dataService';
-import { Integration, IntegrationLog } from '../types';
+import { Integration, IntegrationLog, WebhookLog } from '../types';
 import { toast } from './use-toast';
 import { integrationsService } from "../services/integrationsService";
 
 export function useIntegrations() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [logs, setLogs] = useState<IntegrationLog[]>([]);
+  const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -32,9 +33,14 @@ export function useIntegrations() {
         setLogs(data);
     });
 
+    const webhookLogsListener = dataService.listenToCollection<WebhookLog>('webhook_logs', undefined, (data) => {
+      setWebhookLogs(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    });
+
     return () => {
         integrationsListener.unsubscribe();
         logsListener.unsubscribe();
+        webhookLogsListener.unsubscribe();
     };
   }, []);
 
@@ -68,5 +74,5 @@ export function useIntegrations() {
     }
   };
 
-  return { integrations, logs, loading, refresh, handleTestConnection, testingId, updateApiKey, savingId };
+  return { integrations, logs, webhookLogs, loading, refresh, handleTestConnection, testingId, updateApiKey, savingId };
 }

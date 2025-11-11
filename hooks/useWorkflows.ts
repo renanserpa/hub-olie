@@ -22,10 +22,23 @@ export function useWorkflows() {
     useEffect(() => {
         loadData();
     }, [loadData]);
+    
+    const updateRuleStatus = async (ruleId: string, isActive: boolean) => {
+        try {
+            // Optimistic update
+            setRules(prev => prev.map(r => r.id === ruleId ? { ...r, is_active: isActive } : r));
+            await dataService.updateWorkflowRule(ruleId, isActive);
+            toast({ title: "Sucesso!", description: "Status da regra atualizado." });
+        } catch(error) {
+            toast({ title: "Erro!", description: "Não foi possível atualizar a regra.", variant: "destructive" });
+            loadData(); // Revert
+        }
+    };
 
     return {
         isLoading,
         rules,
+        updateRuleStatus,
         refresh: loadData,
     };
 }

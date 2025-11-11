@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { geminiService } from "../services/geminiService";
 import { dataService } from "../services/dataService";
-import { SystemSettingsLog, SystemSetting } from "../types";
+import { SystemSettingsLog, SystemSetting, SystemSettingsHistory } from "../types";
 import { toast } from "./use-toast";
 
 export interface AISuggestion {
@@ -14,6 +14,7 @@ export interface AISuggestion {
 export function useGovernance() {
   const [logs, setLogs] = useState<SystemSettingsLog[]>([]);
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [history, setHistory] = useState<SystemSettingsHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [applyingSuggestionKey, setApplyingSuggestionKey] = useState<string | null>(null);
@@ -70,5 +71,24 @@ export function useGovernance() {
     }
   }, []);
 
-  return { logs, suggestions, runAIAdjustment, isLoading, isAdjusting, applySuggestion, applyingSuggestionKey };
+  const fetchHistory = useCallback(async (settingKey: string) => {
+    try {
+        const historyData = await dataService.getSettingsHistory(settingKey);
+        setHistory(historyData);
+    } catch(e) {
+        toast({ title: 'Erro', description: 'Não foi possível carregar o histórico.', variant: 'destructive' });
+    }
+  }, []);
+
+  const revertToVersion = useCallback(async (historyId: string) => {
+    try {
+      await dataService.revertSettingValue(historyId);
+      toast({ title: 'Sucesso!', description: 'O parâmetro foi revertido para a versão selecionada.' });
+    } catch(e) {
+      toast({ title: 'Erro', description: 'Não foi possível reverter a alteração.', variant: 'destructive' });
+    }
+  }, []);
+
+
+  return { logs, suggestions, history, runAIAdjustment, isLoading, isAdjusting, applySuggestion, applyingSuggestionKey, fetchHistory, revertToVersion };
 }

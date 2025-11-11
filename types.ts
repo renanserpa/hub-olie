@@ -92,6 +92,39 @@ export interface FieldConfig {
 
 // --- SYSTEM & INITIALIZER ---
 
+export interface SystemRole {
+    id: string;
+    name: UserRole;
+    description: string;
+}
+
+export interface SystemPermission {
+    id: string;
+    role: UserRole;
+    scope: string;
+    read: boolean;
+    write: boolean;
+    update: boolean;
+    delete: boolean;
+}
+
+export interface SystemSettingsHistory {
+    id: string;
+    setting_id: string;
+    setting_key: string;
+    old_value: string;
+    new_value: string;
+    changed_by: string; // user email or 'AI'
+    created_at: string;
+}
+
+export interface WebhookLog {
+    id: string;
+    integration_id: string;
+    payload: any;
+    created_at: string;
+}
+
 export interface SystemAudit {
     id: string;
     key: string;
@@ -545,18 +578,19 @@ export type Priority = 'low' | 'normal' | 'high' | 'urgent';
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 export type ConversationStatus = 'open' | 'closed' | 'pending';
 
+// FIX: Add missing Omnichannel types
 export interface Conversation {
     id: string;
     customerId: string;
     customerName: string;
-    customerHandle: string;
+    customerHandle?: string;
     channel: Channel;
     status: ConversationStatus;
     assigneeId?: string;
     priority: Priority;
     tags: string[];
     unreadCount: number;
-    lastMessageAt: string;
+    lastMessageAt: string; // or Date
     title: string;
     quoteId?: string;
 }
@@ -566,38 +600,50 @@ export interface Message {
     conversationId: string;
     direction: 'in' | 'out' | 'note';
     content: string;
-    authorName: string;
-    createdAt: string;
+    authorName?: string;
+    createdAt: string; // or Date
     status: MessageStatus;
+}
+
+export interface QuoteItem {
+    id: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
 }
 
 export interface Quote {
     id: string;
     status: 'draft' | 'sent' | 'approved' | 'rejected';
-    items: any[];
-    totals: { subtotal: number; shipping: number; grandTotal: number; };
+    items: QuoteItem[];
+    totals: {
+        subtotal: number;
+        shipping: number;
+        grandTotal: number;
+    };
 }
 
-// --- LOGISTICS & INVENTORY ---
-
+// --- INVENTORY ---
+// FIX: Add missing Inventory types
 export interface Warehouse {
     id: string;
     name: string;
-    location: string;
+    location?: string;
 }
 
 export interface InventoryBalance {
     id: string;
     material_id: string;
-    material?: Material;
-    product_variant_id?: string;
-    product_variant?: ProductVariant;
+    product_variant_id?: string | null;
     warehouse_id: string;
-    warehouse?: Warehouse;
     current_stock: number;
     reserved_stock: number;
     location?: string;
     updated_at: string;
+    material?: Material;
+    product_variant?: ProductVariant;
+    warehouse?: Warehouse;
 }
 
 export type InventoryMovementType = 'in' | 'out' | 'adjust' | 'transfer';
@@ -613,29 +659,30 @@ export type InventoryMovementReason =
 
 export interface InventoryMovement {
     id: string;
-    material_id: string;
+    material_id?: string;
     product_variant_id?: string;
     type: InventoryMovementType;
     quantity: number;
     reason: InventoryMovementReason;
-    ref?: string;
+    ref?: string; // PO number, Order number, etc.
     notes?: string;
-    warehouse_id: string;
+    warehouse_id?: string;
     created_at: string;
 }
 
+// --- LOGISTICS ---
+// FIX: Add missing Logistics types
 export type LogisticsTab = 'queue' | 'picking' | 'shipment' | 'settings';
+export type ShipmentStatus = 'pending' | 'quoted' | 'label_created' | 'in_transit' | 'delivered';
 
 export interface LogisticsWave {
     id: string;
     wave_number: string;
-    status: 'pending' | 'in_progress' | 'completed';
+    status: 'pending' | 'picking' | 'packing' | 'completed';
     order_ids: string[];
     created_by: string;
     created_at: string;
 }
-
-export type ShipmentStatus = 'pending' | 'quoted' | 'label_created' | 'in_transit' | 'delivered';
 
 export interface LogisticsShipment {
     id: string;
@@ -647,53 +694,8 @@ export interface LogisticsShipment {
     created_at: string;
 }
 
-export interface LogisticsPickTask {
-    id: string;
-    wave_id: string;
-    order_id: string;
-    order_item_id: string;
-    product_name?: string;
-    variant_sku?: string;
-    quantity: number;
-    picked_quantity: number;
-    status: 'pending' | 'picked';
-    picker_id?: string;
-    picked_at?: string;
-    created_at: string;
-}
-
-
-// --- PURCHASING ---
-export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
-
-export interface PurchaseOrder {
-    id: string;
-    po_number: string;
-    supplier_id: string;
-    supplier?: Supplier;
-    status: PurchaseOrderStatus;
-    items: PurchaseOrderItem[];
-    total: number;
-    created_at: string;
-    updated_at: string;
-    issued_at?: string;
-    received_at?: string;
-    expected_delivery_date?: string;
-}
-
-export interface PurchaseOrderItem {
-    id: string;
-    po_id: string;
-    material_id: string;
-    material_name: string;
-    material?: Material;
-    quantity: number;
-    received_quantity: number;
-    unit_price: number;
-    total: number;
-}
-
 // --- MARKETING ---
+// FIX: Add missing Marketing types
 export type MarketingChannel = 'email' | 'sms' | 'whatsapp' | 'instagram';
 export type MarketingCampaignStatus = 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled';
 
@@ -745,19 +747,49 @@ export interface MarketingTemplate {
     content_preview: string;
 }
 
-// --- ANALYTICS & FINANCE ---
-export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing' | 'login';
-export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
+// --- PURCHASING ---
+// FIX: Add missing Purchasing types
+export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
 
+export interface PurchaseOrder {
+    id: string;
+    po_number: string;
+    supplier_id: string;
+    status: PurchaseOrderStatus;
+    total: number;
+    created_at: string;
+    updated_at: string;
+    issued_at?: string;
+    received_at?: string;
+    expected_delivery_date?: string;
+    supplier?: Supplier;
+    items: PurchaseOrderItem[];
+}
+
+export interface PurchaseOrderItem {
+    id: string;
+    po_id: string;
+    material_id: string;
+    material_name?: string;
+    quantity: number;
+    received_quantity: number;
+    unit_price: number;
+    total: number;
+    material?: Material;
+}
+
+// --- ANALYTICS ---
+// FIX: Add missing Analytics types
+export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing';
 
 export interface AnalyticsKPI {
     id: string;
     module: AnalyticsModule;
     name: string;
     value: string | number;
-    trend: number;
+    trend?: number;
     unit?: string;
-    description: string;
+    description?: string;
 }
 
 export interface AnalyticsSnapshot {
@@ -766,6 +798,10 @@ export interface AnalyticsSnapshot {
     value: number;
     recorded_at: string;
 }
+
+// --- EXECUTIVE ---
+// FIX: Add missing Executive types
+export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
 
 export interface ExecutiveKPI {
     id: string;
@@ -787,10 +823,12 @@ export interface AIInsight {
     generated_at: string;
 }
 
+// --- FINANCE ---
+// FIX: Add missing Finance types
 export interface FinanceAccount {
     id: string;
     name: string;
-    type: 'checking' | 'savings' | 'credit_card' | 'investment';
+    type: 'checking' | 'savings' | 'investment' | 'credit';
     balance: number;
 }
 
@@ -798,7 +836,7 @@ export interface FinanceCategory {
     id: string;
     name: string;
     type: 'income' | 'expense';
-    parent_category_id?: string;
+    parent_category_id?: string | null;
 }
 
 export interface FinanceTransaction {
@@ -807,13 +845,13 @@ export interface FinanceTransaction {
     amount: number;
     type: 'income' | 'expense';
     transaction_date: string;
-    status: 'pending' | 'cleared' | 'cancelled';
+    status: 'cleared' | 'pending' | 'cancelled';
     account_id: string;
-    account?: FinanceAccount;
     category_id: string;
-    category?: FinanceCategory;
     notes?: string;
     created_at: string;
+    account?: FinanceAccount;
+    category?: FinanceCategory;
 }
 
 export interface FinancePayable {
@@ -821,7 +859,7 @@ export interface FinancePayable {
     purchase_order_id: string;
     amount: number;
     due_date: string;
-    status: 'pending' | 'paid';
+    status: 'pending' | 'paid' | 'overdue';
 }
 
 export interface FinanceReceivable {
@@ -829,11 +867,11 @@ export interface FinanceReceivable {
     order_id: string;
     amount: number;
     due_date: string;
-    status: 'pending' | 'paid';
+    status: 'pending' | 'paid' | 'overdue';
 }
 
-
-// --- MISC ---
+// --- TASK MANAGEMENT ---
+// FIX: Add missing Task types
 export interface TaskStatus {
     id: string;
     name: string;
@@ -850,21 +888,26 @@ export interface Task {
     priority: 'baixa' | 'normal' | 'alta' | 'urgente';
 }
 
+// --- MEDIA ---
+// FIX: Add MediaAsset type
 export interface MediaAsset {
     id: string;
     drive_file_id: string;
     module: string;
     category: string;
     name: string;
-    mime_type: string;
-    size: number;
+    mime_type?: string;
+    size?: number;
     url_public: string;
     created_at: string;
 }
 
+
+// --- DASHBOARD ---
+// FIX: Add ActivityItem type
 export interface ActivityItem {
     id: string;
-    type: 'order' | 'contact' | 'production' | 'note';
+    type: 'order' | 'contact' | 'production';
     timestamp: string;
     title: string;
     description: string;
@@ -872,15 +915,18 @@ export interface ActivityItem {
     icon: React.ElementType;
 }
 
+
+// --- APP DATA ---
+// FIX: Add AppData type
 export interface AppData {
     catalogs: {
         paletas_cores: ColorPalette[];
         cores_texturas: {
             tecido: FabricColor[];
             ziper: ZipperColor[];
+            vies: BiasColor[];
             forro: LiningColor[];
             puxador: PullerColor[];
-            vies: BiasColor[];
             bordado: EmbroideryColor[];
             texturas: FabricTexture[];
         };
@@ -928,19 +974,16 @@ export interface AppData {
     suppliers: Supplier[];
     purchase_orders: PurchaseOrder[];
     purchase_order_items: PurchaseOrderItem[];
-
     analytics_kpis: AnalyticsKPI[];
     analytics_snapshots: AnalyticsSnapshot[];
     executive_kpis: ExecutiveKPI[];
     executive_ai_insights: AIInsight[];
     analytics_login_events: any[];
-    
     finance_accounts: FinanceAccount[];
     finance_categories: FinanceCategory[];
     finance_transactions: FinanceTransaction[];
     finance_payables: FinancePayable[];
     finance_receivables: FinanceReceivable[];
-
     config_integrations: Integration[];
     integration_logs: IntegrationLog[];
     initializer_agents: InitializerAgent[];
