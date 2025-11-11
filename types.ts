@@ -220,6 +220,20 @@ export interface WorkflowRule {
     type?: 'standard' | 'cognitive';
 }
 
+export interface EdgeHealthStatus {
+  name: string;
+  status: 'ok' | 'error' | 'timeout';
+  responseTime: number;
+}
+
+export interface RlsPolicyStatus {
+  table: string;
+  policyName: string;
+  isEnabled: boolean;
+  command: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'ALL';
+  roles: string[];
+}
+
 // --- CONTACTS ---
 
 export type ContactStage = 'Lead' | 'Cliente Ativo' | 'Contato Geral' | 'Fornecedor' | 'Inativo';
