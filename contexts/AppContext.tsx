@@ -14,6 +14,13 @@ const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
     Conteudo: 'marketing',
 };
 
+interface MfaChallenge {
+    amr: {
+        method: string;
+        timestamp: number;
+    }[];
+}
+
 interface AppContextType {
   user: UserProfile | null;
   isLoading: boolean;
@@ -23,6 +30,8 @@ interface AppContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   isAIEnabled: boolean;
+  mfaChallenge: MfaChallenge | null;
+  setMfaChallenge: (challenge: MfaChallenge | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -42,6 +51,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isAIEnabled, setIsAIEnabled] = useState(false); // AI Layer is disabled
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+  const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
   const hasRedirected = useRef(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -103,7 +113,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, isLoading, performRedirection]);
 
-  const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme, isAIEnabled };
+  const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme, isAIEnabled, mfaChallenge, setMfaChallenge };
 
   return (
     <AppContext.Provider value={value}>

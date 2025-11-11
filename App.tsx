@@ -26,6 +26,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle';
 import NotificationBell from './components/NotificationBell';
 import { useApp } from './contexts/AppContext';
 import { useOlie } from './contexts/OlieContext';
+import Verify2FA from './components/Verify2FA';
 
 
 const MAIN_TABS = [
@@ -57,7 +58,7 @@ const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (
 );
 
 const App: React.FC = () => {
-    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule, isAIEnabled } = useApp();
+    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule, isAIEnabled, mfaChallenge, setMfaChallenge } = useApp();
     const { can, goto } = useOlie();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -131,6 +132,11 @@ const App: React.FC = () => {
                 <p className="text-red-600 mt-2 max-w-md">{authError}</p>
              </div>
         )
+    }
+    
+    // MFA Challenge Flow
+    if (mfaChallenge) {
+        return <Verify2FA amr={mfaChallenge.amr} onVerified={() => setMfaChallenge(null)} />
     }
 
     if (!user) {

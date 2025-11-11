@@ -741,7 +741,7 @@ export interface MarketingTemplate {
 }
 
 // --- ANALYTICS & FINANCE ---
-export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing';
+export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing' | 'login';
 export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
 
 
