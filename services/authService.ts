@@ -20,6 +20,10 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
 
   if (loginError) {
+    if (loginError instanceof (supabase as any).auth.AuthMultiFactorAuthenticationError) {
+        // This specific error is caught by the UI to trigger the 2FA flow
+        throw loginError;
+    }
     if (loginError.message.includes('Invalid login credentials')) {
         throw new Error('Credenciais inválidas. Verifique seu e-mail e senha.');
     }
@@ -122,3 +126,35 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void):
 
     return () => subscription?.unsubscribe();
 };
+
+// --- 2FA (TOTP) Functions ---
+
+export const enrollTotp = async (): Promise<{ qr_code: string; factorId: string }> => {
+    const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+    });
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("Failed to enroll TOTP factor.");
+    return { qr_code: data.totp.qr_code, factorId: data.id };
+};
+
+export const verifyTotpChallenge = async (factorId: string, code: string): Promise<void> => {
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+        factorId,
+        code,
+    });
+    if (error) throw new Error(error.message);
+};
+
+export const unenrollTotp = async (factorId: string): Promise<void> => {
+    const { error } = await supabase.auth.mfa.unenroll({
+        factorId,
+    });
+    if (error) throw new Error(error.message);
+};
+
+export const getFactors = async () => {
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) throw new Error(error.message);
+    return data;
+}

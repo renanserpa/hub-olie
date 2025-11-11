@@ -4,7 +4,7 @@ import { Button } from './ui/Button';
 import { Loader2, Mail } from 'lucide-react';
 import { sendPasswordResetEmail } from '../services/authService';
 import { toast } from '../hooks/use-toast';
-import { analyticsService } from '../services/analyticsService';
+import { trackLoginEvent } from '../services/analyticsService';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
     setIsLoading(true);
     try {
       await sendPasswordResetEmail(email);
-      analyticsService.trackEvent('password_reset_request', { email });
+      trackLoginEvent('password_reset_request');
       setIsSent(true);
     } catch (error) {
       toast({

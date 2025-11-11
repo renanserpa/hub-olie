@@ -6,12 +6,14 @@ import { toast } from '../hooks/use-toast';
 import BootstrapModal from './BootstrapModal';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { cn } from '../lib/utils';
-import { analyticsService } from '../services/analyticsService';
+import { trackLoginEvent } from '../services/analyticsService';
 import { useTranslation } from '../hooks/useTranslation';
+import { useApp } from '../contexts/AppContext';
 
 type LoginView = 'password' | 'magiclink' | 'magiclink_sent';
 
 const LoginPage: React.FC = () => {
+  const { setMfaChallenge } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +23,7 @@ const LoginPage: React.FC = () => {
   const [isMascotFocused, setIsMascotFocused] = useState(false);
   const [loginError, setLoginError] = useState(false);
   const { t, setLanguage, language } = useTranslation();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,13 +39,19 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      analyticsService.trackEvent('login_success', { email });
+      trackLoginEvent('login_success', { method: 'password' });
       toast({ title: 'Login bem-sucedido!', description: 'Bem-vindo(a) ao Olie Hub.' });
     } catch (err) {
-      analyticsService.trackEvent('login_failure', { email, metadata: { error: (err as Error).message } });
-      handleAuthError(err as Error);
-      setLoginError(true);
-      setTimeout(() => setLoginError(false), 820);
+      const error = err as Error;
+      if ((error as any).name === 'AuthMultiFactorAuthenticationError') {
+          trackLoginEvent('2fa_challenge');
+          setMfaChallenge({ amr: (error as any).amr });
+      } else {
+          trackLoginEvent('login_failure', { method: 'password', metadata: { error: error.message } });
+          handleAuthError(error);
+          setLoginError(true);
+          setTimeout(() => setLoginError(false), 820);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,9 +66,10 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await signInWithMagicLink(email);
-      analyticsService.trackEvent('magic_link_request', { email });
+      trackLoginEvent('magic_link_request', { method: 'magic_link' });
       setView('magiclink_sent');
     } catch (err) {
+      trackLoginEvent('login_failure', { method: 'magic_link', metadata: { error: (err as Error).message }});
       handleAuthError(err as Error);
     } finally {
       setIsLoading(false);
@@ -69,10 +79,11 @@ const LoginPage: React.FC = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-        analyticsService.trackEvent('google_login_request');
+        trackLoginEvent('login_success', { method: 'google' });
         await signInWithGoogle();
         // Redirection will be handled by Supabase
     } catch (error) {
+        trackLoginEvent('login_failure', { method: 'google', metadata: { error: (error as Error).message }});
         handleAuthError(error as Error);
         setIsLoading(false);
     }
@@ -191,7 +202,17 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center justify-center bg-secondary dark:bg-dark-secondary p-12 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <img src="/elephant.png" alt="Mascote Elefante" className={cn("w-48 h-auto transition-transform duration-300", isMascotFocused && "scale-110 -rotate-3")}/>
+              <img 
+                src="/elephant.png" 
+                alt="Mascote Elefante"
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+                className={cn(
+                    "w-48 h-auto transition-all duration-500", 
+                    isMascotFocused && "scale-110 -rotate-3",
+                    imageLoaded ? "opacity-100" : "opacity-0 blur-sm"
+                )}
+              />
           </div>
 
         </div>

@@ -1,35 +1,41 @@
 // services/analyticsService.ts
-import { dataService } from './dataService';
+import { supabase } from '../lib/supabaseClient';
 
-type LoginEvent = 
+export type LoginEventName =
   | 'login_success'
   | 'login_failure'
+  | 'password_reset_request'
   | 'magic_link_request'
-  | 'google_login_request'
-  | 'password_reset_request';
+  | 'google_login_request' // Keep for consistency
+  | '2fa_challenge'
+  | '2fa_success'
+  | '2fa_failure';
 
-interface EventPayload {
-  event_name: LoginEvent;
-  user_email?: string;
-  metadata?: Record<string, any>;
-  created_at?: string;
-}
+export type LoginMethod = 'password' | 'magic_link' | 'google' | 'other';
 
-export const analyticsService = {
-  trackEvent: async (event: LoginEvent, payload?: { email?: string; metadata?: Record<string, any> }) => {
-    try {
-      const eventData: Omit<EventPayload, 'id'> = {
-        event_name: event,
-        user_email: payload?.email,
-        metadata: payload?.metadata,
-        created_at: new Date().toISOString(),
-      };
-      // We assume a table 'analytics_login_events' exists.
-      // This call will fail gracefully if it doesn't.
-      await dataService.addDocument('analytics_login_events', eventData);
-      console.log(`[Analytics] Tracked event: ${event}`);
-    } catch (error) {
-      console.warn(`[Analytics] Failed to track event '${event}':`, (error as Error).message);
+
+export const trackLoginEvent = async (
+  event_name: LoginEventName,
+  payload?: { method?: LoginMethod; metadata?: Record<string, any> }
+) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const eventData = {
+      event_name,
+      method: payload?.method ?? null,
+      user_id: user?.id ?? null,
+      metadata: payload?.metadata ?? null
+    };
+
+    const { error } = await supabase.from('analytics_login_events').insert(eventData);
+
+    if (error) {
+        throw error;
     }
-  },
+
+    console.log(`[Analytics] Tracked event: ${event_name}`);
+  } catch (error) {
+    console.warn(`[Analytics] Failed to track event '${event_name}':`, (error as Error).message);
+  }
 };
