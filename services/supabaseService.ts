@@ -168,7 +168,7 @@ export const supabaseService = {
             return [];
         }
         
-        if (error?.code === '42P01') {
+        if (error?.code === '42P01' || (error?.message && (error.message.includes('does not exist') || error.message.includes('in the schema cache')))) {
             console.warn(`[dataService] Table "${table}" does not exist. Returning an empty array.`);
             return [];
         }
@@ -321,7 +321,7 @@ export const supabaseService = {
   },
 
   getPermissions: async (): Promise<any[]> => {
-      // For Idea #002. This table won't exist yet, so handleError will kick in.
+      // For Idea #002. This table won't exist yet, so getCollection will return []
       return supabaseService.getCollection('system_permissions');
   },
 
@@ -335,10 +335,35 @@ export const supabaseService = {
 
   getUsers: (): Promise<UserProfile[]> => supabaseService.getCollection('profiles'),
   updateUser: (userId: string, data: Partial<UserProfile>): Promise<UserProfile> => updateDocument('profiles', userId, data),
-  addUser: (userData: any): Promise<UserProfile> => {
-      const err = new Error('User creation from client is insecure and not implemented. This requires a Supabase Edge Function to call `supabase.auth.admin.createUser()` and then insert into profiles.');
-      handleError(err, 'addUser');
-      return Promise.reject(err);
+  addUser: async (userData: Partial<UserProfile> & { password?: string }): Promise<UserProfile> => {
+      const { email, password, role } = userData;
+      if (!email || !password || !role) {
+        throw new Error("Email, password, and role are required to create a new user.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('invite-user', {
+        body: { email, password, role },
+      });
+      
+      if (error) {
+        if (error instanceof (supabase as any).functions.FunctionsHttpError) {
+          const errorMessage = await error.context.json();
+          throw new Error(errorMessage.error || `HTTP Error ${error.context.status}: ${error.context.statusText}`);
+        }
+        if (error instanceof (supabase as any).functions.FunctionsRelayError) {
+           throw new Error(`Relay Error: ${error.message}`);
+        }
+        if (error instanceof (supabase as any).functions.FunctionsFetchError) {
+           throw new Error(`Network Error: ${error.message}`);
+        }
+        throw new Error(error.message);
+      }
+      
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
+
+      return { id: 'temp-id', ...userData } as UserProfile;
   },
   
   getMaterials: (): Promise<Material[]> => supabaseService.getCollection('config_materials', '*, config_supply_groups(name)'),
