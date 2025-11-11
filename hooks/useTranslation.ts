@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import pt from '../locales/pt.json';
-import en from '../locales/en.json';
+import pt from '/locales/pt.json';
+import en from '/locales/en.json';
 
 const translations = { pt, en };
 type Language = 'pt' | 'en';
