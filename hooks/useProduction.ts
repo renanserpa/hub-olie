@@ -88,11 +88,15 @@ export function useProduction() {
         const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, (data) => {
             setAllQualityChecks(data as ProductionQualityCheck[]);
         });
+        const routesListener = dataService.listenToCollection('production_routes', undefined, (data) => setAllRoutes(data as ProductionRoute[]));
+        const moldsListener = dataService.listenToCollection('mold_library', undefined, (data) => setAllMolds(data as MoldLibrary[]));
 
         return () => {
             ordersListener.unsubscribe();
             tasksListener.unsubscribe();
             qualityListener.unsubscribe();
+            routesListener.unsubscribe();
+            moldsListener.unsubscribe();
         };
     }, [loadAuxData]);
 
@@ -152,6 +156,27 @@ export function useProduction() {
         };
     }, [allOrders, allQualityChecks]);
     
+    const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
+        setIsSaving(true);
+        try {
+            await mutationFn;
+            toast({ title: "Sucesso!", description: successMsg });
+        } catch (e) {
+            toast({ title: "Erro!", description: (e as Error).message, variant: "destructive" });
+            throw e;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const addRoute = (item: any) => handleMutation(dataService.addDocument('production_routes', item), `Rota adicionada.`);
+    const updateRoute = (item: any) => handleMutation(dataService.updateDocument('production_routes', item.id, item), `Rota atualizada.`);
+    const deleteRoute = (id: string) => handleMutation(dataService.deleteDocument('production_routes', id), `Rota excluída.`);
+    const addMold = (item: any) => handleMutation(dataService.addDocument('mold_library', item), `Molde adicionado.`);
+    const updateMold = (item: any) => handleMutation(dataService.updateDocument('mold_library', item.id, item), `Molde atualizado.`);
+    const deleteMold = (id: string) => handleMutation(dataService.deleteDocument('mold_library', id), `Molde excluído.`);
+
+
     const updateTaskStatus = async (taskId: string, status: ProductionTaskStatus) => {
         setIsSaving(true);
         const task = allTasks.find(t => t.id === taskId);
@@ -242,6 +267,8 @@ export function useProduction() {
         filteredOrders,
         allMaterials,
         allProducts,
+        allRoutes,
+        allMolds,
         isLoading,
         isSaving,
         selectedOrder,
@@ -253,6 +280,8 @@ export function useProduction() {
         updateProductionOrderStatus,
         createQualityCheck,
         createProductionOrder,
+        addRoute, updateRoute, deleteRoute,
+        addMold, updateMold, deleteMold,
         viewMode,
         setViewMode,
         isCreateDialogOpen,

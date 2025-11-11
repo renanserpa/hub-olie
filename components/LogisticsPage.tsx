@@ -14,6 +14,8 @@ const LogisticsPage: React.FC = () => {
         activeTab,
         setActiveTab,
         pickingQueue,
+        allWaves,
+        allPickTasks,
         allShipments,
         isWaveDialogOpen,
         setIsWaveDialogOpen,
@@ -38,7 +40,7 @@ const LogisticsPage: React.FC = () => {
                     />
                 );
             case 'picking':
-                return <PickingPackingPanel />;
+                return <PickingPackingPanel waves={allWaves} pickTasks={allPickTasks} />;
             case 'shipment':
                 return <ShipmentBoard shipments={allShipments} />;
             case 'settings':

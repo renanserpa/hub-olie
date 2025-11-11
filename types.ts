@@ -697,6 +697,21 @@ export interface LogisticsShipment {
     created_at: string;
 }
 
+export interface LogisticsPickTask {
+    id: string;
+    wave_id: string;
+    order_id: string;
+    order_item_id: string;
+    product_name: string;
+    variant_sku?: string | null;
+    quantity: number;
+    picked_quantity: number;
+    status: 'pending' | 'picking' | 'picked';
+    picker_id?: string | null;
+    picked_at?: string | null;
+    created_at: string;
+}
+
 // --- MARKETING ---
 // FIX: Add missing Marketing types
 export type MarketingChannel = 'email' | 'sms' | 'whatsapp' | 'instagram';
@@ -969,6 +984,7 @@ export interface AppData {
     };
     logistics_waves: LogisticsWave[];
     logistics_shipments: LogisticsShipment[];
+    logistics_pick_tasks: LogisticsPickTask[];
     inventory_balances: InventoryBalance[];
     inventory_movements: InventoryMovement[];
     marketing_campaigns: MarketingCampaign[];

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, LogisticsWave, LogisticsShipment, LogisticsTab } from '../../types';
+import { Order, LogisticsWave, LogisticsShipment, LogisticsTab, LogisticsPickTask } from '../../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ export function useLogistics() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [allWaves, setAllWaves] = useState<LogisticsWave[]>([]);
     const [allShipments, setAllShipments] = useState<LogisticsShipment[]>([]);
+    const [allPickTasks, setAllPickTasks] = useState<LogisticsPickTask[]>([]);
     
     // UI states
     const [isWaveDialogOpen, setIsWaveDialogOpen] = useState(false);
@@ -22,10 +23,11 @@ export function useLogistics() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const { orders, waves, shipments } = await dataService.getLogisticsData();
+            const { orders, waves, shipments, pickTasks } = await dataService.getLogisticsData();
             setAllOrders(orders as Order[]);
             setAllWaves(waves);
             setAllShipments(shipments);
+            setAllPickTasks(pickTasks);
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível carregar os dados de logística.", variant: "destructive" });
         } finally {
@@ -93,6 +95,7 @@ export function useLogistics() {
         pickingQueue,
         allWaves,
         allShipments,
+        allPickTasks,
 
         // Dialogs and Actions
         isWaveDialogOpen,

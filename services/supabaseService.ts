@@ -71,6 +71,7 @@ import {
     SystemRole,
     SystemPermission,
     WebhookLog,
+    LogisticsPickTask,
 } from "../types";
 
 
@@ -243,7 +244,7 @@ export const supabaseService = {
         const [
             sistema, system_settings_logs, config_supply_groups, config_materials, warehouses, mold_library, production_routes, media_assets, orders, order_items, customers, profiles, products, product_variants, product_categories, collections, production_orders, production_tasks, production_quality_checks, task_statuses, tasks, 
             omni_conversations, omni_messages, omni_quotes,
-            logistics_waves, logistics_shipments, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates, suppliers, purchase_orders, purchase_order_items,
+            logistics_waves, logistics_shipments, logistics_pick_tasks, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates, suppliers, purchase_orders, purchase_order_items,
             analytics_kpis, analytics_snapshots, executive_kpis, executive_ai_insights, analytics_login_events,
             finance_accounts, finance_categories, finance_transactions, finance_payables, finance_receivables,
             config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit,
@@ -275,6 +276,7 @@ export const supabaseService = {
             supabaseService.getCollection<any>('quotes'),
             supabaseService.getCollection<LogisticsWave>('logistics_waves'),
             supabaseService.getCollection<LogisticsShipment>('logistics_shipments'),
+            supabaseService.getCollection<LogisticsPickTask>('logistics_pick_tasks'),
             supabaseService.getCollection<InventoryBalance>('inventory_balances'),
             supabaseService.getCollection<InventoryMovement>('inventory_movements'),
             supabaseService.getCollection<MarketingCampaign>('marketing_campaigns'),
@@ -318,7 +320,7 @@ export const supabaseService = {
             logistica: { metodos_entrega: [], calculo_frete: [], tipos_embalagem: [], tipos_vinculo: [] },
             sistema, system_settings_logs, config_supply_groups, config_materials, warehouses, mold_library, production_routes, media_assets, orders, order_items, customers, profiles, products, product_variants, product_categories, collections, production_orders, production_tasks, production_quality_checks, task_statuses, tasks,
             omnichannel: { conversations: omni_conversations, messages: omni_messages, quotes: omni_quotes },
-            logistics_waves, logistics_shipments, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates, suppliers, purchase_orders, purchase_order_items,
+            logistics_waves, logistics_shipments, logistics_pick_tasks, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates, suppliers, purchase_orders, purchase_order_items,
             analytics_kpis, analytics_snapshots, executive_kpis, executive_ai_insights, analytics_login_events,
             finance_accounts, finance_categories, finance_transactions, finance_payables, finance_receivables,
             config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit,
@@ -449,12 +451,13 @@ export const supabaseService = {
   getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection<ProductionRoute>('production_routes'),
   getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection<MoldLibrary>('mold_library'),
   getLogisticsData: async () => {
-    const [orders, waves, shipments] = await Promise.all([
+    const [orders, waves, shipments, pickTasks] = await Promise.all([
         supabaseService.getCollection<Order>('orders', '*, customers(name)'),
         supabaseService.getCollection<LogisticsWave>('logistics_waves'),
         supabaseService.getCollection<LogisticsShipment>('logistics_shipments'),
+        supabaseService.getCollection<LogisticsPickTask>('logistics_pick_tasks'),
     ]);
-    return { orders, waves, shipments };
+    return { orders, waves, shipments, pickTasks };
   },
   getPurchasingData: async () => {
     const [suppliers, purchase_orders] = await Promise.all([

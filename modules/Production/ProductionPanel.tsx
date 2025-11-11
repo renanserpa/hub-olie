@@ -10,6 +10,7 @@ import ProductionTimeline from './ProductionTimeline';
 import ProductionQualityPanel from './ProductionQualityPanel';
 import PlaceholderContent from '../../components/PlaceholderContent';
 import { AuthUser } from '../../types';
+import ProductionSettingsPanel from './ProductionSettingsPanel';
 
 const TABS = [
   { id: 'kanban', label: 'Kanban de OPs', icon: LayoutGrid },
@@ -53,7 +54,7 @@ export default function ProductionPanel() {
       case 'quality':
         return <ProductionQualityPanel checks={filteredOrders.flatMap(o => o.quality_checks || [])} />;
       case 'settings':
-        return <PlaceholderContent title="Configurações de Produção" requiredTable="production_routes" icon={Settings} />;
+        return <ProductionSettingsPanel />;
       default:
         return null;
     }
