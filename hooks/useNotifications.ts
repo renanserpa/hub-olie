@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Notification } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
@@ -8,35 +8,42 @@ export function useNotifications() {
     const { user } = useApp();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    // FIX: The useRef hook was called without an initial value, which is not allowed by some TypeScript configurations when a generic type is provided. Initializing it with 'undefined' resolves the error.
+    const prevNotificationsRef = useRef<Notification[] | undefined>(undefined);
+    
+    useEffect(() => {
+        // Keep the ref updated with the latest notifications state on every render
+        prevNotificationsRef.current = notifications;
+    });
 
     useEffect(() => {
         if (!user) {
-            setIsLoading(false);
             setNotifications([]);
+            setIsLoading(false);
             return;
         }
 
         setIsLoading(true);
-        const listener = dataService.listenToCollection<Notification>('notifications', undefined, (data) => {
+        
+        const handleData = (data: Notification[]) => {
             const sortedData = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-            setNotifications(prevNotifications => {
-                // This check avoids showing toasts on the initial load.
-                if (prevNotifications.length > 0) {
-                     const newUnread = sortedData.find(n => !n.is_read && !prevNotifications.some(old => old.id === n.id));
-                    if(newUnread) {
-                        toast({ title: newUnread.title, description: newUnread.message });
-                    }
-                }
-                return sortedData;
-            });
             
+            const prevNotifications = prevNotificationsRef.current;
+            if (prevNotifications && prevNotifications.length > 0) {
+                const newUnread = sortedData.find(n => !n.is_read && !prevNotifications.some(old => old.id === n.id));
+                if (newUnread) {
+                    toast({ title: newUnread.title, description: newUnread.message });
+                }
+            }
+            setNotifications(sortedData);
             setIsLoading(false);
-        });
+        };
+        
+        const listener = dataService.listenToCollection<Notification>('notifications', undefined, handleData);
         
         return () => listener.unsubscribe();
 
-    }, [user]);
+    }, [user?.id]); // Dependency is now on the stable user ID primitive
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 

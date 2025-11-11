@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, LogisticsWave, LogisticsShipment, LogisticsTab, LogisticsPickTask } from '../../types';
+import { Order, LogisticsWave, LogisticsShipment, LogisticsTab, LogisticsPickTask } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { useApp } from '../contexts/AppContext';
