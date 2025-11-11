@@ -21,6 +21,12 @@ export function useWorkflows() {
 
     useEffect(() => {
         loadData();
+        const listener = dataService.listenToCollection<WorkflowRule>('workflow_rules', undefined, (data) => {
+            setRules(data);
+        });
+
+        return () => listener.unsubscribe();
+
     }, [loadData]);
     
     const updateRuleStatus = async (ruleId: string, isActive: boolean) => {

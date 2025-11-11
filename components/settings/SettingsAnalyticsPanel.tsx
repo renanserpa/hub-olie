@@ -3,17 +3,8 @@ import { dataService } from '../../services/dataService';
 import { SystemSettingsHistory } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Loader2, BarChart2, User, Sparkles } from 'lucide-react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-
-const StatCard: React.FC<{ title: string, value: string | number, icon: React.ElementType }> = ({ title, value, icon: Icon }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-textSecondary">{title}</CardTitle>
-            <Icon className="w-4 h-4 text-textSecondary" />
-        </CardHeader>
-        <CardContent><div className="text-2xl font-bold">{value}</div></CardContent>
-    </Card>
-);
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import StatCard from '../dashboard/StatCard';
 
 const SettingsAnalyticsPanel: React.FC = () => {
     const [history, setHistory] = useState<SystemSettingsHistory[]>([]);
@@ -62,13 +53,24 @@ const SettingsAnalyticsPanel: React.FC = () => {
                 <CardHeader>
                     <CardTitle>Origem das Alterações</CardTitle>
                 </CardHeader>
-                <CardContent className="h-64">
+                <CardContent className="h-80">
                      <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                            <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                            <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                                const RADIAN = Math.PI / 180;
+                                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                return (
+                                <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+                                    {`${(percent * 100).toFixed(0)}%`}
+                                </text>
+                                );
+                            }}>
                                 {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                             </Pie>
                             <Tooltip formatter={(value) => `${value} (${((Number(value) / stats.totalChanges) * 100).toFixed(0)}%)`} />
+                            <Legend />
                         </PieChart>
                     </ResponsiveContainer>
                 </CardContent>

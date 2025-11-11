@@ -68,6 +68,9 @@ import {
     PurchaseOrderStatus,
     SystemSettingsHistory,
     ActivityItem,
+    SystemRole,
+    SystemPermission,
+    WebhookLog,
 } from "../types";
 
 
@@ -322,15 +325,16 @@ export const supabaseService = {
         };
   },
   
-  getRoles: (): Promise<any[]> => supabaseService.getCollection('system_roles'),
-  getPermissions: async (): Promise<any[]> => supabaseService.getCollection('system_permissions'),
-  updatePermissions: async (permissions: any[]) => {
-    const { error } = await supabase.from('system_permissions').upsert(permissions, { onConflict: 'role,scope' });
+  getRoles: (): Promise<SystemRole[]> => supabaseService.getCollection('system_roles'),
+  getPermissions: async (): Promise<SystemPermission[]> => supabaseService.getCollection('system_permissions'),
+  updatePermissions: async (permissions: SystemPermission[]) => {
+    const upsertData = permissions.map(({ id, ...rest }) => rest);
+    const { error } = await supabase.from('system_permissions').upsert(upsertData, { onConflict: 'role,scope' });
     if (error) handleError(error, 'updatePermissions');
   },
-  getWebhookLogs: (): Promise<any[]> => supabaseService.getCollection('webhook_logs'),
+  getWebhookLogs: (): Promise<WebhookLog[]> => supabaseService.getCollection('webhook_logs'),
   updateWorkflowRule: (ruleId: string, isActive: boolean) => updateDocument<WorkflowRule>('workflow_rules', ruleId, { is_active: isActive }),
-  getSettingsHistory: async (settingKey: string): Promise<any[]> => {
+  getSettingsHistory: async (settingKey: string): Promise<SystemSettingsHistory[]> => {
     const { data, error } = await supabase.from('system_settings_history').select('*').eq('setting_key', settingKey).order('created_at', { ascending: false });
     if (error) handleError(error, 'getSettingsHistory');
     return data || [];
@@ -339,10 +343,6 @@ export const supabaseService = {
     const historyEntry = await getDocument<SystemSettingsHistory>('system_settings_history', historyId);
     if (!historyEntry) throw new Error("History entry not found");
 
-    const { data: currentSetting } = await supabase.from('system_settings').select('id, value').eq('key', historyEntry.setting_key).single();
-    if (!currentSetting) throw new Error(`Setting with key ${historyEntry.setting_key} not found`);
-
-    // This will trigger the logging function again, creating a new history entry for the revert action.
     await supabaseService.updateSystemSetting(historyEntry.setting_key, JSON.parse(historyEntry.new_value), 'user', 1.0, `Revertido para a versão de ${new Date(historyEntry.created_at).toLocaleString('pt-BR')}`);
   },
 
