@@ -5,12 +5,12 @@ import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 // FIX: Export the bootstrapSqlScript constant to make it available for import.
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.0)
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.1)
 -- Cria TODAS as tabelas, aplica RLS e políticas permissivas.
 -- Este script é IDEMPOTENTE e seguro para ser executado múltiplas vezes.
 
 -- 1️⃣ CONFIGURAÇÃO DE ACESSO (Profiles & Roles)
-CREATE TABLE IF NOT EXISTS public.profiles (id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, email TEXT NOT NULL UNIQUE, role TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS public.profiles (id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, email TEXT NOT NULL UNIQUE, role TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW(), last_login TIMESTAMPTZ);
 CREATE TABLE IF NOT EXISTS public.user_roles (user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, role TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());
 
 -- 2️⃣ CRIAÇÃO DE TODAS AS TABELAS DE NEGÓCIO
@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS public.system_settings_history (id UUID PRIMARY KEY D
 CREATE TABLE IF NOT EXISTS public.webhook_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), integration_id UUID, payload JSONB, status TEXT, retry_count INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.system_roles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT UNIQUE NOT NULL, description TEXT);
 CREATE TABLE IF NOT EXISTS public.system_permissions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), role TEXT NOT NULL, scope TEXT NOT NULL, read BOOLEAN DEFAULT false, write BOOLEAN DEFAULT false, update BOOLEAN DEFAULT false, "delete" BOOLEAN DEFAULT false, UNIQUE(role, scope));
+CREATE TABLE IF NOT EXISTS public.governance_suggestions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), setting_key TEXT NOT NULL, suggested_value JSONB, explanation TEXT, confidence NUMERIC, status TEXT NOT NULL DEFAULT 'suggested', created_at TIMESTAMPTZ DEFAULT now());
+
 
 -- 3️⃣ APLICAÇÃO DE POLÍTICAS RLS PERMISSIVAS PARA TODAS AS TABELAS
 DO $$
@@ -120,6 +122,7 @@ BEGIN
     EXECUTE 'DROP POLICY IF EXISTS "Permitir escrita para usuários autenticados" ON public.' || quote_ident(tbl_name) || ';';
     
     -- ATENÇÃO: Em um ambiente de produção real, as políticas deveriam ser mais restritivas e baseadas em papéis (roles).
+    -- CUIDADO: Esta política é para DESENVOLVIMENTO. Em PRODUÇÃO, substitua por políticas RLS granulares e seguras.
     -- Esta política permissiva resolve os erros de 'violates row-level security policy' para o ambiente de desenvolvimento/homologação.
     EXECUTE 'CREATE POLICY "Permitir acesso total para usuários autenticados" ON public.' || quote_ident(tbl_name) || ' FOR ALL USING (auth.role() = ''authenticated'') WITH CHECK (auth.role() = ''authenticated'');';
 
