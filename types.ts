@@ -30,6 +30,7 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   created_at?: string;
+  last_login?: string | null;
 }
 
 export interface CompanyProfile {

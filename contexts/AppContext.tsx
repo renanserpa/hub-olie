@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { getCurrentUser, listenAuthChanges } from '../services/authService';
-// FIX: Import AuthUser from types.ts to use the centralized type definition.
-import { AuthUser } from '../types';
+import { UserProfile } from '../types';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import WelcomeModal from '../components/WelcomeModal';
+import { dataService } from '../services/dataService';
 
 const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
     AdminGeral: 'dashboard',
@@ -14,7 +15,7 @@ const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
 };
 
 interface AppContextType {
-  user: AuthUser | null;
+  user: UserProfile | null;
   isLoading: boolean;
   error: string | null;
   activeModule: string;
@@ -35,13 +36,36 @@ export const useApp = () => {
 };
 
 const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isAIEnabled, setIsAIEnabled] = useState(false); // AI Layer is disabled
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const hasRedirected = useRef(false);
   const { theme, toggleTheme } = useTheme();
+
+  const performRedirection = useCallback((userRole: string) => {
+      const defaultPage = DEFAULT_PAGE_BY_ROLE[userRole];
+      if (defaultPage) {
+          setActiveModule(defaultPage);
+      }
+      hasRedirected.current = true;
+  }, []);
+
+  const handleWelcomeComplete = useCallback(async () => {
+    if (user) {
+        setIsWelcomeModalOpen(false);
+        try {
+            // FIX: Explicitly provided the 'UserProfile' generic type to ensure TypeScript correctly infers the type of the update payload, allowing the 'last_login' property.
+            await dataService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
+            setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
+        } catch (error) {
+            console.error("Failed to update last_login", error);
+        }
+        performRedirection(user.role);
+    }
+  }, [user, performRedirection]);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,21 +91,32 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {
-        const defaultPage = DEFAULT_PAGE_BY_ROLE[user.role];
-        if (defaultPage) {
-            setActiveModule(defaultPage);
+        if (user.last_login === null) {
+            setIsWelcomeModalOpen(true);
+        } else {
+            performRedirection(user.role);
         }
-        hasRedirected.current = true;
     }
     if (!user && !isLoading) {
         hasRedirected.current = false;
         setActiveModule('dashboard'); 
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, performRedirection]);
 
   const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme, isAIEnabled };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+        {children}
+        {user && (
+             <WelcomeModal 
+                isOpen={isWelcomeModalOpen}
+                user={user}
+                onComplete={handleWelcomeComplete}
+            />
+        )}
+    </AppContext.Provider>
+  );
 };
 
 export const AppContextProvider: React.FC<{children: ReactNode}> = ({ children }) => {
