@@ -64,6 +64,8 @@ import {
     Warehouse,
     MediaAsset,
     ExecutiveKPI,
+    // FIX: Import missing PurchaseOrderStatus type.
+    PurchaseOrderStatus,
 } from "../types";
 
 
