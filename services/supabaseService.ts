@@ -72,6 +72,7 @@ import {
     SystemPermission,
     WebhookLog,
     LogisticsPickTask,
+    GovernanceSuggestion,
 } from "../types";
 
 
@@ -248,7 +249,7 @@ export const supabaseService = {
             analytics_kpis, analytics_snapshots, executive_kpis, executive_ai_insights, analytics_login_events,
             finance_accounts, finance_categories, finance_transactions, finance_payables, finance_receivables,
             config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit,
-            paletas_cores, tecido, ziper, vies, forro, puxador, bordado, texturas, fontes_monogramas,
+            paletas_cores, tecido, ziper, vies, forro, puxador, bordado, texturas, fontes_monogramas, governance_suggestions,
         ] = await Promise.all([
             supabaseService.getCollection<SystemSetting>('system_settings'),
             supabaseService.getCollection<SystemSettingsLog>('system_settings_logs'),
@@ -313,6 +314,7 @@ export const supabaseService = {
             supabaseService.getCollection<EmbroideryColor>('embroidery_colors'),
             supabaseService.getCollection<FabricTexture>('fabric_textures'),
             supabaseService.getCollection<MonogramFont>('config_fonts'),
+            supabaseService.getCollection<GovernanceSuggestion>('governance_suggestions'),
         ]);
         
         return {
@@ -323,7 +325,7 @@ export const supabaseService = {
             logistics_waves, logistics_shipments, logistics_pick_tasks, inventory_balances, inventory_movements, marketing_campaigns, marketing_segments, marketing_templates, suppliers, purchase_orders, purchase_order_items,
             analytics_kpis, analytics_snapshots, executive_kpis, executive_ai_insights, analytics_login_events,
             finance_accounts, finance_categories, finance_transactions, finance_payables, finance_receivables,
-            config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit,
+            config_integrations, integration_logs, initializer_agents, initializer_logs, initializer_sync_state, workflow_rules, notifications, system_audit, production_audit, governance_suggestions,
         };
   },
   
@@ -345,7 +347,10 @@ export const supabaseService = {
     const historyEntry = await getDocument<SystemSettingsHistory>('system_settings_history', historyId);
     if (!historyEntry) throw new Error("History entry not found");
 
-    await supabaseService.updateSystemSetting(historyEntry.setting_key, JSON.parse(historyEntry.new_value), 'user', 1.0, `Revertido para a versão de ${new Date(historyEntry.created_at).toLocaleString('pt-BR')}`);
+    const { data: currentSetting } = await supabase.from('system_settings').select('id, value').eq('key', historyEntry.setting_key).single();
+    if (!currentSetting) throw new Error(`Setting with key ${historyEntry.setting_key} not found`);
+
+    await updateDocument<SystemSetting>('system_settings', currentSetting.id, { value: historyEntry.old_value });
   },
 
   addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
@@ -544,30 +549,14 @@ export const supabaseService = {
         notes: `De ${transferData.from_warehouse_id}`
     });
   },
-  updateSystemSetting: async (key: string, value: any, source: 'user' | 'AI', confidence: number, explanation: string) => {
-    const { data: currentSetting } = await supabase.from('system_settings').select('id, value').eq('key', key).single();
+  updateSystemSetting: async (key: string, value: any) => {
+    const { data: currentSetting } = await supabase.from('system_settings').select('id').eq('key', key).single();
     if (!currentSetting) throw new Error(`Setting with key ${key} not found`);
-    const { data: { user } } = await supabase.auth.getUser();
 
     const newValueString = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
     
+    // The DB trigger will now handle creating history and audit logs automatically.
     await updateDocument<SystemSetting>('system_settings', currentSetting.id, { value: newValueString });
-    await addDocument<SystemSettingsHistory>('system_settings_history', {
-        setting_id: currentSetting.id,
-        setting_key: key,
-        old_value: currentSetting.value,
-        new_value: newValueString,
-        changed_by: source === 'AI' ? 'AI' : user?.email || 'user',
-    } as any);
-    await addDocument<SystemAudit>('system_audit', {
-        key: 'SETTING_UPDATE',
-        status: source === 'AI' ? 'AUTO_APPLIED' : 'MANUAL_APPLIED',
-        details: {
-            setting_key: key,
-            source: source,
-            changed_by: source === 'AI' ? 'AI' : user?.email || 'user'
-        }
-    } as any);
   },
   testConnection: async (): Promise<{ success: boolean; message: string }> => {
     try {

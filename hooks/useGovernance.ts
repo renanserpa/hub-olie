@@ -1,43 +1,30 @@
 import { useEffect, useState, useCallback } from "react";
-import { geminiService } from "../services/geminiService";
 import { dataService } from "../services/dataService";
-import { SystemSettingsLog, SystemSetting, SystemSettingsHistory } from "../types";
+import { SystemSettingsHistory, GovernanceSuggestion } from "../types";
 import { toast } from "./use-toast";
 import { supabase } from "../lib/supabaseClient";
 
-export interface AISuggestion {
-  key: string;
-  newValue: any;
-  confidence: number;
-  explanation: string;
-}
-
 export function useGovernance() {
-  const [logs, setLogs] = useState<SystemSettingsLog[]>([]);
-  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<GovernanceSuggestion[]>([]);
   const [history, setHistory] = useState<SystemSettingsHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdjusting, setIsAdjusting] = useState(false);
-  const [applyingSuggestionKey, setApplyingSuggestionKey] = useState<string | null>(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    const listener = dataService.listenToCollection<SystemSettingsLog>('system_settings_logs', undefined, (data) => {
-        setLogs(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    const listener = dataService.listenToCollection<GovernanceSuggestion>('governance_suggestions', undefined, (data) => {
+        setSuggestions(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setIsLoading(false);
     });
-
     return () => listener.unsubscribe();
   }, []);
 
-
-  const runAIAdjustment = useCallback(async () => {
+  const runAIAnalysis = useCallback(async () => {
     setIsAdjusting(true);
-    setSuggestions([]);
     try {
       const kpis = await dataService.getCollection('analytics_kpis');
-      const settings = await dataService.getCollection<SystemSetting>('system_settings');
+      const settings = await dataService.getCollection('system_settings');
       
       const { data: result, error } = await supabase.functions.invoke('ai-governance', {
         body: { kpis, settings }
@@ -45,12 +32,12 @@ export function useGovernance() {
 
       if (error) throw error;
       
-      setSuggestions(result);
       if (result.length > 0) {
-        toast({ title: 'Análise da IA Concluída', description: `${result.length} sugestão(ões) gerada(s).`});
+        toast({ title: 'Análise da IA Concluída', description: `${result.length} nova(s) sugestão(ões) gerada(s).`});
       } else {
         toast({ title: 'Análise da IA Concluída', description: 'Nenhum ajuste recomendado no momento.'});
       }
+      // Realtime listener will update the suggestions list
     } catch (error) {
         toast({ title: 'Erro na Análise de IA', description: (error as Error).message, variant: 'destructive'});
     } finally {
@@ -58,23 +45,22 @@ export function useGovernance() {
     }
   }, []);
   
-  const applySuggestion = useCallback(async (suggestion: AISuggestion) => {
-    setApplyingSuggestionKey(suggestion.key);
+  const updateSuggestionStatus = useCallback(async (suggestion: GovernanceSuggestion, status: 'accepted' | 'rejected') => {
+    setIsSubmitting(true);
     try {
-      await dataService.updateSystemSetting(
-        suggestion.key,
-        suggestion.newValue,
-        'AI',
-        suggestion.confidence,
-        suggestion.explanation
-      );
-      toast({ title: 'Ajuste Aplicado!', description: `O parâmetro ${suggestion.key} foi atualizado.`});
-      // Remove applied suggestion from the list
-      setSuggestions(prev => prev.filter(s => s.key !== suggestion.key));
+      await dataService.updateDocument<GovernanceSuggestion>('governance_suggestions', suggestion.id, { status });
+      
+      if (status === 'accepted') {
+          await dataService.updateSystemSetting(suggestion.setting_key, suggestion.suggested_value);
+          toast({ title: 'Ajuste Aplicado!', description: `O parâmetro ${suggestion.setting_key} foi atualizado.`});
+      } else {
+          toast({ title: 'Sugestão Rejeitada', description: 'A sugestão foi arquivada.' });
+      }
+      // Realtime listener will handle UI updates
     } catch (error) {
-       toast({ title: 'Erro ao Aplicar Ajuste', description: (error as Error).message, variant: 'destructive'});
+       toast({ title: 'Erro', description: (error as Error).message, variant: 'destructive'});
     } finally {
-      setApplyingSuggestionKey(null);
+      setIsSubmitting(false);
     }
   }, []);
 
@@ -88,14 +74,26 @@ export function useGovernance() {
   }, []);
 
   const revertToVersion = useCallback(async (historyId: string) => {
+    setIsSubmitting(true);
     try {
       await dataService.revertSettingValue(historyId);
       toast({ title: 'Sucesso!', description: 'O parâmetro foi revertido para a versão selecionada.' });
     } catch(e) {
       toast({ title: 'Erro', description: 'Não foi possível reverter a alteração.', variant: 'destructive' });
+    } finally {
+        setIsSubmitting(false);
     }
   }, []);
 
-
-  return { logs, suggestions, history, runAIAdjustment, isLoading, isAdjusting, applySuggestion, applyingSuggestionKey, fetchHistory, revertToVersion };
+  return { 
+      suggestions, 
+      history, 
+      runAIAnalysis, 
+      isLoading, 
+      isAdjusting, 
+      isSubmitting,
+      updateSuggestionStatus,
+      fetchHistory, 
+      revertToVersion 
+    };
 }

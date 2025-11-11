@@ -122,8 +122,21 @@ export interface WebhookLog {
     id: string;
     integration_id: string;
     payload: any;
-    status: 'success' | 'error';
+    status: 'success' | 'error' | 'retrying' | 'failed';
     retry_count: number;
+    created_at: string;
+    last_error?: string;
+    next_retry_at?: string;
+    correlation_id?: string;
+}
+
+export interface GovernanceSuggestion {
+    id: string;
+    setting_key: string;
+    suggested_value: any;
+    explanation: string;
+    confidence: number;
+    status: 'suggested' | 'accepted' | 'rejected';
     created_at: string;
 }
 
@@ -1014,4 +1027,5 @@ export interface AppData {
     notifications: Notification[];
     system_audit: SystemAudit[];
     production_audit: ProductionAudit[];
+    governance_suggestions: GovernanceSuggestion[];
 }

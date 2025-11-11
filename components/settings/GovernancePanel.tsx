@@ -1,12 +1,24 @@
-import React from 'react';
-import { useGovernance, AISuggestion } from '../../hooks/useGovernance';
+import React, { useState, useEffect } from 'react';
+import { dataService } from '../../services/dataService';
+import { SystemSettingsLog } from '../../types';
 import { Button } from '../ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Loader2, Sparkles, History, List, Check } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 
 export function GovernancePanel() {
-  const { logs, isLoading } = useGovernance();
+  const [logs, setLogs] = useState<SystemSettingsLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const listener = dataService.listenToCollection<SystemSettingsLog>('system_settings_logs', undefined, (data) => {
+        setLogs(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        setIsLoading(false);
+    });
+    return () => listener.unsubscribe();
+  }, []);
+
 
   const formatDate = (dateStr: string) => {
       return new Date(dateStr).toLocaleString('pt-BR', {

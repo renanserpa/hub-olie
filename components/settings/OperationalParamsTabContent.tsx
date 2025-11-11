@@ -58,7 +58,8 @@ const OperationalParamsTabContent: React.FC = () => {
                 return;
             }
             for (const setting of changedSettings) {
-                await dataService.updateSystemSetting(setting.key, JSON.parse(setting.value), 'user', 1.0, 'Alteração manual de parâmetro.');
+                // FIX: The updateSystemSetting function now only takes 2 arguments. The DB trigger handles logging.
+                await dataService.updateSystemSetting(setting.key, JSON.parse(setting.value));
             }
 
             toast({ title: 'Sucesso!', description: 'Parâmetros operacionais salvos.' });
