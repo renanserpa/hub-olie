@@ -1,4 +1,3 @@
-
 // A simple event-based toast system to avoid context providers.
 type ToastPayload = {
   title: string;

@@ -66,7 +66,7 @@ export function usePurchasing() {
     // Aux data
     allMaterials,
 
-    // Dialogs
+    // Dialogs for POs
     isPODialogOpen,
     setIsPODialogOpen,
     isReceiveDialogOpen,

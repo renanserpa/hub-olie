@@ -1,12 +1,12 @@
 import React from 'react';
-import { useGovernance } from '../../hooks/useGovernance';
+import { useGovernance, AISuggestion } from '../../hooks/useGovernance';
 import { Button } from '../ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Loader2, Sparkles, History, List } from 'lucide-react';
+import { Loader2, Sparkles, History, List, Check } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 
 export function GovernancePanel() {
-  const { logs, suggestions, runAIAdjustment, isLoading, isAdjusting } = useGovernance();
+  const { logs, suggestions, runAIAdjustment, isLoading, isAdjusting, applySuggestion, applyingSuggestionKey } = useGovernance();
 
   const formatDate = (dateStr: string) => {
       return new Date(dateStr).toLocaleString('pt-BR', {
@@ -24,26 +24,35 @@ export function GovernancePanel() {
         </CardTitle>
         <Button onClick={runAIAdjustment} disabled={isAdjusting} size="sm">
             {isAdjusting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Executar Análise
+            Analisar Sistema
         </Button>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto space-y-6">
         <div>
-            <h3 className="text-sm font-semibold text-textPrimary dark:text-dark-textPrimary mb-2 flex items-center gap-2"><List size={16}/>Ajustes Realizados Nesta Execução</h3>
+            <h3 className="text-sm font-semibold text-textPrimary dark:text-dark-textPrimary mb-2 flex items-center gap-2"><List size={16}/>Sugestões da IA</h3>
             {isAdjusting ? (
                  <div className="text-sm text-textSecondary dark:text-dark-textSecondary flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin"/>Analisando métricas...</div>
             ) : suggestions.length > 0 ? (
                 <div className="space-y-2">
-                    {suggestions.map((s, i) => (
-                        <div key={i} className="border border-primary/50 bg-primary/10 p-3 rounded-lg text-sm animate-fade-in-up">
-                            <p><strong>{s.key}</strong> → {JSON.stringify(s.newValue)}</p>
-                            <p className="text-xs text-primary/80 mt-1">{s.explanation}</p>
-                            <Badge variant="secondary" className="mt-2 text-xs">Confiança: {(s.confidence * 100).toFixed(0)}%</Badge>
-                        </div>
-                    ))}
+                    {suggestions.map((s, i) => {
+                        const isApplying = applyingSuggestionKey === s.key;
+                        return (
+                            <div key={i} className="border border-primary/50 bg-primary/10 p-3 rounded-lg text-sm animate-fade-in-up">
+                                <p className="font-semibold">{s.key}</p>
+                                <p className="text-xs text-primary/80 mt-1">{s.explanation}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                    <Badge variant="secondary" className="text-xs">Confiança: {(s.confidence * 100).toFixed(0)}%</Badge>
+                                    <Button size="sm" variant="secondary" onClick={() => applySuggestion(s)} disabled={isApplying}>
+                                        {isApplying ? <Loader2 className="w-4 h-4 animate-spin"/> : <Check className="w-4 h-4 mr-1"/>}
+                                        Aplicar
+                                    </Button>
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             ) : (
-                <p className="text-sm text-textSecondary dark:text-dark-textSecondary p-3 bg-secondary dark:bg-dark-secondary rounded-lg">Nenhum ajuste automático aplicado nesta execução.</p>
+                <p className="text-sm text-textSecondary dark:text-dark-textSecondary p-3 bg-secondary dark:bg-dark-secondary rounded-lg">Nenhuma sugestão de ajuste no momento.</p>
             )}
         </div>
         <div>

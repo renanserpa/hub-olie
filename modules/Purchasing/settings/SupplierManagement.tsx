@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Plus, Loader2 } from 'lucide-react';
-import { usePurchasing } from '../hooks/usePurchasing';
+import { useSuppliers } from '../hooks/useSuppliers';
 import SuppliersTable from '../../../components/purchases/SuppliersTable';
 import { Supplier } from '../../../types';
 import PlaceholderContent from '../../../components/PlaceholderContent';
@@ -15,7 +15,7 @@ interface SupplierManagementProps {
 }
 
 export default function SupplierManagement({ onNewClick, onEditClick }: SupplierManagementProps) {
-    const { suppliers, isLoading } = usePurchasing();
+    const { suppliers, isLoading, canWrite } = useSuppliers();
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -29,10 +29,10 @@ export default function SupplierManagement({ onNewClick, onEditClick }: Supplier
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Fornecedores Cadastrados</CardTitle>
-                <Button onClick={onNewClick}><Plus className="w-4 h-4 mr-2" />Novo Fornecedor</Button>
+                {canWrite && <Button onClick={onNewClick}><Plus className="w-4 h-4 mr-2" />Novo Fornecedor</Button>}
             </CardHeader>
             <CardContent>
-                <SuppliersTable suppliers={suppliers as any[]} onEdit={onEditClick} canWrite={true}/>
+                <SuppliersTable suppliers={suppliers as any[]} onEdit={onEditClick} canWrite={canWrite}/>
             </CardContent>
         </Card>
     );

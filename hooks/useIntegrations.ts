@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { dataService } from '../services/dataService';
 import { Integration, IntegrationLog } from '../types';
 import { toast } from './use-toast';
+import { integrationsService } from "../services/integrationsService";
 
 export function useIntegrations() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -56,10 +57,10 @@ export function useIntegrations() {
     }
     setSavingId(id);
     try {
-      // NOTE: We are not saving the actual key for security reasons, just updating the record.
-      // In a real app, this would be handled by a secure backend service.
-      await dataService.updateDocument<Integration>('config_integrations', id, { api_key: '********' });
-      toast({ title: 'Chave Salva', description: 'A chave de API foi atualizada.' });
+      await integrationsService.updateApiKey(id, apiKey);
+      toast({ title: 'Chave Enviada', description: 'A chave de API foi enviada para o serviço seguro.' });
+      // In a real app, we might want to refresh the integration status after this
+      // For now, we rely on the realtime listener if the backend updates the record.
     } catch (e) {
       toast({ title: 'Erro ao Salvar Chave', description: (e as Error).message, variant: 'destructive' });
     } finally {

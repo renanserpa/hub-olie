@@ -8,13 +8,10 @@ import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
 import { useCategories } from '../../hooks/useCategories';
 import { useCollections } from '../../hooks/useCollections';
-import { MaterialList } from '../settings/materials/MaterialList';
-import { MaterialDialog } from '../settings/materials/MaterialDialog';
 
 const CATALOG_TABS = [
   { id: 'categories', label: 'Categorias & Coleções', icon: BookOpen },
-  { id: 'personalization', label: 'Personalização', icon: Palette },
-  { id: 'materials', label: 'Insumos', icon: Wrench },
+  { id: 'personalization', label: 'Opções de Personalização', icon: Palette },
 ];
 
 const PERSONALIZATION_SUB_TABS = [
@@ -132,15 +129,6 @@ const CatalogManagement: React.FC = () => {
                         <div className="col-span-12 md:col-span-9">
                             {renderPersonalizationContent()}
                         </div>
-                    </div>
-                );
-            case 'materials':
-                return (
-                     <div className="space-y-4">
-                        <div className="flex justify-end">
-                            <MaterialDialog />
-                        </div>
-                        <MaterialList />
                     </div>
                 );
             default:

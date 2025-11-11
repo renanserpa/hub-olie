@@ -3,21 +3,23 @@ import { Users, SlidersHorizontal, Sparkles, Puzzle, ImageIcon, BarChart, Cpu } 
 import TabLayout from './ui/TabLayout';
 import { useOlie } from '../contexts/OlieContext';
 import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';
-import { GovernancePanel } from './settings/GovernancePanel';
 import IntegrationsTabContent from './IntegrationsTabContent';
 import AppearanceTabContent from './AppearanceTabContent';
 import PlaceholderContent from './PlaceholderContent';
 import InitializerPanel from '../modules/Settings/Initializer/InitializerPanel';
 import OperationalParamsTabContent from './settings/OperationalParamsTabContent';
+import SecurityTabContent from './SecurityTabContent';
+import { GovernancePanel } from './settings/GovernancePanel';
 
 const AuditTabContent: React.FC = () => <PlaceholderContent title="Logs de Auditoria" requiredTable="system_audit" icon={BarChart}><p className="mt-1 text-sm text-textSecondary">Visualize um registro de todas as ações importantes realizadas no sistema.</p></PlaceholderContent>;
 
 const SETTINGS_TABS_BASE = [
   { id: 'teams', label: 'Equipes & Permissões', icon: Users, scope: 'Settings' },
-  { id: 'parameters', label: 'Parâmetros Globais', icon: SlidersHorizontal, scope: 'Settings' },
+  { id: 'parameters', label: 'Parâmetros Operacionais', icon: SlidersHorizontal, scope: 'Settings' },
   { id: 'governance', label: 'Governança IA', icon: Sparkles, scope: 'Settings' },
   { id: 'integrations', label: 'Integrações', icon: Puzzle, scope: 'Settings' },
   { id: 'appearance', label: 'Aparência', icon: ImageIcon, scope: 'Settings' },
+  { id: 'security', label: 'Segurança (RBAC)', icon: Shield, scope: 'Settings'},
   { id: 'audit', label: 'Auditoria', icon: BarChart, scope: 'Settings' },
 ];
 
@@ -41,6 +43,7 @@ const SettingsPage: React.FC = () => {
             case 'governance': return <div className="max-w-3xl mx-auto"><GovernancePanel /></div>;
             case 'integrations': return <IntegrationsTabContent />;
             case 'appearance': return <AppearanceTabContent />;
+            case 'security': return <SecurityTabContent />;
             case 'audit': return <AuditTabContent />;
             case 'initializer': return <InitializerPanel />;
             default: return null;

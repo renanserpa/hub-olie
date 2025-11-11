@@ -37,30 +37,18 @@ export async function dynamicConfigTuner(): Promise<SettingUpdate[]> {
   // For this demo, we'll create another update for freight_params to show multiple changes.
   if (metrics.production_delay_avg > 2) {
     updates.push({
-      key: "freight_params", // Let's reuse for demo purposes
+      key: "production_params", 
       newValue: {
-          radius_km: 12, // a different change
-          base_fee: 18,
-          fee_per_km: 2.5,
-          free_shipping_threshold: 300,
+          priority_production_mode: true,
+          max_wip: 15,
       },
       confidence: 0.92,
-      explanation: `Atrasos na produção (${metrics.production_delay_avg.toFixed(1)} dias) detectados. Ajustando parâmetros de frete como exemplo.`,
+      explanation: `Atrasos na produção (${metrics.production_delay_avg.toFixed(1)} dias) detectados. Sugerindo ativar o modo de produção prioritária.`,
     });
   }
 
   console.log(`🤖 [aiTunerService] Identified ${updates.length} potential adjustments.`);
 
-  for (const u of updates) {
-    console.log(`🤖 [aiTunerService] Applying update for key: ${u.key}`);
-    await dataService.updateSystemSetting(
-        u.key,
-        u.newValue,
-        "AI",
-        u.confidence,
-        u.explanation
-    );
-  }
-
+  // Return suggestions instead of applying them
   return updates;
 }

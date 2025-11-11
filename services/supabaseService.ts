@@ -320,6 +320,11 @@ export const supabaseService = {
         };
   },
 
+  getPermissions: async (): Promise<any[]> => {
+      // For Idea #002. This table won't exist yet, so handleError will kick in.
+      return supabaseService.getCollection('system_permissions');
+  },
+
   addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
   updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getTableNameForSetting(category, subTab, subSubTab), id, data),
   deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getTableNameForSetting(category, subTab, subSubTab), id),
@@ -393,7 +398,7 @@ export const supabaseService = {
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection<ProductionOrder>('production_orders'),
   updateProductionOrderStatus: (id: string, status: ProductionOrderStatus) => updateDocument<ProductionOrder>('production_orders', id, { status, updated_at: new Date().toISOString() }),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection<TaskStatus>('task_statuses'),
-  getTasks: (): Promise<Task[]> => supabaseService.getCollection<Task>('tasks'),
+  getTasks: (): Promise<Task> => supabaseService.getCollection<Task>('tasks'),
   getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection<ProductionRoute>('production_routes'),
   getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection<MoldLibrary>('mold_library'),
   getLogisticsData: async () => {

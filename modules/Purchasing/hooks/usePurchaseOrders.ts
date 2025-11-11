@@ -60,7 +60,6 @@ export function usePurchaseOrders() {
         if (!canWrite) throw new Error("Acesso negado");
         setIsSaving(true);
         try {
-            // FIX: Enrich the items with required data before sending to dataService.
             const materials = await dataService.getCollection<Material>('config_materials');
             const materialMap = new Map(materials.map(m => [m.id, m.name]));
 

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { DefaultRBAC } from '../lib/rbac';
+import { DefaultRBAC, RBACMatrix } from '../lib/rbac';
 import { UserRole } from '../types';
+import { dataService } from '../services/dataService';
 
 type Permission = 'read' | 'write' | 'update' | 'delete';
 
@@ -22,11 +23,40 @@ export const useOlie = () => {
 
 export const OlieContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user, setActiveModule } = useApp();
+  const [permissions, setPermissions] = useState<RBACMatrix>(DefaultRBAC);
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
+
+  useEffect(() => {
+    async function loadPermissions() {
+      if (user) {
+        setIsLoadingPermissions(true);
+        try {
+          // Idea #002: Fetch permissions from the database
+          const remotePermissions = await dataService.getPermissions();
+          if (remotePermissions && remotePermissions.length > 0) {
+            // Here you would transform the flat list from DB into the RBACMatrix structure
+            // For now, we'll assume it's correctly formatted or just keep the default
+            console.log("Permissions loaded from database (simulation).");
+            // setPermissions(formattedPermissions);
+          } else {
+             console.log("No dynamic permissions found, using default RBAC.");
+             setPermissions(DefaultRBAC);
+          }
+        } catch (error) {
+            console.error("Failed to load permissions, falling back to default RBAC.", error);
+            setPermissions(DefaultRBAC);
+        } finally {
+            setIsLoadingPermissions(false);
+        }
+      }
+    }
+    loadPermissions();
+  }, [user]);
 
   const can = useCallback((scope: string, permission: Permission): boolean => {
-    if (!user) return false;
+    if (!user || isLoadingPermissions) return false;
     
-    const rolePermissions = DefaultRBAC[user.role];
+    const rolePermissions = permissions[user.role];
     if (!rolePermissions) return false;
 
     // AdminGeral has access to everything
@@ -38,7 +68,7 @@ export const OlieContextProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (!scopePermissions) return false;
 
     return scopePermissions[permission] || false;
-  }, [user]);
+  }, [user, permissions, isLoadingPermissions]);
 
   const goto = (module: string) => {
     if (can(module, 'read')) {

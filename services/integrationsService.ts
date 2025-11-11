@@ -27,5 +27,10 @@ export const integrationsService = {
 
   createShippingLabel: async (order: Order): Promise<{ logistics: LogisticsDetails }> => {
     return invokeEdgeFunction<{ logistics: LogisticsDetails }>('create-shipping-label', { order });
-  }
+  },
+
+  updateApiKey: async (id: string, apiKey: string): Promise<any> => {
+    // For Idea #004 - Secure API key management
+    return invokeEdgeFunction('set-integration-secret', { integrationId: id, apiKey });
+  },
 };

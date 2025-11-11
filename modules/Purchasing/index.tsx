@@ -32,7 +32,7 @@ export default function Purchasing() {
     receivePOItems,
     // Materials for Dialogs
     allMaterials,
-    // Dialog states
+    // Dialog states for POs
     isPODialogOpen,
     setIsPODialogOpen,
     isReceiveDialogOpen,
@@ -93,9 +93,7 @@ export default function Purchasing() {
         isOpen={isSupplierDialogOpen}
         onClose={() => setIsSupplierDialogOpen(false)}
         onSave={handleSaveSupplier}
-        // FIX: The type of editingSupplier is 'Supplier | null', which is correct. No change needed here.
-        supplier={editingSupplier as Supplier}
-        // FIX: Pass the isSaving prop to the SupplierDialog component.
+        supplier={editingSupplier}
         isSaving={isSaving}
       />
     </div>

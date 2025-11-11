@@ -16,7 +16,7 @@ const OperationalParamsTabContent: React.FC = () => {
     useEffect(() => {
         if (settingsData?.sistema) {
             const operationalSettings = settingsData.sistema.filter(
-                s => s.category === 'logistica' || s.category === 'sistema'
+                s => s.category === 'logistica' || s.category === 'producao' || s.category === 'sistema'
             );
             setLocalSettings(operationalSettings);
         }
@@ -31,7 +31,6 @@ const OperationalParamsTabContent: React.FC = () => {
                         parsedValue[fieldKey] = value;
                         return { ...setting, value: JSON.stringify(parsedValue, null, 2) };
                     } catch (e) {
-                        // Fallback for non-JSON values
                         return { ...setting, value: value };
                     }
                 }
@@ -47,7 +46,6 @@ const OperationalParamsTabContent: React.FC = () => {
         }
         setIsSaving(true);
         try {
-            // Only update the settings that were changed
             const changedSettings = localSettings.filter(local => {
                 const original = settingsData?.sistema.find(s => s.id === local.id);
                 return original?.value !== local.value;
@@ -80,7 +78,7 @@ const OperationalParamsTabContent: React.FC = () => {
                     type={type}
                     value={value}
                     onChange={(e) => handleFieldChange(setting.id, key, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
-                    className="mt-1 w-full p-2 border rounded-md text-sm bg-secondary dark:bg-dark-secondary"
+                    className="mt-1 w-full p-2 border rounded-md text-sm bg-background dark:bg-dark-background"
                     disabled={!isAdmin || isSaving}
                 />
             </div>
@@ -93,9 +91,9 @@ const OperationalParamsTabContent: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-2 text-sm text-textSecondary dark:text-dark-textSecondary p-3 bg-secondary dark:bg-dark-secondary rounded-lg border border-border dark:border-dark-border">
-                <Info size={18} className="flex-shrink-0" />
-                <p>Gerencie os parâmetros que controlam as regras de negócio dos módulos de Logística, Produção e outros. As alterações aqui podem impactar diretamente a operação.</p>
+            <div className="flex items-start gap-3 text-sm text-textSecondary dark:text-dark-textSecondary p-3 bg-secondary dark:bg-dark-secondary rounded-lg border border-border dark:border-dark-border">
+                <Info size={28} className="flex-shrink-0 text-primary" />
+                <p>Gerencie os parâmetros que controlam as regras de negócio dos módulos de Logística, Produção e outros. As alterações aqui podem impactar diretamente a operação. A IA pode sugerir otimizações na aba de Governança.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -107,7 +105,7 @@ const OperationalParamsTabContent: React.FC = () => {
                                 {setting.description}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-4">
                              {(() => {
                                 try {
                                     const parsed = JSON.parse(setting.value);
@@ -118,12 +116,12 @@ const OperationalParamsTabContent: React.FC = () => {
                                 // Render as a single textarea if not a JSON object
                                 return (
                                      <div>
-                                        <label className="block text-xs font-medium text-textSecondary">Valor</label>
+                                        <label className="block text-xs font-medium text-textSecondary">Valor (JSON)</label>
                                         <textarea 
                                             value={setting.value} 
                                             onChange={(e) => handleFieldChange(setting.id, 'value', e.target.value)}
-                                            rows={4}
-                                            className="mt-1 w-full p-2 border rounded-md text-sm bg-secondary dark:bg-dark-secondary font-mono"
+                                            rows={5}
+                                            className="mt-1 w-full p-2 border rounded-md text-sm bg-background dark:bg-dark-background font-mono"
                                             disabled={!isAdmin || isSaving}
                                         />
                                      </div>
