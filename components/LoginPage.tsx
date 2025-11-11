@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
 
   const handleAuthError = (err: Error) => {
       const errorMessage = err.message;
-      if (errorMessage.includes('BOOTSTRAP_REQUIRED')) {
+      if (errorMessage.includes('BOOTSTRAP_REQUIRED') || errorMessage.includes('não possui um perfil definido')) {
         setIsBootstrapModalOpen(true);
       } else if (errorMessage.includes('Supabase fetch failed catastrophically')) {
         toast({ 
