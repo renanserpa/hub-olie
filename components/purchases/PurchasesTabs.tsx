@@ -1,17 +1,15 @@
 import React from 'react';
-import { Users, FileText, BarChart2, Wrench } from 'lucide-react';
+import { Users, FileText, BarChart2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Supplier, PurchaseOrder } from '../../types';
 import PurchaseOrdersTab from './PurchaseOrdersTab';
 import PurchaseMetrics from './PurchaseMetrics';
-import PurchasingSettings from './PurchasingSettings';
 
-type PurchasesTab = 'pos' | 'settings' | 'metrics';
+type PurchasesTab = 'pos' | 'metrics'; // Removed 'settings'
 
 interface PurchasesTabsProps {
   activeTab: string;
   onTabChange: (tab: PurchasesTab) => void;
-  suppliers: Supplier[];
   purchaseOrders: (PurchaseOrder & { supplier?: Supplier, items: any[] })[];
   onNewPOClick: () => void;
   onReceivePOClick: () => void;
@@ -23,7 +21,6 @@ interface PurchasesTabsProps {
 
 const TABS: { id: PurchasesTab, label: string, icon: React.ElementType }[] = [
     { id: 'pos', label: 'Pedidos de Compra', icon: FileText },
-    { id: 'settings', label: 'Dados Mestres', icon: Wrench },
     { id: 'metrics', label: 'Métricas', icon: BarChart2 },
 ];
 
@@ -31,8 +28,6 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
     
     const renderContent = () => {
         switch (props.activeTab) {
-            case 'settings':
-                return <PurchasingSettings />;
             case 'pos':
                 return <PurchaseOrdersTab 
                             purchaseOrders={props.purchaseOrders}
@@ -46,7 +41,8 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
             case 'metrics':
                 return <PurchaseMetrics />;
             default:
-                return null;
+                // Default to 'pos' if an invalid tab is selected
+                return <PurchaseOrdersTab {...props} />;
         }
     };
 

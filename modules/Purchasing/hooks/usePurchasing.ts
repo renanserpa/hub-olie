@@ -1,19 +1,24 @@
 // modules/Purchasing/hooks/usePurchasing.ts
 import { useState, useEffect } from 'react';
-import { useSuppliers } from '../../../hooks/useSuppliers';
+import { useSuppliers } from './useSuppliers';
 import { useSupplyGroups } from './useSupplyGroups';
 import { usePurchaseOrders } from './usePurchaseOrders';
 import { dataService } from '../../../services/dataService';
-import { Material } from '../../../types';
+import { Material, Supplier } from '../../../types';
 
 export function usePurchasing() {
-  const [activeTab, setActiveTab] = useState('pos');
+  const [activeTab, setActiveTab] = useState<'pos' | 'settings' | 'metrics'>('pos');
   const [allMaterials, setAllMaterials] = useState<Material[]>([]);
   const [isLoadingMaterials, setIsLoadingMaterials] = useState(true);
 
-  // Dialog states
+  // Dialog states for POs
   const [isPODialogOpen, setIsPODialogOpen] = useState(false);
   const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
+  
+  // Dialog states for Suppliers
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+
 
   // Sub-hooks for each data entity
   const suppliersHook = useSuppliers();
@@ -31,24 +36,24 @@ export function usePurchasing() {
   }, []);
 
   const isLoading = suppliersHook.isLoading || supplyGroupsHook.isLoading || purchaseOrdersHook.isLoading || isLoadingMaterials;
+  const isSaving = suppliersHook.isSaving || supplyGroupsHook.isSaving || purchaseOrdersHook.isSaving;
 
   return {
     isLoading,
-    isSaving: suppliersHook.isSaving || supplyGroupsHook.isSaving || purchaseOrdersHook.isSaving,
+    isSaving,
     activeTab,
     setActiveTab,
 
     // From useSuppliers
     suppliers: suppliersHook.suppliers,
-    canWriteSuppliers: suppliersHook.canWrite,
     saveSupplier: suppliersHook.saveSupplier,
-    deleteSupplier: suppliersHook.deleteSupplier,
+    isSupplierDialogOpen,
+    setIsSupplierDialogOpen,
+    editingSupplier,
+    setEditingSupplier,
 
     // From useSupplyGroups
     supplyGroups: supplyGroupsHook.groups,
-    canWriteSupplyGroups: supplyGroupsHook.canWrite,
-    saveSupplyGroup: supplyGroupsHook.saveGroup,
-    deleteSupplyGroup: supplyGroupsHook.deleteGroup,
 
     // From usePurchaseOrders
     purchaseOrders: purchaseOrdersHook.purchaseOrders,

@@ -35,6 +35,8 @@ interface PurchasePanelProps {
     onSelectPO: (id: string | null) => void;
     isSaving: boolean;
     isLoadingItems: boolean;
+    onNewSupplierClick: () => void;
+    onEditSupplierClick: (supplier: Supplier) => void;
 }
 
 const PurchasePanel: React.FC<PurchasePanelProps> = (props) => {
@@ -57,7 +59,7 @@ const PurchasePanel: React.FC<PurchasePanelProps> = (props) => {
                     <div>
                          <TabLayout tabs={SETTINGS_SUB_TABS} activeTab={activeSettingsTab} onTabChange={(id) => setActiveSettingsTab(id as SettingsSubTab)} />
                         <div className="mt-6">
-                            {activeSettingsTab === 'suppliers' && <SupplierManagement />}
+                            {activeSettingsTab === 'suppliers' && <SupplierManagement onNewClick={props.onNewSupplierClick} onEditClick={props.onEditSupplierClick} />}
                             {activeSettingsTab === 'groups' && <SupplyGroupsManagement />}
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 // modules/Purchasing/hooks/useSupplyGroups.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { MaterialGroup } from '../../../types';
 import { dataService } from '../../../services/dataService';
 import { toast } from '../../../hooks/use-toast';

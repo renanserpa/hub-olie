@@ -11,7 +11,7 @@ import ProductDrawer from './products/ProductDrawer';
 
 const PRODUCT_PAGE_TABS = [
     { id: 'list', label: 'Lista de Produtos', icon: Package },
-    { id: 'settings', label: 'Configurações', icon: BookOpen },
+    { id: 'settings', label: 'Dados Mestres', icon: BookOpen },
 ];
 
 const ProductsPage: React.FC = () => {

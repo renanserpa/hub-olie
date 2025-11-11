@@ -5,6 +5,7 @@ import { usePurchasing } from './hooks/usePurchasing';
 import { Loader2 } from 'lucide-react';
 import CreatePODialog from '../../components/purchases/CreatePODialog';
 import ReceivePODialog from '../../components/purchases/ReceivePODialog';
+import SupplierDialog from '../../components/purchases/SupplierDialog';
 
 export default function Purchasing() {
   const {
@@ -14,6 +15,11 @@ export default function Purchasing() {
     setActiveTab,
     // Suppliers
     suppliers,
+    saveSupplier,
+    isSupplierDialogOpen,
+    setIsSupplierDialogOpen,
+    editingSupplier,
+    setEditingSupplier,
     // Supply Groups
     supplyGroups,
     // Purchase Orders
@@ -40,6 +46,11 @@ export default function Purchasing() {
     );
   }
 
+  const handleSaveSupplier = async (data: any) => {
+    await saveSupplier(data);
+    setIsSupplierDialogOpen(false);
+  };
+
   return (
     <div>
       <PurchasePanel
@@ -54,6 +65,8 @@ export default function Purchasing() {
         onSelectPO={setSelectedPOId}
         isSaving={isSaving}
         isLoadingItems={isLoadingItems}
+        onNewSupplierClick={() => { setEditingSupplier(null); setIsSupplierDialogOpen(true); }}
+        onEditSupplierClick={(supplier) => { setEditingSupplier(supplier); setIsSupplierDialogOpen(true); }}
       />
 
       <CreatePODialog
@@ -74,6 +87,14 @@ export default function Purchasing() {
           isSaving={isSaving}
         />
       )}
+      
+      <SupplierDialog
+        isOpen={isSupplierDialogOpen}
+        onClose={() => setIsSupplierDialogOpen(false)}
+        onSave={handleSaveSupplier}
+        supplier={editingSupplier}
+        isSaving={isSaving}
+      />
     </div>
   );
 }
