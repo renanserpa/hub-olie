@@ -122,6 +122,8 @@ export interface WebhookLog {
     id: string;
     integration_id: string;
     payload: any;
+    status: 'success' | 'error';
+    retry_count: number;
     created_at: string;
 }
 
@@ -202,6 +204,7 @@ export interface WorkflowRule {
     trigger: string;
     action: string;
     is_active: boolean;
+    type?: 'standard' | 'cognitive';
 }
 
 // --- CONTACTS ---

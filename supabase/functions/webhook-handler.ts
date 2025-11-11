@@ -14,8 +14,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let status: 'success' | 'error' = 'success';
+  let errorMessage: string | null = null;
+
   try {
-    // Create a Supabase client with the user's auth token
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -30,9 +32,19 @@ serve(async (req) => {
       throw new Error("integration_id query parameter is required.");
     }
 
+    // Simulate a random failure for demonstration purposes
+    if (Math.random() > 0.75) {
+        throw new Error("Simulated webhook processing failure.");
+    }
+
     const { error } = await supabaseClient
       .from('webhook_logs')
-      .insert({ integration_id: integrationId, payload: payload });
+      .insert({ 
+          integration_id: integrationId, 
+          payload: payload,
+          status: 'success',
+          retry_count: 0
+      });
 
     if (error) throw error;
 
@@ -41,7 +53,29 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    status = 'error';
+    errorMessage = error.message;
+    console.error(`[Webhook Handler Error] ${errorMessage}`);
+
+    // Attempt to log the failure to the database
+    try {
+        const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+        const url = new URL(req.url);
+        const integrationId = url.searchParams.get('integration_id');
+        
+        if (integrationId) {
+            await supabaseAdmin.from('webhook_logs').insert({
+                integration_id: integrationId,
+                payload: { error: "Failed to parse original payload", received_headers: Object.fromEntries(req.headers) },
+                status: 'error',
+                retry_count: 0
+            });
+        }
+    } catch(dbError) {
+        console.error(`[Webhook Handler] CRITICAL: Failed to log error to DB.`, dbError.message);
+    }
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

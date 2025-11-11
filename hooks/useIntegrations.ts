@@ -73,6 +73,22 @@ export function useIntegrations() {
       setSavingId(null);
     }
   };
+  
+  const retryWebhook = async (logId: string) => {
+    const log = webhookLogs.find(l => l.id === logId);
+    if (!log) return;
 
-  return { integrations, logs, webhookLogs, loading, refresh, handleTestConnection, testingId, updateApiKey, savingId };
+    try {
+      // Simulate retry: Update status to 'success' and increment retry_count
+      await dataService.updateDocument<WebhookLog>('webhook_logs', logId, {
+        status: 'success',
+        retry_count: (log.retry_count || 0) + 1,
+      });
+      toast({ title: 'Reprocessado!', description: 'O webhook foi reprocessado com sucesso (simulado).' });
+    } catch(e) {
+      toast({ title: 'Erro', description: 'Não foi possível reprocessar o webhook.', variant: 'destructive' });
+    }
+  };
+
+  return { integrations, logs, webhookLogs, loading, refresh, handleTestConnection, testingId, updateApiKey, savingId, retryWebhook };
 }

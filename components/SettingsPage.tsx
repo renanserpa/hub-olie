@@ -12,7 +12,7 @@ import OperationalParamsTabContent from './settings/OperationalParamsTabContent'
 import SecurityTabContent from './SecurityTabContent';
 import { GovernancePanel } from './settings/GovernancePanel';
 import WorkflowRulesPanel from './settings/WorkflowRulesPanel';
-import SettingsAnalyticsPanel from './settings/SettingsAnalyticsPanel';
+import CognitiveGovernanceDashboard from './settings/CognitiveGovernanceDashboard';
 
 const AuditTabContent: React.FC = () => <PlaceholderContent title="Logs de Auditoria" requiredTable="system_audit" icon={BarChart}><p className="mt-1 text-sm text-textSecondary">Visualize um registro de todas as ações importantes realizadas no sistema.</p></PlaceholderContent>;
 
@@ -24,7 +24,7 @@ const SETTINGS_TABS_BASE = [
   { id: 'integrations', label: 'Integrações', icon: Puzzle, scope: 'Settings' },
   { id: 'appearance', label: 'Aparência', icon: ImageIcon, scope: 'Settings' },
   { id: 'security', label: 'Segurança (RBAC)', icon: Shield, scope: 'Settings'},
-  { id: 'analytics', label: 'Analytics', icon: BarChart, scope: 'Settings' },
+  { id: 'analytics', label: 'Analytics Cognitivo', icon: BarChart, scope: 'Settings' },
   { id: 'audit', label: 'Auditoria', icon: BarChart, scope: 'Settings' },
 ];
 
@@ -50,7 +50,7 @@ const SettingsPage: React.FC = () => {
             case 'integrations': return <IntegrationsTabContent />;
             case 'appearance': return <AppearanceTabContent />;
             case 'security': return <SecurityTabContent />;
-            case 'analytics': return <SettingsAnalyticsPanel />;
+            case 'analytics': return <CognitiveGovernanceDashboard />;
             case 'audit': return <AuditTabContent />;
             case 'initializer': return <InitializerPanel />;
             default: return null;
