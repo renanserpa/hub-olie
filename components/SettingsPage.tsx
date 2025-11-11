@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Users, SlidersHorizontal, Sparkles, Puzzle, ImageIcon, BarChart, Cpu } from 'lucide-react';
+// FIX: Imported the missing 'Shield' icon.
+import { Users, SlidersHorizontal, Sparkles, Puzzle, ImageIcon, BarChart, Cpu, Shield } from 'lucide-react';
 import TabLayout from './ui/TabLayout';
 import { useOlie } from '../contexts/OlieContext';
 import TeamsAndPermissionsTabContent from './settings/TeamsAndPermissionsTabContent';

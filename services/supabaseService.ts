@@ -398,7 +398,8 @@ export const supabaseService = {
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection<ProductionOrder>('production_orders'),
   updateProductionOrderStatus: (id: string, status: ProductionOrderStatus) => updateDocument<ProductionOrder>('production_orders', id, { status, updated_at: new Date().toISOString() }),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection<TaskStatus>('task_statuses'),
-  getTasks: (): Promise<Task> => supabaseService.getCollection<Task>('tasks'),
+  // FIX: Changed return type from Promise<Task> to Promise<Task[]> to match what getCollection returns.
+  getTasks: (): Promise<Task[]> => supabaseService.getCollection<Task>('tasks'),
   getProductionRoutes: (): Promise<ProductionRoute[]> => supabaseService.getCollection<ProductionRoute>('production_routes'),
   getMoldLibrary: (): Promise<MoldLibrary[]> => supabaseService.getCollection<MoldLibrary>('mold_library'),
   getLogisticsData: async () => {
