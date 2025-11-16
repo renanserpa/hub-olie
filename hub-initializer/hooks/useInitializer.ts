@@ -1,5 +1,5 @@
 // FIX: Import React hooks to resolve 'Cannot find name' errors.
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { log } from '../../lib/logger';
 import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabaseClient';

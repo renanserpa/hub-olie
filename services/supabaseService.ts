@@ -194,12 +194,12 @@ export const supabaseService = {
   listenToCollection: <T extends { id: string }>(
     table: string, 
     join: string | undefined, 
-    setData: React.Dispatch<React.SetStateAction<T[]>>,
+    setData?: React.Dispatch<React.SetStateAction<T[]>>,
     callback?: (data: T[]) => void
   ) => {
       const fetchData = async () => {
           const data = await supabaseService.getCollection<T>(table, join);
-          setData(data);
+          if (setData) setData(data);
           if (callback) {
               callback(data);
           }

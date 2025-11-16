@@ -99,20 +99,30 @@ export function useProduction() {
 
     const ordersWithDetails = useMemo(() => {
         return allOrders.map(order => {
-            const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku) : undefined;
             const product = allProducts.find(p => p.id === order.product_id);
-            const sizeName = variant?.configuration.size ? product?.available_sizes?.find(s => s.id === variant.configuration.size)?.name : undefined;
+            const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku && v.product_base_id === product?.id) : undefined;
             
+            // Find size name from the base product definition
+            const sizeId = variant?.configuration?.size;
+            const sizeName = sizeId ? product?.available_sizes?.find(s => s.id === sizeId)?.name : undefined;
+            
+            // Find the route based on product name (case-insensitive) and the exact size name.
+            const route = allRoutes.find(r => 
+                r.produto.toLowerCase() === product?.name.toLowerCase() && 
+                r.tamanho === sizeName
+            );
+
             return {
                 ...order,
                 variant,
                 product,
-                route: allRoutes.find(r => r.produto.toLowerCase() === product?.name.toLowerCase() && r.tamanho === sizeName),
-                tasks: allTasks.filter(t => t.production_order_id === order.id),
+                route,
+                tasks: allTasks
+                    .filter(t => t.production_order_id === order.id)
+                    .sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()),
                 quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
             };
         });
-        // FIX: Add allRoutes to dependency array.
     }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes]);
     
     const filteredOrders = useMemo(() => {

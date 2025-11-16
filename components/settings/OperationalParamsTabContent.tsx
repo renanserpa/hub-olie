@@ -126,37 +126,4 @@ const OperationalParamsTabContent: React.FC = () => {
                                         <label className="block text-xs font-medium text-textSecondary">Valor</label>
                                         <textarea 
                                             value={setting.value} 
-                                            onChange={(e) => handleFieldChange(setting.id, 'value', e.target.value)}
-                                            rows={5}
-                                            className="mt-1 w-full p-2 border rounded-md text-sm bg-background dark:bg-dark-background font-mono"
-                                            disabled={!isAdmin || isSaving}
-                                        />
-                                     </div>
-                                );
-                            })()}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {isAdmin && (
-                <div className="flex justify-end sticky bottom-6">
-                    <Button onClick={handleSave} disabled={isSaving} size="lg" className="shadow-lg">
-                       {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                       Salvar Parâmetros
-                    </Button>
-                </div>
-            )}
-            {historyModalKey && (
-                <SettingsHistoryModal
-                    isOpen={!!historyModalKey}
-                    onClose={() => setHistoryModalKey(null)}
-                    settingKey={historyModalKey}
-                    onRevertSuccess={() => { setHistoryModalKey(null); refresh(); }}
-                />
-            )}
-        </div>
-    );
-};
-
-export default OperationalParamsTabContent;
+                                            onChange={(e) => handleFieldChange(setting.id,

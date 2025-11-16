@@ -45,6 +45,7 @@ const LoginPage: React.FC = () => {
       const error = err as Error;
       if ((error as any).name === 'AuthMultiFactorAuthenticationError') {
           trackLoginEvent('2fa_challenge');
+          // FIX: Pass the amr property from the error object to setMfaChallenge to match the expected MfaChallenge type.
           setMfaChallenge({ amr: (error as any).amr });
       } else {
           trackLoginEvent('login_failure', { method: 'password', metadata: { error: error.message } });

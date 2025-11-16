@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductCategory } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
@@ -10,6 +10,7 @@ export function useCategories() {
     useEffect(() => {
         setIsLoading(true);
         const listener = dataService.listenToCollection<ProductCategory>('product_categories', undefined, setCategories, (newData) => {
+            setCategories(newData.sort((a,b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
         });
         return () => listener.unsubscribe();

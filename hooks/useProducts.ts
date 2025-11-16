@@ -54,9 +54,9 @@ export function useProducts() {
 
     useEffect(() => {
         loadData();
-        const productsListener = dataService.listenToCollection('products', undefined, (d) => {}, setAllProducts);
-        const categoriesListener = dataService.listenToCollection('product_categories', undefined, (d) => {}, setCategories);
-        const collectionsListener = dataService.listenToCollection('collections', undefined, (d) => {}, setCollections);
+        const productsListener = dataService.listenToCollection('products', undefined, setAllProducts);
+        const categoriesListener = dataService.listenToCollection('product_categories', undefined, setCategories);
+        const collectionsListener = dataService.listenToCollection('collections', undefined, setCollections);
         
         return () => {
             productsListener.unsubscribe();
@@ -88,6 +88,7 @@ export function useProducts() {
     const closeDialog = () => {
         setEditingProduct(null);
         setIsDialogOpen(false);
+        setSelectedProductId(null);
     };
     
     const saveProduct = async (productData: AnyProduct | Product) => {
@@ -118,9 +119,9 @@ export function useProducts() {
             toast({ title: "Status Atualizado!", description: `O produto foi movido para "${newStatus}".`});
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status do produto.", variant: "destructive" });
-            // Revert on failure, but listener should eventually correct it
+            loadData(); // Revert on failure
         }
-    }, []);
+    }, [loadData]);
 
     return {
         isLoading,
