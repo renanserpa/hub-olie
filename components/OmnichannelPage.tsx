@@ -1,7 +1,3 @@
-
-
-
-
 import React from 'react';
 import { User, Contact, Order } from '../types';
 import { useOmnichannel } from '../hooks/useOmnichannel';
