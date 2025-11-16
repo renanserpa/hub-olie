@@ -41,7 +41,7 @@ export function useInitializer() {
 
     log.info('[Initializer] Starting system initialization...');
     let supabaseConnected = false;
-    let warnings: string[] = [];
+    const warnings: string[] = [];
 
     if (ENV.APP_ENV !== 'SANDBOX' && supabase) {
       const { data, error } = await supabase.from('system_settings').select('*').limit(1);

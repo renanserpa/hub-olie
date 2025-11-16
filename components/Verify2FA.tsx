@@ -43,15 +43,17 @@ const Verify2FA: React.FC<Verify2FAProps> = ({ amr, onVerified }) => {
     }
     setError('');
     setIsLoading(true);
-    try {
-        const { factors } = await getFactors();
-        const totpFactor = factors?.find(f => f.factor_type === 'totp' && f.status === 'verified');
+  try {
+    const factorsResp = await getFactors();
+    // getFactors returns an object containing collections like `all`, `totp`, `phone`, etc.
+    const totpList = (factorsResp && (factorsResp as any).totp) || (factorsResp && (factorsResp as any).all) || [];
+    const totpFactor = totpList.find((f: any) => f.factor_type === 'totp' && f.status === 'verified');
 
-        if (!totpFactor) {
-            throw new Error("Fator TOTP não encontrado ou não verificado. Habilite o 2FA novamente.");
-        }
+    if (!totpFactor) {
+      throw new Error('Fator TOTP não encontrado ou não verificado. Habilite o 2FA novamente.');
+    }
 
-        await verifyTotpChallenge(totpFactor.id, code);
+    await verifyTotpChallenge(totpFactor.id, code);
         trackLoginEvent('2fa_success');
         toast({ title: 'Verificação bem-sucedida!', description: 'Você está sendo redirecionado.' });
         onVerified();
