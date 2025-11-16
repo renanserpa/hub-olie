@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AIInsight, ExecutiveKPI } from '../../types';
+// FIX: Import AnalyticsKPI and related module types for type conversion.
+import { AIInsight, ExecutiveKPI, AnalyticsKPI, AnalyticsModule } from '../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Sparkles, Lightbulb, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
@@ -26,7 +27,40 @@ const ExecutiveAIInsights: React.FC<ExecutiveAIInsightsProps> = ({ insights, kpi
         setIsGenerating(true);
         setGeneratedSummary('');
         try {
-            const summary = await analyticsAiService.insightGeneratorAI(kpis);
+            // FIX: Convert ExecutiveKPI[] to AnalyticsKPI[] before passing to the service.
+            // This handles the incompatible 'module' types between the two KPI interfaces.
+            const analyticsKpis: AnalyticsKPI[] = kpis.map(kpi => {
+                let module: AnalyticsModule | undefined;
+                switch (kpi.module) {
+                    case 'sales':
+                        module = 'orders';
+                        break;
+                    case 'overview':
+                    case 'financial':
+                    case 'production':
+                    case 'logistics':
+                        module = kpi.module;
+                        break;
+                    default:
+                        // Modules like 'purchasing' or 'ai_insights' have no direct equivalent in AnalyticsModule and will be filtered out.
+                        module = undefined;
+                }
+
+                if (module) {
+                    return {
+                        id: kpi.id,
+                        module: module,
+                        name: kpi.name,
+                        value: kpi.value,
+                        trend: kpi.trend,
+                        unit: kpi.unit,
+                        description: kpi.description,
+                    };
+                }
+                return null;
+            }).filter((k): k is AnalyticsKPI => k !== null);
+
+            const summary = await analyticsAiService.insightGeneratorAI(analyticsKpis);
             setGeneratedSummary(summary);
             toast({ title: "Sucesso!", description: "Análise da IA gerada."});
         } catch (error) {
