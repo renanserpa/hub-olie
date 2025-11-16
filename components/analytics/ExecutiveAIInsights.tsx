@@ -29,7 +29,8 @@ const ExecutiveAIInsights: React.FC<ExecutiveAIInsightsProps> = ({ insights, kpi
         try {
             // FIX: Convert ExecutiveKPI[] to AnalyticsKPI[] before passing to the service.
             // This handles the incompatible 'module' types between the two KPI interfaces.
-            const analyticsKpis: AnalyticsKPI[] = kpis.map(kpi => {
+            // FIX: Explicitly type the return value of the `map` callback to `AnalyticsKPI | null`. This ensures that TypeScript correctly infers the array type for the subsequent `filter` with its type predicate, resolving the type assignability error.
+            const analyticsKpis: AnalyticsKPI[] = kpis.map((kpi): AnalyticsKPI | null => {
                 let module: AnalyticsModule | undefined;
                 switch (kpi.module) {
                     case 'sales':

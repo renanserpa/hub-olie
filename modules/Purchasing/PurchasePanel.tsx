@@ -24,8 +24,8 @@ const SETTINGS_SUB_TABS: { id: SettingsSubTab, label: string, icon: React.Elemen
 ];
 
 interface PurchasePanelProps {
-    activeTab: string;
-    onTabChange: (tab: PurchasesTab) => void;
+    activeTab: PurchasesTab;
+    onTabChange: (tab: string) => void;
     suppliers: Supplier[];
     supplyGroups: MaterialGroup[];
     purchaseOrders: (PurchaseOrder & { supplier?: Supplier, items: any[] })[];
@@ -73,7 +73,7 @@ const PurchasePanel: React.FC<PurchasePanelProps> = (props) => {
 
     return (
         <div>
-            <TabLayout tabs={MAIN_TABS} activeTab={props.activeTab} onTabChange={props.onTabChange as any} />
+            <TabLayout tabs={MAIN_TABS} activeTab={props.activeTab} onTabChange={props.onTabChange} />
             <div className="mt-6">
                 {renderContent()}
             </div>

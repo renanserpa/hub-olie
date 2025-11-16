@@ -101,7 +101,7 @@ const CampaignDialog: React.FC<CampaignDialogProps> = ({ isOpen, onClose, onSave
                 : result.data;
 
             // FIX: The type of dataToSave now correctly matches the updated onSave prop type.
-            await onSave(dataToSave as any);
+            await onSave(dataToSave);
         } finally {
             setIsSubmitting(false);
         }

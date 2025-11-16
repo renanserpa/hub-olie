@@ -42,7 +42,7 @@ export function usePurchasing() {
     isLoading,
     isSaving,
     activeTab,
-    setActiveTab,
+    setActiveTab: (tab: string) => setActiveTab(tab as 'pos' | 'settings' | 'metrics'),
 
     // From useSuppliers
     suppliers: suppliersHook.suppliers,
