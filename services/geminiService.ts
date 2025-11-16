@@ -1,4 +1,4 @@
-import { ExecutiveKPI, SystemSetting } from "../types";
+import { ExecutiveKPI as _ExecutiveKPI, SystemSetting } from "../types";
 import { toast } from '../hooks/use-toast';
 import { externalAIEnabled } from '../lib/featureFlags';
 

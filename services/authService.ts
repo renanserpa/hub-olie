@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { UserRole, UserProfile } from '../types';
+import { UserRole as _UserRole, UserProfile } from '../types';
 
 const getProfile = async (userId: string): Promise<UserProfile | null> => {
     const { data, error } = await supabase

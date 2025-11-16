@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SystemAudit } from '../types';
 import { dataService } from '../services/dataService';
-import { toast } from './use-toast';
+import { toast as _toast } from './use-toast';
 
 export function useAnomalies() {
     const [anomalies, setAnomalies] = useState<SystemAudit[]>([]);

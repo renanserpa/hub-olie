@@ -61,6 +61,5 @@ export function useUsers() {
         isSaving,
         isAdmin,
         saveUser,
-        refresh: loadUsers,
     };
 }

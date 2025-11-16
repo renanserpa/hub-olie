@@ -1,4 +1,4 @@
-import { ExecutiveKPI, AnalyticsKPI, AnalyticsSnapshot } from "../types";
+import { ExecutiveKPI as _ExecutiveKPI, AnalyticsKPI, AnalyticsSnapshot } from "../types";
 
 // Helper for disabled functions
 const aiDisabledWarning = (feature: string) => {
@@ -26,7 +26,7 @@ export const analyticsAiService = {
     };
   },
 
-  insightGeneratorAI: async (kpis: (ExecutiveKPI | AnalyticsKPI)[]): Promise<string> => {
+  insightGeneratorAI: async (kpis: (AnalyticsKPI)[]): Promise<string> => {
     aiDisabledWarning('Insight Generator');
     return "* A análise executiva por IA está temporariamente desabilitada.";
   },

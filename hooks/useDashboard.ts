@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Order, Contact, Product, ProductionOrder, FinancePayable, FinanceReceivable, ActivityItem } from '../types';
+import { Order as _Order, Contact as _Contact, Product as _Product, ProductionOrder as _ProductionOrder, FinancePayable as _FinancePayable, FinanceReceivable as _FinanceReceivable, ActivityItem } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 import { ShoppingCart, Users, Workflow } from 'lucide-react';

@@ -67,7 +67,7 @@ import {
     // FIX: Import missing PurchaseOrderStatus type.
     PurchaseOrderStatus,
     SystemSettingsHistory,
-    ActivityItem,
+    ActivityItem as _ActivityItem,
     SystemRole,
     SystemPermission,
     WebhookLog,

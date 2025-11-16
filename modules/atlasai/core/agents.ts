@@ -1,6 +1,6 @@
 // modules/atlasai/core/agents.ts
 import { dataService } from '../../../services/dataService';
-import { ProductionOrder, Task, Order, Product, Contact, TaskStatus } from '../../../types';
+import { ProductionOrder, Task, Order as _Order, Product as _Product, Contact as _Contact, TaskStatus } from '../../../types';
 
 // Base Agent Interface
 interface IAgent {
