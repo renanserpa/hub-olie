@@ -10,9 +10,9 @@ export function MaterialGroupList() {
 
   if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   
-  if (groups.length === 0) {
+      if (groups.length === 0) {
       return <PlaceholderContent title="Nenhum Grupo de Suprimento" requiredTable="config_supply_groups" icon={Box}>
-          <p className="mt-1 text-sm text-textSecondary">Crie grupos como "Tecidos" ou "Metais" para organizar seus materiais.</p>
+          <p className="mt-1 text-sm text-textSecondary">Crie grupos como &quot;Tecidos&quot; ou &quot;Metais&quot; para organizar seus materiais.</p>
       </PlaceholderContent>
   }
 

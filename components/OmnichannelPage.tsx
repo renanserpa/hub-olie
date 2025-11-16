@@ -2,7 +2,7 @@
 
 
 import React from 'react';
-import { User, Contact, Order } from '../types';
+import type { User, Contact, Order } from '../types';
 import { useOmnichannel } from '../hooks/useOmnichannel';
 import InboxList from './omnichannel/InboxList';
 import ConversationThread from './omnichannel/ConversationThread';

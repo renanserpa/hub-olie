@@ -54,12 +54,12 @@ export function useOrders() {
     useEffect(() => {
         loadData();
         
-        const ordersListener = dataService.listenToCollection('orders', undefined, (payload) => {
+        const ordersListener = dataService.listenToCollection('orders', undefined, (_payload) => {
             console.log('Realtime update on orders detected, refreshing...');
             loadData();
         });
 
-        const itemsListener = dataService.listenToCollection('order_items', undefined, (payload) => {
+        const itemsListener = dataService.listenToCollection('order_items', undefined, (_payload) => {
             console.log('Realtime update on order_items detected, refreshing...');
             loadData();
         });

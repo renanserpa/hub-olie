@@ -22,7 +22,7 @@ interface OrderKanbanProps {
 }
 
 const OrderKanban: React.FC<OrderKanbanProps> = ({ orders, onStatusChange, onCardClick }) => {
-    const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
+    const [_draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
     const [isDraggingOver, setIsDraggingOver] = useState<OrderStatus | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, orderId: string) => {

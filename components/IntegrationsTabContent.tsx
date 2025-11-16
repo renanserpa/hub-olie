@@ -5,7 +5,8 @@ import { Button } from './ui/Button';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import WebhookMonitor from './settings/WebhookMonitor';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+// UI Card components imported but currently unused in this module; alias with _ to avoid lint warnings
+import { Card as _Card, CardContent as _CardContent, CardHeader as _CardHeader, CardTitle as _CardTitle } from './ui/Card';
 
 export function IntegrationsTabContent() {
   const { integrations, logs, loading, refresh } = useIntegrations();

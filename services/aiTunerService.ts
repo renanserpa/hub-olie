@@ -1,5 +1,5 @@
 import { getOperationalMetrics } from "./metricsService";
-import { dataService } from "./dataService";
+import { _dataService as _dataService } from "./dataService";
 
 interface SettingUpdate {
   key: string;

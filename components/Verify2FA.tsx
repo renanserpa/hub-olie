@@ -6,11 +6,11 @@ import { verifyTotpChallenge, getFactors } from '../services/authService';
 import { trackLoginEvent } from '../services/analyticsService';
 
 interface Verify2FAProps {
-  amr: { method: string; timestamp: number }[];
+  _amr: { method: string; timestamp: number }[];
   onVerified: () => void;
 }
 
-const Verify2FA: React.FC<Verify2FAProps> = ({ amr, onVerified }) => {
+const Verify2FA: React.FC<Verify2FAProps> = ({ _amr, onVerified }) => {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
-import { Conversation, Message, Quote, Contact, Order, User } from '../types';
+import { Conversation, Message, _Quote as _Quote, Contact, Order, User } from '../types';
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;

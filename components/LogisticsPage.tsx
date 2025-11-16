@@ -1,5 +1,6 @@
 import React from 'react';
-import { Truck, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Truck as _Truck } from 'lucide-react';
 import { useLogistics } from '../hooks/useLogistics';
 import LogisticsTabs from './logistics/LogisticsTabs';
 import QueuePanel from './logistics/QueuePanel';

@@ -1,7 +1,7 @@
 // NOTE: This file has been refactored for Supabase.
 import { supabase } from '../lib/supabaseClient';
 import {
-    AnyProduct,
+    _AnyProduct as _AnyProduct,
     AppData,
     BiasColor,
     ColorPalette,
@@ -57,7 +57,7 @@ import {
     MoldLibrary,
     ProductionRoute,
     ProductVariant,
-    IntegrationStatus,
+    _IntegrationStatus as _IntegrationStatus,
     UserProfile,
     AIInsight,
     // FIX: Import missing types.
@@ -67,7 +67,7 @@ import {
     // FIX: Import missing PurchaseOrderStatus type.
     PurchaseOrderStatus,
     SystemSettingsHistory,
-    ActivityItem,
+    _ActivityItem as _ActivityItem,
     SystemRole,
     SystemPermission,
     WebhookLog,
@@ -93,7 +93,7 @@ const handleError = (error: any, context: string) => {
 
 // FIX: Implement the missing getDocument function.
 const getDocument = async <T>(table: string, id: string): Promise<T | null> => {
-    const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+    const { data, error } = await supabase.from(table).select('*').eq('id', _id).single();
     if (error) {
         // PGRST116 means no rows found, which is not an error for a single get.
         if (error.code === 'PGRST116') {
@@ -118,13 +118,13 @@ const addManyDocuments = async <T extends { id?: string }>(table: string, docDat
 };
 
 const updateDocument = async <T extends { id: string }>(table: string, id: string, docData: Partial<T>): Promise<T> => {
-    const { data, error } = await supabase.from(table).update(docData).eq('id', id).select().single();
+    const { data, error } = await supabase.from(table).update(docData).eq('id', _id).select().single();
     if (error) handleError(error, `updateDocument(${table}, ${id})`);
     return data as T;
 };
 
 const deleteDocument = async (table: string, id: string): Promise<void> => {
-    const { error } = await supabase.from(table).delete().eq('id', id);
+    const { error } = await supabase.from(table).delete().eq('id', _id);
     if (error) handleError(error, `deleteDocument(${table}, ${id})`);
 };
 
@@ -226,9 +226,9 @@ export const supabaseService = {
             event: 'UPDATE',
             schema: 'public',
             table: table,
-            filter: `id=eq.${id}`,
+            filter: `_id =eq.${id}`,
           },
-          (payload) => {
+          (_payload) => {
             callback(payload.new as T);
           }
         )
@@ -332,7 +332,7 @@ export const supabaseService = {
   getRoles: (): Promise<SystemRole[]> => supabaseService.getCollection('system_roles'),
   getPermissions: async (): Promise<SystemPermission[]> => supabaseService.getCollection('system_permissions'),
   updatePermissions: async (permissions: SystemPermission[]) => {
-    const upsertData = permissions.map(({ id, ...rest }) => rest);
+    const upsertData = permissions.map(({ _id, ...rest }) => rest);
     const { error } = await supabase.from('system_permissions').upsert(upsertData, { onConflict: 'role,scope' });
     if (error) handleError(error, 'updatePermissions');
   },
@@ -354,8 +354,8 @@ export const supabaseService = {
   },
 
   addSetting: (category: SettingsCategory, data: any, subTab: string | null, subSubTab: string | null) => addDocument(getTableNameForSetting(category, subTab, subSubTab), data),
-  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getTableNameForSetting(category, subTab, subSubTab), id, data),
-  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getTableNameForSetting(category, subTab, subSubTab), id),
+  updateSetting: (category: SettingsCategory, id: string, data: any, subTab: string | null, subSubTab: string | null) => updateDocument(getTableNameForSetting(category, subTab, subSubTab), _id, data),
+  deleteSetting: (category: SettingsCategory, id: string, subTab: string | null, subSubTab: string | null) => deleteDocument(getTableNameForSetting(category, subTab, subSubTab), _id),
   updateSystemSettings: async (settings: SystemSetting[]) => {
       const updates = settings.map(s => updateDocument<SystemSetting>('system_settings', s.id, { value: s.value }));
       return Promise.all(updates);
@@ -416,10 +416,10 @@ export const supabaseService = {
     return ordersData.map(order => ({ ...order, items: itemsByOrderId[order.id] || [] }));
   },
   getOrder: async (id: string): Promise<Order | null> => {
-    const data = await supabaseService.getDocument<Order>('orders', id);
+    const data = await supabaseService.getDocument<Order>('orders', _id);
     if (!data) return null;
     
-    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').eq('order_id', id);
+    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').eq('order_id', _id);
     if (itemsError) handleError(itemsError, `getOrder(${id}) (items)`);
 
     return { ...data, items: itemsData || [] };
@@ -449,7 +449,7 @@ export const supabaseService = {
   getProducts: (): Promise<Product[]> => supabaseService.getCollection<Product>('products'),
   getContacts: (): Promise<Contact[]> => supabaseService.getCollection<Contact>('customers'),
   getProductionOrders: (): Promise<ProductionOrder[]> => supabaseService.getCollection<ProductionOrder>('production_orders'),
-  updateProductionOrderStatus: (id: string, status: ProductionOrderStatus) => updateDocument<ProductionOrder>('production_orders', id, { status, updated_at: new Date().toISOString() }),
+  updateProductionOrderStatus: (id: string, status: ProductionOrderStatus) => updateDocument<ProductionOrder>('production_orders', _id, { status, updated_at: new Date().toISOString() }),
   getTaskStatuses: (): Promise<TaskStatus[]> => supabaseService.getCollection<TaskStatus>('task_statuses'),
   // FIX: Changed return type from Promise<Task> to Promise<Task[]> to match what getCollection returns.
   getTasks: (): Promise<Task[]> => supabaseService.getCollection<Task>('tasks'),
@@ -571,13 +571,13 @@ export const supabaseService = {
       console.warn(`[MOCK] testIntegrationConnection for ${id}`);
       await new Promise(res => setTimeout(res, 1000));
       const shouldFail = Math.random() > 0.8;
-      await updateDocument<Integration>('config_integrations', id, {
+      await updateDocument<Integration>('config_integrations', _id, {
           status: shouldFail ? 'error' : 'connected',
           last_sync: new Date().toISOString(),
           last_error: shouldFail ? 'Simulated connection timeout' : undefined,
       });
       await addDocument('integration_logs', {
-          integration_id: id,
+          integration_id: _id,
           event: 'Connection Test',
           message: shouldFail ? 'Failed: Simulated timeout' : 'Success',
       });

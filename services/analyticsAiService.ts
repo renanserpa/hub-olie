@@ -33,6 +33,6 @@ export const analyticsAiService = {
 
   logAnalyzerAI: async (logs: string[]): Promise<string> => {
     aiDisabledWarning('Log Analyzer');
-    return "Análise de logs por IA está temporariamente desabilitada.";
+    return "Análise de _logs por IA está temporariamente desabilitada.";
   }
 };

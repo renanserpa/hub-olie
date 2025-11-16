@@ -15,7 +15,7 @@ const ConfigDisplay: React.FC<{ config: ConfigJson }> = ({ config }) => (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-textSecondary mt-1">
         {config.fabricColor && <span>Tecido: {config.fabricColor}</span>}
         {config.zipperColor && <span>Zíper: {config.zipperColor}</span>}
-        {config.embroidery?.enabled && <span>Bordado: "{config.embroidery.text}"</span>}
+        {config.embroidery?.enabled && <span>Bordado: &quot;{config.embroidery.text}&quot;</span>}
     </div>
 );
 

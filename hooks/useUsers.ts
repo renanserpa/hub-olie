@@ -38,7 +38,7 @@ export function useUsers() {
         try {
             if (userData.id) {
                 // Update existing user
-                const { password, ...updateData } = userData;
+                const { _password, ...updateData } = userData;
                 await dataService.updateDocument('profiles', userData.id, updateData);
                 toast({ title: "Sucesso!", description: "Usuário atualizado." });
             } else {

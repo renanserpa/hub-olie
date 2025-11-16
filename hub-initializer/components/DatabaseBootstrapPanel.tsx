@@ -32,7 +32,7 @@ export default function DatabaseBootstrapPanel() {
                     <ol className="list-decimal list-inside pl-2 mt-1">
                         <li>Copie o script acima.</li>
                         <li>Cole e execute no SQL Editor do seu projeto Supabase.</li>
-                        <li>Volte aqui e use o painel "Diagnóstico de Conexão" abaixo para validar as alterações.</li>
+                        <li>Volte aqui e use o painel &quot;Diagnóstico de Conexão&quot; abaixo para validar as alterações.</li>
                     </ol>
                 </div>
             </CardContent>

@@ -175,8 +175,8 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
             <p className="text-sm">Este é o passo mais importante para resolver o problema de acesso.</p>
             <ol className="list-decimal list-inside space-y-1 text-sm pl-2">
                 <li>Vá para a seção **Authentication** no seu painel Supabase.</li>
-                <li>Encontre o usuário `serparenan@gmail.com`, clique nos 3 pontos e em **"Edit user"**.</li>
-                <li>Role até a seção **"User App Metadata"**.</li>
+                <li>Encontre o usuário `serparenan@gmail.com`, clique nos 3 pontos e em **&quot;Edit user&quot;**.</li>
+                <li>Role até a seção **&quot;User App Metadata&quot;**.</li>
                 <li>Cole o seguinte JSON e clique em **Save**:</li>
             </ol>
             <pre className="text-xs whitespace-pre-wrap font-mono bg-secondary p-2 rounded-md">{`{

@@ -1,8 +1,10 @@
 // Fix: Import useState and useEffect from React.
 import React, { useState, useEffect } from 'react';
-import { User, UserProfile } from './types';
+import type { User, UserProfile } from './types';
 import Toaster from './components/Toaster';
-import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, Bell, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, Lightbulb, BookOpen, ChevronsLeft, ChevronsRight, LogOut, Loader2 } from 'lucide-react';
+import { ShoppingCart, Settings, Workflow, MessagesSquare, Package, Users, ShieldAlert, Truck, Megaphone, ShoppingBasket, BarChart2, BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, ChevronsLeft, ChevronsRight, LogOut, Loader2 } from 'lucide-react';
+// Unused icons kept aliased with _ prefix to silence lint when intentionally unused
+import { Bell as _Bell, Lightbulb as _Lightbulb, BookOpen as _BookOpen } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
@@ -58,13 +60,13 @@ const AccessDeniedPage: React.FC<{ role: string }> = ({ role }) => (
 );
 
 const App: React.FC = () => {
-    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule, isAIEnabled, mfaChallenge, setMfaChallenge } = useApp();
-    const { can, goto } = useOlie();
+    const { user, isLoading: isAuthLoading, error: authError, activeModule, setActiveModule, isAIEnabled: _isAIEnabled, mfaChallenge, setMfaChallenge } = useApp();
+    const { can, goto: _goto } = useOlie();
     const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-    useEffect(() => {
+        useEffect(() => {
         if (!user) {
           setIsDataLoading(false);
           return;

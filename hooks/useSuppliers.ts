@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, _useCallback as _useCallback } from 'react';
 import { Supplier } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';

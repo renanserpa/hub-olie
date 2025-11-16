@@ -15,7 +15,7 @@ export function useTinyApi() {
     console.log(`Calling mock API: ${functionName}`);
     try {
       await delay(1000 + Math.random() * 500); // Simulate network latency
-      // toast({ title: "Sucesso (Mock)", description: successMessage });
+      // toast({ title: "Sucesso (Mock)", description: _successMessage });
       return mockResult;
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });

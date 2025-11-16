@@ -167,9 +167,10 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                                     return <Badge variant={value ? 'ativo' : 'inativo'}>{value ? 'Ativo' : 'Inativo'}</Badge>;
                                 case 'file':
                                     return value ? <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate">{(value as string).split('/').pop()}</a> : <span className="text-xs text-textSecondary/70 dark:text-dark-textSecondary/70">Nenhum arquivo</span>;
-                                case 'select':
-                                    const option = field.options?.find(opt => opt.value === value);
-                                    return String(option?.label ?? value ?? '');
+                case 'select': {
+                  const option = field.options?.find(opt => opt.value === value);
+                  return String(option?.label ?? value ?? '');
+                }
                                 default:
                                     return String(value ?? '');
                             }

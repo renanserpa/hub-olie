@@ -157,7 +157,7 @@ export async function executeAgent(agent: string, payload: AgentPayload = {}) {
         await delay(1500);
         break;
 
-      case "ArquitetoSupremo_Finalizador":
+      case "ArquitetoSupremo_Finalizador": {
         const finalAgentName = "ArquitetoSupremo";
         if (payload.context === 'system_wide') {
           sendLog(finalAgentName, `Relatório consolidado.`);
@@ -167,6 +167,7 @@ export async function executeAgent(agent: string, payload: AgentPayload = {}) {
         await generateReport(String(payload.report ?? 'default-report'));
         await reportGenerator.writeAuditLog(`[SUCCESS] Módulo ${payload.context} finalizado.`);
         break;
+      }
 
       case "WebAppDevAI":
         sendLog(agent, `Atualizando componentes UI para ${payload.context}...`);

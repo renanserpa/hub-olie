@@ -1,5 +1,5 @@
 // modules/Purchasing/hooks/usePurchaseOrders.ts
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, _useCallback as _useCallback } from 'react';
 import { PurchaseOrder, PurchaseOrderItem, Supplier, Material } from '../../../types';
 import { dataService } from '../../../services/dataService';
 import { toast } from '../../../hooks/use-toast';

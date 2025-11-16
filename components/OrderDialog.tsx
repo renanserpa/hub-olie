@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 // FIX: Added Order to imports
-import { Contact, Product, OrderItem, ConfigJson, AppData, Order } from '../types';
+import type { Contact, Product, OrderItem, ConfigJson, AppData, Order } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from '../hooks/use-toast';
 import { Plus, Trash2, Settings, Loader2 } from 'lucide-react';
@@ -62,7 +62,8 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
             item.product = product;
             item.config_json = {}; // Reset config when product changes
         } else {
-            // @ts-ignore
+            // This line updates a dynamic key on a typed object; prefer @ts-expect-error so eslint/TS rules are explicit
+            // @ts-expect-error -- assigning to a dynamic OrderItem field
             item[field] = value;
         }
         

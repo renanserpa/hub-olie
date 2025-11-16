@@ -14,7 +14,7 @@ const ProductVariantsTable: React.FC<ProductVariantsTableProps> = ({ variants })
             <div className="text-center text-textSecondary py-12 border-2 border-dashed border-border rounded-xl">
                 <GitBranch className="mx-auto h-10 w-10 text-gray-400" />
                 <h3 className="mt-3 text-md font-medium text-textPrimary">Nenhuma Variante Gerada</h3>
-                <p className="mt-1 text-xs">Use o botão "Gerar Variantes Válidas" para criar os SKUs para este produto.</p>
+                <p className="mt-1 text-xs">Use o botão &quot;Gerar Variantes Válidas&quot; para criar os SKUs para este produto.</p>
             </div>
         );
     }

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Order, ConfigJson, Contact, PaymentDetails, FiscalDetails, LogisticsDetails } from '../types';
+import type { Order, ConfigJson, Contact, PaymentDetails, FiscalDetails, LogisticsDetails } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
-import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Palette, Type, Link as LinkIcon, Download } from 'lucide-react';
+import { ArrowLeft, CreditCard, FileText, Truck, RefreshCw, Link as LinkIcon, Download } from 'lucide-react';
+import { Palette as _Palette, Type as _Type } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { dataService } from '../services/dataService';
 import { integrationsService } from '../services/integrationsService';

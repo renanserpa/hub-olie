@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Order, Product } from '../types';
-import { X, List, CreditCard, Clock, FileText, ShoppingBag } from 'lucide-react';
+import { X, List, CreditCard, Clock, ShoppingBag } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
+import { FileText as _FileText } from 'lucide-react';
 import OrderTabDetails from './OrderDetailTabs/OrderTabDetails';
 import OrderTabItems from './OrderDetailTabs/OrderTabItems';
 import OrderTabPayments from './OrderDetailTabs/OrderTabPayments';

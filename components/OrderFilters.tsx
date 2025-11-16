@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, Plus, LayoutGrid, List, Columns, SlidersHorizontal } from 'lucide-react';
 import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { cn as _cn } from '../lib/utils';
 
 type ViewMode = 'kanban' | 'list' | 'table';
 

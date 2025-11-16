@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User } from '../types';
+import type { User } from '../types';
 import { Users, Plus, Search, Loader2, LayoutGrid, List, Columns } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useContacts } from '../hooks/useContacts';

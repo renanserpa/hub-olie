@@ -18,7 +18,7 @@ const PickingPackingPanel: React.FC<PickingPackingPanelProps> = ({ waves, pickTa
             <div className="text-center text-textSecondary py-16 border-2 border-dashed border-border rounded-xl">
                 <PackageCheck className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-lg font-medium text-textPrimary">Nenhuma Onda de Separação Ativa</h3>
-                <p className="mt-1 text-sm">Crie uma nova onda na aba "Fila & Ondas" para iniciar o processo de picking.</p>
+                <p className="mt-1 text-sm">Crie uma nova onda na aba &quot;Fila &amp; Ondas&quot; para iniciar o processo de picking.</p>
             </div>
         );
     }

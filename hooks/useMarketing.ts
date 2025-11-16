@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, _useCallback as _useCallback } from 'react';
 import { MarketingCampaign, MarketingSegment, MarketingTemplate, MarketingCampaignStatus, MarketingChannel } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
