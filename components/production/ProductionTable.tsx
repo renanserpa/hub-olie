@@ -5,11 +5,6 @@ import { Button } from '../ui/Button';
 import { Edit } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-interface ProductionTableProps {
-    orders: ProductionOrder[];
-    onOrderSelect: (orderId: string) => void;
-}
-
 const statusStyles: Record<ProductionOrderStatus, { badge: string; label: string }> = {
   novo: { badge: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200', label: 'Nova' },
   planejado: { badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200', label: 'Planejada' },
@@ -20,7 +15,7 @@ const statusStyles: Record<ProductionOrderStatus, { badge: string; label: string
 };
 
 
-const ProductionTable: React.FC<ProductionTableProps> = ({ orders, onOrderSelect }) => {
+const ProductionTable: React.FC<{ orders: ProductionOrder[], onOrderSelect: (orderId: string) => void }> = ({ orders, onOrderSelect }) => {
     
     const formatDate = (dateValue: any) => {
         if (!dateValue) return '';
@@ -47,4 +42,31 @@ const ProductionTable: React.FC<ProductionTableProps> = ({ orders, onOrderSelect
                             {orders.map(order => {
                                 const status = statusStyles[order.status];
                                 return (
-                                    <tr key={order.id} className="border-b border-border hover:bg-accent/50 cursor
+                                    <tr key={order.id} className="border-b border-border hover:bg-accent/50 cursor-pointer" onClick={() => onOrderSelect(order.id)}>
+                                        <td className="p-4 font-medium text-textPrimary font-mono">{order.po_number}</td>
+                                        <td className="p-4 text-textSecondary">{order.product?.name || 'N/A'}</td>
+                                        <td className="p-4 text-textSecondary">{order.quantity}</td>
+                                        <td className="p-4 text-textSecondary">{formatDate(order.due_date)}</td>
+                                        <td className="p-4">
+                                            <div className={cn('inline-flex items-center rounded-full border border-transparent px-2.5 py-0.5 text-xs font-semibold', status.badge)}>
+                                                {status.label}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOrderSelect(order.id); }}>
+                                                <Edit size={14} className="mr-2" />
+                                                Detalhes
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+export default ProductionTable;

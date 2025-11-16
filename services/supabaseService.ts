@@ -1,4 +1,6 @@
 // NOTE: This file has been refactored for Supabase.
+// FIX: Added 'React' import to resolve 'Cannot find namespace React' error for types used in `listenToCollection`.
+import React from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
     AnyProduct,

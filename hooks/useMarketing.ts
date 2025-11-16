@@ -27,16 +27,13 @@ export function useMarketing() {
 
     useEffect(() => {
         setIsLoading(true);
-        // FIX: Added the 4th argument `setCampaigns` to match the expected signature of `listenToCollection`.
         const campaignsListener = dataService.listenToCollection('marketing_campaigns', undefined, (data) => {
             setCampaigns(data as MarketingCampaign[]);
             setIsLoading(false);
         }, setCampaigns);
-        // FIX: Added the 4th argument `setSegments` to match the expected signature of `listenToCollection`.
         const segmentsListener = dataService.listenToCollection('marketing_segments', undefined, (data) => {
             setSegments(data as MarketingSegment[]);
         }, setSegments);
-        // FIX: Added the 4th argument `setTemplates` to match the expected signature of `listenToCollection`.
         const templatesListener = dataService.listenToCollection('marketing_templates', undefined, (data) => {
             setTemplates(data as MarketingTemplate[]);
         }, setTemplates);

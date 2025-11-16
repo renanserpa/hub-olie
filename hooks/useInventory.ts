@@ -56,9 +56,7 @@ export function useInventory() {
             loadData();
         };
 
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const balanceListener = dataService.listenToCollection('inventory_balances', undefined, handleDataChange, setAllBalances);
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const movementListener = dataService.listenToCollection('inventory_movements', undefined, handleDataChange, setMovements);
 
         return () => {

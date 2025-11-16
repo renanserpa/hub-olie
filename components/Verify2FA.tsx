@@ -44,8 +44,8 @@ const Verify2FA: React.FC<Verify2FAProps> = ({ amr, onVerified }) => {
     setError('');
     setIsLoading(true);
     try {
-        const { factors } = await getFactors();
-        const totpFactor = factors?.find(f => f.factor_type === 'totp' && f.status === 'verified');
+        const factorsData = await getFactors();
+        const totpFactor = factorsData?.all?.find(f => f.factor_type === 'totp' && f.status === 'verified');
 
         if (!totpFactor) {
             throw new Error("Fator TOTP não encontrado ou não verificado. Habilite o 2FA novamente.");

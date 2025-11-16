@@ -19,12 +19,10 @@ export function usePurchaseOrders() {
 
     useEffect(() => {
         setIsLoading(true);
-        // FIX: Added the 4th argument `setPurchaseOrders` to match the expected signature of `listenToCollection`.
         const poListener = dataService.listenToCollection('purchase_orders', '*, supplier:suppliers(*)', (data) => {
             setPurchaseOrders(data as PurchaseOrder[]);
             setIsLoading(false);
         }, setPurchaseOrders);
-        // FIX: Added the 4th argument `setSuppliers` to match the expected signature of `listenToCollection`.
         const supplierListener = dataService.listenToCollection('suppliers', undefined, (data) => setSuppliers(data as Supplier[]), setSuppliers);
 
         return () => {
