@@ -191,12 +191,12 @@ export const supabaseService = {
   updateDocument,
   deleteDocument,
   
-  listenToCollection: <T extends { id: string }>(table: string, join: string | undefined, callback: (payload: T[]) => void, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
-      const initialFetch = async () => {
+  listenToCollection: <T extends { id: string }>(table: string, join: string | undefined, callback: (data: T[]) => void, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
+      const fetchDataAndCallback = async () => {
           const data = await supabaseService.getCollection<T>(table, join);
-          setData(data);
+          callback(data);
       };
-      initialFetch();
+      fetchDataAndCallback(); // Initial fetch uses callback
 
       const channel = supabase.channel(`public:${table}`);
       channel
@@ -205,15 +205,7 @@ export const supabaseService = {
           { event: '*', schema: 'public', table: table },
           (payload: any) => {
             console.log(`[Realtime] Change detected in ${table}:`, payload);
-            if (payload.eventType === 'INSERT') {
-                setData(prevData => [...prevData, payload.new]);
-            }
-            if (payload.eventType === 'UPDATE') {
-                setData(prevData => prevData.map(item => item.id === payload.new.id ? payload.new : item));
-            }
-            if (payload.eventType === 'DELETE') {
-                setData(prevData => prevData.filter(item => item.id !== payload.old.id));
-            }
+            fetchDataAndCallback(); // Refetch to get fresh data and run callback logic
           }
         )
         .subscribe((status, err) => {
