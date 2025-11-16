@@ -80,19 +80,24 @@ export function useProduction() {
         setIsLoading(true);
         loadAuxData();
 
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', (data) => {
             setAllOrders(data as ProductionOrder[]);
             setIsLoading(false);
-        });
+        }, setAllOrders);
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const tasksListener = dataService.listenToCollection('production_tasks', undefined, (data) => {
             setAllTasks(data as ProductionTask[]);
-        });
+        }, setAllTasks);
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, (data) => {
             setAllQualityChecks(data as ProductionQualityCheck[]);
-        });
+        }, setAllQualityChecks);
         // FIX: Add realtime listeners for routes and molds.
-        const routesListener = dataService.listenToCollection('production_routes', undefined, (data) => setAllRoutes(data as ProductionRoute[]));
-        const moldsListener = dataService.listenToCollection('mold_library', undefined, (data) => setAllMolds(data as MoldLibrary[]));
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
+        const routesListener = dataService.listenToCollection('production_routes', undefined, (data) => setAllRoutes(data as ProductionRoute[]), setAllRoutes);
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
+        const moldsListener = dataService.listenToCollection('mold_library', undefined, (data) => setAllMolds(data as MoldLibrary[]), setAllMolds);
 
         return () => {
             ordersListener.unsubscribe();

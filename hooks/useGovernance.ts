@@ -13,10 +13,11 @@ export function useGovernance() {
 
   useEffect(() => {
     setIsLoading(true);
+    // FIX: Added the 4th argument `setSuggestions` to match the expected signature of `listenToCollection`.
     const listener = dataService.listenToCollection<GovernanceSuggestion>('governance_suggestions', undefined, (data) => {
         setSuggestions(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setIsLoading(false);
-    });
+    }, setSuggestions);
     return () => listener.unsubscribe();
   }, []);
 

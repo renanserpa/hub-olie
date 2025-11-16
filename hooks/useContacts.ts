@@ -13,25 +13,14 @@ export function useContacts() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await dataService.getContacts();
-            setAllContacts(data);
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar os contatos.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        loadData();
+        setIsLoading(true);
         const listener = dataService.listenToCollection<Contact>('customers', undefined, (newContacts) => {
             setAllContacts(newContacts);
-        });
+            setIsLoading(false);
+        }, setAllContacts);
         return () => listener.unsubscribe();
-    }, [loadData]);
+    }, []);
 
 
     const filteredContacts = useMemo(() => {
@@ -98,11 +87,12 @@ export function useContacts() {
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o estágio do contato.", variant: "destructive" });
             // Revert on failure
-            loadData(); 
+             const data = await dataService.getContacts();
+            setAllContacts(data);
         } finally {
             setIsSaving(false);
         }
-    }, [loadData]);
+    }, [allContacts]);
 
     return {
         isLoading,

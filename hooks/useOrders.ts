@@ -52,17 +52,16 @@ export function useOrders() {
     }, []);
 
     useEffect(() => {
-        loadData();
-        
-        const ordersListener = dataService.listenToCollection('orders', undefined, (payload) => {
+        const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', (payload) => {
             console.log('Realtime update on orders detected, refreshing...');
-            loadData();
-        });
+            loadData(); // Still need loadData to fetch items
+        }, setAllOrders as any);
 
         const itemsListener = dataService.listenToCollection('order_items', undefined, (payload) => {
-            console.log('Realtime update on order_items detected, refreshing...');
-            loadData();
-        });
+            console.log('Realtime update on order_items detected, refreshing orders...');
+            loadData(); // If items change, we need to reload orders to update totals
+        }, () => {});
+
 
         return () => {
             ordersListener.unsubscribe();
@@ -127,7 +126,7 @@ export function useOrders() {
                 }
             }
 
-            setAllOrders(prev => prev.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+            // Realtime listener handles the state update
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status do pedido.", variant: "destructive" });
         } finally {
@@ -141,13 +140,13 @@ export function useOrders() {
             await dataService.addOrder(orderData);
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             setIsCreateDialogOpen(false);
-            loadData();
+            // Realtime will update list
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível criar o pedido.", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
-    }, [loadData]);
+    }, []);
 
     const addItemToOrder = useCallback(async (orderId: string, itemData: { product_id: string; quantity: number }) => {
         setIsSaving(true);
@@ -167,22 +166,10 @@ export function useOrders() {
                 total: product.base_price * itemData.quantity,
             };
     
-            const addedItem = await dataService.addDocument('order_items', newItem);
-    
-            const order = allOrders.find(o => o.id === orderId);
-            if (order) {
-                const updatedItems = [...order.items, addedItem as OrderItem];
-                const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0);
-                const newTotal = newSubtotal - order.discounts + order.shipping_fee;
-    
-                await dataService.updateDocument<Order>('orders', orderId, {
-                    subtotal: newSubtotal,
-                    total: newTotal,
-                });
-            }
+            await dataService.addDocument('order_items', newItem);
             
             toast({ title: "Sucesso!", description: "Item adicionado ao pedido." });
-            await loadData();
+            // The item listener will trigger a refresh of orders
     
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível adicionar o item.", variant: "destructive" });

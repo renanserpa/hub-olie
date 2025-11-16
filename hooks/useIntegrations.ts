@@ -25,18 +25,21 @@ export function useIntegrations() {
 
   useEffect(() => {
     setLoading(true);
+    // FIX: Added the 4th argument `setIntegrations` to match the expected signature of `listenToCollection`.
     const integrationsListener = dataService.listenToCollection<Integration>('config_integrations', undefined, (data) => {
         setIntegrations(data);
         setLoading(false);
-    });
+    }, setIntegrations);
 
+    // FIX: Added the 4th argument `setLogs` to match the expected signature of `listenToCollection`.
     const logsListener = dataService.listenToCollection<IntegrationLog>('integration_logs', undefined, (data) => {
         setLogs(data);
-    });
+    }, setLogs);
 
+    // FIX: Added the 4th argument `setWebhookLogs` to match the expected signature of `listenToCollection`.
     const webhookLogsListener = dataService.listenToCollection<WebhookLog>('webhook_logs', undefined, (data) => {
       setWebhookLogs(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    });
+    }, setWebhookLogs);
 
     return () => {
         integrationsListener.unsubscribe();

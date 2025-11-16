@@ -7,25 +7,14 @@ export function useCategories() {
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await dataService.getCollection<ProductCategory>('product_categories');
-            setCategories(data);
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar as categorias.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        loadData();
+        setIsLoading(true);
         const listener = dataService.listenToCollection<ProductCategory>('product_categories', undefined, (newData) => {
             setCategories(newData);
-        });
+            setIsLoading(false);
+        }, setCategories);
         return () => listener.unsubscribe();
-    }, [loadData]);
+    }, []);
 
     const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
         try {

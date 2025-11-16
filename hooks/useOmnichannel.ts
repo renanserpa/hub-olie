@@ -37,14 +37,16 @@ export function useOmnichannel(user: User) {
         setIsLoading(true);
         loadAuxData();
 
+        // FIX: Added the 4th argument `setConversations` to match the expected signature of `listenToCollection`.
         const convListener = dataService.listenToCollection<Conversation>('conversations', undefined, (data) => {
             setConversations(data.sort((a, b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt)));
             setIsLoading(false);
-        });
+        }, setConversations);
 
+        // FIX: Added the 4th argument `setMessages` to match the expected signature of `listenToCollection`.
         const msgListener = dataService.listenToCollection<Message>('messages', undefined, (data) => {
             setMessages(data);
-        });
+        }, setMessages);
         
         return () => {
             convListener.unsubscribe();

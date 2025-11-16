@@ -37,17 +37,11 @@ export function useProducts() {
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [productsData, categoriesData, collectionsData, settings, variantsData, balancesData] = await Promise.all([
-                dataService.getCollection<Product>('products'),
-                dataService.getCollection<ProductCategory>('product_categories'),
-                dataService.getCollection<Collection>('collections'),
+            const [settings, variantsData, balancesData] = await Promise.all([
                 dataService.getSettings(),
                 dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<InventoryBalance>('inventory_balances', '*, material:config_materials(*)'),
             ]);
-            setAllProducts(productsData);
-            setCategories(categoriesData);
-            setCollections(collectionsData);
             setSettingsData(settings);
             setAllVariants(variantsData);
             setInventoryBalances(balancesData);
@@ -60,9 +54,9 @@ export function useProducts() {
 
     useEffect(() => {
         loadData();
-        const productsListener = dataService.listenToCollection('products', undefined, () => loadData());
-        const categoriesListener = dataService.listenToCollection('product_categories', undefined, () => loadData());
-        const collectionsListener = dataService.listenToCollection('collections', undefined, () => loadData());
+        const productsListener = dataService.listenToCollection('products', undefined, (d) => {}, setAllProducts);
+        const categoriesListener = dataService.listenToCollection('product_categories', undefined, (d) => {}, setCategories);
+        const collectionsListener = dataService.listenToCollection('collections', undefined, (d) => {}, setCollections);
         
         return () => {
             productsListener.unsubscribe();
@@ -124,9 +118,9 @@ export function useProducts() {
             toast({ title: "Status Atualizado!", description: `O produto foi movido para "${newStatus}".`});
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status do produto.", variant: "destructive" });
-            loadData(); // Revert on failure
+            // Revert on failure, but listener should eventually correct it
         }
-    }, [loadData]);
+    }, []);
 
     return {
         isLoading,

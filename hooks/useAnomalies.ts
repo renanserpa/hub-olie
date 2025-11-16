@@ -10,6 +10,7 @@ export function useAnomalies() {
     useEffect(() => {
         setIsLoading(true);
 
+        // FIX: Added the 4th argument `setAnomalies` to match the expected signature of `listenToCollection`.
         const listener = dataService.listenToCollection<SystemAudit>('system_audit', undefined, (allAudits) => {
             const anomalyLogs = allAudits
                 .filter(log => log.key.endsWith('_ANOMALY'))
@@ -17,7 +18,7 @@ export function useAnomalies() {
             
             setAnomalies(anomalyLogs);
             setIsLoading(false);
-        });
+        }, setAnomalies);
 
         return () => listener.unsubscribe();
 

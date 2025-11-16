@@ -12,10 +12,11 @@ export function GovernancePanel() {
 
   useEffect(() => {
     setIsLoading(true);
+    // FIX: Added the 4th argument `setLogs` to match the expected signature of `listenToCollection`.
     const listener = dataService.listenToCollection<SystemSettingsLog>('system_settings_logs', undefined, (data) => {
         setLogs(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setIsLoading(false);
-    });
+    }, setLogs);
     return () => listener.unsubscribe();
   }, []);
 

@@ -34,7 +34,7 @@ export function useSettings() {
                 if (!prevData) return null;
                 return { ...prevData, sistema: updatedSettings };
             });
-        });
+        }, setSettingsData as any);
         
         return () => listener.unsubscribe();
 
@@ -52,7 +52,7 @@ export function useSettings() {
         try {
             await mutationFn;
             toast({ title: 'Sucesso!', description: successMessage });
-            await loadSettings();
+            // No manual refresh needed, realtime listener will update state
         } catch (error) {
             console.error(errorMessage, error);
             const errorMsg = (error as Error).message || errorMessage;

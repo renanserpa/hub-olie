@@ -15,10 +15,11 @@ export function useSuppliers() {
 
     useEffect(() => {
         setIsLoading(true);
+        // FIX: Added the 4th argument `setSuppliers` to match the expected signature of `listenToCollection`.
         const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, (newSuppliers) => {
             setSuppliers(newSuppliers.sort((a, b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
-        });
+        }, setSuppliers);
         return () => listener.unsubscribe();
     }, []);
 

@@ -39,7 +39,8 @@ export function useNotifications() {
             setIsLoading(false);
         };
         
-        const listener = dataService.listenToCollection<Notification>('notifications', undefined, handleData);
+        // FIX: Added the 4th argument `setNotifications` to match the expected signature of `listenToCollection`.
+        const listener = dataService.listenToCollection<Notification>('notifications', undefined, handleData, setNotifications);
         
         return () => listener.unsubscribe();
 

@@ -15,10 +15,11 @@ export function useSupplyGroups() {
 
     useEffect(() => {
         setIsLoading(true);
+        // FIX: Added the 4th argument `setGroups` to match the expected signature of `listenToCollection`.
         const listener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, (newData) => {
             setGroups(newData.sort((a,b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
-        });
+        }, setGroups);
         return () => listener.unsubscribe();
     }, []);
 

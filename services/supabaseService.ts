@@ -190,10 +190,10 @@ export const supabaseService = {
   updateDocument,
   deleteDocument,
   
-  listenToCollection: <T>(table: string, join: string | undefined, callback: (payload: T[]) => void) => {
+  listenToCollection: <T extends { id: string }>(table: string, join: string | undefined, callback: (payload: T[]) => void, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
       const initialFetch = async () => {
           const data = await supabaseService.getCollection<T>(table, join);
-          callback(data);
+          setData(data);
       };
       initialFetch();
 
@@ -202,13 +202,30 @@ export const supabaseService = {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: table },
-          async (payload: any) => {
-            console.log(`Change detected in ${table}, refetching...`);
-            const data = await supabaseService.getCollection<T>(table, join);
-            callback(data);
+          (payload: any) => {
+            console.log(`[Realtime] Change detected in ${table}:`, payload);
+            if (payload.eventType === 'INSERT') {
+                setData(prevData => [...prevData, payload.new]);
+            }
+            if (payload.eventType === 'UPDATE') {
+                setData(prevData => prevData.map(item => item.id === payload.new.id ? payload.new : item));
+            }
+            if (payload.eventType === 'DELETE') {
+                setData(prevData => prevData.filter(item => item.id !== payload.old.id));
+            }
           }
         )
-        .subscribe();
+        .subscribe((status, err) => {
+            if (status === 'SUBSCRIBED') {
+                console.log(`[Realtime] Successfully subscribed to ${table}`);
+            }
+            if (status === 'CHANNEL_ERROR') {
+                console.error(`[Realtime] Error on channel ${table}:`, err);
+            }
+            if (status === 'TIMED_OUT') {
+                console.warn(`[Realtime] Timed out subscribing to ${table}`);
+            }
+        });
 
       return {
         unsubscribe: () => {

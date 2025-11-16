@@ -27,15 +27,17 @@ export function useMaterials() {
     loadInitialData();
     
     // Subscribe to realtime updates for materials and groups
+    // FIX: Added the 4th argument `setMaterials` to match the expected signature of `listenToCollection`.
     const materialsListener = dataService.listenToCollection<Material>('config_materials', '*, config_supply_groups(name)', (data) => {
       setMaterials(data);
       setLoading(false);
-    });
+    }, setMaterials);
 
+    // FIX: Added the 4th argument `setGroups` to match the expected signature of `listenToCollection`.
     const groupsListener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, (data) => {
       setGroups(data);
       setLoading(false);
-    });
+    }, setGroups);
 
     // Unsubscribe on cleanup
     return () => {

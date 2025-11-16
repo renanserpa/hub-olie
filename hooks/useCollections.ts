@@ -7,25 +7,14 @@ export function useCollections() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await dataService.getCollection<Collection>('collections');
-            setCollections(data);
-        } catch (error) {
-            toast({ title: "Erro!", description: "Não foi possível carregar as coleções.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        loadData();
+        setIsLoading(true);
         const listener = dataService.listenToCollection<Collection>('collections', undefined, (newData) => {
             setCollections(newData);
-        });
+            setIsLoading(false);
+        }, setCollections);
         return () => listener.unsubscribe();
-    }, [loadData]);
+    }, []);
 
     const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
         try {

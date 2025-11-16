@@ -38,15 +38,17 @@ export function useLogistics() {
     useEffect(() => {
         loadData();
 
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const ordersListener = dataService.listenToCollection('orders', undefined, () => {
             console.log('Realtime update on orders detected for logistics, refreshing...');
             loadData();
-        });
+        }, setAllOrders);
 
+        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
         const wavesListener = dataService.listenToCollection('logistics_waves', undefined, () => {
             console.log('Realtime update on logistics_waves detected, refreshing...');
             loadData();
-        });
+        }, setAllWaves);
 
         return () => {
             ordersListener.unsubscribe();
