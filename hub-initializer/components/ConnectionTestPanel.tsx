@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Zap, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { useInitializer } from '../hooks/useInitializer';
 import { cn } from '../../lib/utils';
-import { runtime } from '../../lib/runtime';
 import { toast } from '../../hooks/use-toast';
 
 export default function ConnectionTestPanel() {
@@ -44,8 +43,9 @@ export default function ConnectionTestPanel() {
                     <Button 
                         onClick={handleTestConnection} 
                         variant="outline" 
-                        disabled={isTesting || runtime.mode === 'SANDBOX'} 
-                        title={runtime.mode === 'SANDBOX' ? "O teste de conexão só pode ser executado no modo SUPABASE." : ""}
+                        // FIX: Removed runtime dependency as SANDBOX mode is deprecated.
+                        disabled={isTesting} 
+                        title=""
                     >
                         {isTesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Executar Teste de Conexão

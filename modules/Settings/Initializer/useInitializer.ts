@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import { ENV } from '../../../lib/env';
 import { log } from '../../../lib/logger';
 import { useApp } from '../../../contexts/AppContext';
 import { supabase } from '../../../lib/supabaseClient';
@@ -20,7 +19,8 @@ export function useInitializer() {
   const { setActiveModule, user } = useApp();
   const { can } = useOlie();
   const [status, setStatus] = useState<InitStatus>({
-    env: ENV.APP_ENV,
+    // FIX: Remove ENV dependency and hardcode to SUPABASE mode.
+    env: 'SUPABASE',
     supabaseConnected: false,
     modulesDetected: [],
     lastSync: null,
@@ -43,12 +43,11 @@ export function useInitializer() {
     let supabaseConnected = false;
     let warnings: string[] = [];
 
-    if (ENV.APP_ENV !== 'SANDBOX' && supabase) {
+    // FIX: Simplified logic as SANDBOX mode is deprecated.
+    if (supabase) {
       const { data, error } = await supabase.from('system_settings').select('*').limit(1);
       supabaseConnected = !error && !!data;
       if (error) warnings.push('Supabase access error on system_settings.');
-    } else if (ENV.APP_ENV === 'SANDBOX') {
-        supabaseConnected = true; // In sandbox, we assume connection is fine.
     }
 
     const settingsArr = await dataService.getCollection<SystemSetting>('system_settings');
@@ -63,7 +62,8 @@ export function useInitializer() {
       : {};
 
     const result: InitStatus = {
-      env: ENV.APP_ENV,
+      // FIX: Remove ENV dependency and hardcode to SUPABASE mode.
+      env: 'SUPABASE',
       supabaseConnected,
       modulesDetected,
       lastSync: now,
