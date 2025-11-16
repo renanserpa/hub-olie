@@ -3,7 +3,7 @@ import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2, BookOpen, Layer
 import TabLayout from '../ui/TabLayout';
 import TabContent from '../TabContent';
 import { useSettings } from '../../hooks/useSettings';
-import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection } from '../../types';
+import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection, ColorPalette, MonogramFont, FabricTexture } from '../../types';
 import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
 import { useCategories } from '../../hooks/useCategories';
@@ -73,11 +73,11 @@ const CatalogManagement: React.FC = () => {
         switch (activePersonalizationSubTab) {
             case 'paletas_cores':
                 if (!settingsData.catalogs.paletas_cores) return <PlaceholderContent title="Paletas de Cores" requiredTable="config_color_palettes" />;
-                return <TabContent category="catalogs" data={settingsData.catalogs.paletas_cores} fields={paletteFieldConfig} {...createCrudHandlers('catalogs', 'paletas_cores')} isAdmin={isAdmin} title="Paletas de Cores" />;
+                return <TabContent<ColorPalette> category="catalogs" data={settingsData.catalogs.paletas_cores} fields={paletteFieldConfig} {...createCrudHandlers('catalogs', 'paletas_cores')} isAdmin={isAdmin} title="Paletas de Cores" />;
             
             case 'fontes_monogramas':
                 if (!settingsData.catalogs.fontes_monogramas) return <PlaceholderContent title="Fontes para Monograma" requiredTable="config_fonts" />;
-                return <TabContent category="catalogs" data={settingsData.catalogs.fontes_monogramas} fields={fontFieldConfig} {...createCrudHandlers('catalogs', 'fontes_monogramas')} isAdmin={isAdmin} title="Fontes para Monograma" />;
+                return <TabContent<MonogramFont> category="catalogs" data={settingsData.catalogs.fontes_monogramas} fields={fontFieldConfig} {...createCrudHandlers('catalogs', 'fontes_monogramas')} isAdmin={isAdmin} title="Fontes para Monograma" />;
 
             case 'cores_texturas': {
                 const colorData = settingsData.catalogs.cores_texturas;
@@ -115,9 +115,8 @@ const CatalogManagement: React.FC = () => {
             case 'categories':
                  return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        {/* FIX: Removed 'as any' casts as ProductCategory/Collection are now part of AnySettingsItem */}
-                        <TabContent title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory as any} onUpdate={updateCategory as any} onDelete={deleteCategory} isAdmin={isAdmin} />
-                        <TabContent title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection as any} onUpdate={updateCollection as any} onDelete={deleteCollection} isAdmin={isAdmin} />
+                        <TabContent<ProductCategory> title="Categorias de Produto" data={categories} fields={categoryFieldConfig} category="catalogs" onAdd={addCategory} onUpdate={updateCategory} onDelete={deleteCategory} isAdmin={isAdmin} />
+                        <TabContent<Collection> title="Coleções" data={collections} fields={collectionFieldConfig} category="catalogs" onAdd={addCollection} onUpdate={updateCollection} onDelete={deleteCollection} isAdmin={isAdmin} />
                     </div>
                 );
             case 'personalization':

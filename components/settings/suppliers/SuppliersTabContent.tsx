@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { Plus, Loader2 } from 'lucide-react';
-import { useSuppliers } from '../../../hooks/useSuppliers';
+// FIX: Corrected import path for useSuppliers hook, as the original was obsolete.
+import { useSuppliers } from '../../../modules/Purchasing/hooks/useSuppliers';
 import SuppliersTable from './SuppliersTable';
 import SupplierDialog from './SupplierDialog';
 import { Supplier } from '../../../types';

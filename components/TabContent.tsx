@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnySettingsItem, SettingsCategory, FieldConfig } from '../types';
+import { SettingsCategory, FieldConfig } from '../types';
 import { Pencil, Trash2, Plus, Loader2, PackageOpen } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -9,20 +9,20 @@ import AlertDialog from './ui/AlertDialog';
 import { cn } from '../lib/utils';
 import { toast } from '../hooks/use-toast';
 
-interface TabContentProps {
+interface TabContentProps<T extends { id: string; [key: string]: any }> {
   category: SettingsCategory;
-  data: AnySettingsItem[];
+  data: T[];
   fields: FieldConfig[];
-  onAdd: (item: Omit<AnySettingsItem, 'id'>, fileData?: Record<string, File | null>) => Promise<void>;
-  onUpdate: (item: AnySettingsItem, fileData?: Record<string, File | null>) => Promise<void>;
+  onAdd: (item: Omit<T, 'id'>, fileData?: Record<string, File | null>) => Promise<void>;
+  onUpdate: (item: T, fileData?: Record<string, File | null>) => Promise<void>;
   onDelete: (itemId: string) => Promise<void>;
   isAdmin: boolean;
   title: string;
 }
 
-const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, onUpdate, onDelete, isAdmin, title }) => {
+const TabContent = <T extends { id: string; [key: string]: any }>({ category, data, fields, onAdd, onUpdate, onDelete, isAdmin, title }: TabContentProps<T>) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<AnySettingsItem | null>(null);
+  const [currentItem, setCurrentItem] = useState<T | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [fileData, setFileData] = useState<Record<string, File | null>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -34,7 +34,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
     return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
   };
 
-  const openModal = (item: AnySettingsItem | null = null) => {
+  const openModal = (item: T | null = null) => {
     setCurrentItem(item);
     setFormData(item ? { ...item } : fields.reduce((acc, field) => ({ ...acc, [field.key]: field.type === 'checkbox' ? false : '' }), {}));
     setFileData({});
@@ -99,9 +99,9 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
 
     try {
         if (currentItem) {
-          await onUpdate(submissionData as AnySettingsItem, fileData);
+          await onUpdate(submissionData as T, fileData);
         } else {
-          await onAdd(submissionData as Omit<AnySettingsItem, 'id'>, fileData);
+          await onAdd(submissionData as Omit<T, 'id'>, fileData);
         }
         closeModal();
     } catch (error) {
@@ -151,7 +151,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
                   {fields.map(field => field.key !== 'id' && (
                     <td key={field.key} className="p-4 text-textPrimary dark:text-dark-textPrimary align-middle">
                        {(() => {
-                            const value = item[field.key as keyof AnySettingsItem] as any;
+                            const value = item[field.key] as any;
                             if (field.key === 'preview_url' && value) {
                                 return <img src={value} alt="Preview" className="h-8 w-auto max-w-[100px] object-contain bg-secondary dark:bg-dark-secondary rounded" />;
                             }
@@ -205,7 +205,7 @@ const TabContent: React.FC<TabContentProps> = ({ category, data, fields, onAdd, 
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? `Editar: ${'name' in currentItem && currentItem.name ? currentItem.name : ('type' in currentItem ? currentItem.type : currentItem.id)}` : `Adicionar Novo Item`}>
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={currentItem ? `Editar: ${currentItem.name || currentItem.type || currentItem.id}` : `Adicionar Novo Item`}>
         <form onSubmit={handleSubmit}>
             <div className="space-y-4">
             {fields.map(field => field.key !== 'id' && (
