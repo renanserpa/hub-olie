@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProductionOrder, Material, BOMComponent, ProductionRoute, ProductionTaskStatus, ProductionQualityCheck, AuthUser, ProductionTask, QualityCheckResult } from '../../types';
+import { ProductionOrder, Material, BOMComponent, ProductionRoute, ProductionTaskStatus, ProductionQualityCheck, AuthUser, ProductionTask, QualityCheckResult, Product, ProductVariant } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { cn } from '../../lib/utils';
 import { Button } from '../../components/ui/Button';
@@ -19,7 +19,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 interface ProductionOrderDetailPanelProps {
-    order: ProductionOrder & { product?: any; tasks?: ProductionTask[]; quality_checks?: ProductionQualityCheck[] };
+    order: ProductionOrder & { product?: Product; tasks?: ProductionTask[]; variant?: ProductVariant; quality_checks?: ProductionQualityCheck[] };
     allMaterials: Material[];
     onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
     onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;

@@ -12,6 +12,7 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Use modern class property syntax for state initialization
   state: ErrorBoundaryState = {
     hasError: false,
     error: undefined,

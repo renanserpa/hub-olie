@@ -1,12 +1,12 @@
 import React from 'react';
-import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser } from '../../types';
+import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser, Product, ProductVariant, ProductionTask } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
 import ProductionOrderDetailPanel from './ProductionOrderDetailPanel';
 
 interface ProductionDrawerProps {
-    order: (ProductionOrder & { product?: any, tasks?: any[], variant?: any, quality_checks?: ProductionQualityCheck[] }) | null;
+    order: (ProductionOrder & { product?: Product; tasks?: ProductionTask[]; variant?: ProductVariant; quality_checks?: ProductionQualityCheck[] }) | null;
     isOpen: boolean;
     onClose: () => void;
     allMaterials: Material[];

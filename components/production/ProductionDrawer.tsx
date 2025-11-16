@@ -1,6 +1,6 @@
 import React from 'react';
 // FIX: Add AuthUser, ProductionTask to imports
-import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser, ProductionTask } from '../../types';
+import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser, ProductionTask, Product } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
@@ -11,7 +11,7 @@ import ProductionOrderDetailPanel from '../../modules/Production/ProductionOrder
 
 interface ProductionDrawerProps {
     // FIX: Update order type to match what ProductionOrderDetailPanel expects
-    order: (ProductionOrder & { product?: any; tasks?: ProductionTask[]; quality_checks?: ProductionQualityCheck[] }) | null;
+    order: (ProductionOrder & { product?: Product; tasks?: ProductionTask[]; quality_checks?: ProductionQualityCheck[] }) | null;
     isOpen: boolean;
     onClose: () => void;
     allMaterials: Material[];

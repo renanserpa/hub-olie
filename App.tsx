@@ -102,7 +102,6 @@ const App: React.FC = () => {
             case 'finance':
                 return <FinancePage />;
             case 'omnichannel':
-                // FIX: Removed 'as User' cast as UserProfile is now compatible with User type.
                 return <OmnichannelPage user={user} />;
             case 'marketing':
                 return <MarketingPage />;
@@ -111,7 +110,6 @@ const App: React.FC = () => {
             case 'products':
                 return <ProductsPage />;
             case 'orders':
-                // FIX: Removed 'as User' cast as UserProfile is now compatible with User type.
                 return <OrdersPage user={user} />;
             default:
                 return <DashboardPage />;
@@ -195,29 +193,4 @@ const App: React.FC = () => {
                 <header className="flex items-center justify-between h-16 px-6 border-b border-border dark:border-dark-border bg-card dark:bg-dark-card flex-shrink-0">
                     <div>
                         <h2 className="text-xl font-semibold">{MAIN_TABS.find(t => t.id === activeModule)?.label}</h2>
-                        <p className="text-sm text-textSecondary dark:text-dark-textSecondary">{MAIN_TABS.find(t => t.id === activeModule)?.description}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <NotificationBell />
-                        <ThemeToggle />
-                        {/* User Profile - simplified */}
-                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center font-semibold text-sm">
-                            {user.email.charAt(0).toUpperCase()}
-                        </div>
-                    </div>
-                </header>
-                <div className="flex-1 overflow-y-auto p-6">
-                    {isDataLoading ? (
-                        <div className="flex justify-center items-center h-full">
-                            <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                        </div>
-                    ) : renderActivePage()}
-                </div>
-            </main>
-            
-            <Toaster />
-        </div>
-    );
-};
-// FIX: Add default export to resolve module loading error in index.tsx.
-export default App;
+                        <p className="text-sm text-textSecondary dark:text-dark-textSecondary">{MAIN_TABS.find(t => t.id === activeModule)?.description

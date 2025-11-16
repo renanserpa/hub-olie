@@ -1,6 +1,2 @@
-// FIX: Add content to this file to make it a valid module.
-import { ENV } from './env';
-
-export const runtime = {
-  mode: ENV.APP_ENV,
-};
+// This file is obsolete and has been emptied to resolve build errors.
+// The application now operates exclusively in SUPABASE mode.
