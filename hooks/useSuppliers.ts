@@ -14,11 +14,13 @@ export function useSuppliers() {
 
     useEffect(() => {
         setIsLoading(true);
-        // FIX: Added the 4th argument `setSuppliers` to match the expected signature of `listenToCollection`.
-        const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, (newSuppliers) => {
+        // FIX: The `listenToCollection` function's 3rd argument is the state setter, and the 4th is a callback.
+        // This was previously inverted, causing a type inference issue on `newSuppliers`.
+        // The correct pattern is to pass the state setter directly, and then use the callback for subsequent logic like sorting.
+        const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, setSuppliers, (newSuppliers) => {
             setSuppliers(newSuppliers.sort((a, b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
-        }, setSuppliers);
+        });
         return () => listener.unsubscribe();
     }, []);
 
@@ -47,7 +49,7 @@ export function useSuppliers() {
     
     const _deleteSupplier = async (id: string) => {
          if (!canWrite) {
-            toast({ title: 'Acesso Negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+            toast({ title: 'Acesso Negado', description: 'Você не tem permissão para esta ação.', variant: 'destructive' });
             throw new Error('Permission denied');
         }
         setIsSaving(true);

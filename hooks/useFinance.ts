@@ -32,13 +32,13 @@ export function useFinance() {
     useEffect(() => {
         loadData();
 
-        // FIX: Added the 4th argument `setTransactions` to match the expected signature of `listenToCollection`.
-        const listener = dataService.listenToCollection('finance_transactions', undefined, () => {
+        const listener = dataService.listenToCollection('finance_transactions', undefined, setTransactions, (data) => {
             console.log('Realtime update on finance_transactions detected, refreshing...');
-            loadData();
-        }, setTransactions);
+            setTransactions(data.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()));
+        });
 
         return () => listener.unsubscribe();
+
     }, [loadData]);
     
     const saveTransaction = async (data: Omit<FinanceTransaction, 'id' | 'created_at'> | FinanceTransaction) => {

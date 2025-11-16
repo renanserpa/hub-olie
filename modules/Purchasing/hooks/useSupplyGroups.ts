@@ -15,10 +15,10 @@ export function useSupplyGroups() {
 
     useEffect(() => {
         setIsLoading(true);
-        const listener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, (newData) => {
+        const listener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, setGroups, (newData) => {
             setGroups(newData.sort((a,b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
-        }, setGroups);
+        });
         return () => listener.unsubscribe();
     }, []);
 

@@ -8,11 +8,9 @@ export function useNotifications() {
     const { user } = useApp();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    // FIX: The useRef hook was called without an initial value, which is not allowed by some TypeScript configurations when a generic type is provided. Initializing it with 'undefined' resolves the error.
     const prevNotificationsRef = useRef<Notification[] | undefined>(undefined);
     
     useEffect(() => {
-        // Keep the ref updated with the latest notifications state on every render
         prevNotificationsRef.current = notifications;
     });
 
@@ -35,28 +33,25 @@ export function useNotifications() {
                     toast({ title: newUnread.title, description: newUnread.message });
                 }
             }
-            setNotifications(sortedData);
+            setNotifications(sortedData); // This is handled by the service now, but keep for the logic above
             setIsLoading(false);
         };
         
-        // FIX: Added the 4th argument `setNotifications` to match the expected signature of `listenToCollection`.
-        const listener = dataService.listenToCollection<Notification>('notifications', undefined, handleData, setNotifications);
+        const listener = dataService.listenToCollection<Notification>('notifications', undefined, setNotifications, handleData);
         
         return () => listener.unsubscribe();
 
-    }, [user?.id]); // Dependency is now on the stable user ID primitive
+    }, [user?.id]);
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
     const markAsRead = useCallback(async (id: string) => {
         const originalNotifications = notifications;
-        // Optimistic update
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
         try {
             await dataService.updateDocument<Notification>('notifications', id, { is_read: true });
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível marcar a notificação como lida.", variant: "destructive" });
-            // Revert on error
             setNotifications(originalNotifications);
         }
     }, [notifications]);
@@ -66,15 +61,12 @@ export function useNotifications() {
         const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
         if (unreadIds.length === 0) return;
         
-        // Optimistic update
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         
         try {
-            // Batch update
             await Promise.all(unreadIds.map(id => dataService.updateDocument<Notification>('notifications', id, { is_read: true })));
         } catch (error) {
              toast({ title: "Erro", description: "Não foi possível marcar todas as notificações como lidas.", variant: "destructive" });
-             // Revert
              setNotifications(originalNotifications);
         }
     }, [notifications]);

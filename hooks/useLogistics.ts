@@ -36,23 +36,18 @@ export function useLogistics() {
     }, []);
 
     useEffect(() => {
+        // Still do a full load initially
         loadData();
 
-        const ordersListener = dataService.listenToCollection('orders', undefined, () => {
-            console.log('Realtime update on orders detected for logistics, refreshing...');
-            loadData();
-        }, setAllOrders);
-
-        const wavesListener = dataService.listenToCollection('logistics_waves', undefined, () => {
-            console.log('Realtime update on logistics_waves detected, refreshing...');
-            loadData();
-        }, setAllWaves);
+        // Then listen for targeted updates
+        const ordersListener = dataService.listenToCollection('orders', '*, customers(name)', setAllOrders);
+        const wavesListener = dataService.listenToCollection('logistics_waves', undefined, setAllWaves);
 
         return () => {
             ordersListener.unsubscribe();
             wavesListener.unsubscribe();
         };
-    }, [loadData]);
+    }, []);
 
     const pickingQueue = useMemo(() => {
         const ordersInWaves = new Set(allWaves.flatMap(w => w.order_ids));
@@ -78,7 +73,7 @@ export function useLogistics() {
             await dataService.addDocument('logistics_waves', newWave);
             toast({ title: 'Sucesso!', description: `Onda ${waveNumber} criada com ${orderIds.length} pedidos.` });
             setIsWaveDialogOpen(false);
-            loadData(); // Refresh data
+            // Realtime handles refresh
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível criar a onda de separação.', variant: 'destructive' });
         }

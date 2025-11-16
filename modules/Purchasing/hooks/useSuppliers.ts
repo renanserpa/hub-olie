@@ -15,10 +15,10 @@ export function useSuppliers() {
 
     useEffect(() => {
         setIsLoading(true);
-        const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, (newSuppliers) => {
+        const listener = dataService.listenToCollection<Supplier>('suppliers', undefined, setSuppliers, (newSuppliers) => {
             setSuppliers(newSuppliers.sort((a, b) => a.name.localeCompare(b.name)));
             setIsLoading(false);
-        }, setSuppliers);
+        });
         return () => listener.unsubscribe();
     }, []);
 

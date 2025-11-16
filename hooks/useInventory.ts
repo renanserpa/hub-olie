@@ -51,19 +51,31 @@ export function useInventory() {
     useEffect(() => {
         loadData();
 
-        const handleDataChange = () => {
-            console.log('Realtime update detected in inventory module, refreshing...');
-            loadData();
-        };
-
-        const balanceListener = dataService.listenToCollection('inventory_balances', undefined, handleDataChange, setAllBalances);
-        const movementListener = dataService.listenToCollection('inventory_movements', undefined, handleDataChange, setMovements);
+        const balanceListener = dataService.listenToCollection('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)', setAllBalances, (data) => {
+             console.log('Realtime update detected in inventory balances, refreshing auxiliary data...');
+             // We still need to load aux data like suppliers to enrich the balances
+             Promise.all([
+                dataService.getCollection<Material>('config_materials'),
+                dataService.getCollection<Supplier>('suppliers'),
+             ]).then(([materialsData, suppliersData]) => {
+                const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
+                const enrichedBalances = data.map(balance => {
+                    if (balance.material && balance.material.supplier_id) {
+                        balance.material.supplier = suppliersById.get(balance.material.supplier_id);
+                    }
+                    return balance;
+                });
+                setAllBalances(enrichedBalances);
+                setAllMaterials(materialsData);
+             })
+        });
+        const movementListener = dataService.listenToCollection('inventory_movements', undefined, setMovements);
 
         return () => {
             balanceListener.unsubscribe();
             movementListener.unsubscribe();
         };
-    }, [loadData]);
+    }, []);
     
     useEffect(() => {
         const fetchMovements = async () => {
@@ -158,28 +170,28 @@ export function useInventory() {
         try {
             await dataService.addInventoryMovement(movementData);
             toast({ title: 'Sucesso!', description: 'Movimento de estoque registrado.' });
-            loadData();
+            // Realtime will refresh
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível registrar o movimento.', variant: 'destructive' });
             throw error;
         } finally {
             setIsSaving(false);
         }
-    }, [loadData]);
+    }, []);
     
     const transferStock = useCallback(async (transferData: any) => {
         setIsSaving(true);
         try {
             await dataService.transferStock(transferData);
              toast({ title: 'Sucesso!', description: 'Transferência de estoque registrada.' });
-             loadData();
+             // Realtime will refresh
         } catch (error) {
             toast({ title: 'Erro!', description: 'Não foi possível registrar a transferência.', variant: 'destructive' });
             throw error;
         } finally {
             setIsSaving(false);
         }
-    }, [loadData]);
+    }, []);
     
     const selectItem = (id: string, type: 'material' | 'product') => {
         setSelectedItemId(id);

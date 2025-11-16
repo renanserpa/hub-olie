@@ -28,13 +28,16 @@ export function useSettings() {
     useEffect(() => {
         loadSettings();
         
-        const listener = dataService.listenToCollection<SystemSetting>('system_settings', undefined, (updatedSettings) => {
+        const listener = dataService.listenToCollection<SystemSetting>('system_settings', undefined, (prevData) => {
+            // This is a dummy setter because the callback handles the logic
+            return prevData;
+        }, (updatedSettings) => {
             console.log("Realtime update for system_settings received!");
             setSettingsData(prevData => {
                 if (!prevData) return null;
                 return { ...prevData, sistema: updatedSettings };
             });
-        }, setSettingsData as any);
+        });
         
         return () => listener.unsubscribe();
 

@@ -9,10 +9,9 @@ export function useCategories() {
 
     useEffect(() => {
         setIsLoading(true);
-        const listener = dataService.listenToCollection<ProductCategory>('product_categories', undefined, (newData) => {
-            setCategories(newData);
+        const listener = dataService.listenToCollection<ProductCategory>('product_categories', undefined, setCategories, (newData) => {
             setIsLoading(false);
-        }, setCategories);
+        });
         return () => listener.unsubscribe();
     }, []);
 

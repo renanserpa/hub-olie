@@ -25,18 +25,15 @@ export function useIntegrations() {
 
   useEffect(() => {
     setLoading(true);
-    const integrationsListener = dataService.listenToCollection<Integration>('config_integrations', undefined, (data) => {
-        setIntegrations(data);
+    const integrationsListener = dataService.listenToCollection<Integration>('config_integrations', undefined, setIntegrations, (data) => {
         setLoading(false);
-    }, setIntegrations);
+    });
 
-    const logsListener = dataService.listenToCollection<IntegrationLog>('integration_logs', undefined, (data) => {
-        setLogs(data);
-    }, setLogs);
+    const logsListener = dataService.listenToCollection<IntegrationLog>('integration_logs', undefined, setLogs);
 
-    const webhookLogsListener = dataService.listenToCollection<WebhookLog>('webhook_logs', undefined, (data) => {
+    const webhookLogsListener = dataService.listenToCollection<WebhookLog>('webhook_logs', undefined, setWebhookLogs, (data) => {
       setWebhookLogs(data.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    }, setWebhookLogs);
+    });
 
     return () => {
         integrationsListener.unsubscribe();

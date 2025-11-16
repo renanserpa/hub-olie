@@ -9,10 +9,9 @@ export function useCollections() {
 
     useEffect(() => {
         setIsLoading(true);
-        const listener = dataService.listenToCollection<Collection>('collections', undefined, (newData) => {
-            setCollections(newData);
+        const listener = dataService.listenToCollection<Collection>('collections', undefined, setCollections, (newData) => {
             setIsLoading(false);
-        }, setCollections);
+        });
         return () => listener.unsubscribe();
     }, []);
 

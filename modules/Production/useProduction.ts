@@ -80,30 +80,18 @@ export function useProduction() {
         setIsLoading(true);
         loadAuxData();
 
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
-        const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', (data) => {
-            setAllOrders(data as ProductionOrder[]);
+        const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', setAllOrders, (data) => {
             setIsLoading(false);
-        }, setAllOrders);
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
-        const tasksListener = dataService.listenToCollection('production_tasks', undefined, (data) => {
-            setAllTasks(data as ProductionTask[]);
-        }, setAllTasks);
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
-        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, (data) => {
-            setAllQualityChecks(data as ProductionQualityCheck[]);
-        }, setAllQualityChecks);
-        // FIX: Add realtime listeners for routes and molds.
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
-        const routesListener = dataService.listenToCollection('production_routes', undefined, (data) => setAllRoutes(data as ProductionRoute[]), setAllRoutes);
-        // FIX: Added the 4th argument to match the expected signature of `listenToCollection`.
-        const moldsListener = dataService.listenToCollection('mold_library', undefined, (data) => setAllMolds(data as MoldLibrary[]), setAllMolds);
+        });
+        const tasksListener = dataService.listenToCollection('production_tasks', undefined, setAllTasks);
+        const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, setAllQualityChecks);
+        const routesListener = dataService.listenToCollection('production_routes', undefined, setAllRoutes);
+        const moldsListener = dataService.listenToCollection('mold_library', undefined, setAllMolds);
 
         return () => {
             ordersListener.unsubscribe();
             tasksListener.unsubscribe();
             qualityListener.unsubscribe();
-            // FIX: Unsubscribe from listeners.
             routesListener.unsubscribe();
             moldsListener.unsubscribe();
         };

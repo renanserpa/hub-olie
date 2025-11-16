@@ -37,14 +37,12 @@ export function useOmnichannel(user: User) {
         setIsLoading(true);
         loadAuxData();
 
-        const convListener = dataService.listenToCollection<Conversation>('conversations', undefined, (data) => {
+        const convListener = dataService.listenToCollection<Conversation>('conversations', undefined, setConversations, (data) => {
             setConversations(data.sort((a, b) => safeGetTime(b.lastMessageAt) - safeGetTime(a.lastMessageAt)));
             setIsLoading(false);
-        }, setConversations);
+        });
 
-        const msgListener = dataService.listenToCollection<Message>('messages', undefined, (data) => {
-            setMessages(data);
-        }, setMessages);
+        const msgListener = dataService.listenToCollection<Message>('messages', undefined, setMessages);
         
         return () => {
             convListener.unsubscribe();

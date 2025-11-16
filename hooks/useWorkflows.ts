@@ -21,10 +21,7 @@ export function useWorkflows() {
 
     useEffect(() => {
         loadData();
-        // FIX: Added the 4th argument `setRules` to match the expected signature of `listenToCollection`.
-        const listener = dataService.listenToCollection<WorkflowRule>('workflow_rules', undefined, (data) => {
-            setRules(data);
-        }, setRules);
+        const listener = dataService.listenToCollection<WorkflowRule>('workflow_rules', undefined, setRules);
 
         return () => listener.unsubscribe();
 

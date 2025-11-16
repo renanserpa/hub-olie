@@ -12,10 +12,10 @@ export function GovernancePanel() {
 
   useEffect(() => {
     setIsLoading(true);
-    const listener = dataService.listenToCollection<SystemSettingsLog>('system_settings_logs', undefined, (data) => {
+    const listener = dataService.listenToCollection<SystemSettingsLog>('system_settings_logs', undefined, setLogs, (data) => {
         setLogs(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setIsLoading(false);
-    }, setLogs);
+    });
     return () => listener.unsubscribe();
   }, []);
 

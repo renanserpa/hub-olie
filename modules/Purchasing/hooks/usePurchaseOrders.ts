@@ -19,11 +19,10 @@ export function usePurchaseOrders() {
 
     useEffect(() => {
         setIsLoading(true);
-        const poListener = dataService.listenToCollection('purchase_orders', '*, supplier:suppliers(*)', (data) => {
-            setPurchaseOrders(data as PurchaseOrder[]);
+        const poListener = dataService.listenToCollection('purchase_orders', '*, supplier:suppliers(*)', setPurchaseOrders, (data) => {
             setIsLoading(false);
-        }, setPurchaseOrders);
-        const supplierListener = dataService.listenToCollection('suppliers', undefined, (data) => setSuppliers(data as Supplier[]), setSuppliers);
+        });
+        const supplierListener = dataService.listenToCollection('suppliers', undefined, setSuppliers);
 
         return () => {
             poListener.unsubscribe();

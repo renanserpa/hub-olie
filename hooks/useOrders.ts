@@ -52,15 +52,17 @@ export function useOrders() {
     }, []);
 
     useEffect(() => {
-        const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', (payload) => {
+        loadData(); // Initial full load
+
+        const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', setAllOrders, (payload) => {
             console.log('Realtime update on orders detected, refreshing...');
             loadData(); // Still need loadData to fetch items
-        }, setAllOrders as any);
+        });
 
-        const itemsListener = dataService.listenToCollection('order_items', undefined, (payload) => {
+        const itemsListener = dataService.listenToCollection('order_items', undefined, () => {}, (payload) => {
             console.log('Realtime update on order_items detected, refreshing orders...');
             loadData(); // If items change, we need to reload orders to update totals
-        }, () => {});
+        });
 
 
         return () => {

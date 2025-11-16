@@ -26,16 +26,13 @@ export function useMaterials() {
   useEffect(() => {
     loadInitialData();
     
-    // Subscribe to realtime updates for materials and groups
-    const materialsListener = dataService.listenToCollection<Material>('config_materials', '*, config_supply_groups(name)', (data) => {
-      setMaterials(data);
+    const materialsListener = dataService.listenToCollection<Material>('config_materials', '*, config_supply_groups(name)', setMaterials, (data) => {
       setLoading(false);
-    }, setMaterials);
+    });
 
-    const groupsListener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, (data) => {
-      setGroups(data);
+    const groupsListener = dataService.listenToCollection<MaterialGroup>('config_supply_groups', undefined, setGroups, (data) => {
       setLoading(false);
-    }, setGroups);
+    });
 
     // Unsubscribe on cleanup
     return () => {

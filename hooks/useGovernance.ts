@@ -13,10 +13,10 @@ export function useGovernance() {
 
   useEffect(() => {
     setIsLoading(true);
-    const listener = dataService.listenToCollection<GovernanceSuggestion>('governance_suggestions', undefined, (data) => {
+    const listener = dataService.listenToCollection<GovernanceSuggestion>('governance_suggestions', undefined, setSuggestions, (data) => {
         setSuggestions(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         setIsLoading(false);
-    }, setSuggestions);
+    });
     return () => listener.unsubscribe();
   }, []);
 

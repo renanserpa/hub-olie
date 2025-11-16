@@ -10,14 +10,14 @@ export function useAnomalies() {
     useEffect(() => {
         setIsLoading(true);
 
-        const listener = dataService.listenToCollection<SystemAudit>('system_audit', undefined, (allAudits) => {
+        const listener = dataService.listenToCollection<SystemAudit>('system_audit', undefined, setAnomalies, (allAudits) => {
             const anomalyLogs = allAudits
                 .filter(log => log.key.endsWith('_ANOMALY'))
                 .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             
             setAnomalies(anomalyLogs);
             setIsLoading(false);
-        }, setAnomalies);
+        });
 
         return () => listener.unsubscribe();
 

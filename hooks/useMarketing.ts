@@ -27,16 +27,11 @@ export function useMarketing() {
 
     useEffect(() => {
         setIsLoading(true);
-        const campaignsListener = dataService.listenToCollection('marketing_campaigns', undefined, (data) => {
-            setCampaigns(data as MarketingCampaign[]);
+        const campaignsListener = dataService.listenToCollection('marketing_campaigns', undefined, setCampaigns, (data) => {
             setIsLoading(false);
-        }, setCampaigns);
-        const segmentsListener = dataService.listenToCollection('marketing_segments', undefined, (data) => {
-            setSegments(data as MarketingSegment[]);
-        }, setSegments);
-        const templatesListener = dataService.listenToCollection('marketing_templates', undefined, (data) => {
-            setTemplates(data as MarketingTemplate[]);
-        }, setTemplates);
+        });
+        const segmentsListener = dataService.listenToCollection('marketing_segments', undefined, setSegments);
+        const templatesListener = dataService.listenToCollection('marketing_templates', undefined, setTemplates);
 
         return () => {
             campaignsListener.unsubscribe();

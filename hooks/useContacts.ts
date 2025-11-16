@@ -15,10 +15,9 @@ export function useContacts() {
 
     useEffect(() => {
         setIsLoading(true);
-        const listener = dataService.listenToCollection<Contact>('customers', undefined, (newContacts) => {
-            setAllContacts(newContacts);
+        const listener = dataService.listenToCollection<Contact>('customers', undefined, setAllContacts, (newContacts) => {
             setIsLoading(false);
-        }, setAllContacts);
+        });
         return () => listener.unsubscribe();
     }, []);
 
