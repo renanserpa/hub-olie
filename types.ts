@@ -526,9 +526,10 @@ export interface Order {
     payments?: PaymentDetails;
     fiscal?: FiscalDetails;
     logistics?: LogisticsDetails;
-    payments_history: OrderPayment[];
-    timeline: OrderTimelineEvent[];
-    notes_internal: OrderNote[];
+    // FIX: Add optional payments_history, timeline, and notes_internal properties to resolve type errors in dataService.
+    payments_history?: OrderPayment[];
+    timeline?: OrderTimelineEvent[];
+    notes_internal?: OrderNote[];
 }
 
 

@@ -194,6 +194,7 @@ export const supabaseService = {
   listenToCollection: <T extends { id: string }>(
     table: string, 
     join: string | undefined, 
+    // FIX: Made setData optional to align with actual usage where some listeners only use the callback.
     setData?: React.Dispatch<React.SetStateAction<T[]>>,
     callback?: (data: T[]) => void
   ) => {
