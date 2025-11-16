@@ -55,7 +55,7 @@ export function useOmnichannel(user: User) {
 
 
     const filteredConversations = useMemo(() => {
-        const convos = [...conversations];
+        let convos = [...conversations];
         // FIX: Changed user.uid to user.id to align with updated User type.
         if (assigneeFilter === 'mine') return convos.filter(c => c.assigneeId === user.id);
         if (assigneeFilter === 'unassigned') return convos.filter(c => !c.assigneeId);

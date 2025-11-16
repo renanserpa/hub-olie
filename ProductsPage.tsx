@@ -1,13 +1,13 @@
 import React from 'react';
 import { Loader2, Package, BookOpen } from 'lucide-react';
-import { useProducts } from './hooks/useProducts';
-import ProductList from './components/products/ProductList';
-import ProductFilterBar from './components/products/ProductFilterBar';
-import ProductKanban from './components/products/ProductKanban';
-import TabLayout from './components/ui/TabLayout';
-import CatalogManagement from './components/products/CatalogManagement';
-import { Product } from './types';
-import ProductDrawer from './components/products/ProductDrawer';
+import { useProducts } from '../hooks/useProducts';
+import ProductList from './products/ProductList';
+import ProductFilterBar from './products/ProductFilterBar';
+import ProductKanban from './products/ProductKanban';
+import TabLayout from './ui/TabLayout';
+import CatalogManagement from './products/CatalogManagement';
+import { Product } from '../types';
+import ProductDrawer from './products/ProductDrawer';
 
 const PRODUCT_PAGE_TABS = [
     { id: 'list', label: 'Lista de Produtos', icon: Package },

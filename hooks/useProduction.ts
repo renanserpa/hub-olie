@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary } from '../../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 

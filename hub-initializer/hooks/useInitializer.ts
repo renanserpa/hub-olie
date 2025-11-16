@@ -73,7 +73,7 @@ export function useInitializer() {
 
     log.info('[Initializer] Starting system initialization...');
     let supabaseConnected = false;
-    const warnings: string[] = [];
+    let warnings: string[] = [];
 
     if (supabase) {
       const { data, error } = await supabase.from('system_settings').select('*').limit(1);

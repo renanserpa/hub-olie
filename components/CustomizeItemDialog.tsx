@@ -104,7 +104,7 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
     
     const handleSave = () => {
         let variantName = product.name;
-        const finalPrice = product.base_price;
+        let finalPrice = product.base_price;
         const configParts: string[] = [];
 
         if (configuration.size) {
