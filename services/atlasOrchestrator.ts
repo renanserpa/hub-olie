@@ -1,6 +1,6 @@
 import { executeAgent } from '../hub-initializer/services/crewSyncService';
-import { geminiGenerate } from './geminiService';
-import { pushLogs } from '../hub-initializer/services/supabaseSyncService';
+import { geminiGenerate as _geminiGenerate } from './geminiService';
+import { pushLogs as _pushLogs } from '../hub-initializer/services/supabaseSyncService';
 import { sendLog } from '../hub-initializer/services/logStreamService';
 
 const orchestrationPromise = fetch('/schemas/ai_orchestration_map.json').then(res => {

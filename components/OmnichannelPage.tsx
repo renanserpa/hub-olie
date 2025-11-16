@@ -1,6 +1,7 @@
 
 
 
+
 import React from 'react';
 import { User, Contact, Order } from '../types';
 import { useOmnichannel } from '../hooks/useOmnichannel';
@@ -23,7 +24,6 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
         currentMessages,
         customerInfo,
         customerOrders,
-        currentQuote,
         assigneeFilter,
         setAssigneeFilter,
         setSelectedConversation,
@@ -78,7 +78,8 @@ const OmnichannelPage: React.FC<OmnichannelPageProps> = ({ user }) => {
                             key={selectedConversation.id}
                             customer={customerInfo}
                             orders={customerOrders}
-                            quote={currentQuote}
+                            // FIX: Pass null for currentQuote as it is not returned from the hook.
+                            quote={null}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center text-textSecondary p-4">

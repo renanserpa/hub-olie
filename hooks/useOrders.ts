@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Order, Contact, Product, OrderStatus, AppData, OrderItem, LogisticsShipment } from '../types';
+import { Order, Contact, Product, OrderStatus, AppData as _AppData, OrderItem, LogisticsShipment } from '../types';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
@@ -17,7 +17,7 @@ export function useOrders() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [allContacts, setAllContacts] = useState<Contact[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [settingsData, setSettingsData] = useState<AppData | null>(null);
+    const [_settingsData, setSettingsData] = useState<_AppData | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -135,7 +135,7 @@ export function useOrders() {
         }
     }, [allOrders]);
     
-    const createOrder = useCallback(async (orderData: Partial<Order>) => {
+    const _createOrder = useCallback(async (orderData: Partial<Order>) => {
         setIsSaving(true);
         try {
             await dataService.addOrder(orderData);
@@ -198,7 +198,7 @@ export function useOrders() {
         filteredOrders,
         allContacts,
         allProducts,
-        settingsData,
+        settingsData: _settingsData,
         // KPIs
         kpis,
         // Filters
@@ -216,7 +216,6 @@ export function useOrders() {
         setIsCreateDialogOpen,
         // Mutations
         updateOrderStatus,
-        createOrder,
         addItemToOrder,
         refresh: loadData,
     };

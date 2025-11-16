@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
-import { Conversation, Message, Quote, Contact, Order, User } from '../types';
+import { Conversation, Message, Quote as _Quote, Contact, Order, User } from '../types';
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;
@@ -84,7 +84,7 @@ export function useOmnichannel(user: User) {
             .sort((a, b) => safeGetTime(b.created_at) - safeGetTime(a.created_at));
     }, [selectedConversation, allOrders]);
 
-    const currentQuote = useMemo(() => {
+    const _currentQuote = useMemo(() => {
         if (!selectedConversation?.quoteId) return null;
         return null;
     }, [selectedConversation]);
@@ -107,7 +107,6 @@ export function useOmnichannel(user: User) {
         currentMessages,
         customerInfo,
         customerOrders,
-        currentQuote,
         assigneeFilter,
         setAssigneeFilter,
         setSelectedConversation: handleSelectConversation,

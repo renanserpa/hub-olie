@@ -31,7 +31,6 @@ const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
         isCreateDialogOpen,
         setIsCreateDialogOpen,
         updateOrderStatus,
-        createOrder,
         addItemToOrder,
         refresh,
         kpis,

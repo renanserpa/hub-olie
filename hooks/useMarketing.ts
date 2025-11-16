@@ -123,7 +123,7 @@ export function useMarketing() {
         }
     };
 
-    const saveTemplate = async (templateData: Omit<MarketingTemplate, 'id'> | MarketingTemplate) => {
+    const _saveTemplate = async (templateData: Omit<MarketingTemplate, 'id'> | MarketingTemplate) => {
         setIsSaving(true);
         try {
              if ('id' in templateData && templateData.id) {
@@ -159,6 +159,5 @@ export function useMarketing() {
         openSegmentDialog,
         closeSegmentDialog,
         saveSegment,
-        saveTemplate,
     };
 }

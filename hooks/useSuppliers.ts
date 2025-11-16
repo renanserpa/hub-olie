@@ -44,7 +44,7 @@ export function useSuppliers() {
         }
     };
     
-    const deleteSupplier = async (id: string) => {
+    const _deleteSupplier = async (id: string) => {
          if (!canWrite) {
             toast({ title: 'Acesso Negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
             throw new Error('Permission denied');
@@ -67,6 +67,5 @@ export function useSuppliers() {
         isSaving,
         canWrite,
         saveSupplier,
-        deleteSupplier,
     };
 }
