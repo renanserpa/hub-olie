@@ -198,7 +198,6 @@ export function useOrders() {
         filteredOrders,
         allContacts,
         allProducts,
-        settingsData: _settingsData,
         // KPIs
         kpis,
         // Filters
