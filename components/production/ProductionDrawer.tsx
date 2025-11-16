@@ -1,22 +1,27 @@
 import React from 'react';
-import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck } from '../../types';
+// FIX: Add AuthUser, ProductionTask to imports
+import { ProductionOrder, Material, ProductionTaskStatus, ProductionQualityCheck, AuthUser, ProductionTask } from '../../types';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
-import ProductionOrderDetailPanel from './ProductionOrderDetailPanel';
+// FIX: The original import was from './ProductionOrderDetailPanel', which is a deprecated, empty component.
+// Changed to import the correct, implemented component from the 'modules' directory.
+import ProductionOrderDetailPanel from '../../modules/Production/ProductionOrderDetailPanel';
 
 
 interface ProductionDrawerProps {
-    order: ProductionOrder | null;
+    // FIX: Update order type to match what ProductionOrderDetailPanel expects
+    order: (ProductionOrder & { product?: any; tasks?: ProductionTask[]; quality_checks?: ProductionQualityCheck[] }) | null;
     isOpen: boolean;
     onClose: () => void;
     allMaterials: Material[];
     onUpdateTaskStatus: (taskId: string, status: ProductionTaskStatus) => void;
     onCreateQualityCheck: (check: Omit<ProductionQualityCheck, 'id' | 'created_at'>) => void;
+    // FIX: Add user prop to match the expected props of the new ProductionOrderDetailPanel
+    user: AuthUser | null;
 }
 
-const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
-    const { order, isOpen, onClose } = props;
+const ProductionDrawer: React.FC<ProductionDrawerProps> = ({ order, isOpen, onClose, allMaterials, onUpdateTaskStatus, onCreateQualityCheck, user }) => {
     
     if (!order) return null;
 
@@ -46,7 +51,14 @@ const ProductionDrawer: React.FC<ProductionDrawerProps> = (props) => {
                 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto">
-                    <ProductionOrderDetailPanel {...props} />
+                    {/* FIX: Pass props individually to match the expected signature of the correct ProductionOrderDetailPanel component. */}
+                    <ProductionOrderDetailPanel
+                        order={order}
+                        allMaterials={allMaterials}
+                        onUpdateTaskStatus={onUpdateTaskStatus}
+                        onCreateQualityCheck={onCreateQualityCheck}
+                        user={user}
+                    />
                 </div>
             </div>
         </div>
