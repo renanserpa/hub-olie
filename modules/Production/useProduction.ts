@@ -12,7 +12,6 @@ export function useProduction() {
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
-    // FIX: Add state for routes and molds, which was missing.
     const [allRoutes, setAllRoutes] = useState<ProductionRoute[]>([]);
     const [allMolds, setAllMolds] = useState<MoldLibrary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +66,6 @@ export function useProduction() {
             setAllMaterials(enrichedMaterials);
             setAllProducts(productsData);
             setAllVariants(variantsData);
-            // FIX: Set state for routes and molds.
             setAllRoutes(routesData);
             setAllMolds(moldsData);
         } catch (error) {
@@ -102,11 +100,9 @@ export function useProduction() {
             const product = allProducts.find(p => p.id === order.product_id);
             const variant = order.variant_sku ? allVariants.find(v => v.sku === order.variant_sku && v.product_base_id === product?.id) : undefined;
             
-            // Find size name from the base product definition
             const sizeId = variant?.configuration?.size;
             const sizeName = sizeId ? product?.available_sizes?.find(s => s.id === sizeId)?.name : undefined;
             
-            // Find the route based on product name (case-insensitive) and the exact size name.
             const route = allRoutes.find(r => 
                 r.produto.toLowerCase() === product?.name.toLowerCase() && 
                 r.tamanho === sizeName
@@ -164,7 +160,6 @@ export function useProduction() {
         };
     }, [allOrders, allQualityChecks]);
     
-    // FIX: Add generic mutation handler for CRUD operations.
     const handleMutation = async (mutationFn: Promise<any>, successMsg: string) => {
         setIsSaving(true);
         try {
@@ -178,7 +173,6 @@ export function useProduction() {
         }
     };
 
-    // FIX: Add CRUD functions for routes and molds.
     const addRoute = (item: any) => handleMutation(dataService.addDocument('production_routes', item), `Rota adicionada.`);
     const updateRoute = (item: any) => handleMutation(dataService.updateDocument('production_routes', item.id, item), `Rota atualizada.`);
     const deleteRoute = (id: string) => handleMutation(dataService.deleteDocument('production_routes', id), `Rota excluída.`);
@@ -204,10 +198,8 @@ export function useProduction() {
         }
 
         try {
-            // FIX: Explicitly specify the generic type for updateDocument to resolve incorrect type inference by TypeScript.
             await dataService.updateDocument<ProductionTask>('production_tasks', taskId, updateData);
             toast({ title: "Sucesso!", description: `Tarefa "${task.name}" atualizada para "${status}".` });
-            // Realtime will handle refresh
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da tarefa.", variant: "destructive" });
         } finally {
@@ -223,7 +215,6 @@ export function useProduction() {
             return;
         }
         
-        // Optimistic update for UI
         setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
 
         try {
@@ -231,7 +222,6 @@ export function useProduction() {
             toast({ title: "Sucesso!", description: `Status da OP #${order.po_number} atualizado.` });
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status da OP.", variant: "destructive" });
-            // Revert optimistic update on failure by reloading
             setAllOrders(allOrders);
         } finally {
             setIsSaving(false);
@@ -245,7 +235,6 @@ export function useProduction() {
             await dataService.addDocument('production_orders', { ...orderData, po_number, status: 'novo' });
             toast({ title: "Sucesso!", description: "Nova Ordem de Produção criada." });
             setIsCreateDialogOpen(false);
-            // Realtime will handle refresh
         } catch(e) {
             toast({ title: "Erro!", description: "Não foi possível criar a Ordem de Produção.", variant: "destructive" });
         } finally {
@@ -261,7 +250,6 @@ export function useProduction() {
                 created_at: new Date().toISOString()
             });
             toast({ title: "Sucesso!", description: "Inspeção de qualidade registrada." });
-            // Realtime will handle refresh
         } catch(e) {
              toast({ title: "Erro!", description: "Não foi possível registrar a inspeção.", variant: "destructive" });
         } finally {
@@ -300,6 +288,6 @@ export function useProduction() {
         isAdvancedFilterOpen,
         setIsAdvancedFilterOpen,
         clearFilters,
-        reload: loadAuxData, // Expose aux data reload
+        reload: loadAuxData,
     };
 }

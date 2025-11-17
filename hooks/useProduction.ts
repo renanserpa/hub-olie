@@ -1,2 +1,3 @@
-// This file is obsolete as its functionality has been migrated to /modules/Production/useProduction.ts
+// This file is obsolete.
+// The logic has been consolidated into /modules/Production/useProduction.ts.
 export {};

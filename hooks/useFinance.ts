@@ -32,7 +32,8 @@ export function useFinance() {
     useEffect(() => {
         loadData();
 
-        const listener = dataService.listenToCollection('finance_transactions', undefined, setTransactions, (data) => {
+        // FIX: Explicitly type `data` in the callback signature to ensure `a` and `b` are correctly typed as FinanceTransaction, resolving property access errors on `transaction_date`.
+        const listener = dataService.listenToCollection('finance_transactions', undefined, setTransactions, (data: FinanceTransaction[]) => {
             console.log('Realtime update on finance_transactions detected, refreshing...');
             setTransactions(data.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()));
         });

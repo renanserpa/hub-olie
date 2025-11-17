@@ -51,7 +51,8 @@ export function useInventory() {
     useEffect(() => {
         loadData();
 
-        const balanceListener = dataService.listenToCollection('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)', setAllBalances, (data) => {
+        // FIX: Explicitly type `data` in the callback signature to ensure `balance` is correctly typed as InventoryBalance, resolving property access errors.
+        const balanceListener = dataService.listenToCollection('inventory_balances', '*, material:config_materials(*), product_variant:product_variants(*), warehouse:warehouses(*)', setAllBalances, (data: InventoryBalance[]) => {
              console.log('Realtime update detected in inventory balances, refreshing auxiliary data...');
              // We still need to load aux data like suppliers to enrich the balances
              Promise.all([
