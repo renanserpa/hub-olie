@@ -22,7 +22,8 @@ const MessageStatusIcon: React.FC<{ status: MessageStatus }> = ({ status }) => {
 
 const safeFormat = (dateValue: any, formatStr: string) => {
     if (!dateValue) return '';
-    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+    // FIX: Removed the '.toDate' check, which is a legacy pattern from Firebase. Supabase returns ISO strings, which the 'new Date()' constructor handles directly.
+    const date = new Date(dateValue);
     if (isNaN(date.getTime())) return '';
     return format(date, formatStr, { locale: ptBR });
 };

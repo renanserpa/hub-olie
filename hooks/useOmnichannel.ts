@@ -5,7 +5,8 @@ import { Conversation, Message, Quote as _Quote, Contact, Order, User } from '..
 
 const safeGetTime = (dateValue: any): number => {
     if (!dateValue) return 0;
-    const date = dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+    // FIX: Removed the '.toDate' check, which is a legacy pattern from Firebase. Supabase returns ISO strings, which the 'new Date()' constructor handles directly.
+    const date = new Date(dateValue);
     if (isNaN(date.getTime())) return 0;
     return date.getTime();
 };
