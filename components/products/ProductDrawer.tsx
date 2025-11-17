@@ -96,7 +96,6 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
                 "fixed inset-0 bg-black/60 z-40 transition-opacity",
                 isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
-            onClick={onClose}
         >
             <form
                 onSubmit={handleSubmit}

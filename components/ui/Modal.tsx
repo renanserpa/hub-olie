@@ -19,7 +19,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, classNa
     <div 
       className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center animate-fade-in-up"
       style={{ animationDuration: '0.3s' }}
-      onClick={onClose}
     >
       <Card 
         className={cn("w-full max-w-md m-4 flex flex-col", className)}
