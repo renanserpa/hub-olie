@@ -110,7 +110,7 @@ const App: React.FC = () => {
             case 'products':
                 return <ProductsPage />;
             case 'orders':
-                return <OrdersPage user={user} />;
+                return <OrdersPage />;
             default:
                 return <DashboardPage />;
         }

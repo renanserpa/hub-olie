@@ -13,7 +13,7 @@ import AdvancedFilterPanel from './orders/AdvancedFilterPanel';
 
 type ViewMode = 'kanban' | 'list' | 'table';
 
-const OrdersPage: React.FC<{ user: User }> = ({ user }) => {
+const OrdersPage: React.FC = () => {
     const {
         isLoading,
         isSaving,

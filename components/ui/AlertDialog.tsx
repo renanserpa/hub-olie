@@ -16,7 +16,6 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onClose, onConfirm, t
   return (
     <div 
       className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center animate-content-show"
-      onClick={onClose}
     >
       <Card 
         className="w-full max-w-sm m-4"

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Product, ProductCategory, AppData, BOMComponent } from '../../../types';
 import { cn } from '../../../lib/utils';
 import { Button } from '../../ui/Button';
-import { UploadCloud, Trash2, Info, Plus } from 'lucide-react';
+import { Trash2, Info, Plus } from 'lucide-react';
 import { IconButton } from '../../ui/IconButton';
 import { MediaUploadCard } from '../../media/MediaUploadCard';
 import { toast } from '../../../hooks/use-toast';
@@ -90,7 +90,6 @@ const ProductBasePanel: React.FC<{ formData: Partial<Product>, setFormData: Reac
                         module="products" 
                         category={formData.base_sku || 'new_product'} 
                         onUploadSuccess={handleUploadSuccess}
-                        multiple={true}
                     />
                     {(formData.images && formData.images.length > 0) && (
                         <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">

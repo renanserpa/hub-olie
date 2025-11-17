@@ -41,12 +41,9 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
             case 'metrics':
                 return <PurchaseMetrics />;
             default:
-                // FIX: Pass the missing onNewClick and onReceiveClick props to PurchaseOrdersTab to resolve the type error.
                 // Default to 'pos' if an invalid tab is selected
                 return <PurchaseOrdersTab 
                     {...props} 
-                    onNewClick={props.onNewPOClick} 
-                    onReceiveClick={props.onReceivePOClick} 
                 />;
         }
     };

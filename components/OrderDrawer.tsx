@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, Product } from '../types';
+import { Order, Product } from '../../types';
 import { X, List, CreditCard, Clock, FileText, ShoppingBag } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
@@ -55,7 +55,6 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allPr
                 "fixed inset-0 bg-black/60 z-40 transition-opacity",
                 isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
-            onClick={onClose}
         >
             <div 
                 className={cn(
