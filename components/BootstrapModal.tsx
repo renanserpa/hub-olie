@@ -5,7 +5,7 @@ import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 // FIX: Export the bootstrapSqlScript constant to make it available for import.
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.1)
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.2)
 -- Cria TODAS as tabelas, aplica RLS e políticas permissivas.
 -- Este script é IDEMPOTENTE e seguro para ser executado múltiplas vezes.
 
@@ -136,14 +136,14 @@ DO $$
 DECLARE
   admin_user_id UUID;
 BEGIN
-  -- Este passo assume que o Passo Manual de "Edit User Metadata" já foi feito no painel do Supabase.
-  SELECT id INTO admin_user_id FROM auth.users WHERE email = 'serparenan@gmail.com' LIMIT 1;
+  -- Este passo assume que o Passo Manual de criação do usuário admin já foi feito no painel do Supabase.
+  SELECT id INTO admin_user_id FROM auth.users WHERE email = 'adm@adm.com' LIMIT 1;
   IF admin_user_id IS NOT NULL THEN
-    INSERT INTO public.profiles (id, email, role) VALUES (admin_user_id, 'serparenan@gmail.com', 'AdminGeral') ON CONFLICT (id) DO UPDATE SET role = 'AdminGeral';
+    INSERT INTO public.profiles (id, email, role) VALUES (admin_user_id, 'adm@adm.com', 'AdminGeral') ON CONFLICT (id) DO UPDATE SET role = 'AdminGeral';
     INSERT INTO public.user_roles (user_id, role) VALUES (admin_user_id, 'AdminGeral') ON CONFLICT (user_id) DO UPDATE SET role = 'AdminGeral';
-    RAISE NOTICE '✅ Bootstrap concluído! Registros públicos para o AdminGeral criados/validados com sucesso.';
+    RAISE NOTICE '✅ Bootstrap concluído! Registros públicos para o AdminGeral (adm@adm.com) criados/validados com sucesso.';
   ELSE
-    RAISE WARNING '⚠️ Atenção: Usuário admin serparenan@gmail.com não encontrado. Certifique-se de que o usuário existe na seção Authentication do Supabase.';
+    RAISE WARNING '⚠️ Atenção: Usuário admin adm@adm.com não encontrado. Certifique-se de que o usuário foi criado na seção Authentication do Supabase com o metadata correto.';
   END IF;
 END $$;
 `;
@@ -171,13 +171,14 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="space-y-3 p-4 border rounded-lg">
-            <h5 className="font-bold text-lg">Passo 1: Configurar Permissão do Administrador (Manual e Obrigatório)</h5>
+            <h5 className="font-bold text-lg">Passo 1: Criar o Usuário Administrador (Manual e Obrigatório)</h5>
             <p className="text-sm">Este é o passo mais importante para resolver o problema de acesso.</p>
             <ol className="list-decimal list-inside space-y-1 text-sm pl-2">
                 <li>Vá para a seção **Authentication** no seu painel Supabase.</li>
-                <li>Encontre o usuário `serparenan@gmail.com`, clique nos 3 pontos e em **"Edit user"**.</li>
-                <li>Role até a seção **"User App Metadata"**.</li>
-                <li>Cole o seguinte JSON e clique em **Save**:</li>
+                <li>Clique em **"Add user"**.</li>
+                <li>Preencha com o email <code className="bg-secondary p-1 rounded">adm@adm.com</code> e a senha <code className="bg-secondary p-1 rounded">123456</code> (ou outra de sua preferência, senhas muito curtas podem ser recusadas).</li>
+                <li>**Importante:** Role até a seção **"User App Metadata"**.</li>
+                <li>Cole o seguinte JSON e clique em **"Create user"**:</li>
             </ol>
             <pre className="text-xs whitespace-pre-wrap font-mono bg-secondary p-2 rounded-md">{`{
   "role": "AdminGeral"

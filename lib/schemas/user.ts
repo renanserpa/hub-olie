@@ -6,5 +6,5 @@ export const userSchema = z.object({
       required_error: "A função é obrigatória."
   }),
   // Password validation only for creation form
-  password: z.string().min(8, { message: "A senha deve ter no mínimo 8 caracteres." }).optional(),
+  password: z.string().min(1, { message: "A senha não pode estar em branco." }).optional(),
 });
