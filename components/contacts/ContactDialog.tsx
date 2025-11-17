@@ -72,7 +72,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                 address: {
                     ...prev.address,
                     zip: data.cep,
-                    street: data.logouro,
+                    street: data.logradouro,
                     neighborhood: data.bairro,
                     city: data.localidade,
                     state: data.uf,
@@ -81,7 +81,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
             }));
 
         } catch (error) {
-            toast({ title: "Erro no CEP", description: (error as Error).message, variant: 'destructive' });
+            toast({ title: "Erro na busca de CEP", description: (error as Error).message, variant: 'destructive' });
         } finally {
             setIsCepLoading(false);
         }
@@ -187,6 +187,13 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                         <input name="address.city" value={formData.address?.city || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                  </div>
+                 <div className="grid grid-cols-3 gap-4">
+                     <div className="col-span-1">
+                        <label className={labelStyle}>Estado</label>
+                        <input name="address.state" value={formData.address?.state || ''} onChange={handleChange} className={inputStyle} />
+                     </div>
+                 </div>
+
 
                 <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
