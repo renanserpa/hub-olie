@@ -58,8 +58,16 @@ const OperationalParamsTabContent: React.FC = () => {
                 return;
             }
             for (const setting of changedSettings) {
+                let valueToUpdate;
+                try {
+                    // If the setting's value is a valid JSON string, parse it before sending.
+                    valueToUpdate = JSON.parse(setting.value);
+                } catch (e) {
+                    // Otherwise, it's a primitive string value.
+                    valueToUpdate = setting.value;
+                }
                 // FIX: The updateSystemSetting function now only takes 2 arguments. The DB trigger handles logging.
-                await dataService.updateSystemSetting(setting.key, JSON.parse(setting.value));
+                await dataService.updateSystemSetting(setting.key, valueToUpdate);
             }
 
             toast({ title: 'Sucesso!', description: 'Parâmetros operacionais salvos.' });

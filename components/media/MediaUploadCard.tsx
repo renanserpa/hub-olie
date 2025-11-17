@@ -8,28 +8,39 @@ interface MediaUploadCardProps {
   module: string;
   category?: string;
   onUploadSuccess?: (result: { drive_file_id: string; url_public: string }) => void;
+  multiple?: boolean;
 }
 
-export function MediaUploadCard({ module, category, onUploadSuccess }: MediaUploadCardProps) {
+export function MediaUploadCard({ module, category, onUploadSuccess, multiple = false }: MediaUploadCardProps) {
   const { handleUpload, uploading } = useMedia(module, category);
   const [isDragging, setIsDragging] = useState(false);
 
-  const processFile = (file: File | null) => {
-      if (file) {
-          handleUpload(file, onUploadSuccess);
-      }
-  };
+  const processFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    if (!multiple && files.length > 1) {
+      toast({ title: "Apenas um arquivo permitido", description: "Apenas o primeiro arquivo será enviado.", variant: "destructive" });
+      handleUpload(files[0], onUploadSuccess);
+      return;
+    }
+    
+    for (const file of Array.from(files)) {
+      handleUpload(file, onUploadSuccess);
+    }
+  }, [handleUpload, onUploadSuccess, multiple]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    processFile(e.target.files ? e.target.files[0] : null);
+    processFiles(e.target.files);
+    // Reset input value to allow re-uploading the same file
+    e.target.value = '';
   };
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    processFile(e.dataTransfer.files ? e.dataTransfer.files[0] : null);
-  }, [handleUpload]);
+    processFiles(e.dataTransfer.files);
+  }, [processFiles]);
 
   const handleDragEvents = (e: React.DragEvent<HTMLDivElement>, isEntering: boolean) => {
     e.preventDefault();
@@ -54,10 +65,11 @@ export function MediaUploadCard({ module, category, onUploadSuccess }: MediaUplo
       <input
         id={uniqueId}
         type="file"
-        accept="image/*,video/*,application/pdf"
+        accept="image/*"
         onChange={handleFileChange}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         disabled={uploading}
+        multiple={multiple}
       />
       {uploading ? (
         <>
@@ -68,9 +80,9 @@ export function MediaUploadCard({ module, category, onUploadSuccess }: MediaUplo
         <>
             <UploadCloud className="w-8 h-8" />
             <label htmlFor={uniqueId} className="font-medium text-primary cursor-pointer hover:underline">
-                Clique para enviar
+                {multiple ? 'Clique para enviar arquivos' : 'Clique para enviar um arquivo'}
             </label>
-            <p className="text-xs">ou arraste e solte o arquivo aqui</p>
+            <p className="text-xs">ou arraste e solte aqui</p>
         </>
       )}
     </div>

@@ -3,7 +3,7 @@ import { Palette, Wrench, Paintbrush, Type as TypeIcon, Loader2, BookOpen, Layer
 import TabLayout from '../ui/TabLayout';
 import TabContent from '../TabContent';
 import { useSettings } from '../../hooks/useSettings';
-import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection, ColorPalette, MonogramFont, FabricTexture } from '../../types';
+import { AnySettingsItem, FieldConfig, SettingsCategory, ProductCategory, Collection, ColorPalette, MonogramFont, FabricTexture, FabricColor, ZipperColor, LiningColor, PullerColor, BiasColor, EmbroideryColor } from '../../types';
 import PlaceholderContent from '../PlaceholderContent';
 import { cn } from '../../lib/utils';
 import { useCategories } from '../../hooks/useCategories';
@@ -15,25 +15,20 @@ const CATALOG_TABS = [
 ];
 
 const PERSONALIZATION_SUB_TABS = [
-    { id: 'paletas_cores', label: 'Paletas de Cores', icon: Palette },
-    { id: 'cores_texturas', label: 'Cores & Texturas', icon: Paintbrush },
+    { id: 'tecido', label: 'Cores de Tecido', icon: Layers },
+    { id: 'ziper', label: 'Cores de Zíper', icon: Link2 },
+    { id: 'forro', label: 'Cores de Forro', icon: Layers },
+    { id: 'puxador', label: 'Cores de Puxador', icon: Hand },
+    { id: 'vies', label: 'Cores de Viés', icon: Scissors },
+    { id: 'bordado', label: 'Cores de Bordado', icon: Paintbrush2 },
+    { id: 'texturas', label: 'Texturas', icon: ScanSearch },
     { id: 'fontes_monogramas', label: 'Fontes p/ Monograma', icon: TypeIcon },
 ];
 
-const CORES_SUB_TABS = [
-    { id: 'tecido', label: 'Tecido', icon: Layers },
-    { id: 'ziper', label: 'Zíper', icon: Link2 },
-    { id: 'forro', label: 'Forro', icon: Layers },
-    { id: 'puxador', label: 'Puxador', icon: Hand },
-    { id: 'vies', label: 'Viés', icon: Scissors },
-    { id: 'bordado', label: 'Bordado', icon: Paintbrush2 },
-    { id: 'texturas', label: 'Texturas', icon: ScanSearch },
-];
 
 // --- Field Configurations ---
 const categoryFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome da Categoria', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }];
 const collectionFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome da Coleção', type: 'text' }, { key: 'description', label: 'Descrição', type: 'textarea' }];
-const paletteFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'descricao', label: 'Descrição', type: 'textarea' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const colorFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'hex', label: 'Cor (Hex)', type: 'color' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
 const embroideryColorFieldConfig: FieldConfig[] = [ ...colorFieldConfig, { key: 'thread_type', label: 'Tipo de Linha', type: 'select', options: [ {value: 'rayon', label: 'Rayon'}, {value: 'polyester', label: 'Polyester'}, {value: 'cotton', label: 'Algodão'}, {value: 'metallic', label: 'Metálica'}]} ];
 const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'text' }, { key: 'category', label: 'Categoria', type: 'select', options: [ {value: 'script', label: 'Script'}, {value: 'serif', label: 'Serif'}, {value: 'sans-serif', label: 'Sans-serif'}, {value: 'decorative', label: 'Decorativa'}, {value: 'handwritten', label: 'Manuscrita'}]}, { key: 'style', label: 'Estilo', type: 'select', options: [ {value: 'regular', label: 'Regular'}, {value: 'bold', label: 'Bold'}, {value: 'italic', label: 'Italic'}, {value: 'script', label: 'Script'}]}, { key: 'font_file_url', label: 'Arquivo da Fonte (.ttf, .otf)', type: 'file' }, { key: 'preview_url', label: 'URL da Imagem de Preview', type: 'text' }, { key: 'is_active', label: 'Status', type: 'checkbox' }, ];
@@ -42,7 +37,6 @@ const fontFieldConfig: FieldConfig[] = [ { key: 'name', label: 'Nome', type: 'te
 const CatalogManagement: React.FC = () => {
     const [activeTab, setActiveTab] = useState(CATALOG_TABS[0].id);
     const [activePersonalizationSubTab, setActivePersonalizationSubTab] = useState(PERSONALIZATION_SUB_TABS[0].id);
-    const [activeCoresSubTab, setActiveCoresSubTab] = useState(CORES_SUB_TABS[0].id);
     
     const { settingsData, isLoading: isSettingsLoading, isAdmin, handleAdd, handleUpdate, handleDelete } = useSettings();
     const { categories, addCategory, updateCategory, deleteCategory, isLoading: isCategoriesLoading } = useCategories();
@@ -71,38 +65,32 @@ const CatalogManagement: React.FC = () => {
         ];
 
         switch (activePersonalizationSubTab) {
-            case 'paletas_cores':
-                if (!settingsData.catalogs.paletas_cores) return <PlaceholderContent title="Paletas de Cores" requiredTable="config_color_palettes" />;
-                return <TabContent<ColorPalette> category="catalogs" data={settingsData.catalogs.paletas_cores} fields={paletteFieldConfig} {...createCrudHandlers('catalogs', 'paletas_cores')} isAdmin={isAdmin} title="Paletas de Cores" />;
-            
             case 'fontes_monogramas':
                 if (!settingsData.catalogs.fontes_monogramas) return <PlaceholderContent title="Fontes para Monograma" requiredTable="config_fonts" />;
                 return <TabContent<MonogramFont> category="catalogs" data={settingsData.catalogs.fontes_monogramas} fields={fontFieldConfig} {...createCrudHandlers('catalogs', 'fontes_monogramas')} isAdmin={isAdmin} title="Fontes para Monograma" />;
 
-            case 'cores_texturas': {
-                const colorData = settingsData.catalogs.cores_texturas;
-                let data: AnySettingsItem[] | undefined, fields: FieldConfig[] = [], title = '', tableName = '';
-
-                switch (activeCoresSubTab) {
-                    case 'tecido': data = colorData.tecido; fields = colorFieldConfig; title = 'Cores de Tecido'; tableName = 'fabric_colors'; break;
-                    case 'ziper': data = colorData.ziper; fields = colorFieldConfig; title = 'Cores de Zíper'; tableName = 'zipper_colors'; break;
-                    case 'forro': data = colorData.forro; fields = colorFieldConfig; title = 'Cores de Forro'; tableName = 'lining_colors'; break;
-                    case 'puxador': data = colorData.puxador; fields = colorFieldConfig; title = 'Cores de Puxador'; tableName = 'puller_colors'; break;
-                    case 'vies': data = colorData.vies; fields = colorFieldConfig; title = 'Cores de Viés'; tableName = 'bias_colors'; break;
-                    case 'bordado': data = colorData.bordado; fields = embroideryColorFieldConfig; title = 'Cores de Bordado'; tableName = 'embroidery_colors'; break;
-                    case 'texturas': data = colorData.texturas; fields = textureFieldConfig; title = "Texturas de Tecido"; tableName = "fabric_textures"; break;
-                }
-                
-                if (!data) return <PlaceholderContent title={title} requiredTable={tableName} />;
-                return (
-                    <>
-                        <div className="mb-4">
-                            <TabLayoutHorizontal tabs={CORES_SUB_TABS} activeTab={activeCoresSubTab} onTabChange={setActiveCoresSubTab} />
-                        </div>
-                        <TabContent category="catalogs" data={data} fields={fields} {...createCrudHandlers('catalogs', 'cores_texturas', activeCoresSubTab)} isAdmin={isAdmin} title={title} />
-                    </>
-                );
-            }
+            case 'tecido':
+                if (!settingsData.catalogs.cores_texturas.tecido) return <PlaceholderContent title="Cores de Tecido" requiredTable="fabric_colors" />;
+                return <TabContent<FabricColor> category="catalogs" data={settingsData.catalogs.cores_texturas.tecido} fields={colorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'tecido')} isAdmin={isAdmin} title="Cores de Tecido" />;
+            case 'ziper':
+                if (!settingsData.catalogs.cores_texturas.ziper) return <PlaceholderContent title="Cores de Zíper" requiredTable="zipper_colors" />;
+                return <TabContent<ZipperColor> category="catalogs" data={settingsData.catalogs.cores_texturas.ziper} fields={colorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'ziper')} isAdmin={isAdmin} title="Cores de Zíper" />;
+            case 'forro':
+                 if (!settingsData.catalogs.cores_texturas.forro) return <PlaceholderContent title="Cores de Forro" requiredTable="lining_colors" />;
+                return <TabContent<LiningColor> category="catalogs" data={settingsData.catalogs.cores_texturas.forro} fields={colorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'forro')} isAdmin={isAdmin} title="Cores de Forro" />;
+            case 'puxador':
+                if (!settingsData.catalogs.cores_texturas.puxador) return <PlaceholderContent title="Cores de Puxador" requiredTable="puller_colors" />;
+                return <TabContent<PullerColor> category="catalogs" data={settingsData.catalogs.cores_texturas.puxador} fields={colorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'puxador')} isAdmin={isAdmin} title="Cores de Puxador" />;
+            case 'vies':
+                 if (!settingsData.catalogs.cores_texturas.vies) return <PlaceholderContent title="Cores de Viés" requiredTable="bias_colors" />;
+                return <TabContent<BiasColor> category="catalogs" data={settingsData.catalogs.cores_texturas.vies} fields={colorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'vies')} isAdmin={isAdmin} title="Cores de Viés" />;
+            case 'bordado':
+                 if (!settingsData.catalogs.cores_texturas.bordado) return <PlaceholderContent title="Cores de Bordado" requiredTable="embroidery_colors" />;
+                return <TabContent<EmbroideryColor> category="catalogs" data={settingsData.catalogs.cores_texturas.bordado} fields={embroideryColorFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'bordado')} isAdmin={isAdmin} title="Cores de Bordado" />;
+            case 'texturas':
+                if (!settingsData.catalogs.cores_texturas.texturas) return <PlaceholderContent title="Texturas de Tecido" requiredTable="fabric_textures" />;
+                return <TabContent<FabricTexture> category="catalogs" data={settingsData.catalogs.cores_texturas.texturas} fields={textureFieldConfig} {...createCrudHandlers('catalogs', 'cores_texturas', 'texturas')} isAdmin={isAdmin} title="Texturas de Tecido" />;
+            
             default: return null;
         }
     };
@@ -158,26 +146,5 @@ const TabLayoutVertical: React.FC<{tabs: any[], activeTab: string, onTabChange: 
         ))}
     </nav>
 );
-const TabLayoutHorizontal: React.FC<{tabs: any[], activeTab: string, onTabChange: (id: string) => void}> = ({tabs, activeTab, onTabChange}) => (
-     <div className="border-b border-border dark:border-dark-border">
-        <nav className="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
-            {tabs.map(tab => {
-                const Icon = tab.icon;
-                return (
-                    <button key={tab.id} onClick={() => onTabChange(tab.id)}
-                        className={cn(
-                            'flex items-center gap-2 whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm focus:outline-none',
-                            activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-textSecondary hover:text-textPrimary'
-                        )}
-                    >
-                        {Icon && <Icon size={14} />}
-                        {tab.label}
-                    </button>
-                )
-            })}
-        </nav>
-    </div>
-);
-
 
 export default CatalogManagement;
