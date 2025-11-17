@@ -1,6 +1,8 @@
 // supabase/functions/issue-nfe.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+declare const Deno: any;
+
 console.log("🚀 [Edge Function] issue-nfe loaded.");
 
 serve(async (req) => {

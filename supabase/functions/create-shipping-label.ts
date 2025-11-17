@@ -1,6 +1,8 @@
 // supabase/functions/create-shipping-label.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+declare const Deno: any;
+
 console.log("🚀 [Edge Function] create-shipping-label loaded.");
 
 serve(async (req) => {
