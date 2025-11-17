@@ -23,11 +23,15 @@ interface ProductDrawerProps {
     allVariants: ProductVariant[];
     inventoryBalances: InventoryBalance[];
     onRefresh: () => void;
+    isSaving: boolean;
+    generateVariantsForProduct: (product: Product, appData: AppData) => Promise<void>;
 }
 
-const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, product, categories, appData, allVariants, inventoryBalances, onRefresh }) => {
+const ProductDrawer: React.FC<ProductDrawerProps> = ({ 
+    isOpen, onClose, onSave, product, categories, appData, 
+    allVariants, inventoryBalances, onRefresh, isSaving, generateVariantsForProduct 
+}) => {
     const [formData, setFormData] = useState<Partial<Product>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('base');
     
     useEffect(() => {
@@ -56,13 +60,10 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
             return;
         }
 
-        setIsSubmitting(true);
         try {
             await onSave(result.data as unknown as (AnyProduct | Product));
         } catch (error) {
             // Error is handled by the hook
-        } finally {
-            setIsSubmitting(false);
         }
     };
     
@@ -88,7 +89,14 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
             case 'base':
                 return <ProductBasePanel formData={formData} setFormData={setFormData} categories={categories} appData={appData} />;
             case 'skus':
-                 return product ? <ProductVariantsPanel product={product} allVariants={allVariants} appData={appData} onRefresh={onRefresh} /> : saveFirstMessage;
+                 return product ? <ProductVariantsPanel 
+                    product={product} 
+                    allVariants={allVariants} 
+                    appData={appData} 
+                    onRefresh={onRefresh} 
+                    generateVariantsForProduct={generateVariantsForProduct}
+                    isGenerating={isSaving}
+                /> : saveFirstMessage;
             case 'bom':
                 return product ? <ProductBOMPanel product={product} allVariants={allVariants} appData={appData} inventoryBalances={inventoryBalances} /> : saveFirstMessage;
             case 'personalization':
@@ -133,9 +141,9 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
 
                 {/* Footer */}
                 <div className="p-4 border-t border-border flex-shrink-0 flex justify-end gap-3 bg-background dark:bg-dark-card">
-                    <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {product ? 'Salvar Alterações' : 'Salvar Produto'}
                     </Button>
                 </div>

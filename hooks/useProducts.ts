@@ -15,6 +15,23 @@ export interface ProductAdvancedFilters {
 
 export type ProductColumn = 'category' | 'collection_ids' | 'available_sizes' | 'variants' | 'status';
 
+const getOptionsForSource = (source: string | undefined, appData: AppData): { value: string, label: string }[] => {
+    if (!source || !appData) return [];
+    
+    const sourceMap: Record<string, any[] | undefined> = {
+        'fabric_colors': appData.catalogs.cores_texturas.tecido,
+        'zipper_colors': appData.catalogs.cores_texturas.ziper,
+        'lining_colors': appData.catalogs.cores_texturas.forro,
+        'puller_colors': appData.catalogs.cores_texturas.puxador,
+        'bias_colors': appData.catalogs.cores_texturas.vies,
+        'embroidery_colors': appData.catalogs.cores_texturas.bordado,
+        'config_materials': appData.config_materials
+    };
+
+    const options = sourceMap[source];
+    return options ? options.map(item => ({ value: item.id, label: item.name })) : [];
+};
+
 
 export function useProducts() {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -167,6 +184,102 @@ export function useProducts() {
         }
     }, [loadData]);
 
+    const generateVariantsForProduct = useCallback(async (product: Product, appData: AppData) => {
+        setIsSaving(true);
+        try {
+            if (!product.configurable_parts?.length && (!product.available_sizes || product.available_sizes.length === 0)) {
+                toast({ title: "Atenção", description: "O produto não tem partes configuráveis ou tamanhos definidos.", variant: "destructive"});
+                return;
+            }
+
+            const optionSets: Record<string, { value: string, label: string }[]> = {};
+            
+            if (product.configurable_parts) {
+                for (const part of product.configurable_parts) {
+                    const options = getOptionsForSource(part.options_source, appData);
+                    if (options.length > 0) {
+                        optionSets[part.key] = options;
+                    }
+                }
+            }
+            if (product.available_sizes && product.available_sizes.length > 0) {
+                optionSets['size'] = product.available_sizes.map(s => ({ value: s.id, label: s.name }));
+            }
+
+            const keys = Object.keys(optionSets);
+            let combinations: Record<string, { value: string; label: string; }>[] = [{}];
+
+            for (const key of keys) {
+                if (!optionSets[key] || optionSets[key].length === 0) continue;
+                const newCombinations: Record<string, { value: string; label: string; }>[] = [];
+                for (const combo of combinations) {
+                    for (const option of optionSets[key]) {
+                        newCombinations.push({ ...combo, [key]: option });
+                    }
+                }
+                combinations = newCombinations;
+            }
+
+            const validCombinations = combinations.filter(combo => {
+                if (!product.combination_rules || product.combination_rules.length === 0) return true;
+                let isValid = true;
+                for (const rule of product.combination_rules) {
+                    const conditionMet = combo[rule.condition.part_key]?.value === rule.condition.option_id;
+                    if (conditionMet) {
+                        const consequencePartKey = rule.consequence.part_key;
+                        const allowedIds = rule.consequence.allowed_option_ids;
+                        const selectedOptionId = combo[consequencePartKey]?.value;
+                        if (selectedOptionId && !allowedIds.includes(selectedOptionId)) {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                }
+                return isValid;
+            });
+            
+            if (validCombinations.length === 0) {
+                 toast({ title: "Nenhuma Variante Válida", description: "Nenhuma combinação válida foi encontrada com as regras e opções atuais.", variant: "destructive"});
+                 return;
+            }
+
+            const newVariants = validCombinations.map(combo => {
+                const config: Record<string, string> = {};
+                const nameParts: string[] = [];
+                const skuParts: string[] = [];
+
+                Object.entries(combo).forEach(([key, option]) => {
+                    config[key] = option.label;
+                    nameParts.push(option.label);
+                    skuParts.push(option.label.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                });
+
+                return {
+                    product_base_id: product.id,
+                    sku: `${product.base_sku}-${skuParts.join('-')}`,
+                    name: `${product.name} - ${nameParts.join(' / ')}`,
+                    configuration: config,
+                    price_modifier: 0,
+                    final_price: product.base_price,
+                    bom: product.base_bom || [],
+                };
+            });
+            
+            await dataService.deleteVariantsForProduct(product.id);
+            await dataService.addManyDocuments('product_variants', newVariants);
+
+            toast({ title: "Sucesso!", description: `${newVariants.length} variantes geradas e salvas.` });
+            // FIX: Replaced undefined 'refresh' with 'loadData' to correctly reload data after generating variants.
+            loadData();
+
+        } catch (error) {
+            toast({ title: "Erro ao Gerar Variantes", description: (error as Error).message, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    // FIX: Replaced undefined 'refresh' with 'loadData' in the dependency array.
+    }, [loadData]);
+
     const clearFilters = () => {
         setAdvancedFilters({ category: '', collection: '', status: [], minPrice: '', maxPrice: '' });
         setSearchQuery('');
@@ -194,6 +307,7 @@ export function useProducts() {
         selectedProductId,
         setSelectedProductId,
         refresh: loadData,
+        generateVariantsForProduct,
         // New features
         advancedFilters,
         setAdvancedFilters,

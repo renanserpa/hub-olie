@@ -191,6 +191,11 @@ export const supabaseService = {
   updateDocument,
   deleteDocument,
   
+  deleteVariantsForProduct: async (productId: string): Promise<void> => {
+    const { error } = await supabase.from('product_variants').delete().eq('product_base_id', productId);
+    if (error) handleError(error, `deleteVariantsForProduct(${productId})`);
+  },
+
   listenToCollection: <T extends { id: string }>(
     table: string, 
     join: string | undefined, 

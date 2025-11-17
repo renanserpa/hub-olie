@@ -1,97 +1,128 @@
-import React, { useState } from 'react';
-import { Product, ProductVariant, AppData } from '../../../types';
+import React, { useState, useMemo } from 'react';
+import { Product, ProductVariant, AppData, ProductPart } from '../../../types';
 import { Button } from '../../ui/Button';
 import { Plus, Loader2 } from 'lucide-react';
 import { dataService } from '../../../services/dataService';
 import { toast } from '../../../hooks/use-toast';
 import ProductVariantsTable from '../ProductVariantsTable';
+import Modal from '../../ui/Modal';
 
-// Mock Variant Generator Dialog (inline for simplicity)
-const VariantGenerator: React.FC<{
-    product: Product;
-    appData: AppData;
-    onGenerate: (variants: Omit<ProductVariant, 'id'>[]) => Promise<void>;
-}> = ({ product, appData, onGenerate }) => {
-    // A simplified generator for demonstration
-    const [isGenerating, setIsGenerating] = useState(false);
-
-    const handleGenerate = async () => {
-        setIsGenerating(true);
-        // This is a very basic generation logic. The real one would be more complex.
-        const size = product.available_sizes?.[0];
-        const fabric = appData.catalogs.cores_texturas.tecido[0];
-
-        if (!size || !fabric) {
-            toast({ title: "Faltam Opções", description: "Defina tamanhos e cores de tecido para gerar variantes.", variant: "destructive"});
-            setIsGenerating(false);
-            return;
-        }
-
-        const newVariant: Omit<ProductVariant, 'id'> = {
-            product_base_id: product.id,
-            sku: `${product.base_sku}-${size.name}-${fabric.name.slice(0,3).toUpperCase()}`,
-            name: `${product.name} ${size.name} - ${fabric.name}`,
-            configuration: { size: size.name, fabric: fabric.name },
-            price_modifier: 0,
-            final_price: product.base_price,
-            bom: product.base_bom || [],
-        };
-
-        await onGenerate([newVariant]);
-        setIsGenerating(false);
+const getOptionsForSource = (source: ProductPart['options_source'] | undefined, appData: AppData): { value: string, label: string }[] => {
+    if (!source || !appData) return [];
+    const mapping: Record<string, any[]> = {
+        'fabric_colors': appData.catalogs.cores_texturas.tecido,
+        'zipper_colors': appData.catalogs.cores_texturas.ziper,
+        'lining_colors': appData.catalogs.cores_texturas.forro,
+        'puller_colors': appData.catalogs.cores_texturas.puxador,
+        'bias_colors': appData.catalogs.cores_texturas.vies,
+        'embroidery_colors': appData.catalogs.cores_texturas.bordado,
+        'config_materials': appData.config_materials,
     };
-
-    return (
-        <div className="p-4 border-dashed border-2 rounded-lg bg-secondary/50">
-            <h4 className="font-semibold text-lg mb-2">Gerador de Combinações</h4>
-            <p className="text-sm text-textSecondary mb-4">Em desenvolvimento. O gerador completo terá um grid interativo para selecionar e validar combinações em tempo real. Por enquanto, a geração é simplificada.</p>
-            <Button onClick={handleGenerate} disabled={isGenerating}>
-                {isGenerating && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
-                Gerar Variante de Teste
-            </Button>
-        </div>
-    );
+    const result = mapping[source] || [];
+    return result.map(item => ({ value: item.id, label: item.name }));
 };
 
 
-const ProductVariantsPanel: React.FC<{
+const VariantGeneratorDialog: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onGenerate: () => Promise<void>;
+    isGenerating: boolean;
+    product: Product;
+    appData: AppData;
+}> = ({ isOpen, onClose, onGenerate, isGenerating, product, appData }) => {
+
+    const potentialVariantCount = useMemo(() => {
+        if (!product) return 0;
+        
+        let count = 1;
+        if (product.configurable_parts) {
+             for (const part of product.configurable_parts) {
+                const options = getOptionsForSource(part.options_source, appData);
+                if (options.length > 0) {
+                    count *= options.length;
+                }
+            }
+        }
+        if (product.available_sizes && product.available_sizes.length > 0) {
+            count = count === 1 && product.available_sizes.length > 0 ? product.available_sizes.length : count * product.available_sizes.length;
+        }
+
+        return count === 1 ? 0 : count;
+
+    }, [product, appData]);
+
+    const handleConfirm = async () => {
+        await onGenerate();
+        onClose();
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Gerar Variantes de Produto">
+            <div className="space-y-4">
+                <p className="text-sm text-textSecondary">
+                    Esta ação irá <strong className="text-red-600">apagar todas as variantes existentes</strong> para este produto e criar novas com base nas configurações atuais de tamanhos, partes configuráveis e regras de combinação.
+                </p>
+                <div className="p-3 bg-secondary rounded-lg text-sm">
+                    <p>Partes configuráveis: <strong>{product.configurable_parts?.length || 0}</strong></p>
+                    <p>Tamanhos definidos: <strong>{product.available_sizes?.length || 0}</strong></p>
+                    <p className="font-bold mt-2">Total de combinações possíveis: <span className="text-primary text-base">{potentialVariantCount}</span></p>
+                    <p className="text-xs text-textSecondary">(Este número pode ser menor após a aplicação das regras de combinação).</p>
+                </div>
+
+                {potentialVariantCount > 100 && 
+                    <p className="text-sm font-semibold text-red-500 p-2 bg-red-500/10 rounded-md">
+                        Aviso: Um número alto de variantes pode impactar a performance. Continue com cuidado.
+                    </p>
+                }
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isGenerating}>Cancelar</Button>
+                    <Button type="button" onClick={handleConfirm} disabled={isGenerating}>
+                        {isGenerating && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
+                        Apagar e Gerar Novas Variantes
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
+interface ProductVariantsPanelProps {
     product: Product;
     allVariants: ProductVariant[];
     appData: AppData;
     onRefresh: () => void;
-}> = ({ product, allVariants, appData, onRefresh }) => {
-    const [showGenerator, setShowGenerator] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    generateVariantsForProduct: (product: Product, appData: AppData) => Promise<void>;
+    isGenerating: boolean;
+}
+
+
+const ProductVariantsPanel: React.FC<ProductVariantsPanelProps> = ({ 
+    product, allVariants, appData, onRefresh, generateVariantsForProduct, isGenerating 
+}) => {
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     
     const productVariants = allVariants.filter(v => v.product_base_id === product.id);
-
-    const handleVariantsGenerated = async (newVariants: Omit<ProductVariant, 'id'>[]) => {
-        setIsSubmitting(true);
-        try {
-            await dataService.addManyDocuments('product_variants', newVariants);
-            toast({ title: "Sucesso!", description: `${newVariants.length} nova(s) variante(s) foram geradas.` });
-            setShowGenerator(false);
-            onRefresh();
-        } catch(error) {
-            toast({ title: "Erro", description: "Não foi possível salvar as novas variantes.", variant: 'destructive' });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
     
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <p className="text-sm text-textSecondary">Gerencie e gere todas as combinações (SKUs) para este produto base.</p>
-                <Button onClick={() => setShowGenerator(true)} disabled={!product || isSubmitting}>
+                <Button onClick={() => setIsGeneratorOpen(true)} disabled={!product || isGenerating}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Gerar Novas Combinações
+                    Gerar Novas Variações
                 </Button>
             </div>
 
-            {showGenerator && (
-                <VariantGenerator product={product} appData={appData} onGenerate={handleVariantsGenerated} />
-            )}
+            <VariantGeneratorDialog
+                isOpen={isGeneratorOpen}
+                onClose={() => setIsGeneratorOpen(false)}
+                onGenerate={() => generateVariantsForProduct(product, appData)}
+                isGenerating={isGenerating}
+                product={product}
+                appData={appData}
+            />
             
             <ProductVariantsTable variants={productVariants} />
         </div>

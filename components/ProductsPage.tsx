@@ -39,6 +39,7 @@ const ProductsPage: React.FC = () => {
         selectedProductId,
         setSelectedProductId,
         refresh,
+        generateVariantsForProduct,
         advancedFilters,
         setAdvancedFilters,
         isAdvancedFilterOpen,
@@ -135,6 +136,8 @@ const ProductsPage: React.FC = () => {
                 allVariants={allVariants}
                 inventoryBalances={inventoryBalances}
                 onRefresh={refresh}
+                isSaving={isSaving}
+                generateVariantsForProduct={generateVariantsForProduct}
             />
             
              <AdvancedFilterPanel
