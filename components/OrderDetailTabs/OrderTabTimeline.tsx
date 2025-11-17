@@ -4,7 +4,7 @@ import { Order } from '../../types';
 const OrderTabTimeline: React.FC<{ order: Order }> = ({ order }) => {
     return (
         <div>
-            {order.timeline.length > 0 ? (
+            {order.timeline?.length > 0 ? (
                 <div className="space-y-4">
                     {order.timeline.map(event => (
                          <div key={event.id}>

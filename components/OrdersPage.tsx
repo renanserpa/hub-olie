@@ -34,6 +34,7 @@ const OrdersPage: React.FC = () => {
         addItemToOrder,
         refresh,
         kpis,
+        isLoadingDetails,
     } = useOrders();
 
     const [viewMode, setViewMode] = React.useState<ViewMode>('kanban');
@@ -107,11 +108,13 @@ const OrdersPage: React.FC = () => {
 
             <OrderDrawer 
                 order={selectedOrder}
+                // FIX: The `useOrders` hook returns `selectedOrder` (the object) but not `selectedOrderId` (the string). The correct way to determine if the drawer should be open is to check for the existence of the `selectedOrder` object.
                 isOpen={!!selectedOrder}
                 onClose={() => setSelectedOrderId(null)}
                 allProducts={allProducts}
                 addItemToOrder={addItemToOrder}
                 isSaving={isSaving}
+                isLoadingDetails={isLoadingDetails}
             />
 
             <OrderDialog

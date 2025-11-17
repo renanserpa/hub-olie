@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Order, Product } from '../../types';
-import { X, List, CreditCard, Clock, FileText, ShoppingBag } from 'lucide-react';
+import { X, List, CreditCard, Clock, FileText, ShoppingBag, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
 import OrderTabDetails from './OrderDetailTabs/OrderTabDetails';
@@ -17,6 +17,7 @@ interface OrderDrawerProps {
     allProducts: Product[];
     addItemToOrder: (orderId: string, itemData: { product_id: string; quantity: number }) => Promise<void>;
     isSaving: boolean;
+    isLoadingDetails: boolean;
 }
 
 const TABS = [
@@ -26,11 +27,10 @@ const TABS = [
     { id: 'timeline', label: 'Timeline', icon: Clock },
 ];
 
-const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allProducts, addItemToOrder, isSaving }) => {
+const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allProducts, addItemToOrder, isSaving, isLoadingDetails }) => {
     const [activeTab, setActiveTab] = useState('details');
     const tinyApi = useTinyApi();
     
-    // Reset tab when a new order is opened
     React.useEffect(() => {
         if (isOpen) {
             setActiveTab('details');
@@ -40,6 +40,13 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allPr
     if (!order) return null;
 
     const renderTabContent = () => {
+        if (isLoadingDetails) {
+            return (
+                <div className="flex justify-center items-center h-full">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+            );
+        }
         switch(activeTab) {
             case 'details': return <OrderTabDetails order={order} />;
             case 'items': return <OrderTabItems order={order} allProducts={allProducts} addItemToOrder={addItemToOrder} isSaving={isSaving} />;

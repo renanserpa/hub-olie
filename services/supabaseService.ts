@@ -74,6 +74,9 @@ import {
     WebhookLog,
     LogisticsPickTask,
     GovernanceSuggestion,
+    OrderTimelineEvent,
+    OrderNote,
+    OrderPayment,
 } from "../types";
 
 
@@ -93,8 +96,9 @@ const handleError = (error: any, context: string) => {
 };
 
 // FIX: Implement the missing getDocument function.
-const getDocument = async <T>(table: string, id: string): Promise<T | null> => {
-    const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+const getDocument = async <T>(table: string, id: string, join?: string): Promise<T | null> => {
+    const query = join ? supabase.from(table).select(join) : supabase.from(table).select('*');
+    const { data, error } = await query.eq('id', id).single();
     if (error) {
         // PGRST116 means no rows found, which is not an error for a single get.
         if (error.code === 'PGRST116') {
@@ -440,13 +444,32 @@ export const supabaseService = {
     return ordersData.map(order => ({ ...order, items: itemsByOrderId[order.id] || [] }));
   },
   getOrder: async (id: string): Promise<Order | null> => {
-    const data = await supabaseService.getDocument<Order>('orders', id);
-    if (!data) return null;
-    
-    const { data: itemsData, error: itemsError } = await supabase.from('order_items').select('*').eq('order_id', id);
-    if (itemsError) handleError(itemsError, `getOrder(${id}) (items)`);
+    const { data: orderData, error: orderError } = await supabase.from('orders').select('*, customers(*)').eq('id', id).single();
+    if (orderError) { 
+        if(orderError.code === 'PGRST116') return null;
+        handleError(orderError, `getOrder(${id})`); 
+        return null;
+    }
 
-    return { ...data, items: itemsData || [] };
+    const [itemsRes, timelineRes, notesRes, paymentsRes] = await Promise.all([
+      supabase.from('order_items').select('*').eq('order_id', id),
+      supabase.from('order_timeline').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+      supabase.from('order_notes').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+      supabase.from('order_payments').select('*').eq('order_id', id).order('date', { ascending: false })
+    ]);
+
+    if (itemsRes.error) handleError(itemsRes.error, 'getOrder items');
+    if (timelineRes.error) handleError(timelineRes.error, 'getOrder timeline');
+    if (notesRes.error) handleError(notesRes.error, 'getOrder notes');
+    if (paymentsRes.error) handleError(paymentsRes.error, 'getOrder payments');
+
+    return {
+      ...(orderData as Order),
+      items: itemsRes.data || [],
+      timeline: timelineRes.data || [],
+      notes_internal: notesRes.data || [],
+      payments_history: paymentsRes.data || []
+    };
   },
   updateOrderStatus: async (orderId: string, newStatus: OrderStatus): Promise<Order> => updateDocument<Order>('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() }),
   addOrder: async (orderData: Partial<Order>) => {

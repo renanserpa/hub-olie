@@ -29,6 +29,8 @@ export function useOrders() {
     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [detailedOrder, setDetailedOrder] = useState<Order | null>(null);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
     const loadData = useCallback(async () => {
@@ -52,18 +54,14 @@ export function useOrders() {
     }, []);
 
     useEffect(() => {
-        loadData(); // Initial full load
+        loadData();
 
-        const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', setAllOrders, (payload) => {
-            console.log('Realtime update on orders detected, refreshing...');
-            loadData(); // Still need loadData to fetch items
+        const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', undefined, () => {
+            loadData();
         });
-
-        const itemsListener = dataService.listenToCollection('order_items', undefined, () => {}, (payload) => {
-            console.log('Realtime update on order_items detected, refreshing orders...');
-            loadData(); // If items change, we need to reload orders to update totals
+        const itemsListener = dataService.listenToCollection('order_items', undefined, undefined, () => {
+            loadData(); 
         });
-
 
         return () => {
             ordersListener.unsubscribe();
@@ -71,14 +69,31 @@ export function useOrders() {
         };
     }, [loadData]);
 
+     useEffect(() => {
+        const fetchDetails = async () => {
+            if (!selectedOrderId) {
+                setDetailedOrder(null);
+                return;
+            }
+            setIsLoadingDetails(true);
+            try {
+                const details = await dataService.getOrder(selectedOrderId);
+                setDetailedOrder(details);
+            } catch (error) {
+                toast({ title: "Erro!", description: "Não foi possível carregar os detalhes do pedido.", variant: "destructive" });
+            } finally {
+                setIsLoadingDetails(false);
+            }
+        };
+        fetchDetails();
+    }, [selectedOrderId]);
+
     const filteredOrders = useMemo(() => {
         return allOrders.filter(order => {
-            // Basic search
             const searchMatch = searchQuery.length === 0 ||
                 order.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (order.customers?.name && order.customers.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            // Advanced filters
             const startDateMatch = !advancedFilters.startDate || new Date(order.created_at) >= new Date(advancedFilters.startDate);
             const endDateMatch = !advancedFilters.endDate || new Date(order.created_at) <= new Date(advancedFilters.endDate);
             const customerMatch = advancedFilters.customerIds.length === 0 || advancedFilters.customerIds.includes(order.customer_id);
@@ -92,8 +107,12 @@ export function useOrders() {
     }, [allOrders, searchQuery, advancedFilters]);
     
     const selectedOrder = useMemo(() => {
+        if (!selectedOrderId) return null;
+        if (detailedOrder && detailedOrder.id === selectedOrderId) {
+            return detailedOrder;
+        }
         return allOrders.find(o => o.id === selectedOrderId) || null;
-    }, [allOrders, selectedOrderId]);
+    }, [selectedOrderId, detailedOrder, allOrders]);
 
     const kpis = useMemo(() => {
         if (!allOrders) {
@@ -127,8 +146,6 @@ export function useOrders() {
                     toast({ title: "Integração Logística", description: `Envio para o pedido ${order.number} criado na expedição.` });
                 }
             }
-
-            // Realtime listener handles the state update
         } catch (error) {
             toast({ title: "Erro!", description: "Não foi possível atualizar o status do pedido.", variant: "destructive" });
         } finally {
@@ -142,7 +159,6 @@ export function useOrders() {
             await dataService.addOrder(orderData);
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             setIsCreateDialogOpen(false);
-            // Realtime will update list
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível criar o pedido.", variant: "destructive" });
         } finally {
@@ -171,40 +187,33 @@ export function useOrders() {
             await dataService.addDocument('order_items', newItem);
             
             toast({ title: "Sucesso!", description: "Item adicionado ao pedido." });
-            // The item listener will trigger a refresh of orders
-    
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível adicionar o item.", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
-    }, [allProducts, allOrders, loadData]);
+    }, [allProducts]);
     
     return {
         isLoading,
         isSaving,
-        // Data
         filteredOrders,
         allContacts,
         allProducts,
-        // KPIs
         kpis,
-        // Filters
         searchQuery,
         setSearchQuery,
         advancedFilters,
         setAdvancedFilters,
         isFilterPanelOpen,
         setIsFilterPanelOpen,
-        // Selection
         selectedOrder,
         setSelectedOrderId,
-        // Dialogs
         isCreateDialogOpen,
         setIsCreateDialogOpen,
-        // Mutations
         updateOrderStatus,
         addItemToOrder,
         refresh: loadData,
+        isLoadingDetails,
     };
 }
