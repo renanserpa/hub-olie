@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, AppData, ProductPart, MonogramFont } from '../types';
+import { Product, AppData, ProductPart, MonogramFont, EmbroideryColor } from '../types';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
 
@@ -49,6 +49,24 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
             }
         }));
     };
+    
+    const embroideryAttrs = product.attributes?.personalization?.embroidery;
+
+    const availableFonts = useMemo(() => {
+        if (!embroideryAttrs?.enabled || !embroideryAttrs.allowed_font_ids || embroideryAttrs.allowed_font_ids.length === 0) {
+            return appData.catalogs.fontes_monogramas;
+        }
+        const allowedSet = new Set(embroideryAttrs.allowed_font_ids);
+        return appData.catalogs.fontes_monogramas.filter(font => allowedSet.has(font.id));
+    }, [embroideryAttrs, appData.catalogs.fontes_monogramas]);
+
+    const availableColors = useMemo(() => {
+        if (!embroideryAttrs?.enabled || !embroideryAttrs.allowed_color_ids || embroideryAttrs.allowed_color_ids.length === 0) {
+            return appData.catalogs.cores_texturas.bordado;
+        }
+        const allowedSet = new Set(embroideryAttrs.allowed_color_ids);
+        return appData.catalogs.cores_texturas.bordado.filter(color => allowedSet.has(color.id));
+    }, [embroideryAttrs, appData.catalogs.cores_texturas.bordado]);
     
     // Calculate which options should be disabled based on combination rules
     const disabledOptions = useMemo(() => {
@@ -122,9 +140,16 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
         });
 
         if (configuration.embroidery?.enabled && configuration.embroidery?.text) {
-            configParts.push(`Bordado: "${configuration.embroidery.text}"`);
-            // Placeholder for price increase
-            // finalPrice += 15.0;
+            const fontName = availableFonts.find(f => f.id === configuration.embroidery.font)?.name;
+            const colorName = availableColors.find(c => c.id === configuration.embroidery.color)?.name;
+
+            let embroideryDetails = `Bordado: "${configuration.embroidery.text}"`;
+            if (fontName) embroideryDetails += ` (${fontName})`;
+            if (colorName) embroideryDetails += ` - ${colorName}`;
+            
+            configParts.push(embroideryDetails);
+            // Placeholder for price increase logic for embroidery
+            // finalPrice += product.attributes?.personalization?.embroidery?.price_increase || 15.0;
         }
         
         if (configParts.length > 0) {
@@ -182,8 +207,7 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                         )
                     })}
                      {/* Embroidery Section */}
-                    {/* FIX: Check for embroidery availability under the 'personalization' property and its 'enabled' flag. */}
-                    {product.attributes?.personalization?.embroidery?.enabled && (
+                    {embroideryAttrs?.enabled && (
                         <div>
                             <label className="font-semibold text-sm">Personalização (Bordado)</label>
                             <div className="p-4 border rounded-lg bg-secondary/50 space-y-3 mt-2">
@@ -206,27 +230,47 @@ const CustomizeItemDialog: React.FC<CustomizeItemDialogProps> = ({ isOpen, onClo
                                     value={configuration.embroidery?.text || ''}
                                     onChange={e => handleEmbroideryChange('text', e.target.value)}
                                     className="w-full mt-1 p-2 border rounded-md bg-background"
-                                    maxLength={15}
+                                    maxLength={embroideryAttrs.max_chars || 15}
                                     placeholder="Ex: A.S."
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium">Fonte</label>
-                                    <select 
-                                    value={configuration.embroidery?.font || ''}
-                                    onChange={e => handleEmbroideryChange('font', e.target.value)}
-                                    className="w-full mt-1 p-2 border rounded-md bg-background"
-                                    >
-                                    <option value="">Selecione a fonte</option>
-                                    {appData.catalogs.fontes_monogramas.map((font: MonogramFont) => (
-                                        <option key={font.id} value={font.id}>{font.name}</option>
-                                    ))}
-                                    </select>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-medium">Fonte</label>
+                                        <select 
+                                        value={configuration.embroidery?.font || ''}
+                                        onChange={e => handleEmbroideryChange('font', e.target.value)}
+                                        className="w-full mt-1 p-2 border rounded-md bg-background"
+                                        >
+                                        <option value="">Selecione a fonte</option>
+                                        {availableFonts.map((font: MonogramFont) => (
+                                            <option key={font.id} value={font.id}>{font.name}</option>
+                                        ))}
+                                        </select>
+                                    </div>
+                                     <div>
+                                        <label className="text-xs font-medium">Cor da Linha</label>
+                                        <select 
+                                        value={configuration.embroidery?.color || ''}
+                                        onChange={e => handleEmbroideryChange('color', e.target.value)}
+                                        className="w-full mt-1 p-2 border rounded-md bg-background"
+                                        >
+                                        <option value="">Selecione a cor</option>
+                                        {availableColors.map((color: EmbroideryColor) => (
+                                            <option key={color.id} value={color.id}>{color.name}</option>
+                                        ))}
+                                        </select>
+                                    </div>
                                 </div>
                                 {configuration.embroidery?.text && (
                                     <div className="pt-2">
                                         <p className="text-xs font-medium mb-1">Prévia:</p>
-                                        <div className="p-3 bg-background rounded text-center text-2xl" style={{ fontFamily: appData.catalogs.fontes_monogramas.find((f: MonogramFont) => f.id === configuration.embroidery?.font)?.name || 'serif' }}>
+                                        <div className="p-3 bg-background rounded text-center text-2xl" 
+                                            style={{ 
+                                                fontFamily: appData.catalogs.fontes_monogramas.find((f: MonogramFont) => f.id === configuration.embroidery?.font)?.name || 'serif',
+                                                color: appData.catalogs.cores_texturas.bordado.find((c: EmbroideryColor) => c.id === configuration.embroidery?.color)?.hex || '#000000'
+                                            }}
+                                        >
                                             {configuration.embroidery.text}
                                         </div>
                                     </div>

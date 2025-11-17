@@ -188,6 +188,32 @@ const ProductPersonalizationPanel: React.FC<{
         setFormData(prev => ({ ...prev, combination_rules: newRules }));
     };
 
+    const handlePersonalizationChange = (
+        type: 'embroidery' | 'hot_stamping',
+        field: string,
+        value: any
+    ) => {
+        setFormData(prev => {
+            const currentAttrs = prev.attributes || {};
+            const currentPersonalization = currentAttrs.personalization || {};
+            const currentType = currentPersonalization[type] || { enabled: false };
+    
+            return {
+                ...prev,
+                attributes: {
+                    ...currentAttrs,
+                    personalization: {
+                        ...currentPersonalization,
+                        [type]: {
+                            ...currentType,
+                            [field]: value
+                        }
+                    }
+                }
+            };
+        });
+    };
+
     const optionsSources = Object.keys(appData.catalogs.cores_texturas || {}).concat('config_materials');
     const inputStyle = "w-full px-3 py-1.5 border border-border rounded-lg shadow-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
     const labelStyle = "block text-xs font-medium text-textSecondary mb-1";
@@ -215,6 +241,53 @@ const ProductPersonalizationPanel: React.FC<{
                         <div className="col-span-4"><label className={labelStyle}>Fonte</label><select value={newPart.options_source} onChange={e => setNewPart(p => ({...p, options_source: e.target.value}))} className={inputStyle}><option value="">Fonte de Opções</option>{optionsSources.map(src => <option key={src} value={src}>{src}</option>)}</select></div>
                         <div className="col-span-1"><Button type="button" onClick={addPart} size="icon" className="h-9 w-9"><Plus size={16}/></Button></div>
                     </div>
+                </div>
+            </Section>
+
+            <Section title="Tipos de Personalização">
+                <div className="p-3 border rounded-lg space-y-3 bg-secondary/50">
+                    <label className="flex items-center gap-3 text-sm font-medium cursor-pointer p-2 rounded-lg hover:bg-background">
+                        <input
+                            type="checkbox"
+                            checked={!!formData.attributes?.personalization?.embroidery?.enabled}
+                            onChange={e => handlePersonalizationChange('embroidery', 'enabled', e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <Type size={16} className="text-textSecondary"/>
+                        <span>Permitir Bordado</span>
+                    </label>
+
+                    {formData.attributes?.personalization?.embroidery?.enabled && (
+                        <div className="pl-8 space-y-4 pt-2 border-t animate-fade-in-up">
+                            <div>
+                                <label className={labelStyle}>Fontes Permitidas</label>
+                                <MultiSelectPopover
+                                    options={appData.catalogs.fontes_monogramas.map(f => ({ value: f.id, label: f.name }))}
+                                    selected={formData.attributes?.personalization?.embroidery?.allowed_font_ids || []}
+                                    onChange={selectedIds => handlePersonalizationChange('embroidery', 'allowed_font_ids', selectedIds)}
+                                    placeholder="Selecionar fontes..."
+                                />
+                            </div>
+                            <div>
+                                <label className={labelStyle}>Cores de Linha Permitidas</label>
+                                 <MultiSelectPopover
+                                    options={(appData.catalogs.cores_texturas.bordado || []).map(c => ({ value: c.id, label: c.name }))}
+                                    selected={formData.attributes?.personalization?.embroidery?.allowed_color_ids || []}
+                                    onChange={selectedIds => handlePersonalizationChange('embroidery', 'allowed_color_ids', selectedIds)}
+                                    placeholder="Selecionar cores..."
+                                />
+                            </div>
+                            <div>
+                                <label className={labelStyle}>Máximo de Caracteres</label>
+                                <input
+                                    type="number"
+                                    value={formData.attributes?.personalization?.embroidery?.max_chars || ''}
+                                    onChange={e => handlePersonalizationChange('embroidery', 'max_chars', parseInt(e.target.value) || 0)}
+                                    className={inputStyle}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Section>
 
