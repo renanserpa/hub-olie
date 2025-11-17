@@ -38,6 +38,7 @@ export const mediaService = {
         if (category) {
             filtered = filtered.filter(asset => asset.category === category);
         }
-        return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // FIX: Handle potentially undefined 'created_at' in sort comparison to prevent runtime errors.
+        return filtered.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
     }
 };

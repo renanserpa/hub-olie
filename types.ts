@@ -947,7 +947,8 @@ export interface MediaAsset {
     mime_type?: string;
     size?: number;
     url_public: string;
-    created_at: string;
+    // FIX: Make created_at optional to allow creation without providing it, as it's database-generated. This resolves a type error in mediaService.ts.
+    created_at?: string;
 }
 
 
