@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary, AuthUser } from '../../types';
+import { ProductionOrder, ProductionOrderStatus, Material, ProductionTask, ProductionQualityCheck, ProductionTaskStatus, QualityCheckResult, Product, ProductVariant, Supplier, ProductionRoute, MoldLibrary, AuthUser, Order } from '../../types';
 import { dataService } from '../../services/dataService';
 import { toast } from '../../hooks/use-toast';
 
@@ -7,6 +7,7 @@ export type ProductionViewMode = 'kanban' | 'list' | 'table';
 
 export function useProduction() {
     const [allOrders, setAllOrders] = useState<ProductionOrder[]>([]);
+    const [originalOrders, setOriginalOrders] = useState<Order[]>([]);
     const [allTasks, setAllTasks] = useState<ProductionTask[]>([]);
     const [allQualityChecks, setAllQualityChecks] = useState<ProductionQualityCheck[]>([]);
     const [allMaterials, setAllMaterials] = useState<Material[]>([]);
@@ -46,13 +47,14 @@ export function useProduction() {
 
     const loadAuxData = useCallback(async () => {
         try {
-            const [materialsData, productsData, variantsData, suppliersData, routesData, moldsData] = await Promise.all([
+            const [materialsData, productsData, variantsData, suppliersData, routesData, moldsData, ordersData] = await Promise.all([
                 dataService.getCollection<Material>('config_materials'),
                 dataService.getCollection<Product>('products'),
                 dataService.getCollection<ProductVariant>('product_variants'),
                 dataService.getCollection<Supplier>('suppliers'),
                 dataService.getProductionRoutes(),
                 dataService.getMoldLibrary(),
+                dataService.getOrders(),
             ]);
             
             const suppliersById = new Map(suppliersData.map(s => [s.id, s]));
@@ -68,6 +70,7 @@ export function useProduction() {
             setAllVariants(variantsData);
             setAllRoutes(routesData);
             setAllMolds(moldsData);
+            setOriginalOrders(ordersData);
         } catch (error) {
              toast({ title: "Erro!", description: "Não foi possível carregar os dados de apoio de produção.", variant: "destructive" });
         }
@@ -81,6 +84,7 @@ export function useProduction() {
         const ordersListener = dataService.listenToCollection('production_orders', '*, product:products(*)', setAllOrders, (data) => {
             setIsLoading(false);
         });
+        const originalOrdersListener = dataService.listenToCollection('orders', '*, customers(*)', setOriginalOrders);
         const tasksListener = dataService.listenToCollection('production_tasks', undefined, setAllTasks);
         const qualityListener = dataService.listenToCollection('production_quality_checks', undefined, setAllQualityChecks);
         const routesListener = dataService.listenToCollection('production_routes', undefined, setAllRoutes);
@@ -88,6 +92,7 @@ export function useProduction() {
 
         return () => {
             ordersListener.unsubscribe();
+            originalOrdersListener.unsubscribe();
             tasksListener.unsubscribe();
             qualityListener.unsubscribe();
             routesListener.unsubscribe();
@@ -108,18 +113,22 @@ export function useProduction() {
                 r.tamanho === sizeName
             );
 
+            const originalOrder = originalOrders.find(o => o.number === order.order_code);
+
             return {
                 ...order,
                 variant,
                 product,
                 route,
+                customer_name: originalOrder?.customers?.name,
+                item_count: originalOrder?.items?.reduce((sum, item) => sum + item.quantity, 0),
                 tasks: allTasks
                     .filter(t => t.production_order_id === order.id)
                     .sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()),
                 quality_checks: allQualityChecks.filter(q => q.production_order_id === order.id),
             };
         });
-    }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes]);
+    }, [allOrders, allTasks, allQualityChecks, allVariants, allProducts, allRoutes, originalOrders]);
     
     const filteredOrders = useMemo(() => {
         return ordersWithDetails.filter(order => {

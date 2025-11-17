@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 import { PlusCircle, ClipboardList, Cog, PauseCircle, CheckCircle2 } from 'lucide-react';
 
 interface ProductionKanbanProps {
-  orders: ProductionOrder[];
+  orders: (ProductionOrder & { customer_name?: string, item_count?: number })[];
   onCardClick: (id: string) => void;
   onStatusChange: (orderId: string, newStatus: ProductionOrderStatus) => void;
 }

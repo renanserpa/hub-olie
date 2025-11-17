@@ -1,9 +1,10 @@
 import React from 'react';
 import { ProductionOrder } from '../../types';
 import { Card } from '../../components/ui/Card';
+import { User, Package } from 'lucide-react';
 
 interface ProductionOrderCardProps {
-    order: ProductionOrder;
+    order: ProductionOrder & { customer_name?: string, item_count?: number };
     onClick: () => void;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
 }
@@ -31,7 +32,20 @@ const ProductionOrderCard: React.FC<ProductionOrderCardProps> = ({ order, onClic
     >
       <p className="text-xs text-textSecondary font-mono">{order.po_number}</p>
       <h3 className="text-sm font-semibold">{order.product?.name}</h3>
-      <p className="text-xs text-textSecondary">Qtd: {order.quantity}</p>
+      
+      <div className="mt-2 pt-2 border-t border-border/50 space-y-1.5 text-xs text-textSecondary">
+          {order.customer_name && (
+              <div className="flex items-center gap-1.5">
+                  <User size={12} />
+                  <span className="font-medium text-textPrimary">{order.customer_name}</span>
+              </div>
+          )}
+          <div className="flex items-center gap-1.5">
+              <Package size={12} />
+              <span>Qtd. OP: {order.quantity} (Total Pedido: {order.item_count})</span>
+          </div>
+      </div>
+      
       <p className="text-xs text-textSecondary mt-2">Prazo: {new Date(order.due_date).toLocaleDateString('pt-BR')}</p>
     </Card>
   );
