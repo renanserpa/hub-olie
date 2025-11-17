@@ -124,7 +124,9 @@ export function useProducts() {
 
 
     const filteredProducts = useMemo(() => {
-        return allProducts.filter(p => {
+        const collectionsMap = new Map(collections.map(c => [c.id, c]));
+        
+        const filtered = allProducts.filter(p => {
             // Basic search
             const searchMatch = searchQuery.length === 0 ||
                 p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,7 +141,12 @@ export function useProducts() {
 
             return searchMatch && categoryMatch && collectionMatch && statusMatch && minPriceMatch && maxPriceMatch;
         });
-    }, [allProducts, searchQuery, advancedFilters]);
+
+        return filtered.map(p => ({
+            ...p,
+            collections: (p.collection_ids || []).map(id => collectionsMap.get(id)).filter(Boolean) as Collection[]
+        }));
+    }, [allProducts, collections, searchQuery, advancedFilters]);
     
     const openDialog = (product: Product | null = null) => {
         setEditingProduct(product);

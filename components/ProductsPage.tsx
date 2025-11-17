@@ -62,7 +62,7 @@ const ProductsPage: React.FC = () => {
 
 
     const renderProductsContent = () => {
-        if (isLoading) {
+        if (isLoading && filteredProducts.length === 0) {
              return (
                 <div className="flex justify-center items-center h-64">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -114,6 +114,7 @@ const ProductsPage: React.FC = () => {
                         onAdvancedFilterClick={() => setIsAdvancedFilterOpen(true)}
                         visibleColumns={visibleColumns}
                         toggleColumnVisibility={toggleColumnVisibility}
+                        isLoading={isLoading}
                     />
                     
                     <div className="mt-6">
@@ -126,19 +127,21 @@ const ProductsPage: React.FC = () => {
                 <CatalogManagement />
             )}
             
-            <ProductDrawer
-                isOpen={isDialogOpen}
-                onClose={closeDialog}
-                onSave={saveProduct}
-                product={editingProduct}
-                categories={categories}
-                appData={settingsData!}
-                allVariants={allVariants}
-                inventoryBalances={inventoryBalances}
-                onRefresh={refresh}
-                isSaving={isSaving}
-                generateVariantsForProduct={generateVariantsForProduct}
-            />
+            {settingsData && (
+                <ProductDrawer
+                    isOpen={isDialogOpen}
+                    onClose={closeDialog}
+                    onSave={saveProduct}
+                    product={editingProduct}
+                    categories={categories}
+                    appData={settingsData}
+                    allVariants={allVariants}
+                    inventoryBalances={inventoryBalances}
+                    onRefresh={refresh}
+                    isSaving={isSaving}
+                    generateVariantsForProduct={generateVariantsForProduct}
+                />
+            )}
             
              <AdvancedFilterPanel
                 isOpen={isAdvancedFilterOpen}
