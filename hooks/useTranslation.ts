@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+// FIX: Update the 't' function to handle JSX elements in replacements, allowing for rich text formatting in translations.
+import React, { useState, useCallback } from 'react';
 
 const pt = {
   "login.title": "Olie Hub",
@@ -41,14 +42,30 @@ type Language = 'pt' | 'en';
 export function useTranslation() {
   const [language, setLanguage] = useState<Language>('pt');
 
-  const t = useCallback((key: string, replacements?: Record<string, string>): string => {
-    let translation = (translations[language] as Record<string, string>)[key] || key;
-    if (replacements) {
-        Object.keys(replacements).forEach(rKey => {
-            translation = translation.replace(`{${rKey}}`, replacements[rKey]);
-        });
+  const t = useCallback((key: string, replacements?: Record<string, React.ReactNode>): React.ReactNode => {
+    const translation = (translations[language] as Record<string, string>)[key] || key;
+    if (!replacements) {
+        return translation;
     }
-    return translation;
+    
+    // Split the string by placeholders like {key}
+    const parts = translation.split(/({[^{}]+})/g);
+    
+    // FIX: Replaced JSX syntax with React.createElement to fix compilation errors in a .ts file
+    // while preserving the ability to interpolate React components into translated strings.
+    return parts.map((part, i) => {
+        // Check if the part is a placeholder
+        if (part.startsWith('{') && part.endsWith('}')) {
+            const rKey = part.slice(1, -1);
+            // Check if a replacement for this key exists
+            if (Object.prototype.hasOwnProperty.call(replacements, rKey)) {
+                // Using React.createElement to wrap the replacement and give it a key.
+                // This is the equivalent of <React.Fragment key={...}>{...}</React.Fragment>
+                return React.createElement(React.Fragment, { key: `${rKey}-${i}` }, replacements[rKey]);
+            }
+        }
+        return part;
+    });
   }, [language]);
 
   return { t, setLanguage, language };

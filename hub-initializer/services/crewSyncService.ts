@@ -197,4 +197,14 @@ export async function executeAgent(agent: string, payload: any) {
 
   } catch (error) {
     console.error(`[AGENT] Erro ao executar ${agent}:`, error);
-    sendLog(
+    sendLog(agent, `[ERROR] Falha na execução: ${(error as Error).message}`);
+    await dataService.addDocument('initializer_logs', {
+      agent_name: agent,
+      action: actionDescription,
+      status: 'error',
+      module: payload.context,
+      timestamp: new Date().toISOString(),
+      metadata: { error: (error as Error).message }
+    });
+  }
+}
