@@ -1,15 +1,31 @@
-import * as driveService from './driveService';
 import { dataService } from './dataService';
 import { MediaAsset } from '../types';
 import { toast } from '../hooks/use-toast';
+import { supabaseStorageService } from './supabaseStorageService';
 
 export const mediaService = {
-    async uploadFile(file: File, module: string, category: string): Promise<{ id: string; webViewLink: string;[key: string]: any; }> {
+    async uploadFile(file: File, module: string, category: string): Promise<MediaAsset> {
         toast({ title: "Enviando arquivo...", description: file.name });
         try {
-            const result = await driveService.uploadToDrive(file, module, category);
-            toast({ title: "Sucesso!", description: "Arquivo enviado para o Google Drive."});
-            return result;
+            // 1. Upload file to Supabase Storage
+            const { path, publicUrl } = await supabaseStorageService.uploadFile(file, module, category);
+
+            // 2. Create a record in the media_assets table
+            const newAsset: Omit<MediaAsset, 'id' | 'created_at'> = {
+                drive_file_id: path, // Use this field for the Supabase path
+                module,
+                category,
+                name: file.name,
+                mime_type: file.type,
+                size: file.size,
+                url_public: publicUrl,
+            };
+
+            const savedAsset = await dataService.addDocument<MediaAsset>('media_assets', newAsset);
+            
+            toast({ title: "Sucesso!", description: "Arquivo salvo no Supabase Storage."});
+            return savedAsset;
+
         } catch(e) {
             toast({ title: "Erro no Upload", description: (e as Error).message, variant: 'destructive' });
             throw e;

@@ -27,12 +27,10 @@ export function useMedia(module: string, category?: string) {
     if (!file) return;
     setUploading(true);
     try {
-      const result = await mediaService.uploadFile(file, module, category || "default");
-      // The sandbox service returns `id` as drive_file_id and `webViewLink` as url_public. The real one might differ. Let's align.
-      const uploadResult = { drive_file_id: result.id, url_public: result.webViewLink };
+      const savedAsset = await mediaService.uploadFile(file, module, category || "default");
       
       if (onUploadSuccess) {
-        onUploadSuccess(uploadResult);
+        onUploadSuccess({ drive_file_id: savedAsset.drive_file_id, url_public: savedAsset.url_public });
       }
       // Only refresh the gallery if there's no specific callback to handle the result.
       // If there is a callback, the parent component is responsible for what happens next.

@@ -93,4 +93,47 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
     return (
         <div 
             className={cn(
-                "fixed inset-0 bg
+                "fixed inset-0 bg-black/60 z-40 transition-opacity",
+                isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+        >
+            <form
+                onSubmit={handleSubmit}
+                className={cn(
+                    "fixed top-0 right-0 h-full w-full max-w-4xl bg-card dark:bg-dark-card shadow-lg flex flex-col transition-transform duration-300",
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                )}
+                onClick={e => e.stopPropagation()}
+            >
+                 {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b border-border dark:border-dark-border flex-shrink-0">
+                    <div>
+                        <h2 className="text-xl font-bold text-textPrimary dark:text-dark-textPrimary">{product ? `Editar Produto: ${product.name}` : 'Novo Produto Base'}</h2>
+                    </div>
+                    <Button variant="ghost" type="button" size="icon" onClick={onClose}><X /></Button>
+                </div>
+                
+                {/* Tabs */}
+                <div className="px-4 border-b border-border dark:border-dark-border flex-shrink-0">
+                    <TabLayout tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-secondary/30 dark:bg-dark-secondary/20">
+                    {renderTabContent()}
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-border flex-shrink-0 flex justify-end gap-3 bg-background dark:bg-dark-card">
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {product ? 'Salvar Alterações' : 'Salvar Produto'}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default ProductDrawer;

@@ -64,7 +64,7 @@ export function useSettings() {
         }
     };
 
-    // FIX: Add module and category parameters to pass to the upload service.
+    // FIX: Pass module and category parameters to pass to the upload service.
     const uploadFilesAndUpdateItem = async (item: any, fileData: Record<string, File | null> | undefined, module: SettingsCategory, uploadCategory: string) => {
         const itemToSubmit = { ...item };
         if (!fileData) return itemToSubmit;
@@ -73,9 +73,9 @@ export function useSettings() {
             const file = fileData[key];
             if (file) {
                 toast({ title: "Enviando arquivo...", description: `Enviando ${file.name}` });
-                // FIX: Pass all required arguments to uploadFile and use the correct return property 'webViewLink'.
+                // FIX: Pass all required arguments to uploadFile and use the correct return property 'url_public'.
                 const result = await mediaService.uploadFile(file, module, uploadCategory); 
-                itemToSubmit[key] = result.webViewLink;
+                itemToSubmit[key] = result.url_public;
             }
         }
         return itemToSubmit;
