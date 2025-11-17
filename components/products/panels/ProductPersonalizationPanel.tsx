@@ -18,8 +18,13 @@ const Section: React.FC<{ title: string, children: React.ReactNode, className?: 
 const getOptionsForSource = (source: ProductPart['options_source'] | undefined, appData: AppData): { value: string, label: string }[] => {
     if (!source || !appData) return [];
     const mapping: Record<string, any[]> = {
-        ...(appData.catalogs.cores_texturas || {}),
-        config_materials: appData.config_materials || [],
+        'fabric_colors': appData.catalogs.cores_texturas.tecido || [],
+        'zipper_colors': appData.catalogs.cores_texturas.ziper || [],
+        'lining_colors': appData.catalogs.cores_texturas.forro || [],
+        'puller_colors': appData.catalogs.cores_texturas.puxador || [],
+        'bias_colors': appData.catalogs.cores_texturas.vies || [],
+        'embroidery_colors': appData.catalogs.cores_texturas.bordado || [],
+        'config_materials': appData.config_materials || [],
     };
     const result = mapping[source] || [];
     return result.map(item => ({ value: item.id, label: item.name }));
@@ -27,25 +32,32 @@ const getOptionsForSource = (source: ProductPart['options_source'] | undefined, 
 
 
 const ProductPersonalizationSimulator: React.FC<{
+    product: Product;
     appData: AppData;
-}> = ({ appData }) => {
+}> = ({ product, appData }) => {
+    const [simulationConfig, setSimulationConfig] = useState<Record<string, string>>({});
+    
+    // States for embroidery specific simulation
     const [embroideryText, setEmbroideryText] = useState('Olie');
-    const [embroideryFont, setEmbroideryFont] = useState(appData.catalogs.fontes_monogramas[0]?.id || '');
-    const [embroideryColorId, setEmbroideryColorId] = useState(appData.catalogs.cores_texturas.bordado[0]?.id || '');
     const [embroideryHeight, setEmbroideryHeight] = useState(15);
-    const [fabricColorId, setFabricColorId] = useState(appData.catalogs.cores_texturas.tecido[0]?.id || '');
     
     const [contrast, setContrast] = useState(1);
     const hasEnoughContrast = contrast >= 4.5;
 
+    // Reset simulation when product changes
     useEffect(() => {
-        const fabric = appData.catalogs.cores_texturas.tecido.find(c => c.id === fabricColorId);
-        const thread = appData.catalogs.cores_texturas.bordado.find(c => c.id === embroideryColorId);
-        if (fabric && thread) {
-            const ratio = calculateContrastRatio(fabric.hex, thread.hex);
+        setSimulationConfig({});
+    }, [product.id]);
+
+    useEffect(() => {
+        const fabricColorHex = appData.catalogs.cores_texturas.tecido?.find(c => c.id === simulationConfig.cor_tecido)?.hex;
+        const threadColorHex = appData.catalogs.cores_texturas.bordado?.find(c => c.id === simulationConfig.cor_bordado)?.hex;
+
+        if (fabricColorHex && threadColorHex) {
+            const ratio = calculateContrastRatio(fabricColorHex, threadColorHex);
             setContrast(ratio);
         }
-    }, [fabricColorId, embroideryColorId, appData.catalogs]);
+    }, [simulationConfig, appData.catalogs]);
 
     const getFontName = (fontId: string) => {
         return appData.catalogs.fontes_monogramas.find(f => f.id === fontId)?.name || 'sans-serif';
@@ -54,50 +66,47 @@ const ProductPersonalizationSimulator: React.FC<{
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
-                 <Section title="Simulador de Tecido (para Contraste)">
-                     <div>
-                        <label className="block text-xs font-medium text-textSecondary mb-1">Cor do Tecido Externo</label>
-                        <select value={fabricColorId} onChange={e => setFabricColorId(e.target.value)} className="w-full p-2 border rounded-md">
-                            {appData.catalogs.cores_texturas.tecido.map(color => <option key={color.id} value={color.id}>{color.name}</option>)}
-                        </select>
-                    </div>
-                </Section>
-                <Section title="Configuração da Personalização">
-                    <div className="space-y-4 pt-2">
-                            <div>
-                                <label className="block text-xs font-medium text-textSecondary mb-1">Texto</label>
-                                <input value={embroideryText} onChange={e => setEmbroideryText(e.target.value)} className="w-full p-2 border rounded-md" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-textSecondary mb-1">Fonte</label>
-                                <select value={embroideryFont} onChange={e => setEmbroideryFont(e.target.value)} className="w-full p-2 border rounded-md">
-                                    {appData.catalogs.fontes_monogramas.map(font => <option key={font.id} value={font.id}>{font.name}</option>)}
+                 <Section title="Configuração da Simulação">
+                    {(product.configurable_parts || []).map(part => {
+                         const options = getOptionsForSource(part.options_source, appData);
+                         return (
+                            <div key={part.key}>
+                                <label className="block text-xs font-medium text-textSecondary mb-1">{part.name}</label>
+                                <select 
+                                    value={simulationConfig[part.key] || ''} 
+                                    onChange={e => setSimulationConfig(prev => ({...prev, [part.key]: e.target.value}))} 
+                                    className="w-full p-2 border rounded-md"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-textSecondary mb-1">Cor da Linha</label>
-                                <select value={embroideryColorId} onChange={e => setEmbroideryColorId(e.target.value)} className="w-full p-2 border rounded-md">
-                                    {appData.catalogs.cores_texturas.bordado.map(color => <option key={color.id} value={color.id}>{color.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-textSecondary mb-1">Altura ({embroideryHeight}mm)</label>
-                                <input type="range" min="10" max="25" value={embroideryHeight} onChange={e => setEmbroideryHeight(Number(e.target.value))} className="w-full" />
-                            </div>
-                    </div>
+                         )
+                    })}
+                     <div className="border-t pt-4 space-y-4">
+                        <h4 className="text-xs font-semibold">Bordado</h4>
+                        <div>
+                            <label className="block text-xs font-medium text-textSecondary mb-1">Texto</label>
+                            <input value={embroideryText} onChange={e => setEmbroideryText(e.target.value)} className="w-full p-2 border rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-textSecondary mb-1">Altura ({embroideryHeight}mm)</label>
+                            <input type="range" min="10" max="25" value={embroideryHeight} onChange={e => setEmbroideryHeight(Number(e.target.value))} className="w-full" />
+                        </div>
+                     </div>
                 </Section>
             </div>
             <div className="space-y-6">
-                <Section title="Visualização em Tempo Real">
+                <Section title="Visualização e Análise de Contraste">
                      <div 
                         className="w-full aspect-video rounded-lg flex items-center justify-center transition-colors duration-300" 
-                        style={{ backgroundColor: appData.catalogs.cores_texturas.tecido.find(c => c.id === fabricColorId)?.hex || '#ccc' }}
+                        style={{ backgroundColor: appData.catalogs.cores_texturas.tecido?.find(c => c.id === simulationConfig.cor_tecido)?.hex || '#ccc' }}
                      >
                         <span 
                             className="text-4xl transition-colors duration-300" 
                             style={{ 
-                                color: appData.catalogs.cores_texturas.bordado.find(c => c.id === embroideryColorId)?.hex || '#000',
-                                fontFamily: getFontName(embroideryFont),
+                                color: appData.catalogs.cores_texturas.bordado?.find(c => c.id === simulationConfig.cor_bordado)?.hex || '#000',
+                                fontFamily: getFontName(simulationConfig.fonte_monograma),
                                 fontSize: `${embroideryHeight * 2}px`
                             }}
                         >
@@ -239,7 +248,7 @@ const ProductPersonalizationPanel: React.FC<{
                 <Button type="button" onClick={addRule} variant="outline" size="sm" className="mt-2"><Plus size={14} className="mr-2"/> Adicionar Regra</Button>
             </Section>
 
-            <ProductPersonalizationSimulator appData={appData} />
+            <ProductPersonalizationSimulator product={product} appData={appData} />
         </div>
     );
 };
