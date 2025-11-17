@@ -3,7 +3,18 @@ import { Product, ProductCategory, AnyProduct, AppData, ProductStatus, ProductVa
 import { dataService } from '../services/dataService';
 import { toast } from './use-toast';
 
-export type ViewMode = 'list' | 'kanban';
+export type ViewMode = 'list' | 'kanban' | 'gallery';
+
+export interface ProductAdvancedFilters {
+    category: string;
+    collection: string;
+    status: ProductStatus[];
+    minPrice: number | '';
+    maxPrice: number | '';
+}
+
+export type ProductColumn = 'category' | 'collection_ids' | 'available_sizes' | 'variants' | 'status';
+
 
 export function useProducts() {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -14,18 +25,35 @@ export function useProducts() {
     const [settingsData, setSettingsData] = useState<AppData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     
+    // UI State
+    const [searchQuery, setSearchQuery] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     
+    // New Features State
     const [viewMode, setViewModeInternal] = useState<ViewMode>('list');
+    const [advancedFilters, setAdvancedFilters] = useState<ProductAdvancedFilters>({
+        category: '', collection: '', status: [], minPrice: '', maxPrice: ''
+    });
+    const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+    const [visibleColumns, setVisibleColumns] = useState<Set<ProductColumn>>(
+      new Set(['category', 'available_sizes', 'variants', 'status'])
+    );
+
 
     useEffect(() => {
         const savedViewMode = sessionStorage.getItem('productsViewMode') as ViewMode;
-        if (savedViewMode) {
-            setViewModeInternal(savedViewMode);
+        if (savedViewMode) setViewModeInternal(savedViewMode);
+
+        const savedColumns = sessionStorage.getItem('productsVisibleColumns');
+        if (savedColumns) {
+            try {
+                setVisibleColumns(new Set(JSON.parse(savedColumns)));
+            } catch (e) {
+                console.error("Failed to parse visible columns from session storage", e);
+            }
         }
     }, []);
 
@@ -33,6 +61,18 @@ export function useProducts() {
         sessionStorage.setItem('productsViewMode', mode);
         setViewModeInternal(mode);
     };
+
+    const toggleColumnVisibility = (column: ProductColumn) => {
+        const newColumns = new Set(visibleColumns);
+        if (newColumns.has(column)) {
+            newColumns.delete(column);
+        } else {
+            newColumns.add(column);
+        }
+        setVisibleColumns(newColumns);
+        sessionStorage.setItem('productsVisibleColumns', JSON.stringify(Array.from(newColumns)));
+    };
+
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -67,18 +107,22 @@ export function useProducts() {
 
 
     const filteredProducts = useMemo(() => {
-        let products = allProducts;
+        return allProducts.filter(p => {
+            // Basic search
+            const searchMatch = searchQuery.length === 0 ||
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.base_sku.toLowerCase().includes(searchQuery.toLowerCase());
 
-        if (searchQuery) {
-            const lowercasedQuery = searchQuery.toLowerCase();
-            products = products.filter(p =>
-                p.name.toLowerCase().includes(lowercasedQuery) ||
-                p.base_sku.toLowerCase().includes(lowercasedQuery)
-            );
-        }
-        
-        return products;
-    }, [allProducts, searchQuery]);
+            // Advanced filters
+            const categoryMatch = !advancedFilters.category || p.category === advancedFilters.category;
+            const collectionMatch = !advancedFilters.collection || (p.collection_ids || []).includes(advancedFilters.collection);
+            const statusMatch = advancedFilters.status.length === 0 || advancedFilters.status.includes(p.status);
+            const minPriceMatch = advancedFilters.minPrice === '' || p.base_price >= advancedFilters.minPrice;
+            const maxPriceMatch = advancedFilters.maxPrice === '' || p.base_price <= advancedFilters.maxPrice;
+
+            return searchMatch && categoryMatch && collectionMatch && statusMatch && minPriceMatch && maxPriceMatch;
+        });
+    }, [allProducts, searchQuery, advancedFilters]);
     
     const openDialog = (product: Product | null = null) => {
         setEditingProduct(product);
@@ -123,6 +167,11 @@ export function useProducts() {
         }
     }, [loadData]);
 
+    const clearFilters = () => {
+        setAdvancedFilters({ category: '', collection: '', status: [], minPrice: '', maxPrice: '' });
+        setSearchQuery('');
+    };
+
     return {
         isLoading,
         isSaving,
@@ -145,5 +194,13 @@ export function useProducts() {
         selectedProductId,
         setSelectedProductId,
         refresh: loadData,
+        // New features
+        advancedFilters,
+        setAdvancedFilters,
+        isAdvancedFilterOpen,
+        setIsAdvancedFilterOpen,
+        clearFilters,
+        visibleColumns,
+        toggleColumnVisibility,
     };
 }

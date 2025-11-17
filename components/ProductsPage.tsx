@@ -8,6 +8,8 @@ import TabLayout from './ui/TabLayout';
 import CatalogManagement from './products/CatalogManagement';
 import { Product } from '../types';
 import ProductDrawer from './products/ProductDrawer';
+import ProductGallery from './products/ProductGallery';
+import AdvancedFilterPanel from './products/AdvancedFilterPanel';
 
 const PRODUCT_PAGE_TABS = [
     { id: 'list', label: 'Lista de Produtos', icon: Package },
@@ -22,6 +24,7 @@ const ProductsPage: React.FC = () => {
         allVariants,
         inventoryBalances,
         categories,
+        collections,
         settingsData,
         searchQuery,
         setSearchQuery,
@@ -36,14 +39,26 @@ const ProductsPage: React.FC = () => {
         selectedProductId,
         setSelectedProductId,
         refresh,
+        advancedFilters,
+        setAdvancedFilters,
+        isAdvancedFilterOpen,
+        setIsAdvancedFilterOpen,
+        clearFilters,
+        visibleColumns,
+        toggleColumnVisibility,
     } = useProducts();
 
     const [activeProductTab, setActiveProductTab] = React.useState('list');
 
     const handleSelectProduct = React.useCallback((product: Product) => {
         setSelectedProductId(product.id);
+    }, [setSelectedProductId]);
+
+     const handleOpenDrawer = (product: Product) => {
+        setSelectedProductId(product.id);
         openDialog(product);
-    }, [openDialog, setSelectedProductId]);
+    };
+
 
     const renderProductsContent = () => {
         if (isLoading) {
@@ -53,23 +68,32 @@ const ProductsPage: React.FC = () => {
                 </div>
             );
         }
-        if (viewMode === 'kanban') {
-            return <ProductKanban 
-                products={filteredProducts} 
-                onCardClick={handleSelectProduct} 
-                onStatusChange={updateProductStatus} 
-                selectedProductId={selectedProductId}
-                onEdit={openDialog}
-            />;
+        switch (viewMode) {
+            case 'kanban':
+                return <ProductKanban 
+                    products={filteredProducts} 
+                    onCardClick={handleOpenDrawer} 
+                    onStatusChange={updateProductStatus} 
+                    selectedProductId={selectedProductId}
+                    onEdit={handleOpenDrawer}
+                />;
+             case 'gallery':
+                return <ProductGallery 
+                    products={filteredProducts} 
+                    onCardClick={handleOpenDrawer} 
+                />;
+            case 'list':
+            default:
+                return <ProductList 
+                    products={filteredProducts}
+                    allVariants={allVariants}
+                    isLoading={isLoading} 
+                    onEdit={handleOpenDrawer} 
+                    selectedProductId={selectedProductId}
+                    onRowClick={handleSelectProduct}
+                    visibleColumns={visibleColumns}
+                />;
         }
-        return <ProductList 
-            products={filteredProducts}
-            allVariants={allVariants}
-            isLoading={isLoading} 
-            onEdit={openDialog} 
-            selectedProductId={selectedProductId}
-            onRowClick={(product) => handleSelectProduct(product)}
-        />;
     };
 
     return (
@@ -86,6 +110,9 @@ const ProductsPage: React.FC = () => {
                         onNewProductClick={() => openDialog()}
                         viewMode={viewMode}
                         onViewModeChange={setViewMode}
+                        onAdvancedFilterClick={() => setIsAdvancedFilterOpen(true)}
+                        visibleColumns={visibleColumns}
+                        toggleColumnVisibility={toggleColumnVisibility}
                     />
                     
                     <div className="mt-6">
@@ -98,19 +125,27 @@ const ProductsPage: React.FC = () => {
                 <CatalogManagement />
             )}
             
-            {isDialogOpen && settingsData && (
-                <ProductDrawer
-                    isOpen={isDialogOpen}
-                    onClose={closeDialog}
-                    onSave={saveProduct}
-                    product={editingProduct}
-                    categories={categories}
-                    appData={settingsData}
-                    allVariants={allVariants}
-                    inventoryBalances={inventoryBalances}
-                    onRefresh={refresh}
-                />
-            )}
+            <ProductDrawer
+                isOpen={isDialogOpen}
+                onClose={closeDialog}
+                onSave={saveProduct}
+                product={editingProduct}
+                categories={categories}
+                appData={settingsData!}
+                allVariants={allVariants}
+                inventoryBalances={inventoryBalances}
+                onRefresh={refresh}
+            />
+            
+             <AdvancedFilterPanel
+                isOpen={isAdvancedFilterOpen}
+                onClose={() => setIsAdvancedFilterOpen(false)}
+                filters={advancedFilters}
+                onFiltersChange={setAdvancedFilters}
+                onClearFilters={clearFilters}
+                categories={categories}
+                collections={collections}
+            />
             
             {isSaving && (
                  <div className="fixed inset-0 bg-black/20 z-50 flex justify-center items-center">

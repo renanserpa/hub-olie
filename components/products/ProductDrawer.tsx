@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Product, ProductCategory, AnyProduct, AppData, ProductVariant, InventoryBalance } from '../../types';
-import { Loader2, Package, GitBranch, List, Settings, X } from 'lucide-react';
+import { Loader2, Package, GitBranch, List, Settings, X, ShieldAlert } from 'lucide-react';
 import TabLayout from '../ui/TabLayout';
 import { cn } from '../../lib/utils';
 import { toast } from '../../hooks/use-toast';
@@ -74,7 +74,15 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
     ];
 
     const renderTabContent = () => {
-        const saveFirstMessage = <p className="text-center text-sm text-textSecondary p-8">Salve o produto base primeiro para poder acessar esta aba.</p>;
+        const saveFirstMessage = (
+            <div className="text-center p-8 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200">
+                <ShieldAlert className="mx-auto h-12 w-12 mb-4" />
+                <h3 className="font-semibold text-lg">Salve o Produto Primeiro</h3>
+                <p className="text-sm mt-2">
+                    Você precisa salvar as informações base do produto antes de poder gerenciar variações, lista de materiais ou regras de personalização.
+                </p>
+            </div>
+        );
 
         switch(activeTab) {
             case 'base':
