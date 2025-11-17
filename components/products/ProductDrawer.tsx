@@ -84,7 +84,7 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({ isOpen, onClose, onSave, 
             case 'bom':
                 return <ProductBOMPanel product={productForPanels} allVariants={allVariants} appData={appData} inventoryBalances={inventoryBalances} />;
             case 'personalization':
-                return <ProductPersonalizationPanel product={productForPanels} appData={appData} />;
+                return <ProductPersonalizationPanel product={productForPanels} appData={appData} formData={formData} setFormData={setFormData} />;
             default:
                 return null;
         }
