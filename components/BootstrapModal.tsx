@@ -5,7 +5,7 @@ import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 // FIX: Export the bootstrapSqlScript constant to make it available for import.
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.2)
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.3)
 -- Cria TODAS as tabelas, aplica RLS e políticas permissivas.
 -- Este script é IDEMPOTENTE e seguro para ser executado múltiplas vezes.
 
@@ -154,9 +154,9 @@ interface BootstrapModalProps {
 }
 
 const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
-  const handleCopy = () => {
-    navigator.clipboard.writeText(bootstrapSqlScript);
-    toast({ title: "Script Copiado!", description: "Cole o script no seu SQL Editor do Supabase." });
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({ title: "Copiado!", description: "Cole no seu SQL Editor do Supabase." });
   };
 
   return (
@@ -176,7 +176,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
             <ol className="list-decimal list-inside space-y-1 text-sm pl-2">
                 <li>Vá para a seção **Authentication** no seu painel Supabase.</li>
                 <li>Clique em **"Add user"**.</li>
-                <li>Preencha com o email <code className="bg-secondary p-1 rounded">adm@adm.com</code> e a senha <code className="bg-secondary p-1 rounded">123456</code> (ou outra de sua preferência, senhas muito curtas podem ser recusadas).</li>
+                <li>Preencha com o email <code className="bg-secondary p-1 rounded">adm@adm.com</code> e a senha <code className="bg-secondary p-1 rounded">123456</code>. <strong>(Importante: a senha deve ter no mínimo 6 caracteres. Senhas como '123' não funcionarão).</strong></li>
                 <li>**Importante:** Role até a seção **"User App Metadata"**.</li>
                 <li>Cole o seguinte JSON e clique em **"Create user"**:</li>
             </ol>
@@ -189,14 +189,26 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
              <h5 className="font-bold text-lg">Passo 2: Executar o Script de Inicialização Completo</h5>
             <p className="text-sm">Após configurar o administrador, copie e execute o script abaixo no **SQL Editor** do Supabase para criar e configurar TODAS as tabelas e permissões.</p>
             <div className="relative bg-secondary dark:bg-dark-secondary p-4 rounded-lg max-h-40 overflow-y-auto">
-                <Button size="sm" onClick={handleCopy} className="absolute top-2 right-2 z-10">
+                <Button size="sm" onClick={() => handleCopy(bootstrapSqlScript)} className="absolute top-2 right-2 z-10">
                     <Copy className="w-4 h-4 mr-2" /> Copiar Script
                 </Button>
                 <pre className="text-xs whitespace-pre-wrap font-mono">{bootstrapSqlScript}</pre>
             </div>
         </div>
 
-        <p className="text-center font-semibold">Após seguir os dois passos, feche este aviso e tente fazer o login novamente.</p>
+         <div className="space-y-3 p-4 border rounded-lg">
+             <h5 className="font-bold text-lg">Passo 3: Verificação (Opcional, mas recomendado)</h5>
+            <p className="text-sm">Após rodar o script, execute o comando abaixo no SQL Editor para confirmar que o perfil do admin foi criado corretamente.</p>
+            <div className="relative bg-secondary dark:bg-dark-secondary p-2 rounded-lg">
+                 <Button size="icon" variant="ghost" onClick={() => handleCopy("SELECT * FROM public.profiles;")} className="absolute top-1 right-1 z-10 h-7 w-7">
+                    <Copy className="w-4 h-4" />
+                </Button>
+                <pre className="text-xs whitespace-pre-wrap font-mono">SELECT * FROM public.profiles;</pre>
+            </div>
+             <p className="text-sm">Você deve ver uma linha para o usuário `adm@adm.com` com a role `AdminGeral`.</p>
+        </div>
+
+        <p className="text-center font-semibold">Após seguir os passos, feche este aviso e tente fazer o login novamente com `adm@adm.com` e a senha `123456`.</p>
 
         <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose}>Entendi, vou executar os passos</Button>

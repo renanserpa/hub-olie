@@ -42,8 +42,15 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
                 return <PurchaseMetrics />;
             default:
                 // Default to 'pos' if an invalid tab is selected
+                // FIX: Spread was causing a prop mismatch. Explicitly pass props instead.
                 return <PurchaseOrdersTab 
-                    {...props} 
+                    purchaseOrders={props.purchaseOrders}
+                    selectedPO={props.selectedPO}
+                    onSelectPO={props.onSelectPO}
+                    onNewClick={props.onNewPOClick}
+                    onReceiveClick={props.onReceivePOClick}
+                    isSaving={props.isSaving}
+                    isLoadingItems={props.isLoadingItems}
                 />;
         }
     };

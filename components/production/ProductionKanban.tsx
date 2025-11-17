@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ProductionOrder, ProductionOrderStatus } from '../../types';
-import ProductionOrderCard from './ProductionOrderCard';
+// FIX: The original import was from './ProductionOrderCard', which is an obsolete, empty component.
+// Changed to import the correct, implemented component from the 'modules' directory.
+import ProductionOrderCard from '../../modules/Production/ProductionOrderCard';
 import { cn } from '../../lib/utils';
 import { PlusCircle, ClipboardList, Cog, PauseCircle, CheckCircle2 } from 'lucide-react';
 
@@ -19,16 +21,10 @@ const STATUS_CONFIG: { id: ProductionOrderStatus, label: string, icon: React.Ele
 ];
 
 const ProductionKanban: React.FC<ProductionKanbanProps> = ({ orders, onCardClick, onStatusChange }) => {
-    const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
     const [isDraggingOver, setIsDraggingOver] = useState<ProductionOrderStatus | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, orderId: string) => {
-        setDraggedOrderId(orderId);
         e.dataTransfer.setData('orderId', orderId);
-    };
-    
-    const handleDragEnd = () => {
-        setDraggedOrderId(null);
     };
     
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, status: ProductionOrderStatus) => {
@@ -85,7 +81,6 @@ const ProductionKanban: React.FC<ProductionKanbanProps> = ({ orders, onCardClick
                                         order={order}
                                         onClick={() => onCardClick(order.id)}
                                         onDragStart={(e) => handleDragStart(e, order.id)}
-                                        onDragEnd={handleDragEnd}
                                     />
                                 ))
                             }
