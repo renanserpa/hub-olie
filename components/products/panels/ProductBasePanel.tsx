@@ -90,6 +90,7 @@ const ProductBasePanel: React.FC<{ formData: Partial<Product>, setFormData: Reac
                         module="products" 
                         category={formData.base_sku || 'new_product'} 
                         onUploadSuccess={handleUploadSuccess}
+                        multiple={true}
                     />
                     {(formData.images && formData.images.length > 0) && (
                         <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -159,13 +160,21 @@ const ProductBasePanel: React.FC<{ formData: Partial<Product>, setFormData: Reac
                 </Section>
 
                  <Section title="Tamanhos Disponíveis">
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex flex-wrap gap-4 mb-3">
                         {['P', 'M', 'G', 'GG'].map(size => (
-                            <Button key={size} type="button" variant={(formData.available_sizes || []).some(s => s.name === size) ? 'primary' : 'outline'} onClick={() => handleSizeToggle(size)}>{size}</Button>
+                             <label key={size} className="flex items-center gap-2 text-sm text-textPrimary dark:text-dark-textPrimary cursor-pointer p-2 rounded-md hover:bg-secondary has-[:checked]:bg-primary/10 has-[:checked]:ring-1 has-[:checked]:ring-primary/50 transition-all">
+                                <input 
+                                    type="checkbox"
+                                    checked={(formData.available_sizes || []).some(s => s.name === size)}
+                                    onChange={() => handleSizeToggle(size)}
+                                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary"
+                                />
+                                {size}
+                            </label>
                         ))}
                     </div>
                     {(formData.available_sizes || []).sort((a,b) => ['P','M','G','GG'].indexOf(a.name) - ['P','M','G','GG'].indexOf(b.name)).map(size => (
-                        <div key={size.name} className="grid grid-cols-4 gap-2 items-center">
+                        <div key={size.name} className="grid grid-cols-4 gap-2 items-center animate-fade-in-up" style={{animationDuration: '0.3s'}}>
                             <label className="font-semibold text-sm">{size.name}</label>
                             <input type="number" placeholder="Altura (cm)" value={size.dimensions?.height || ''} onChange={e => handleDimensionChange(size.name, 'height', e.target.value)} className={cn(inputStyle, "text-xs")} />
                             <input type="number" placeholder="Largura (cm)" value={size.dimensions?.width || ''} onChange={e => handleDimensionChange(size.name, 'width', e.target.value)} className={cn(inputStyle, "text-xs")} />
