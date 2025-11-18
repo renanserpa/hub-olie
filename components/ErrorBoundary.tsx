@@ -12,11 +12,13 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // FIX: Initialize state as a class property to correctly type `this.state` and `this.props`. This is the modern and correct way, and it resolves the compilation errors.
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: undefined,
-  };
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: undefined,
+    };
+  }
 
   public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };

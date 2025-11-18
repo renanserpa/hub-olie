@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, Plus, LayoutGrid, List, Columns, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, Columns, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
+import { useApp } from '../contexts/AppContext';
 
 type ViewMode = 'kanban' | 'list' | 'table';
 
@@ -15,8 +16,17 @@ interface OrderFiltersProps {
 }
 
 const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange, onNewOrderClick, onAdvancedFilterClick, viewMode, onViewModeChange }) => {
+    const { setActiveModule } = useApp();
+
     return (
-        <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div>
+                <Button variant="ghost" onClick={() => setActiveModule('orders')}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Voltar
+                </Button>
+            </div>
+
             <div className="flex items-center gap-2">
                  <div className="relative flex-1 sm:flex-initial sm:w-64">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
