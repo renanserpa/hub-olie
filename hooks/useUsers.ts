@@ -55,11 +55,31 @@ export function useUsers() {
         }
     };
 
+    const deleteUser = async (id: string) => {
+        if (!isAdmin) {
+            toast({ title: 'Acesso Negado', description: 'Você não tem permissão para esta ação.', variant: 'destructive' });
+            throw new Error('Permission denied');
+        }
+        
+        setIsSaving(true);
+        try {
+            await dataService.deleteDocument('profiles', id);
+            toast({ title: "Sucesso!", description: "Usuário removido." });
+            loadUsers();
+        } catch (error) {
+            toast({ title: "Erro!", description: "Não foi possível remover o usuário.", variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return {
         users,
         isLoading,
         isSaving,
         isAdmin,
         saveUser,
+        deleteUser,
     };
 }

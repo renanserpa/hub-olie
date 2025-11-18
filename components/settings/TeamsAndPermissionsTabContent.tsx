@@ -8,7 +8,7 @@ import { UserProfile } from '../../types';
 import UserDialog from './UserDialog';
 
 const TeamsAndPermissionsTabContent: React.FC = () => {
-    const { users, isLoading, isAdmin, saveUser, isSaving } = useUsers();
+    const { users, isLoading, isAdmin, saveUser, deleteUser, isSaving } = useUsers();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
 
@@ -84,6 +84,7 @@ const TeamsAndPermissionsTabContent: React.FC = () => {
                 isOpen={isDialogOpen}
                 onClose={() => setIsDialogOpen(false)}
                 onSave={handleSave}
+                onDelete={deleteUser}
                 user={editingUser}
                 isSaving={isSaving}
             />
