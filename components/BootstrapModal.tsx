@@ -5,7 +5,7 @@ import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 // FIX: Export the bootstrapSqlScript constant to make it available for import.
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.4)
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.5 - Product Schema Fix)
 -- Cria TODAS as tabelas, aplica RLS e políticas permissivas.
 -- Este script é IDEMPOTENTE e seguro para ser executado múltiplas vezes.
 
@@ -18,11 +18,11 @@ CREATE TABLE IF NOT EXISTS public.user_roles (user_id UUID PRIMARY KEY REFERENCE
 CREATE TABLE IF NOT EXISTS public.system_roles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT UNIQUE NOT NULL, description TEXT);
 CREATE TABLE IF NOT EXISTS public.system_permissions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), role TEXT NOT NULL, scope TEXT NOT NULL, read BOOLEAN DEFAULT false, write BOOLEAN DEFAULT false, update BOOLEAN DEFAULT false, "delete" BOOLEAN DEFAULT false, UNIQUE(role, scope));
 
--- Módulo: Produtos
+-- Módulo: Produtos (Atualizado para persistência de base_sku/base_price e relação com variantes)
 CREATE TABLE IF NOT EXISTS public.product_categories (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.collections (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, created_at TIMESTAMPTZ DEFAULT now());
-CREATE TABLE IF NOT EXISTS public.products (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, base_sku TEXT NOT NULL, base_price NUMERIC NOT NULL, category TEXT, status TEXT NOT NULL, collection_ids UUID[], images TEXT[], created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now(), available_sizes JSONB, configurable_parts JSONB, combination_rules JSONB, base_bom JSONB, attributes JSONB, hasVariants BOOLEAN DEFAULT false, created_by UUID REFERENCES public.profiles(id));
-CREATE TABLE IF NOT EXISTS public.product_variants (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), product_id UUID REFERENCES public.products(id) ON DELETE CASCADE, sku TEXT NOT NULL UNIQUE, name TEXT, sales_price NUMERIC NOT NULL, unit_of_measure TEXT NOT NULL DEFAULT 'UN', configuration JSONB, price_modifier NUMERIC, final_price NUMERIC, dimensions JSONB, bom JSONB, stock_quantity INT, created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.products (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, description TEXT, base_sku TEXT NOT NULL, base_price NUMERIC NOT NULL DEFAULT 0, category TEXT, status TEXT NOT NULL, collection_ids UUID[], images TEXT[], created_by UUID, created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now(), available_sizes JSONB, configurable_parts JSONB, combination_rules JSONB, base_bom JSONB, attributes JSONB, hasVariants BOOLEAN);
+CREATE TABLE IF NOT EXISTS public.product_variants (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), product_base_id UUID REFERENCES public.products(id) ON DELETE CASCADE, sku TEXT NOT NULL UNIQUE, name TEXT, configuration JSONB, price_modifier NUMERIC, sales_price NUMERIC NOT NULL DEFAULT 0, final_price NUMERIC, dimensions JSONB, bom JSONB, stock_quantity INT DEFAULT 0, unit_of_measure TEXT DEFAULT 'UN', created_at TIMESTAMPTZ DEFAULT now());
 
 -- Módulo: Pedidos e Clientes
 CREATE TABLE IF NOT EXISTS public.customers (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, document TEXT, email TEXT, phone TEXT, whatsapp TEXT, instagram TEXT, address JSONB, birth_date DATE, phones JSONB, stage TEXT, tags TEXT[], created_at TIMESTAMPTZ DEFAULT now());
@@ -102,8 +102,10 @@ CREATE TABLE IF NOT EXISTS public.notifications (id UUID PRIMARY KEY DEFAULT gen
 CREATE TABLE IF NOT EXISTS public.system_settings_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), key TEXT, old_value TEXT, new_value TEXT, source_module TEXT, confidence NUMERIC, explanation TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.system_settings_history (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), setting_id UUID, setting_key TEXT, old_value TEXT, new_value TEXT, changed_by TEXT, created_at TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS public.webhook_logs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), integration_id UUID, payload JSONB, status TEXT, retry_count INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.system_roles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT UNIQUE NOT NULL, description TEXT);
+CREATE TABLE IF NOT EXISTS public.system_permissions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), role TEXT NOT NULL, scope TEXT NOT NULL, read BOOLEAN DEFAULT false, write BOOLEAN DEFAULT false, update BOOLEAN DEFAULT false, "delete" BOOLEAN DEFAULT false, UNIQUE(role, scope));
 CREATE TABLE IF NOT EXISTS public.governance_suggestions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), setting_key TEXT NOT NULL, suggested_value JSONB, explanation TEXT, confidence NUMERIC, status TEXT NOT NULL DEFAULT 'suggested', created_at TIMESTAMPTZ DEFAULT now());
-
+CREATE TABLE IF NOT EXISTS public.system_config (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), olie_hub_name TEXT, timezone TEXT, default_currency TEXT);
 
 -- 3️⃣ APLICAÇÃO DE POLÍTICAS RLS PERMISSIVAS PARA TODAS AS TABELAS
 DO $$
@@ -114,17 +116,8 @@ BEGIN
     SELECT tablename FROM pg_tables WHERE schemaname = 'public'
   LOOP
     EXECUTE 'ALTER TABLE public.' || quote_ident(tbl_name) || ' ENABLE ROW LEVEL SECURITY;';
-    
-    -- Limpa políticas antigas
     EXECUTE 'DROP POLICY IF EXISTS "Permitir acesso total para usuários autenticados" ON public.' || quote_ident(tbl_name) || ';';
-    EXECUTE 'DROP POLICY IF EXISTS "Permitir leitura para usuários autenticados" ON public.' || quote_ident(tbl_name) || ';';
-    EXECUTE 'DROP POLICY IF EXISTS "Permitir escrita para usuários autenticados" ON public.' || quote_ident(tbl_name) || ';';
-    
-    -- ATENÇÃO: Em um ambiente de produção real, as políticas deveriam ser mais restritivas e baseadas em papéis (roles).
-    -- CUIDADO: Esta política é para DESENVOLVIMENTO. Em PRODUÇÃO, substitua por políticas RLS granulares e seguras.
-    -- Esta política permissiva resolve os erros de 'violates row-level security policy' para o ambiente de desenvolvimento/homologação.
     EXECUTE 'CREATE POLICY "Permitir acesso total para usuários autenticados" ON public.' || quote_ident(tbl_name) || ' FOR ALL USING (auth.role() = ''authenticated'') WITH CHECK (auth.role() = ''authenticated'');';
-
   END LOOP;
 END $$;
 

@@ -9,6 +9,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("ERRO CRÍTICO: As constantes do Supabase (URL/ANON_KEY) não estão definidas no código-fonte.");
 }
 
+console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");
+
 // Create the client directly. If this fails, it throws immediately, which is better than a silent failure.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: { 
