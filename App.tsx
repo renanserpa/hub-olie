@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Core, Contexts & Layout
@@ -31,13 +31,6 @@ import ContactsPage from './components/ContactsPage';
 
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
-
-    useEffect(() => {
-        // Log apenas em desenvolvimento ou mudança crítica de estado
-        if (!isLoading) {
-            console.log("[App] Ready. User:", user?.email || "Guest");
-        }
-    }, [user, isLoading]);
 
     if (isLoading) {
         return <Spinner />;
@@ -95,12 +88,6 @@ const AppContent: React.FC = () => {
     );
 };
 
-const App: React.FC = () => {
-    useEffect(() => {
-        console.log("🚀 Olie Hub App Mounted (v6.2)");
-    }, []);
-    
-    return <AppContent />;
-};
+const App: React.FC = () => <AppContent />;
 
 export default App;

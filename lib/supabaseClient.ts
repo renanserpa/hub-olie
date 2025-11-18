@@ -10,7 +10,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // Throw an error to stop execution if keys are somehow missing
   throw new Error("Supabase URL and Key are required but missing in the source code.");
 }
-console.log("🛰️ SUPABASE mode active. Initializing Supabase client.");
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: { persistSession: true },
