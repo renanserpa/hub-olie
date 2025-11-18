@@ -1,4 +1,3 @@
-// Fix: Import useState and useEffect from React.
 import React, { useState, useEffect } from 'react';
 import { User, UserProfile } from './types';
 import Toaster from './components/Toaster';
@@ -217,5 +216,5 @@ const App: React.FC = () => {
         </div>
     );
 };
-// FIX: Add default export to resolve module loading error in index.tsx.
+
 export default App;
