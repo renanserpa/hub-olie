@@ -21,8 +21,13 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({ searchQuery, onSearchChange
     return (
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
-                <Button variant="ghost" onClick={() => setActiveModule('orders')}>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setActiveModule('dashboard')}
+                    className="text-textSecondary hover:text-textPrimary gap-2 pl-0 hover:bg-transparent"
+                >
+                    <ArrowLeft className="w-4 h-4" />
                     Voltar
                 </Button>
             </div>

@@ -92,6 +92,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
         setIsSubmitting(true);
         const dataToSave = { ...formData };
         if (dataToSave.tags && !Array.isArray(dataToSave.tags)) {
+            // @ts-ignore
             dataToSave.tags = String(dataToSave.tags).split(',').map(tag => tag.trim()).filter(Boolean);
         }
         await onSave(dataToSave as Contact);
