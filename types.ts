@@ -13,16 +13,13 @@ export type UserRole =
   | 'Conteudo';
 
 export interface User {
-  // FIX: Changed from uid to id for consistency with UserProfile
   id: string;
   email: string;
   role: UserRole;
   team_id?: string;
 }
 
-// FIX: Add AuthUser interface to centralize user-related types and resolve import errors.
 export interface AuthUser {
-  // FIX: Changed from uid to id for consistency with UserProfile
   id: string;
   email: string;
   role: UserRole;
@@ -352,9 +349,7 @@ export interface Collection {
 
 export type AnySettingsItem =
     | ColorPalette | FabricColor | ZipperColor | BiasColor | MonogramFont | MaterialGroup | Material
-    // FIX: Add ProductCategory and Collection to the union type to resolve assignment errors in CatalogManagement.
     | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection
-    // FIX: Add ProductionRoute and MoldLibrary to support the production settings panel's TabContent component.
     | ProductionRoute
     | MoldLibrary;
 
@@ -411,18 +406,41 @@ export interface ProductAttributes {
   }
 }
 
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  sku: string;
+  sales_price: number;
+  unit_of_measure: string;
+  // Compatibilidade com código antigo
+  product_base_id?: string;
+  name?: string;
+  configuration?: Record<string, string>;
+  price_modifier?: number;
+  final_price?: number;
+  dimensions?: { width: number; height: number; depth: number };
+  bom?: BOMComponent[];
+  stock_quantity?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Product {
     id: string;
     name: string;
-    description?: string;
-    base_sku: string;
-    base_price: number;
-    category: string;
+    description: string | null;
     status: ProductStatus;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+    product_variants?: ProductVariant[];
+    // Compatibilidade com código antigo
+    base_sku?: string;
+    base_price?: number;
+    category?: string;
     collection_ids?: string[];
-    images: string[];
-    createdAt: string;
-    updatedAt: string;
+    collections?: Collection[];
+    images?: string[];
     available_sizes?: ProductSize[];
     configurable_parts?: ProductPart[];
     combination_rules?: CombinationRule[];
@@ -431,20 +449,7 @@ export interface Product {
     hasVariants?: boolean;
 }
 
-export interface ProductVariant {
-  id: string;
-  product_base_id: string;
-  sku: string;
-  name: string;
-  configuration: Record<string, string>;
-  price_modifier: number;
-  final_price: number;
-  dimensions?: { width: number; height: number; depth: number };
-  bom: BOMComponent[];
-  stock_quantity?: number;
-}
-
-export type AnyProduct = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+export type AnyProduct = Omit<Product, 'id' | 'created_at' | 'updated_at'>;
 
 export interface ConfigJson {
   fabricColor?: string;
@@ -539,7 +544,6 @@ export interface Order {
     payments?: PaymentDetails;
     fiscal?: FiscalDetails;
     logistics?: LogisticsDetails;
-    // FIX: Add optional payments_history, timeline, and notes_internal properties to resolve type errors in dataService.
     payments_history?: OrderPayment[];
     timeline?: OrderTimelineEvent[];
     notes_internal?: OrderNote[];
@@ -560,7 +564,6 @@ export interface ProductionTask {
   started_at?: string;
   finished_at?: string;
   notes?: string;
-  // FIX: Add optional created_at property to resolve sorting error in useProduction hook.
   created_at?: string;
 }
 
@@ -625,7 +628,6 @@ export type Priority = 'low' | 'normal' | 'high' | 'urgent';
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 export type ConversationStatus = 'open' | 'closed' | 'pending';
 
-// FIX: Add missing Omnichannel types
 export interface Conversation {
     id: string;
     customerId: string;
@@ -672,7 +674,6 @@ export interface Quote {
 }
 
 // --- INVENTORY ---
-// FIX: Add missing Inventory types
 export interface Warehouse {
     id: string;
     name: string;
@@ -756,7 +757,6 @@ export interface LogisticsPickTask {
 }
 
 // --- MARKETING ---
-// FIX: Add missing Marketing types
 export type MarketingChannel = 'email' | 'sms' | 'whatsapp' | 'instagram';
 export type MarketingCampaignStatus = 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled';
 
@@ -809,7 +809,6 @@ export interface MarketingTemplate {
 }
 
 // --- PURCHASING ---
-// FIX: Add missing Purchasing types
 export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
 
 export interface PurchaseOrder {
@@ -840,7 +839,6 @@ export interface PurchaseOrderItem {
 }
 
 // --- ANALYTICS ---
-// FIX: Add missing Analytics types
 export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing';
 
 export interface AnalyticsKPI {
@@ -861,7 +859,6 @@ export interface AnalyticsSnapshot {
 }
 
 // --- EXECUTIVE ---
-// FIX: Add missing Executive types
 export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
 
 export interface ExecutiveKPI {
@@ -885,7 +882,6 @@ export interface AIInsight {
 }
 
 // --- FINANCE ---
-// FIX: Add missing Finance types
 export interface FinanceAccount {
     id: string;
     name: string;
@@ -932,7 +928,6 @@ export interface FinanceReceivable {
 }
 
 // --- TASK MANAGEMENT ---
-// FIX: Add missing Task types
 export interface TaskStatus {
     id: string;
     name: string;
@@ -950,7 +945,6 @@ export interface Task {
 }
 
 // --- MEDIA ---
-// FIX: Add MediaAsset type
 export interface MediaAsset {
     id: string;
     drive_file_id: string;
@@ -960,13 +954,11 @@ export interface MediaAsset {
     mime_type?: string;
     size?: number;
     url_public: string;
-    // FIX: Make created_at optional to allow creation without providing it, as it's database-generated. This resolves a type error in mediaService.ts.
     created_at?: string;
 }
 
 
 // --- DASHBOARD ---
-// FIX: Add ActivityItem type
 export interface ActivityItem {
     id: string;
     type: 'order' | 'contact' | 'production';
@@ -979,7 +971,6 @@ export interface ActivityItem {
 
 
 // --- APP DATA ---
-// FIX: Add AppData type
 export interface AppData {
     catalogs: {
         paletas_cores: ColorPalette[];

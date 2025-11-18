@@ -9,7 +9,7 @@ import ProductionPage from './components/ProductionPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
-import ProductsPage from './components/ProductsPage';
+import ProductsPage from './pages/ProductsPage'; // Import the new page
 import SettingsPage from './components/SettingsPage'; // Rota antiga, mantida por compatibilidade se necessário, mas a nova é pages/SettingsPage
 import NewSettingsPage from './pages/SettingsPage'; // Nova página de configurações gerais
 import LogisticsPage from './components/LogisticsPage';
