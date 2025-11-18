@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -70,7 +71,7 @@ const AppContent: React.FC = () => {
                     <Route path="products" element={<ProductsPage />} />
                     
                     {/* Atendimento */}
-                    <Route path="omnichannel" element={<OmnichannelPage user={user!} />} />
+                    <Route path="omnichannel" element={user ? <OmnichannelPage user={user} /> : null} />
                     
                     {/* Inteligência & Gestão */}
                     <Route path="analytics" element={<AnalyticsPage />} />

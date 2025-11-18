@@ -253,9 +253,9 @@ export interface Contact {
     name: string;
     document?: string;
     email?: string;
-    phone?: string; // Mantido para compatibilidade, mas preferir landline/mobile
-    landline?: string; // Telefone Fixo
-    mobile?: string;   // Celular
+    phone?: string; 
+    landline?: string;
+    mobile?: string;
     whatsapp?: string;
     instagram?: string;
     address?: ContactAddress;
@@ -324,6 +324,8 @@ export interface BiasColor { id: string; name: string; hex: string; palette_id: 
 export interface LiningColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface PullerColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface EmbroideryColor { id: string; name: string; hex: string; thread_type: string; is_active: boolean; }
+
+// Fixed Truncated Interface
 export interface FabricTexture { 
     id: string; 
     name: string; 
@@ -337,6 +339,7 @@ export interface FabricTexture {
     distributor_id: string;
     is_active: boolean;
 }
+
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
 
 export interface ProductCategory {
@@ -416,12 +419,11 @@ export interface ProductVariant {
   sku: string;
   sales_price: number;
   unit_of_measure: string;
-  // Compatibilidade com código antigo
   product_base_id?: string;
   name?: string;
   configuration?: Record<string, string>;
   price_modifier?: number;
-  final_price?: number;
+  final_price: number;
   dimensions?: { width: number; height: number; depth: number };
   bom?: BOMComponent[];
   stock_quantity?: number;
@@ -438,9 +440,8 @@ export interface Product {
     created_at: string;
     updated_at: string;
     product_variants?: ProductVariant[];
-    // Compatibilidade com código antigo
     base_sku?: string;
-    base_price?: number;
+    base_price: number;
     category?: string;
     collection_ids?: string[];
     collections?: Collection[];

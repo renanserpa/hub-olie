@@ -82,7 +82,7 @@
       };
     </script>
 
-    <!-- Import Map -->
+    <!-- Import Map - FIXED: Removed React 19 conflicts -->
     <script type="importmap">
 {
   "imports": {
@@ -101,12 +101,30 @@
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.44.4",
     "zod": "https://esm.sh/zod@3.23.8",
     "prop-types": "https://esm.sh/prop-types@15.8.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "date-fns/": "https://aistudiocdn.com/date-fns@^4.1.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "date-fns/": "https://aistudiocdn.com/date-fns@^4.1.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
   }
 }
 </script>
+    <!-- Error Handler Global para Debug Visual -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        const root = document.getElementById('root');
+        if (root) {
+           // Se o erro ocorrer, mostra na tela em vez de deixar branco
+           root.innerHTML += `
+             <div style="color: red; padding: 20px; border: 1px solid red; margin: 20px; background: #fff0f0; border-radius: 8px; font-family: monospace;">
+               <h3>Erro Crítico de Inicialização:</h3>
+               <p><strong>${message}</strong></p>
+               <p>${source}:${lineno}:${colno}</p>
+               <pre>${error ? error.stack : ''}</pre>
+               <button onclick="window.location.reload()" style="padding: 10px; background: #333; color: white; border: none; cursor: pointer; margin-top: 10px;">Tentar Recarregar</button>
+             </div>
+           `;
+        }
+      };
+    </script>
   </head>
 
   <body class="bg-background text-textPrimary dark:bg-dark-background dark:text-dark-textPrimary font-[Inter,sans-serif]">
@@ -114,6 +132,7 @@
       <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: sans-serif; color: #666;">
         <div style="width: 40px; height: 40px; border: 4px solid #D2A66D; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
         <h2>Inicializando Olie Hub...</h2>
+        <p style="font-size: 12px; margin-top: 10px; color: #999;">Versão React 18.2.0</p>
       </div>
       <style>
         @keyframes spin {

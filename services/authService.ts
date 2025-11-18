@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { UserProfile, UserRole } from '../types';
+import { UserRole as _UserRole, UserProfile } from '../types';
 
 const getProfile = async (userId: string): Promise<UserProfile | null> => {
     // FIX: Use maybeSingle() instead of single() to return null instead of throwing error if row is missing
@@ -37,28 +37,8 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const profile = await getProfile(loginData.user.id);
 
   if (!profile) {
-      const fallbackRole = (loginData.user.user_metadata?.role as UserRole) || 'Vendas';
-      const { data: createdProfile, error: upsertError } = await supabase
-          .from('profiles')
-          .upsert({
-              id: loginData.user.id,
-              email: loginData.user.email ?? email,
-              role: fallbackRole,
-          })
-          .select()
-          .maybeSingle();
-
-      if (upsertError) {
-          throw new Error(
-              'Não foi possível criar seu perfil após o login. Entre em contato com o administrador.'
-          );
-      }
-
-      if (!createdProfile) {
-          throw new Error('Perfil não pôde ser recuperado após a criação.');
-      }
-
-      return createdProfile as UserProfile;
+      // Se autenticou mas não tem perfil, lançamos erro específico para o Bootstrap
+      throw new Error("BOOTSTRAP_REQUIRED: Seu usuário foi autenticado, mas não possui um perfil definido. Contate o administrador ou realize o cadastro.");
   }
 
   return profile;
