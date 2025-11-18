@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, UserPlus, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, UserPlus, ArrowRight, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import BootstrapModal from './BootstrapModal';
 import ForgotPasswordModal from './ForgotPasswordModal';
@@ -25,6 +25,13 @@ const LoginPage: React.FC = () => {
   const [loginError, setLoginError] = useState(false);
   const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // UseEffect para forçar a exibição do erro de contexto se houver
+  useEffect(() => {
+      if (appError) {
+          console.error("App Context Error:", appError);
+      }
+  }, [appError]);
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,9 +82,9 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-        await register(email, password); // Default role 'Vendas' or handled by trigger
+        await register(email, password);
         toast({ title: 'Cadastro realizado!', description: 'Verifique seu e-mail para confirmar a conta.' });
-        setView('password'); // Switch back to login
+        setView('password');
     } catch (err) {
         toast({ title: 'Erro no Cadastro', description: (err as Error).message, variant: 'destructive' });
     } finally {
@@ -314,13 +321,16 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* --- PAINEL DE DEBUG PARA DIAGNÓSTICO (Remover em produção) --- */}
-      <div className="fixed bottom-2 left-2 p-3 bg-black/80 text-green-400 font-mono text-xs rounded-lg z-50 pointer-events-none border border-green-800 opacity-80">
-          <p><strong>Status do AppContext:</strong></p>
-          <p>Loading: {appLoading.toString()}</p>
-          <p>User: {appUser ? appUser.email : 'null'}</p>
-          <p>Error: {appError || 'none'}</p>
+
+      {/* DIAGNÓSTICO VISUAL - REMOVER EM PRODUÇÃO */}
+      <div className="fixed bottom-2 left-2 z-50 p-3 bg-black/90 text-green-400 text-xs font-mono border border-green-700 rounded-md shadow-lg pointer-events-none opacity-70">
+          <div className="flex items-center gap-2 mb-1 border-b border-green-800 pb-1">
+              <AlertTriangle size={12} className="text-yellow-400" />
+              <strong>System Diagnostics</strong>
+          </div>
+          <p>App Loading: {appLoading.toString()}</p>
+          <p>User: {appUser ? appUser.email : 'NULL'}</p>
+          <p>Error: {appError || 'NONE'}</p>
       </div>
 
       <BootstrapModal isOpen={isBootstrapModalOpen} onClose={() => setIsBootstrapModalOpen(false)} />

@@ -49,7 +49,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [isAIEnabled, setIsAIEnabled] = useState(false); // AI Layer is disabled
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
   const hasRedirected = useRef(false);
@@ -76,39 +76,54 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, performRedirection]);
 
-  // --- LÓGICA DE AUTENTICAÇÃO ROBUSTA ---
   useEffect(() => {
     let isMounted = true;
-    console.log("[AppContext] Iniciando verificação de autenticação...");
+    console.log("[AppContext] Inicializando autenticação...");
 
-    // Listener principal do Supabase (Auth State Change)
-    const unsubscribe = listenAuthChanges((authUser) => {
-        console.log("[AppContext] Auth Change Detectado:", authUser ? `Usuário: ${authUser.email}` : "Sem usuário");
-        
-        if (isMounted) {
-            setUser(authUser);
-            // GARANTIA CRÍTICA: Sempre liberar o loading quando o estado de auth é resolvido
-            setIsLoading(false);
-        }
-    });
-
-    // Fallback de segurança: Se o listener demorar muito, forçamos o fim do loading após 3s
-    // para evitar tela branca infinita caso o Supabase não responda.
-    const timeoutId = setTimeout(() => {
+    // 1. Failsafe Timeout: Garante que o loading pare após 3s, mesmo se o Supabase falhar
+    const failsafeTimeout = setTimeout(() => {
         if (isMounted && isLoading) {
-             console.warn("[AppContext] Timeout de segurança atingido. Forçando isLoading = false.");
-             setIsLoading(false);
+            console.warn("[AppContext] Timeout de segurança: Forçando liberação da UI.");
+            setIsLoading(false);
+            if (!user) setError("Conexão lenta ou falha na inicialização.");
         }
-    }, 5000);
+    }, 3000);
+
+    // 2. Check Inicial
+    const checkInitialAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (isMounted) {
+            setUser(currentUser);
+            console.log("[AppContext] Usuário inicial:", currentUser?.email || "Nenhum");
+        }
+      } catch (e) {
+        console.error("[AppContext] Erro inicial:", e);
+        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    checkInitialAuth();
+
+    // 3. Listener de Mudanças
+    const unsubscribe = listenAuthChanges((authUser) => {
+      if (isMounted) {
+        console.log("[AppContext] Auth state change:", authUser?.email);
+        setUser(authUser);
+        // Se houver uma mudança, garantimos que o loading pare
+        setIsLoading(false);
+      }
+    });
 
     return () => { 
         isMounted = false; 
-        clearTimeout(timeoutId);
+        clearTimeout(failsafeTimeout);
         unsubscribe(); 
     };
-  }, []); // Array vazio para rodar apenas no mount
+  }, []); // Array vazio, roda apenas no mount
 
-  // Redirecionamento pós-login
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {
         if (user.last_login === null) {
@@ -116,10 +131,6 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } else {
             performRedirection(user.role);
         }
-    }
-    if (!user && !isLoading) {
-        hasRedirected.current = false;
-        // Se não tem usuário, o ProtectedRoute vai cuidar do redirecionamento para /login
     }
   }, [user, isLoading, performRedirection]);
 

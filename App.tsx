@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Toaster from './components/Toaster';
 import LoginPage from './components/LoginPage';
@@ -25,6 +26,10 @@ import { Spinner } from './components/ui/Spinner';
 
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
+
+    useEffect(() => {
+        console.log("[AppContent] Render cycle. User:", user?.email, "Loading:", isLoading);
+    }, [user, isLoading]);
 
     // Mostra o Spinner enquanto a autenticação inicial é verificada pelo AuthContext
     if (isLoading) {
@@ -53,7 +58,7 @@ const AppContent: React.FC = () => {
                     <Route path="purchases" element={<PurchasesPage />} />
                     <Route path="logistics" element={<LogisticsPage />} />
                     <Route path="finance" element={<FinancePage />} />
-                    <Route path="omnichannel" element={<OmnichannelPage user={user!} />} />
+                    <Route path="omnichannel" element={user ? <OmnichannelPage user={user} /> : <Navigate to="/login" />} />
                     <Route path="marketing" element={<MarketingPage />} />
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />

@@ -2,20 +2,15 @@ import { supabase } from '../lib/supabaseClient';
 import { UserRole as _UserRole, UserProfile } from '../types';
 
 const getProfile = async (userId: string): Promise<UserProfile | null> => {
+    // FIX: Use maybeSingle() instead of single() to return null instead of throwing error if row is missing
     const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
     
     if (error) {
-        if (error.code === 'PGRST116') {
-            // Profile not found - this is a valid state during registration or if DB is empty
-            console.warn(`[AuthService] Profile not found for user ${userId}`);
-            return null;
-        }
         console.error("Database error fetching profile:", error.message);
-        // Don't throw, just return null so the app doesn't crash loop
         return null;
     }
 
@@ -27,7 +22,6 @@ export const login = async (email: string, password: string): Promise<UserProfil
 
   if (loginError) {
     if (loginError instanceof (supabase as any).auth.AuthMultiFactorAuthenticationError) {
-        // This specific error is caught by the UI to trigger the 2FA flow
         throw loginError;
     }
     if (loginError.message.includes('Invalid login credentials')) {
@@ -43,8 +37,7 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const profile = await getProfile(loginData.user.id);
 
   if (!profile) {
-      // If authenticated but no profile, it means the triggers failed or haven't run yet.
-      // Throw specific error to trigger Bootstrap Modal
+      // Se autenticou mas não tem perfil, lançamos erro específico para o Bootstrap
       throw new Error("BOOTSTRAP_REQUIRED: Seu usuário foi autenticado, mas não possui um perfil definido. Contate o administrador ou realize o cadastro.");
   }
 
@@ -67,7 +60,6 @@ export const register = async (email: string, password: string, role: string = '
     }
 
     if (data.user) {
-        // Manually insert profile if triggers aren't set up yet, ensuring redundancy
         const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -78,8 +70,8 @@ export const register = async (email: string, password: string, role: string = '
             .select()
             .single();
             
-        if (profileError && profileError.code !== '23505') { // Ignore unique violation if trigger already created it
-             console.warn("Manual profile creation failed, relying on DB trigger:", profileError);
+        if (profileError && profileError.code !== '23505') {
+             console.warn("Manual profile creation failed:", profileError);
         }
     }
 };
@@ -94,7 +86,7 @@ export const logout = async (): Promise<void> => {
 
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin, // Redirect user back to the app after reset
+    redirectTo: window.location.origin,
   });
 
   if (error) {
@@ -136,7 +128,6 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session?.user) {
-      // Silent fail is expected if no session
       return null;
     }
     
@@ -146,7 +137,7 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
         
         if (!profile) {
            console.warn("[AuthService] User has session but no profile. Returning partial session data.");
-           // Return partial data to avoid infinite loading, AppContext will handle redirect or bootstrap modal
+           // Return partial data to avoid infinite loading
            return { id: user.id, email: user.email!, role: 'Vendas' } as UserProfile;
         }
         return profile;
@@ -166,6 +157,7 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void):
           return;
         }
         
+        // Avoid triggering multiple times for the same session if possible, but ensure profile is fetched
         try {
             // Small delay to ensure triggers have run if it's a new signup
             if (event === 'SIGNED_IN') await new Promise(r => setTimeout(r, 500));
@@ -176,7 +168,6 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void):
                 callback(profile);
             } else {
                 console.warn("[AuthService] Profile missing in listener.");
-                // Fallback to prevent lockout, UI should show "Complete Profile" or Bootstrap
                  callback({ id: session.user.id, email: session.user.email!, role: 'Vendas' } as UserProfile);
             }
         } catch (e) {
