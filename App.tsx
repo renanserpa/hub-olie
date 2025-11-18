@@ -1,33 +1,41 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// Core, Contexts & Layout
+import { useApp } from './contexts/AppContext';
+import { MainLayout } from './components/Layout/MainLayout';
+import { ProtectedRoute } from './components/Navigation/ProtectedRoute';
 import Toaster from './components/Toaster';
 import LoginPage from './components/LoginPage';
+import { Spinner } from './components/ui/Spinner';
+
+// Pages (Modules)
 import DashboardPage from './pages/DashboardPage';
-import OrdersPage from './components/OrdersPage';
-import ProductionPage from './components/ProductionPage';
-import OmnichannelPage from './components/OmnichannelPage';
-import InventoryPage from './components/InventoryPage';
-import ContactsPage from './components/ContactsPage';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
-import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
-import { useApp } from './contexts/AppContext';
-import { MainLayout } from './components/Layout/MainLayout';
-import { ProtectedRoute } from './components/Navigation/ProtectedRoute';
-import { Spinner } from './components/ui/Spinner';
+
+// Components acting as Pages (Legacy - Pending migration to /pages)
+import OrdersPage from './components/OrdersPage';
+import ProductionPage from './components/ProductionPage';
+import InventoryPage from './components/InventoryPage';
+import LogisticsPage from './components/LogisticsPage';
+import OmnichannelPage from './components/OmnichannelPage';
+import ContactsPage from './components/ContactsPage';
 
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
 
     useEffect(() => {
-        console.log("[AppContent] Render cycle. User:", user?.email, "Loading:", isLoading);
+        // Log apenas em desenvolvimento ou mudança crítica de estado
+        if (!isLoading) {
+            console.log("[App] Ready. User:", user?.email || "Guest");
+        }
     }, [user, isLoading]);
 
     if (isLoading) {
@@ -46,30 +54,38 @@ const AppContent: React.FC = () => {
                         <MainLayout />
                     </ProtectedRoute>
                 }>
+                    {/* Dashboard & Core */}
                     <Route index element={<DashboardPage />} />
-                    <Route path="initializer" element={<InitializerPage />} />
-                    <Route path="executive" element={<ExecutiveDashboardPage />} />
-                    <Route path="analytics" element={<AnalyticsPage />} />
+                    <Route path="dashboard" element={<Navigate to="/" replace />} />
+                    
+                    {/* Módulos de Negócio */}
                     <Route path="orders" element={<OrdersPage />} />
                     <Route path="production" element={<ProductionPage />} />
                     <Route path="inventory" element={<InventoryPage />} />
                     <Route path="purchases" element={<PurchasesPage />} />
                     <Route path="logistics" element={<LogisticsPage />} />
                     <Route path="finance" element={<FinancePage />} />
-                    <Route path="omnichannel" element={user ? <OmnichannelPage user={user} /> : <Navigate to="/login" />} />
                     <Route path="marketing" element={<MarketingPage />} />
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />
                     
-                    {/* Configurações - Apontando para a versão correta em pages/ */}
+                    {/* Atendimento */}
+                    <Route path="omnichannel" element={<OmnichannelPage user={user!} />} />
+                    
+                    {/* Inteligência & Gestão */}
+                    <Route path="analytics" element={<AnalyticsPage />} />
+                    <Route path="executive" element={<ExecutiveDashboardPage />} />
+                    <Route path="initializer" element={<InitializerPage />} />
+                    
+                    {/* Configurações */}
                     <Route path="settings" element={<SettingsPage />} /> 
                     <Route path="system-config" element={<SettingsPage />} />
                     
-                    {/* Fallback para rotas não encontradas dentro da área logada */}
+                    {/* Fallback Interno */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
                 
-                {/* Fallback global */}
+                {/* Fallback Global */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             
@@ -80,8 +96,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     useEffect(() => {
-        console.log("🚀 Olie Hub App Mounted");
+        console.log("🚀 Olie Hub App Mounted (v6.2)");
     }, []);
+    
     return <AppContent />;
 };
 
