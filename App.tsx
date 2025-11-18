@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Toaster from './components/Toaster';
@@ -9,9 +8,9 @@ import ProductionPage from './components/ProductionPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
-import ProductsPage from './pages/ProductsPage'; // Import the new page
-import SettingsPage from './components/SettingsPage'; // Rota antiga, mantida por compatibilidade se necessário, mas a nova é pages/SettingsPage
-import NewSettingsPage from './pages/SettingsPage'; // Nova página de configurações gerais
+import ProductsPage from './pages/ProductsPage';
+import SettingsPage from './components/SettingsPage';
+import NewSettingsPage from './pages/SettingsPage';
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
@@ -27,7 +26,7 @@ import { Spinner } from './components/ui/Spinner';
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
 
-    // Mostra o Spinner enquanto a autenticação inicial é verificada
+    // Mostra o Spinner enquanto a autenticação inicial é verificada pelo AuthContext
     if (isLoading) {
         return <Spinner />;
     }
@@ -35,10 +34,10 @@ const AppContent: React.FC = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Rota Pública */}
+                {/* Rota Pública - Redireciona para home se já estiver logado */}
                 <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
 
-                {/* Rotas Protegidas */}
+                {/* Rotas Protegidas - Envoltas por ProtectedRoute e MainLayout */}
                 <Route path="/" element={
                     <ProtectedRoute>
                         <MainLayout />
@@ -58,14 +57,17 @@ const AppContent: React.FC = () => {
                     <Route path="marketing" element={<MarketingPage />} />
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />
-                    {/* Rota original settings mantida */}
+                    
+                    {/* Configurações */}
                     <Route path="settings" element={<SettingsPage />} /> 
-                    {/* Nova rota para configurações do sistema */}
                     <Route path="system-config" element={<NewSettingsPage />} />
                     
-                    {/* Rota de fallback para 404 dentro da área logada */}
+                    {/* Fallback para rotas não encontradas dentro da área logada */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
+                
+                {/* Fallback global */}
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             
             <Toaster />

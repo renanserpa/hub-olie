@@ -15,11 +15,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         return <Spinner />;
     }
 
+    // Se não há usuário autenticado, redireciona para a rota pública de login
     if (!user) {
         return <Navigate to="/login" replace />;
     }
 
-    // Se houver um desafio MFA pendente, exibe a tela de verificação em vez do conteúdo protegido
+    // Se há um desafio de MFA pendente (mesmo com user existe), exibe a tela de verificação
+    // Isso age como uma barreira secundária de proteção
     if (mfaChallenge) {
         return (
             <Verify2FA 
@@ -29,5 +31,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         );
     }
 
+    // Se autenticado e sem pendências de segurança, renderiza o conteúdo protegido (Layout/Páginas)
     return <>{children}</>;
 };
