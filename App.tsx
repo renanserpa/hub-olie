@@ -10,8 +10,7 @@ import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './pages/ProductsPage';
-import SettingsPage from './components/SettingsPage';
-import NewSettingsPage from './pages/SettingsPage';
+import SettingsPage from './pages/SettingsPage';
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
@@ -31,7 +30,6 @@ const AppContent: React.FC = () => {
         console.log("[AppContent] Render cycle. User:", user?.email, "Loading:", isLoading);
     }, [user, isLoading]);
 
-    // Mostra o Spinner enquanto a autenticação inicial é verificada pelo AuthContext
     if (isLoading) {
         return <Spinner />;
     }
@@ -63,9 +61,9 @@ const AppContent: React.FC = () => {
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />
                     
-                    {/* Configurações */}
+                    {/* Configurações - Apontando para a versão correta em pages/ */}
                     <Route path="settings" element={<SettingsPage />} /> 
-                    <Route path="system-config" element={<NewSettingsPage />} />
+                    <Route path="system-config" element={<SettingsPage />} />
                     
                     {/* Fallback para rotas não encontradas dentro da área logada */}
                     <Route path="*" element={<Navigate to="/" replace />} />
@@ -81,6 +79,9 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+    useEffect(() => {
+        console.log("🚀 Olie Hub App Mounted");
+    }, []);
     return <AppContent />;
 };
 

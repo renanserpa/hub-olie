@@ -1,5 +1,4 @@
 
-// types.ts
 import React from 'react';
 
 // --- CORE & SETTINGS ---
@@ -12,26 +11,19 @@ export type UserRole =
   | 'Financeiro'
   | 'Conteudo';
 
-export interface User {
+// Consolidated User Interface
+export interface UserProfile {
   id: string;
   email: string;
   role: UserRole;
   team_id?: string;
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: UserRole;
-}
-
-export interface UserProfile {
-  id: string; // Corresponds to auth.users.id
-  email: string;
-  role: UserRole;
   created_at?: string;
   last_login?: string | null;
 }
+
+// Aliases for backward compatibility during refactor
+export type User = UserProfile;
+export type AuthUser = UserProfile;
 
 export interface SystemConfig {
     id: string;
@@ -129,7 +121,7 @@ export interface SystemSettingsHistory {
 export interface WebhookLog {
     id: string;
     integration_id: string;
-    payload: any;
+    payload: Record<string, any>;
     status: 'success' | 'error' | 'retrying' | 'failed';
     retry_count: number;
     created_at: string;
@@ -332,7 +324,19 @@ export interface BiasColor { id: string; name: string; hex: string; palette_id: 
 export interface LiningColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface PullerColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
 export interface EmbroideryColor { id: string; name: string; hex: string; thread_type: string; is_active: boolean; }
-export interface FabricTexture { id: string; name: string; description: string; image_url: string; hex_code: string; fabric_color_id: string; supplier_sku: string; manufacturer_sku: string; manufacturer_id: string; distributor_id: string; is_active: boolean; }
+export interface FabricTexture { 
+    id: string; 
+    name: string; 
+    description: string; 
+    image_url: string; 
+    hex_code: string; 
+    fabric_color_id: string; 
+    supplier_sku: string; 
+    manufacturer_sku: string; 
+    manufacturer_id: string;
+    distributor_id: string;
+    is_active: boolean;
+}
 export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
 
 export interface ProductCategory {

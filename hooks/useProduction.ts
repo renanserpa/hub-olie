@@ -1,3 +1,2 @@
-// This file is obsolete.
-// The logic has been consolidated into /modules/Production/useProduction.ts.
-export {};
+
+export {}; // Obsolete file - DELETE ME - Use modules/Production/useProduction.ts
