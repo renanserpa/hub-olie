@@ -38,32 +38,4 @@ export default function ConnectionTestPanel() {
                     <h4 className="font-semibold text-textPrimary">Passo 2: Testar Conexão</h4>
                     <p className="text-sm text-textSecondary mt-1 mb-3">
                         Depois de recarregar, execute um teste de ponta a ponta para verificar a comunicação, incluindo credenciais,
-                        conectividade de rede e políticas de segurança (RLS).
-                    </p>
-                    <Button 
-                        onClick={handleTestConnection} 
-                        variant="outline" 
-                        // FIX: Removed runtime dependency as SANDBOX mode is deprecated.
-                        disabled={isTesting} 
-                        title=""
-                    >
-                        {isTesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Executar Teste de Conexão
-                    </Button>
-                    {testResult && (
-                        <div className={cn(
-                            "p-3 rounded-lg text-sm flex items-start gap-3 mt-4 animate-fade-in-up",
-                            testResult.success ? "bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200" : "bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                        )}>
-                            {testResult.success ? <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" /> : <XCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />}
-                            <div>
-                                <h4 className="font-semibold">{testResult.success ? 'Conexão Bem-sucedida' : 'Falha na Conexão'}</h4>
-                                <p className="text-xs">{testResult.message}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
+                        conectividade de rede e políticas de segurança (RLS

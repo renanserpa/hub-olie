@@ -67,6 +67,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     if (user) {
         setIsWelcomeModalOpen(false);
         try {
+            // FIX: Explicitly provided the 'UserProfile' generic type to ensure TypeScript correctly infers the type of the update payload, allowing the 'last_login' property.
             await dataService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
             setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
         } catch (error) {
