@@ -37,11 +37,48 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const profile = await getProfile(loginData.user.id);
 
   if (!profile) {
+      // If authenticated but no profile, check if we need to create one (lazy creation) or throw error
+      // For strict RBAC, we usually expect a profile to exist. 
+      // However, for self-registration, the profile might be created via trigger or needs to be created here.
+      // We will throw error here to enforce proper registration flow.
       await supabase.auth.signOut();
-      throw new Error("Acesso negado: Seu usuário foi autenticado, mas não possui um perfil definido na tabela `profiles`. Contate o administrador.");
+      throw new Error("Acesso negado: Seu usuário foi autenticado, mas não possui um perfil definido. Contate o administrador ou realize o cadastro.");
   }
 
   return profile;
+};
+
+export const register = async (email: string, password: string, role: string = 'Vendas'): Promise<void> => {
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                role: role
+            }
+        }
+    });
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    if (data.user) {
+        // Manually insert profile if triggers aren't set up yet, ensuring redundancy
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+                id: data.user.id,
+                email: email,
+                role: role
+            })
+            .select()
+            .single();
+            
+        if (profileError && profileError.code !== '23505') { // Ignore unique violation if trigger already created it
+             console.warn("Manual profile creation failed, relying on DB trigger:", profileError);
+        }
+    }
 };
 
 export const logout = async (): Promise<void> => {
@@ -125,8 +162,9 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void):
             if (profile) {
                 callback(profile);
             } else {
-                console.warn("Auth session exists but profile is missing. Signing out.");
-                await supabase.auth.signOut();
+                // If profile is missing immediately after signup, it might be a timing issue with the trigger.
+                // We won't force sign out here to allow the registration flow to handle it or the user to wait.
+                console.warn("Auth session exists but profile is missing.");
                 callback(null);
             }
         } catch (e) {

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Order, Product } from '../../types';
 import { X, List, CreditCard, Clock, FileText, ShoppingBag, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { cn } from '../../lib/utils';
 import OrderTabDetails from './OrderDetailTabs/OrderTabDetails';
 import OrderTabItems from './OrderDetailTabs/OrderTabItems';
 import OrderTabPayments from './OrderDetailTabs/OrderTabPayments';
 import OrderTabTimeline from './OrderDetailTabs/OrderTabTimeline';
-import { useTinyApi } from '../hooks/useTinyApi';
+import OrderTabPaymentDetails from './OrderDetailTabs/OrderTabPaymentDetails';
+import { useTinyApi } from '../../hooks/useTinyApi';
 
 
 interface OrderDrawerProps {
@@ -23,7 +24,8 @@ interface OrderDrawerProps {
 const TABS = [
     { id: 'details', label: 'Detalhes', icon: List },
     { id: 'items', label: 'Itens', icon: ShoppingBag },
-    { id: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { id: 'payment_details', label: 'Detalhes do Pagamento', icon: FileText },
+    { id: 'payments', label: 'Integração', icon: CreditCard },
     { id: 'timeline', label: 'Timeline', icon: Clock },
 ];
 
@@ -50,6 +52,7 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ order, isOpen, onClose, allPr
         switch(activeTab) {
             case 'details': return <OrderTabDetails order={order} />;
             case 'items': return <OrderTabItems order={order} allProducts={allProducts} addItemToOrder={addItemToOrder} isSaving={isSaving} />;
+            case 'payment_details': return <OrderTabPaymentDetails order={order} />;
             case 'payments': return <OrderTabPayments order={order} tinyApi={tinyApi} />;
             case 'timeline': return <OrderTabTimeline order={order} />;
             default: return null;

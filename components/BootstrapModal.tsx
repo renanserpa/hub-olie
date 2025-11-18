@@ -5,7 +5,7 @@ import { Copy, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 // FIX: Export the bootstrapSqlScript constant to make it available for import.
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.3)
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (v7.4)
 -- Cria TODAS as tabelas, aplica RLS e políticas permissivas.
 -- Este script é IDEMPOTENTE e seguro para ser executado múltiplas vezes.
 

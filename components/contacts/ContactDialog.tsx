@@ -182,7 +182,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                         <input name="address.complement" value={formData.address?.complement || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                 </div>
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-3 gap-4">
                     <div>
                         <label className={labelStyle}>Bairro</label>
                         <input name="address.neighborhood" value={formData.address?.neighborhood || ''} onChange={handleChange} className={inputStyle} />
@@ -191,11 +191,9 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
                         <label className={labelStyle}>Cidade</label>
                         <input name="address.city" value={formData.address?.city || ''} onChange={handleChange} className={inputStyle} />
                     </div>
-                 </div>
-                 <div className="grid grid-cols-3 gap-4">
-                     <div className="col-span-1">
+                     <div>
                         <label className={labelStyle}>Estado</label>
-                        <input name="address.state" value={formData.address?.state || ''} onChange={handleChange} className={inputStyle} />
+                        <input name="address.state" value={formData.address?.state || ''} onChange={handleChange} className={inputStyle} maxLength={2} />
                      </div>
                  </div>
 
