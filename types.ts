@@ -1,3 +1,4 @@
+
 // types.ts
 import React from 'react';
 
@@ -33,6 +34,16 @@ export interface UserProfile {
   role: UserRole;
   created_at?: string;
   last_login?: string | null;
+}
+
+export interface SystemConfig {
+    id: string;
+    olie_hub_name: string;
+    timezone: string;
+    default_currency: string;
+    logo_url: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface CompanyProfile {

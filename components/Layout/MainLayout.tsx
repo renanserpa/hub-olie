@@ -10,7 +10,7 @@ import {
     ShoppingCart, Settings, Workflow, MessagesSquare, Package, 
     Users, Truck, Megaphone, ShoppingBasket, BarChart2, 
     BarChartHorizontal, DollarSign, Cpu, LayoutDashboard, 
-    ChevronsLeft, ChevronsRight, LogOut 
+    ChevronsLeft, ChevronsRight, LogOut, Cog
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { logout } from '../../services/authService';
@@ -31,6 +31,8 @@ const MAIN_TABS = [
     { id: 'contacts', path: '/contacts', label: 'Contatos', icon: Users, scope: 'Contacts', description: 'Gerencie seus clientes e fornecedores.' },
     { id: 'products', path: '/products', label: 'Produtos', icon: Package, scope: 'Products', description: 'Gerencie produtos, variações e os dados mestres do catálogo.' },
     { id: 'settings', path: '/settings', label: 'Sistema', icon: Settings, scope: 'Settings', description: 'Gerencie parâmetros globais, integrações e segurança da plataforma.' },
+    // Adding the new general settings route, reusing Settings scope for now or define a new one if needed
+    { id: 'system-config', path: '/system-config', label: 'Config. Gerais', icon: Cog, scope: 'Settings', description: 'Ajustes básicos do sistema como nome e fuso horário.' },
 ];
 
 export const MainLayout: React.FC = () => {

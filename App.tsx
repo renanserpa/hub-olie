@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Toaster from './components/Toaster';
@@ -9,7 +10,8 @@ import OmnichannelPage from './components/OmnichannelPage';
 import InventoryPage from './components/InventoryPage';
 import ContactsPage from './components/ContactsPage';
 import ProductsPage from './components/ProductsPage';
-import SettingsPage from './components/SettingsPage';
+import SettingsPage from './components/SettingsPage'; // Rota antiga, mantida por compatibilidade se necessário, mas a nova é pages/SettingsPage
+import NewSettingsPage from './pages/SettingsPage'; // Nova página de configurações gerais
 import LogisticsPage from './components/LogisticsPage';
 import MarketingPage from './pages/MarketingPage';
 import PurchasesPage from './pages/PurchasesPage';
@@ -56,7 +58,10 @@ const AppContent: React.FC = () => {
                     <Route path="marketing" element={<MarketingPage />} />
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                    {/* Rota original settings mantida */}
+                    <Route path="settings" element={<SettingsPage />} /> 
+                    {/* Nova rota para configurações do sistema */}
+                    <Route path="system-config" element={<NewSettingsPage />} />
                     
                     {/* Rota de fallback para 404 dentro da área logada */}
                     <Route path="*" element={<Navigate to="/" replace />} />
