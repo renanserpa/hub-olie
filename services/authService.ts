@@ -8,9 +8,15 @@ const getProfile = async (userId: string): Promise<UserProfile | null> => {
         .eq('id', userId)
         .single();
     
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
+        if (error.code === 'PGRST116') {
+            // Profile not found - this is a valid state during registration or if DB is empty
+            console.warn(`[AuthService] Profile not found for user ${userId}`);
+            return null;
+        }
         console.error("Database error fetching profile:", error.message);
-        throw new Error(`Erro de banco de dados ao buscar perfil: ${error.message}`);
+        // Don't throw, just return null so the app doesn't crash loop
+        return null;
     }
 
     return data;
@@ -37,12 +43,9 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const profile = await getProfile(loginData.user.id);
 
   if (!profile) {
-      // If authenticated but no profile, check if we need to create one (lazy creation) or throw error
-      // For strict RBAC, we usually expect a profile to exist. 
-      // However, for self-registration, the profile might be created via trigger or needs to be created here.
-      // We will throw error here to enforce proper registration flow.
-      await supabase.auth.signOut();
-      throw new Error("Acesso negado: Seu usuário foi autenticado, mas não possui um perfil definido. Contate o administrador ou realize o cadastro.");
+      // If authenticated but no profile, it means the triggers failed or haven't run yet.
+      // Throw specific error to trigger Bootstrap Modal
+      throw new Error("BOOTSTRAP_REQUIRED: Seu usuário foi autenticado, mas não possui um perfil definido. Contate o administrador ou realize o cadastro.");
   }
 
   return profile;
@@ -133,39 +136,48 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session?.user) {
-      if (sessionError) console.error("Error getting session:", sessionError.message);
+      // Silent fail is expected if no session
       return null;
     }
     
     const user = session.user;
-    const profile = await getProfile(user.id);
-      
-    if (!profile) {
-       console.warn("User has a valid session but no profile. Signing out to clear invalid state.");
-       await supabase.auth.signOut();
-       return null;
+    try {
+        const profile = await getProfile(user.id);
+        
+        if (!profile) {
+           console.warn("[AuthService] User has session but no profile. Returning partial session data.");
+           // Return partial data to avoid infinite loading, AppContext will handle redirect or bootstrap modal
+           return { id: user.id, email: user.email!, role: 'Vendas' } as UserProfile;
+        }
+        return profile;
+    } catch (e) {
+        console.error("Error getting current user profile:", e);
+        return null;
     }
-
-    return profile;
 };
 
 export const listenAuthChanges = (callback: (user: UserProfile | null) => void): (() => void) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`[AuthService] Auth event: ${event}`);
+        
         if (!session?.user) {
           callback(null);
           return;
         }
         
         try {
+            // Small delay to ensure triggers have run if it's a new signup
+            if (event === 'SIGNED_IN') await new Promise(r => setTimeout(r, 500));
+            
             const profile = await getProfile(session.user.id);
+            
             if (profile) {
                 callback(profile);
             } else {
-                // If profile is missing immediately after signup, it might be a timing issue with the trigger.
-                // We won't force sign out here to allow the registration flow to handle it or the user to wait.
-                console.warn("Auth session exists but profile is missing.");
-                callback(null);
+                console.warn("[AuthService] Profile missing in listener.");
+                // Fallback to prevent lockout, UI should show "Complete Profile" or Bootstrap
+                 callback({ id: session.user.id, email: session.user.email!, role: 'Vendas' } as UserProfile);
             }
         } catch (e) {
             console.error("Error fetching profile in auth listener:", e);

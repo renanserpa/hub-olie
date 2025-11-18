@@ -14,7 +14,7 @@ import PasswordStrengthMeter from './PasswordStrengthMeter';
 type LoginView = 'password' | 'register' | 'magiclink' | 'magiclink_sent';
 
 const LoginPage: React.FC = () => {
-  const { setMfaChallenge } = useApp();
+  const { setMfaChallenge, isLoading: appLoading, user: appUser, error: appError } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -300,7 +300,7 @@ const LoginPage: React.FC = () => {
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                 )}
                 onLoad={() => setImageLoaded(true)}
-                loading="eager"
+                loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-12 text-white">
                 <h2 className="text-3xl font-bold mb-3 leading-tight">Gestão Inteligente para seu Ateliê</h2>
@@ -314,6 +314,15 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* --- PAINEL DE DEBUG PARA DIAGNÓSTICO (Remover em produção) --- */}
+      <div className="fixed bottom-2 left-2 p-3 bg-black/80 text-green-400 font-mono text-xs rounded-lg z-50 pointer-events-none border border-green-800 opacity-80">
+          <p><strong>Status do AppContext:</strong></p>
+          <p>Loading: {appLoading.toString()}</p>
+          <p>User: {appUser ? appUser.email : 'null'}</p>
+          <p>Error: {appError || 'none'}</p>
+      </div>
+
       <BootstrapModal isOpen={isBootstrapModalOpen} onClose={() => setIsBootstrapModalOpen(false)} />
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
     </>

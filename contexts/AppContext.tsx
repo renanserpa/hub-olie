@@ -67,7 +67,6 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     if (user) {
         setIsWelcomeModalOpen(false);
         try {
-            // FIX: Explicitly provided the 'UserProfile' generic type to ensure TypeScript correctly infers the type of the update payload, allowing the 'last_login' property.
             await dataService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
             setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
         } catch (error) {
@@ -77,28 +76,39 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, performRedirection]);
 
+  // --- LÓGICA DE AUTENTICAÇÃO ROBUSTA ---
   useEffect(() => {
     let isMounted = true;
-    const checkInitialAuth = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (isMounted) setUser(currentUser);
-      } catch (e) {
-        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    checkInitialAuth();
-    const unsubscribe = listenAuthChanges((authUser) => {
-      if (isMounted) {
-        setUser(authUser);
-        if (isLoading) setIsLoading(false);
-      }
-    });
-    return () => { isMounted = false; unsubscribe(); };
-  }, []);
+    console.log("[AppContext] Iniciando verificação de autenticação...");
 
+    // Listener principal do Supabase (Auth State Change)
+    const unsubscribe = listenAuthChanges((authUser) => {
+        console.log("[AppContext] Auth Change Detectado:", authUser ? `Usuário: ${authUser.email}` : "Sem usuário");
+        
+        if (isMounted) {
+            setUser(authUser);
+            // GARANTIA CRÍTICA: Sempre liberar o loading quando o estado de auth é resolvido
+            setIsLoading(false);
+        }
+    });
+
+    // Fallback de segurança: Se o listener demorar muito, forçamos o fim do loading após 3s
+    // para evitar tela branca infinita caso o Supabase não responda.
+    const timeoutId = setTimeout(() => {
+        if (isMounted && isLoading) {
+             console.warn("[AppContext] Timeout de segurança atingido. Forçando isLoading = false.");
+             setIsLoading(false);
+        }
+    }, 5000);
+
+    return () => { 
+        isMounted = false; 
+        clearTimeout(timeoutId);
+        unsubscribe(); 
+    };
+  }, []); // Array vazio para rodar apenas no mount
+
+  // Redirecionamento pós-login
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {
         if (user.last_login === null) {
@@ -109,7 +119,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
     if (!user && !isLoading) {
         hasRedirected.current = false;
-        setActiveModule('dashboard'); 
+        // Se não tem usuário, o ProtectedRoute vai cuidar do redirecionamento para /login
     }
   }, [user, isLoading, performRedirection]);
 
