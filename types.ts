@@ -253,7 +253,9 @@ export interface Contact {
     name: string;
     document?: string;
     email?: string;
-    phone?: string;
+    phone?: string; // Mantido para compatibilidade, mas preferir landline/mobile
+    landline?: string; // Telefone Fixo
+    mobile?: string;   // Celular
     whatsapp?: string;
     instagram?: string;
     address?: ContactAddress;

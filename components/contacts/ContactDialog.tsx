@@ -32,7 +32,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
             setFormData(contact);
         } else {
             setFormData({
-                name: '', email: '', phone: '', whatsapp: '', instagram: '',
+                name: '', email: '', phone: '', landline: '', mobile: '', whatsapp: '', instagram: '',
                 document: '', birth_date: '',
                 stage: 'Lead',
                 tags: [],
@@ -124,17 +124,21 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, onClose, onSave, 
 
                 <h3 className="text-md font-semibold text-textPrimary border-b pb-2 pt-2">Contato</h3>
                  <div className="grid grid-cols-2 gap-4">
-                    <div>
+                    <div className="col-span-2">
                         <label className={labelStyle}>Email</label>
                         <input name="email" type="email" value={formData.email || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                      <div>
-                        <label className={labelStyle}>Telefone</label>
-                        <input name="phone" type="tel" value={formData.phone || ''} onChange={handleChange} className={inputStyle} />
+                        <label className={labelStyle}>Telefone Fixo</label>
+                        <input name="landline" type="tel" value={formData.landline || ''} onChange={handleChange} className={inputStyle} placeholder="(00) 0000-0000" />
+                    </div>
+                    <div>
+                        <label className={labelStyle}>Celular</label>
+                        <input name="mobile" type="tel" value={formData.mobile || ''} onChange={handleChange} className={inputStyle} placeholder="(00) 90000-0000" />
                     </div>
                     <div>
                         <label className={labelStyle}>WhatsApp</label>
-                        <input name="whatsapp" type="tel" value={formData.whatsapp || ''} onChange={handleChange} className={inputStyle} />
+                        <input name="whatsapp" type="tel" value={formData.whatsapp || ''} onChange={handleChange} className={inputStyle} placeholder="(00) 90000-0000" />
                     </div>
                     <div>
                         <label className={labelStyle}>Instagram</label>
