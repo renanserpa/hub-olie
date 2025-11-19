@@ -31,7 +31,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Inicializa o cliente Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        storageKey: 'olie_hub_auth', // Usa uma chave de storage customizada
+        // storageKey removida para usar o padrão do Supabase e evitar conflitos de leitura/escrita
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
