@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { Product, ProductVariant, CreateProductData } from '../types';
+import { Product, CreateProductData } from '../types';
 
 export const productService = {
   /**
@@ -12,6 +12,9 @@ export const productService = {
         throw new Error("Dados incompletos: Nome, SKU e Preço Base são obrigatórios.");
     }
 
+    // Conversão segura de preço para número
+    const basePrice = typeof data.base_price === 'string' ? parseFloat(data.base_price) : data.base_price;
+
     // 2. Preparar payload do Produto Mestre
     const productPayload = {
         name: data.name,
@@ -19,11 +22,11 @@ export const productService = {
         status: data.status || 'Rascunho',
         created_by: userId,
         base_sku: data.base_sku,
-        base_price: typeof data.base_price === 'string' ? parseFloat(data.base_price) : data.base_price,
+        base_price: basePrice,
         category: data.category || 'Geral',
-        // Campos JSONB/Array inicializados vazios para evitar null
-        available_sizes: [],
-        configurable_parts: [],
+        // Campos JSONB/Array inicializados vazios para evitar null e permitir edição posterior
+        available_sizes: data.available_sizes || [],
+        configurable_parts: data.configurable_parts || [],
         combination_rules: [],
         base_bom: [],
         attributes: {},
@@ -49,8 +52,8 @@ export const productService = {
             product_base_id: newProduct.id,
             sku: data.base_sku, // SKU da variante padrão é o mesmo do produto base
             name: `${data.name} (Padrão)`,
-            sales_price: productPayload.base_price,
-            final_price: productPayload.base_price,
+            sales_price: basePrice,
+            final_price: basePrice,
             unit_of_measure: 'UN',
             stock_quantity: 0,
             configuration: {}
@@ -81,9 +84,9 @@ export const productService = {
   async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
     const payload = { ...data };
     
-    // Garantir tipagem numérica
+    // Garantir tipagem numérica se o campo estiver presente
     if (payload.base_price !== undefined) {
-        payload.base_price = Number(payload.base_price);
+        payload.base_price = typeof payload.base_price === 'string' ? parseFloat(payload.base_price) : payload.base_price;
     }
 
     const { data: product, error } = await supabase

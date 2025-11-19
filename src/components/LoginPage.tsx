@@ -2,13 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, UserPlus, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, Database, Wifi, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import BootstrapModal from './BootstrapModal';
 import { cn } from '../lib/utils';
 import { useTranslation } from '../hooks/useTranslation';
 import { useApp } from '../contexts/AppContext';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
+import { supabase } from '../lib/supabaseClient';
 
 type LoginView = 'password' | 'register' | 'magiclink' | 'magiclink_sent';
 
@@ -19,15 +21,65 @@ const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isBootstrapOpen, setIsBootstrapOpen] = useState(false);
   const [view, setView] = useState<LoginView>('password');
   const [loginError, setLoginError] = useState(false);
   const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+
+  useEffect(() => {
+      // Verifica conexão inicial silenciosamente
+      const checkConn = async () => {
+          try {
+              const { error } = await supabase.from('system_config').select('id').limit(1);
+              if (error && error.code !== 'PGRST116') {
+                  // PGRST116 é "no rows", o que significa que conectou mas a tabela está vazia (ok)
+                  // Outros erros indicam falha
+                  console.warn("Status check warning:", error.message);
+                  if (error.code === '42P01') { // Tabela não existe
+                       setConnectionStatus('connected'); // Conectado, mas schema pendente
+                  } else {
+                       setConnectionStatus('error');
+                  }
+              } else {
+                  setConnectionStatus('connected');
+              }
+          } catch (e) {
+              setConnectionStatus('error');
+          }
+      };
+      checkConn();
+  }, []);
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
   }
+
+  const testSupabaseConnection = async () => {
+      setIsLoading(true);
+      try {
+          console.log("Iniciando diagnóstico de conexão...");
+          const { data, error } = await supabase.from('system_config').select('olie_hub_name').limit(1);
+
+          if (error) {
+              console.error("Erro diagnóstico:", error);
+              if (error.code === '42P01') {
+                  toast({ title: 'Banco de Dados Incompleto', description: 'Tabelas não encontradas. Abrindo assistente...', variant: 'warning' });
+                  setIsBootstrapOpen(true);
+              } else {
+                  toast({ title: 'Erro de Conexão', description: `Falha: ${error.message}`, variant: 'destructive' });
+              }
+          } else {
+              toast({ title: 'Conexão Estável', description: `Acesso ao banco de dados confirmado.`, variant: 'default' }); 
+          }
+      } catch (e: any) {
+           toast({ title: 'ERRO FATAL', description: `Cliente não inicializado.`, variant: 'destructive' });
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +90,12 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
+      toast({ title: 'Bem-vindo!', description: 'Autenticação realizada.' });
       
-      // FAILSAFE: Força um reload da página para garantir que o token de sessão 
-      // seja lido corretamente pelo AppContext na inicialização, evitando loops de estado.
+      // Pequeno delay para o cookie ser gravado antes do reload
       setTimeout(() => {
-          window.location.reload();
-      }, 500);
+          window.location.href = "/"; // Força navegação limpa para a raiz
+      }, 800);
       
     } catch (err) {
       const error = err as any;
@@ -109,11 +160,13 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Se o AppContext já estiver carregando (verificando sessão), mostramos um loader global na página
   if (appLoading) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
-            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <div className="text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-textSecondary">Carregando sistema...</p>
+            </div>
         </div>
       );
   }
@@ -240,6 +293,30 @@ const LoginPage: React.FC = () => {
                                     <Globe className="mr-2 h-3 w-3" /> Google
                                 </Button>
                             </div>
+                            
+                             <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    onClick={testSupabaseConnection} 
+                                    className="flex-1 text-[10px] h-8 flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border/50"
+                                    disabled={isLoading}
+                                >
+                                    {connectionStatus === 'checking' ? <Loader2 className="w-3 h-3 animate-spin"/> : 
+                                     connectionStatus === 'connected' ? <CheckCircle className="w-3 h-3 text-green-500"/> : <AlertTriangle className="w-3 h-3 text-red-500"/>}
+                                    Status Rede
+                                </Button>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    onClick={() => setIsBootstrapOpen(true)}
+                                    className="flex-1 text-[10px] h-8 flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border/50"
+                                    disabled={isLoading}
+                                >
+                                    <Database className="w-3 h-3" />
+                                    Configurar Banco
+                                </Button>
+                            </div>
                         </>
                       )}
 
@@ -280,6 +357,7 @@ const LoginPage: React.FC = () => {
       </div>
 
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
+      <BootstrapModal isOpen={isBootstrapOpen} onClose={() => setIsBootstrapOpen(false)} />
     </>
   );
 };
