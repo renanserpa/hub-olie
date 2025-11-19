@@ -1,6 +1,10 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Hardcoded fallbacks for sandbox/demo environment where .env might not be present
+const FALLBACK_URL = "https://ijheukynkppcswgtrnwd.supabase.co";
+const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
+
 // Função auxiliar para acessar variáveis de ambiente de forma segura
 // Evita o erro "Cannot read properties of undefined (reading 'VITE_SUPABASE_URL')"
 const getEnv = (key: string) => {
@@ -13,8 +17,8 @@ const getEnv = (key: string) => {
   return undefined;
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+const supabaseUrl = getEnv('VITE_SUPABASE_URL') || FALLBACK_URL;
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || FALLBACK_KEY;
 
 // Tratamento de erro robusto
 if (!supabaseUrl || !supabaseAnonKey) {
