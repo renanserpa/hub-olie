@@ -44,10 +44,11 @@ const AppContent: React.FC = () => {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Rota Pública - Login */}
+                {/* Rota 1: PÚBLICA - Login */}
+                {/* Se o usuário já estiver logado, redireciona para o Dashboard (/) */}
                 <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
 
-                {/* Rota Protegida Principal (Layout) */}
+                {/* Rota 2: PROTEGIDA - Layout Principal */}
                 <Route path="/" element={
                     <ProtectedRoute>
                         <MainLayout />
@@ -68,8 +69,8 @@ const AppContent: React.FC = () => {
                     <Route path="contacts" element={<ContactsPage />} />
                     <Route path="products" element={<ProductsPage />} />
                     
-                    {/* Atendimento (Renderização Condicional Segura) */}
-                    <Route path="omnichannel" element={user ? <OmnichannelPage user={user} /> : <Navigate to="/login" />} />
+                    {/* Atendimento */}
+                    <Route path="omnichannel" element={<OmnichannelPage user={user!} />} />
                     
                     {/* Inteligência & Gestão */}
                     <Route path="analytics" element={<AnalyticsPage />} />
@@ -81,7 +82,8 @@ const AppContent: React.FC = () => {
                     <Route path="system-config" element={<SettingsPage />} />
                 </Route>
                 
-                {/* Fallback Global - Qualquer rota desconhecida vai para a raiz (que é protegida) */}
+                {/* Rota 3: Fallback Global - Redireciona qualquer rota desconhecida para a raiz */}
+                {/* A raiz (/) é protegida, então se não houver user, o ProtectedRoute mandará para /login */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             
