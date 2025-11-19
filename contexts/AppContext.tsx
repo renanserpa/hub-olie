@@ -4,6 +4,7 @@ import { getCurrentUser, listenAuthChanges } from '../services/authService';
 import { UserProfile } from '../types';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import WelcomeModal from '../components/WelcomeModal';
+import { dataService } from '../services/dataService';
 
 const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
     AdminGeral: 'dashboard',
@@ -49,64 +50,90 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [isAIEnabled] = useState(false);
+  const [isAIEnabled] = useState(false); 
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
   const hasRedirected = useRef(false);
   const { theme, toggleTheme } = useTheme();
 
   const performRedirection = useCallback((userRole: string) => {
-      const defaultPage = DEFAULT_PAGE_BY_ROLE[userRole] || 'dashboard';
-      setActiveModule(defaultPage);
+      const defaultPage = DEFAULT_PAGE_BY_ROLE[userRole];
+      if (defaultPage) {
+          setActiveModule(defaultPage);
+      }
       hasRedirected.current = true;
   }, []);
 
-  const handleWelcomeComplete = () => {
-    setIsWelcomeModalOpen(false);
-    if (user) performRedirection(user.role);
-  };
+  const handleWelcomeComplete = useCallback(async () => {
+    if (user) {
+        setIsWelcomeModalOpen(false);
+        try {
+            await dataService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
+            setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
+        } catch (error) {
+            console.error("Failed to update last_login", error);
+        }
+        performRedirection(user.role);
+    }
+  }, [user, performRedirection]);
 
   useEffect(() => {
     let isMounted = true;
-    console.log("[AppContext] Inicializando autenticação simplificada...");
+    console.log("[AppContext] Inicializando autenticação...");
 
-    const initAuth = async () => {
-        try {
-            // 1. Tenta obter sessão atual
-            const currentUser = await getCurrentUser();
-            if (isMounted) {
-                setUser(currentUser);
-                if (currentUser) console.log("[AppContext] Sessão recuperada:", currentUser.email);
-            }
-        } catch (e) {
-            console.error("[AppContext] Erro na inicialização:", e);
-            if (isMounted) setError("Falha ao iniciar autenticação.");
-        } finally {
-            // CRÍTICO: Sempre libera o loading, independente do resultado
-            if (isMounted) setIsLoading(false);
+    // TIMEOUT DE SEGURANÇA: Se o Supabase não responder em 3 segundos, libera a UI
+    const safetyTimeout = setTimeout(() => {
+        if (isMounted && isLoading) {
+            console.warn("[AppContext] Timeout de inicialização atingido. Forçando liberação da UI.");
+            setIsLoading(false);
         }
+    }, 3000);
+
+    const checkInitialAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (isMounted) {
+             setUser(currentUser);
+             console.log("[AppContext] Sessão:", currentUser ? "Ativa" : "Nenhuma");
+        }
+      } catch (e) {
+        console.error("[AppContext] Erro auth:", e);
+        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
 
-    initAuth();
+    checkInitialAuth();
 
-    // 2. Listener para mudanças futuras
     const unsubscribe = listenAuthChanges((authUser) => {
-        if (isMounted) {
-            console.log("[AppContext] Mudança de estado:", authUser ? "Logado" : "Deslogado");
-            setUser(authUser);
-            setIsLoading(false);
-            
-            if (authUser && !hasRedirected.current) {
-                performRedirection(authUser.role);
-            }
-        }
+      if (isMounted) {
+        setUser(authUser);
+        if (isLoading) setIsLoading(false);
+      }
     });
 
-    return () => {
-        isMounted = false;
-        unsubscribe();
+    return () => { 
+        isMounted = false; 
+        clearTimeout(safetyTimeout);
+        unsubscribe(); 
     };
-  }, [performRedirection]);
+  }, []);
+
+  useEffect(() => {
+    if (user && !isLoading && !hasRedirected.current) {
+        // Se last_login for nulo, mostra modal de boas-vindas, senão redireciona
+        if (user.last_login === null || user.last_login === undefined) {
+            setIsWelcomeModalOpen(true);
+        } else {
+            performRedirection(user.role);
+        }
+    }
+    if (!user && !isLoading) {
+        hasRedirected.current = false;
+        // Não forçar redirecionamento aqui, deixe o ProtectedRoute lidar com isso
+    }
+  }, [user, isLoading, performRedirection]);
 
   const value = { user, isLoading, error, activeModule, setActiveModule, theme, toggleTheme, isAIEnabled, mfaChallenge, setMfaChallenge };
 

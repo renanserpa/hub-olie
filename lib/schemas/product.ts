@@ -13,10 +13,7 @@ export const productSchema = z.object({
     .regex(/^[A-Z0-9-]*$/, { message: "SKU deve conter apenas letras maiúsculas, números e hifens (sem espaços)." }),
   base_price: z.preprocess(
     (val) => (typeof val === 'string' || val === '' ? parseFloat(val as string) : val),
-    z.number({ 
-      required_error: "O preço base é obrigatório.",
-      invalid_type_error: "O preço base deve ser um número válido." 
-    }).min(0, { message: "O preço base não pode ser negativo." })
+    z.number().min(0, { message: "O preço base não pode ser negativo." })
   ),
   category: z.string().min(1, { message: "A categoria é obrigatória." }),
 }).passthrough();

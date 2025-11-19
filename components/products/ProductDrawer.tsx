@@ -51,7 +51,7 @@ const ProductDrawer: React.FC<ProductDrawerProps> = ({
         const result = productSchema.safeParse(formData);
 
         if (!result.success) {
-            const firstError = result.error.errors[0];
+            const firstError = result.error.issues[0];
             toast({
                 title: "Erro de Validação",
                 description: firstError.message,

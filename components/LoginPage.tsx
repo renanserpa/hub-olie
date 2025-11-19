@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, Wifi } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, Database, Wifi, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import BootstrapModal from './BootstrapModal'; // Import BootstrapModal
 import { cn } from '../lib/utils';
 import { useTranslation } from '../hooks/useTranslation';
 import { useApp } from '../contexts/AppContext';
@@ -20,6 +21,7 @@ const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isBootstrapOpen, setIsBootstrapOpen] = useState(false); // State for Bootstrap Modal
   const [view, setView] = useState<LoginView>('password');
   const [loginError, setLoginError] = useState(false);
   const { t } = useTranslation();
@@ -34,20 +36,24 @@ const LoginPage: React.FC = () => {
       setIsLoading(true);
       try {
           console.log("Iniciando diagnóstico de conexão...");
-          // Tenta fazer uma query simples e anônima na tabela de configurações (RLS deve permitir leitura por 'anon')
+          // Tenta fazer uma query simples na tabela de configurações
           const { data, error } = await supabase.from('system_config').select('olie_hub_name').limit(1);
 
           if (error) {
               console.error("Erro diagnóstico:", error);
-              toast({ title: 'Erro de Conexão Supabase', description: `Falha na query: ${error.message} (${error.code})`, variant: 'destructive' });
-          } else if (data && data.length > 0) {
-              toast({ title: 'Conexão Supabase OK', description: `Acesso válido. Hub: ${data[0].olie_hub_name}`, variant: 'default' }); // Success uses default variant style often
-          } else {
-               toast({ title: 'Conexão OK', description: 'O RLS está impedindo acesso anônimo, mas o cliente está funcionando.', variant: 'default' });
+              // Código 42P01 significa "relation does not exist" (tabela não existe)
+              if (error.code === '42P01') {
+                  toast({ title: 'Banco de Dados Incompleto', description: 'As tabelas necessárias não foram encontradas.', variant: 'destructive' });
+                  setIsBootstrapOpen(true); // Abre o modal automaticamente
+              } else {
+                  toast({ title: 'Erro de Conexão Supabase', description: `Falha: ${error.message} (${error.code})`, variant: 'destructive' });
+              }
+          } else if (data) {
+              toast({ title: 'Conexão Supabase OK', description: `Acesso válido.`, variant: 'default' }); 
           }
       } catch (e: any) {
            console.error("Exceção diagnóstico:", e);
-           toast({ title: 'ERRO FATAL', description: `Cliente Supabase não inicializado ou rede bloqueada. ${e.message}`, variant: 'destructive' });
+           toast({ title: 'ERRO FATAL', description: `Cliente Supabase não inicializado. ${e.message}`, variant: 'destructive' });
       } finally {
           setIsLoading(false);
       }
@@ -64,8 +70,6 @@ const LoginPage: React.FC = () => {
       await login(email, password);
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
       
-      // FAILSAFE: Força um reload da página para garantir que o token de sessão 
-      // seja lido corretamente pelo AppContext na inicialização, evitando loops de estado.
       setTimeout(() => {
           window.location.reload();
       }, 500);
@@ -133,11 +137,13 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Se o AppContext já estiver carregando (verificando sessão), mostramos um loader global na página
   if (appLoading) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
-            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <div className="text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-textSecondary">Iniciando Olie Hub...</p>
+            </div>
         </div>
       );
   }
@@ -251,16 +257,28 @@ const LoginPage: React.FC = () => {
                       
                       {view === 'password' && (
                         <>
-                             <Button 
-                                type="button" 
-                                variant="ghost" 
-                                onClick={testSupabaseConnection} 
-                                className="w-full text-xs mt-3 flex items-center gap-2 text-textSecondary hover:text-textPrimary"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wifi className="w-3 h-3" />}
-                                {t('Diagnóstico: Testar Conexão Supabase')}
-                            </Button>
+                             <div className="flex gap-2 mt-3">
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    onClick={testSupabaseConnection} 
+                                    className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wifi className="w-3 h-3" />}
+                                    Diagnóstico
+                                </Button>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    onClick={() => setIsBootstrapOpen(true)}
+                                    className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border"
+                                    disabled={isLoading}
+                                >
+                                    <Database className="w-3 h-3" />
+                                    Configurar Banco
+                                </Button>
+                            </div>
 
                             <div className="relative my-4">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
@@ -315,6 +333,7 @@ const LoginPage: React.FC = () => {
       </div>
 
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
+      <BootstrapModal isOpen={isBootstrapOpen} onClose={() => setIsBootstrapOpen(false)} />
     </>
   );
 };
