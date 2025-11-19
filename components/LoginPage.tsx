@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, Wifi, AlertTriangle } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, Wifi } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { cn } from '../lib/utils';
