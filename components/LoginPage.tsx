@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, UserPlus, ArrowRight } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, Wifi, AlertTriangle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { cn } from '../lib/utils';
 import { useTranslation } from '../hooks/useTranslation';
 import { useApp } from '../contexts/AppContext';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
+import { supabase } from '../lib/supabaseClient';
 
 type LoginView = 'password' | 'register' | 'magiclink' | 'magiclink_sent';
 
@@ -29,6 +30,29 @@ const LoginPage: React.FC = () => {
     return re.test(String(email).toLowerCase());
   }
 
+  const testSupabaseConnection = async () => {
+      setIsLoading(true);
+      try {
+          console.log("Iniciando diagnóstico de conexão...");
+          // Tenta fazer uma query simples e anônima na tabela de configurações (RLS deve permitir leitura por 'anon')
+          const { data, error } = await supabase.from('system_config').select('olie_hub_name').limit(1);
+
+          if (error) {
+              console.error("Erro diagnóstico:", error);
+              toast({ title: 'Erro de Conexão Supabase', description: `Falha na query: ${error.message} (${error.code})`, variant: 'destructive' });
+          } else if (data && data.length > 0) {
+              toast({ title: 'Conexão Supabase OK', description: `Acesso válido. Hub: ${data[0].olie_hub_name}`, variant: 'default' }); // Success uses default variant style often
+          } else {
+               toast({ title: 'Conexão OK', description: 'O RLS está impedindo acesso anônimo, mas o cliente está funcionando.', variant: 'default' });
+          }
+      } catch (e: any) {
+           console.error("Exceção diagnóstico:", e);
+           toast({ title: 'ERRO FATAL', description: `Cliente Supabase não inicializado ou rede bloqueada. ${e.message}`, variant: 'destructive' });
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
@@ -39,7 +63,13 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
-      // O redirecionamento é automático pelo AppContext
+      
+      // FAILSAFE: Força um reload da página para garantir que o token de sessão 
+      // seja lido corretamente pelo AppContext na inicialização, evitando loops de estado.
+      setTimeout(() => {
+          window.location.reload();
+      }, 500);
+      
     } catch (err) {
       const error = err as any;
       console.error("Login Error:", error);
@@ -221,6 +251,17 @@ const LoginPage: React.FC = () => {
                       
                       {view === 'password' && (
                         <>
+                             <Button 
+                                type="button" 
+                                variant="ghost" 
+                                onClick={testSupabaseConnection} 
+                                className="w-full text-xs mt-3 flex items-center gap-2 text-textSecondary hover:text-textPrimary"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wifi className="w-3 h-3" />}
+                                {t('Diagnóstico: Testar Conexão Supabase')}
+                            </Button>
+
                             <div className="relative my-4">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
                                 <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-textSecondary">{t('login.separator')}</span></div>
