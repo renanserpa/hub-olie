@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Product, ProductStatus } from '../../types';
 import { productService } from '../../services/productService';
@@ -22,24 +21,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ productToEdit, onSuccess, onC
     status: ProductStatus;
     base_price: number | string;
     base_sku: string;
+    category: string;
   }>({
     name: '',
     description: '',
     status: 'Rascunho',
     base_price: '',
     base_sku: '',
+    category: ''
   });
 
   useEffect(() => {
     if (productToEdit) {
-      // Nota: Em modo de edição, base_price e base_sku podem vir de variantes existentes.
-      // Por simplicidade de MVP, carregamos do objeto produto se disponível, ou deixamos em branco para não sobrescrever incorretamente.
       setFormData({
         name: productToEdit.name,
         description: productToEdit.description || '',
         status: productToEdit.status,
-        base_price: 0, // Em edição real, buscaríamos isso das variantes
-        base_sku: '',  // Em edição real, buscaríamos isso das variantes
+        base_price: productToEdit.base_price || 0,
+        base_sku: productToEdit.base_sku || '',
+        category: productToEdit.category || ''
       });
     }
   }, [productToEdit]);
@@ -53,20 +53,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ productToEdit, onSuccess, onC
     e.preventDefault();
     if (!user) return;
 
-    // Validação básica
-    if (!productToEdit && (!formData.base_sku || !formData.base_price)) {
-       toast({ title: 'Erro', description: 'SKU e Preço são obrigatórios para novos produtos.', variant: 'destructive' });
+    // Validação de campos obrigatórios
+    if (!formData.name || !formData.base_sku || formData.base_price === '' || !formData.category) {
+       toast({ title: 'Erro', description: 'Preencha todos os campos obrigatórios (*).', variant: 'destructive' });
        return;
     }
 
     setIsSubmitting(true);
     try {
+      // Prepara dados convertendo tipos se necessário
+      const submissionData = {
+          ...formData,
+          base_price: Number(formData.base_price)
+      };
+
       if (productToEdit) {
-        await productService.updateProduct(productToEdit.id, formData as any);
+        await productService.updateProduct(productToEdit.id, submissionData as any);
         toast({ title: 'Sucesso', description: 'Produto atualizado com sucesso.' });
       } else {
-        // O serviço agora lida com a criação do Produto E da Variação Padrão
-        await productService.createProduct(formData, user.id);
+        await productService.createProduct(submissionData, user.id);
         toast({ title: 'Sucesso', description: 'Produto e variação padrão criados.' });
       }
       onSuccess();
@@ -83,7 +88,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ productToEdit, onSuccess, onC
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-1">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-textSecondary mb-1">Nome do Produto</label>
+        <label htmlFor="name" className="block text-sm font-medium text-textSecondary mb-1">Nome do Produto *</label>
         <input
           id="name"
           name="name"
@@ -95,38 +100,49 @@ const ProductForm: React.FC<ProductFormProps> = ({ productToEdit, onSuccess, onC
         />
       </div>
 
-      {/* Exibe campos de SKU e Preço apenas na criação para garantir a variação padrão */}
-      {!productToEdit && (
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="base_sku" className="block text-sm font-medium text-textSecondary mb-1">SKU Base</label>
-              <input
-                id="base_sku"
-                name="base_sku"
-                type="text"
-                value={formData.base_sku}
-                onChange={handleChange}
-                required
-                className={inputStyle}
-                placeholder="EX: CAM-001"
-              />
-            </div>
-            <div>
-              <label htmlFor="base_price" className="block text-sm font-medium text-textSecondary mb-1">Preço Base (R$)</label>
-              <input
-                id="base_price"
-                name="base_price"
-                type="number"
-                step="0.01"
-                value={formData.base_price}
-                onChange={handleChange}
-                required
-                className={inputStyle}
-                placeholder="0.00"
-              />
-            </div>
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="base_sku" className="block text-sm font-medium text-textSecondary mb-1">SKU Base *</label>
+            <input
+              id="base_sku"
+              name="base_sku"
+              type="text"
+              value={formData.base_sku}
+              onChange={handleChange}
+              required
+              className={inputStyle}
+              placeholder="EX: CAM-001"
+            />
+          </div>
+          <div>
+            <label htmlFor="base_price" className="block text-sm font-medium text-textSecondary mb-1">Preço Base (R$) *</label>
+            <input
+              id="base_price"
+              name="base_price"
+              type="number"
+              step="0.01"
+              value={formData.base_price}
+              onChange={handleChange}
+              required
+              className={inputStyle}
+              placeholder="0.00"
+            />
+          </div>
+      </div>
+      
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-textSecondary mb-1">Categoria *</label>
+        <input
+          id="category"
+          name="category"
+          type="text"
+          value={formData.category}
+          onChange={handleChange}
+          required
+          className={inputStyle}
+          placeholder="Ex: Vestuário, Acessórios"
+        />
+      </div>
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-textSecondary mb-1">Descrição</label>

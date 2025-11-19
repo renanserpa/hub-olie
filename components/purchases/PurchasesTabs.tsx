@@ -1,11 +1,11 @@
 import React from 'react';
-import { Users, FileText, BarChart2 } from 'lucide-react';
+import { FileText, BarChart2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Supplier, PurchaseOrder } from '../../types';
 import PurchaseOrdersTab from './PurchaseOrdersTab';
 import PurchaseMetrics from './PurchaseMetrics';
 
-type PurchasesTab = 'pos' | 'metrics'; // Removed 'settings'
+type PurchasesTab = 'pos' | 'metrics';
 
 interface PurchasesTabsProps {
   activeTab: string;
@@ -41,8 +41,6 @@ const PurchasesTabs: React.FC<PurchasesTabsProps> = (props) => {
             case 'metrics':
                 return <PurchaseMetrics />;
             default:
-                // Default to 'pos' if an invalid tab is selected
-                // FIX: Spread was causing a prop mismatch. Explicitly pass props instead.
                 return <PurchaseOrdersTab 
                     purchaseOrders={props.purchaseOrders}
                     selectedPO={props.selectedPO}

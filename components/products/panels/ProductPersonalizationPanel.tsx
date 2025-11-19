@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Product, AppData, EmbroideryColor, ProductPart, CombinationRule } from '../../../types';
+import React, { useState, useEffect } from 'react';
+import { Product, AppData, ProductPart, CombinationRule } from '../../../types';
 import { cn } from '../../../lib/utils';
 import { Button } from '../../ui/Button';
 import { calculateContrastRatio } from '../../../lib/utils';
@@ -150,7 +150,7 @@ const ProductPersonalizationPanel: React.FC<{
             toast({ title: 'Atenção', description: 'Preencha todos os campos da nova parte.', variant: 'destructive' });
             return;
         }
-        const newParts = [...(formData.configurable_parts || []), { id: `part_${Date.now()}`, ...newPart }];
+        const newParts = [...(formData.configurable_parts || []), { id: `part_${Date.now()}`, key: newPart.key, name: newPart.name, options_source: newPart.options_source as any }];
         setFormData(prev => ({ ...prev, configurable_parts: newParts as ProductPart[] }));
         setNewPart({ key: '', name: '', options_source: '' });
     };
