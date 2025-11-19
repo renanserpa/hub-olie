@@ -8,12 +8,11 @@ import { logout } from '../services/authService';
 const DashboardPage: React.FC = () => {
     const { user } = useApp();
 
-    // Função de logout local para usar dentro da página se necessário, 
-    // embora o layout principal já tenha essa função na sidebar.
     const handleLogout = async () => {
         try {
-            await logout();
-            window.location.href = '/login';
+            await logout(); 
+            // O redirecionamento será tratado automaticamente pelo AppContext/ProtectedRoute
+            // quando o estado 'user' se tornar nulo.
         } catch (error) {
             console.error('Erro ao sair', error);
         }
