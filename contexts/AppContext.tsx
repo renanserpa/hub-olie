@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { getCurrentUser, listenAuthChanges } from '../services/authService';
 import { UserProfile } from '../types';

@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabaseClient';
 import { UserRole as _UserRole, UserProfile } from '../types';
 

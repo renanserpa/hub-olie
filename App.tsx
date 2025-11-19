@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -33,7 +32,6 @@ const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
 
     useEffect(() => {
-        // Log apenas em desenvolvimento ou mudança crítica de estado
         if (!isLoading) {
             console.log("[App] Ready. User:", user?.email || "Guest");
         }
@@ -96,7 +94,6 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
-    // Cleaned up mounted log
     return <AppContent />;
 };
 
