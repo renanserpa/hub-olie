@@ -1,28 +1,29 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { Spinner } from '../ui/spinner';
+import { useApp } from '../../contexts/AppContext';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const { user, isLoading } = useApp();
 
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-gray-50">
-        <Spinner />
-      </div>
-    );
-  }
+    // 1. Prioridade Máxima: Mostrar Spinner enquanto o Supabase consulta a sessão.
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-secondary dark:bg-dark-secondary">
+                <Loader2 className="w-16 h-16 animate-spin text-primary" />
+            </div>
+        );
+    }
 
-  if (!user) {
-    // Redireciona para login se não estiver autenticado
-    return <Navigate to="/login" replace />;
-  }
+    // 2. Se o carregamento terminou e NÃO HÁ usuário, redirecione para o login.
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
 
-  // Renderiza o conteúdo protegido se autenticado
-  return <>{children}</>;
-}
+    // 3. Se houver usuário, renderize o conteúdo.
+    return <>{children}</>;
+};
