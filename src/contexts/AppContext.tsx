@@ -81,30 +81,27 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     let isMounted = true;
     console.log("[AppContext] 🚀 Inicializando Auth...");
 
-    // TIMEOUT DE SEGURANÇA AGRESSIVO: 
-    // Se o Supabase travar, liberamos a UI em 1 segundo para não bloquear o usuário na tela branca.
+    // TIMEOUT DE SEGURANÇA (2000ms)
+    // Dá um tempo razoável para o Supabase responder antes de assumir que o usuário está deslogado.
     const safetyTimeout = setTimeout(() => {
         if (isMounted && isLoading) {
-            console.warn("[AppContext] ⚠️ Timeout de segurança (1s). Forçando liberação da UI.");
+            console.warn("[AppContext] ⚠️ Timeout de segurança (2s). Liberando UI.");
             setIsLoading(false);
         }
-    }, 1000);
+    }, 2000);
 
     const initAuth = async () => {
       try {
         const currentUser = await getCurrentUser();
         if (isMounted) {
              setUser(currentUser);
-             console.log("[AppContext] ✅ Usuário detectado:", currentUser ? currentUser.email : "Nenhum (Visitante)");
+             console.log("[AppContext] ✅ Usuário:", currentUser ? currentUser.email : "Nenhum");
         }
       } catch (e) {
-        console.error("[AppContext] ❌ Erro fatal na verificação de sessão:", e);
+        console.error("[AppContext] ❌ Erro sessão:", e);
         if (isMounted) setError("Falha na inicialização.");
       } finally {
-        if (isMounted) {
-            setIsLoading(false);
-            console.log("[AppContext] 🔓 UI Liberada.");
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -112,7 +109,6 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     const unsubscribe = listenAuthChanges((authUser) => {
       if (isMounted) {
-        console.log("[AppContext] 🔄 Mudança de estado Auth:", authUser ? "Logado" : "Deslogado");
         setUser(authUser);
         setIsLoading(false);
       }
