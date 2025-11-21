@@ -2,41 +2,35 @@
 import React, { useState } from 'react';
 import Modal from './ui/Modal';
 import { Button } from './ui/Button';
-import { Copy, AlertTriangle, Database, CheckCircle, Trash2 } from 'lucide-react';
+import { Copy, AlertTriangle, Database, CheckCircle } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { cn } from '../lib/utils';
 
-export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Definitivo (Correção de Acesso e Schema)
--- Execute este script no SQL Editor do Supabase para criar tabelas e corrigir seu usuário admin.
+export const bootstrapSqlScript = `-- 🧠 Olie Hub — Bootstrap Mestre (v8.2 - Correção Definitiva)
 
 -- 1. EXTENSÕES
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. CORE & ACESSO (Correção de RLS para o usuario adm@adm.com)
+-- 2. CORREÇÕES DE TABELAS EXISTENTES (CRÍTICO)
+-- Remove restrições antigas que bloqueiam 'AdminGeral'
+ALTER TABLE IF EXISTS public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+
+-- Cria a tabela profiles se não existir
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'Vendas',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    last_login TIMESTAMPTZ
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Garante que a coluna last_login exista (para evitar erro 42703)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS public.user_roles (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
--- IMPORTANTE: Liberar RLS para permitir o conserto
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Acesso Total" ON public.profiles;
-CREATE POLICY "Acesso Total" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
-
--- FIX ESPECÍFICO PARA SEU USUÁRIO (adm@adm.com)
-INSERT INTO public.profiles (id, email, role, created_at, last_login)
-SELECT id, email, 'AdminGeral', NOW(), NOW()
-FROM auth.users WHERE email = 'adm@adm.com'
-ON CONFLICT (id) DO UPDATE SET role = 'AdminGeral';
 
 -- 3. CONFIGURAÇÕES DO SISTEMA
 CREATE TABLE IF NOT EXISTS public.system_config (
@@ -47,8 +41,6 @@ CREATE TABLE IF NOT EXISTS public.system_config (
     logo_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-INSERT INTO public.system_config (olie_hub_name) VALUES ('Olie Hub') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.system_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,8 +154,6 @@ CREATE TABLE IF NOT EXISTS public.warehouses (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-INSERT INTO public.warehouses (name, location) VALUES ('Matriz', 'Principal') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.inventory_balances (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -497,7 +487,7 @@ CREATE TABLE IF NOT EXISTS public.messages (
     "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 15. TABELAS AUXILIARES (MEDIA, INITIALIZER, ETC)
+-- 15. TABELAS AUXILIARES
 CREATE TABLE IF NOT EXISTS public.media_assets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     drive_file_id TEXT,
@@ -706,17 +696,47 @@ CREATE TABLE IF NOT EXISTS public.analytics_login_events (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 17. LIBERAR RLS GERAL (Para evitar problemas de acesso durante bootstrap)
+
+-- 17. SEGURANÇA TOTAL (RLS PERMISSIVA PARA BOOTSTRAP)
 DO $$
 DECLARE
   tbl_name TEXT;
 BEGIN
   FOR tbl_name IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
     EXECUTE 'ALTER TABLE public.' || quote_ident(tbl_name) || ' ENABLE ROW LEVEL SECURITY;';
+    -- Remove política antiga se existir
     EXECUTE 'DROP POLICY IF EXISTS "Acesso Total Autenticado" ON public.' || quote_ident(tbl_name) || ';';
+    -- Cria política permissiva para usuários logados
     EXECUTE 'CREATE POLICY "Acesso Total Autenticado" ON public.' || quote_ident(tbl_name) || ' FOR ALL USING (auth.role() = ''authenticated'') WITH CHECK (auth.role() = ''authenticated'');';
+    -- Permite acesso anônimo apenas para leitura (opcional, útil para debug)
+    EXECUTE 'DROP POLICY IF EXISTS "Leitura Anonima" ON public.' || quote_ident(tbl_name) || ';';
+    EXECUTE 'CREATE POLICY "Leitura Anonima" ON public.' || quote_ident(tbl_name) || ' FOR SELECT USING (auth.role() = ''anon'');';
   END LOOP;
 END $$;
+
+-- 18. SEED INICIAL (Dados Mínimos)
+INSERT INTO public.system_roles (name, description) VALUES 
+('AdminGeral', 'Acesso total ao sistema'),
+('Vendas', 'Acesso a pedidos e clientes'),
+('Producao', 'Acesso à fila de produção'),
+('Financeiro', 'Acesso a módulos financeiros'),
+('Administrativo', 'Gerenciamento de configurações')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO public.warehouses (name, location) VALUES ('Depósito Principal', 'Matriz') ON CONFLICT DO NOTHING;
+
+-- 19. CRIAR/ATUALIZAR ADMIN
+INSERT INTO public.profiles (id, email, role, created_at, last_login)
+SELECT 
+    id, 
+    email, 
+    'AdminGeral', 
+    NOW(),
+    NOW()
+FROM auth.users 
+WHERE email = 'adm@adm.com'
+ON CONFLICT (id) DO UPDATE 
+SET role = 'AdminGeral';
 
 -- FIM DO SCRIPT
 `;
@@ -834,7 +854,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
                             <div>
                                 <p className="font-bold">Configuração Inicial / Recuperação</p>
                                 <p className="text-sm mt-1">
-                                    Use este script para criar todas as tabelas necessárias (v8.0) ou restaurar tabelas que faltam. É seguro rodar múltiplas vezes.
+                                    Use este script para criar todas as tabelas necessárias (v8.2 - Final) e corrigir problemas de acesso. Seguro para re-execução.
                                 </p>
                             </div>
                         </div>
@@ -856,7 +876,7 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
                             <div>
                                 <p className="font-bold">Validação de Schema</p>
                                 <p className="text-sm mt-1">
-                                    Este script compara seu banco atual com a versão v8.0 e gera comandos para remover tabelas velhas (limpeza). Verifique a aba "Messages" no SQL Editor do Supabase após executar.
+                                    Este script compara seu banco atual com a versão v8.0 e gera comandos para remover tabelas velhas (limpeza).
                                 </p>
                             </div>
                         </div>
@@ -882,4 +902,3 @@ const BootstrapModal: React.FC<BootstrapModalProps> = ({ isOpen, onClose }) => {
 };
 
 export default BootstrapModal;
-    

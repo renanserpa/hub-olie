@@ -16,7 +16,7 @@ type LoginView = 'password' | 'register' | 'magiclink' | 'magiclink_sent';
 
 const LoginPage: React.FC = () => {
   const { isLoading: appLoading } = useApp();
-  // Credenciais padrão para facilitar o teste do usuário
+  // Credenciais padrão para teste (Admin)
   const [email, setEmail] = useState('adm@adm.com');
   const [password, setPassword] = useState('123456');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,18 +30,12 @@ const LoginPage: React.FC = () => {
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
 
   useEffect(() => {
+      // Check simples e silencioso ao carregar
       const checkConn = async () => {
           try {
               const { error } = await supabase.from('system_config').select('id').limit(1);
-              if (error && error.code !== 'PGRST116') {
-                  console.warn("Status check warning:", error.message);
-                  if (error.code === '42P01') { 
-                       setConnectionStatus('connected'); // Conectado, mas schema pendente
-                       // Se a tabela não existe, sugerimos o bootstrap
-                       toast({ title: "Configuração Necessária", description: "Banco de dados parece vazio.", variant: "warning" });
-                  } else {
-                       setConnectionStatus('error');
-                  }
+              if (error) {
+                  setConnectionStatus(error.code === '42P01' ? 'error' : 'connected');
               } else {
                   setConnectionStatus('connected');
               }
@@ -60,22 +54,21 @@ const LoginPage: React.FC = () => {
   const testSupabaseConnection = async () => {
       setIsLoading(true);
       try {
-          console.log("Iniciando diagnóstico de conexão...");
-          const { data, error } = await supabase.from('profiles').select('count').limit(1);
+          // Verifica a tabela profiles que é crítica para login
+          const { error } = await supabase.from('profiles').select('count').limit(1);
 
           if (error) {
-              console.error("Erro diagnóstico:", error);
               if (error.code === '42P01') {
-                  toast({ title: 'Tabelas não encontradas', description: 'O banco precisa ser configurado.', variant: 'warning' });
+                  toast({ title: 'Banco Incompleto', description: 'Tabelas não encontradas. Execute a configuração.', variant: 'warning' });
                   setIsBootstrapOpen(true);
               } else {
-                  toast({ title: 'Erro de Permissão/Conexão', description: `Erro: ${error.message}`, variant: 'destructive' });
+                  toast({ title: 'Erro de Conexão', description: `Falha: ${error.message}`, variant: 'destructive' });
               }
           } else {
-              toast({ title: 'Conexão Estável', description: `Banco de dados respondendo.`, variant: 'default' }); 
+              toast({ title: 'Conexão OK', description: `Banco de dados respondendo corretamente.`, variant: 'default' }); 
           }
       } catch (e: any) {
-           toast({ title: 'ERRO FATAL', description: `Cliente não inicializado.`, variant: 'destructive' });
+           toast({ title: 'Erro Fatal', description: `Cliente não inicializado.`, variant: 'destructive' });
       } finally {
           setIsLoading(false);
       }
@@ -90,24 +83,17 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      toast({ title: 'Bem-vindo!', description: 'Autenticação realizada com sucesso.' });
-      
-      setTimeout(() => {
-          window.location.href = "/"; 
-      }, 800);
-      
+      toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
+      // Pequeno delay para feedback visual antes do redirecionamento do AppContext
     } catch (err) {
       const error = err as any;
-      console.error("Login Error:", error);
       setLoginError(true);
       setTimeout(() => setLoginError(false), 820);
       
       if (error.message.includes("Invalid login credentials")) {
-          toast({ title: 'Credenciais Inválidas', description: "Email ou senha incorretos.", variant: 'destructive'});
+          toast({ title: 'Credenciais Inválidas', description: "Verifique seu e-mail e senha.", variant: 'destructive'});
       } else {
-          // Se não é erro de senha, pode ser erro de perfil/banco
-          toast({ title: 'Erro de Acesso', description: "Usuário logado, mas perfil não encontrado. Execute o 'Configurar Banco'.", variant: 'destructive'});
-          setIsBootstrapOpen(true);
+          toast({ title: 'Erro de Acesso', description: "Tente recarregar ou configurar o banco.", variant: 'destructive'});
       }
     } finally {
       setIsLoading(false);
@@ -171,7 +157,7 @@ const LoginPage: React.FC = () => {
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <div className="text-center">
                 <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-textSecondary">Carregando sistema...</p>
+                <p className="text-textSecondary">Iniciando sistema...</p>
             </div>
         </div>
       );
@@ -310,7 +296,7 @@ const LoginPage: React.FC = () => {
                                 >
                                     {connectionStatus === 'checking' ? <Loader2 className="w-3 h-3 animate-spin"/> : 
                                      connectionStatus === 'connected' ? <CheckCircle className="w-3 h-3 text-green-500"/> : <AlertTriangle className="w-3 h-3 text-red-500"/>}
-                                    Status Rede
+                                    Diagnóstico
                                 </Button>
                                 <Button 
                                     type="button" 
@@ -369,4 +355,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-    
