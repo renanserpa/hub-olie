@@ -17,20 +17,24 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setStatusMessage('Autenticando...');
     try {
       await login(email, password);
       toast({ title: 'Login realizado', description: 'Entrando no sistema...' });
-      // Pequeno delay para garantir que o cookie de sessão seja gravado
-      setTimeout(() => window.location.reload(), 500);
+      // Forçar reload para garantir limpeza de estado
+      window.location.href = '/';
     } catch (error: any) {
       console.error("Login Falhou:", error);
+      setStatusMessage('Falha. Verifique console.');
       
       if (error.message?.includes('Invalid login credentials')) {
          toast({ title: 'Credenciais Inválidas', description: 'Verifique e-mail e senha.', variant: 'destructive' });
       } else {
-         // Se for outro erro, provavelmente é banco de dados. Sugerir bootstrap.
          toast({ title: 'Erro no Login', description: error.message, variant: 'destructive' });
-         setStatusMessage('Erro detectado. Tente "Corrigir Banco".');
+         // Se for erro de banco, sugerir bootstrap
+         if (error.message?.includes('profiles') || error.code === '42P01') {
+             setIsBootstrapOpen(true);
+         }
       }
     } finally {
       setIsLoading(false);
@@ -39,20 +43,21 @@ const LoginPage: React.FC = () => {
 
   const testConnection = async () => {
       setIsLoading(true);
-      setStatusMessage('Testando...');
+      setStatusMessage('Testando conexão...');
       try {
-          // Teste de "ping" no banco
+          // Teste simples de conexão
           const { error } = await supabase.from('system_config').select('count').limit(1);
           
           if (error) {
               if (error.code === '42P01') { // Undefined table
-                   setStatusMessage('Conectado, mas tabelas sumiram.');
+                   setStatusMessage('Tabelas não encontradas.');
                    setIsBootstrapOpen(true);
               } else {
                    setStatusMessage(`Erro: ${error.message}`);
+                   toast({ title: "Erro de Conexão", description: error.message, variant: "destructive" });
               }
           } else {
-              setStatusMessage('Conexão OK! Tabelas encontradas.');
+              setStatusMessage('Conexão OK!');
               toast({ title: "Conexão OK", description: "O banco de dados está acessível." });
           }
       } catch (e: any) {
@@ -117,7 +122,7 @@ const LoginPage: React.FC = () => {
              </div>
              
              {statusMessage && (
-                 <div className="text-xs text-center p-2 rounded bg-secondary text-textSecondary">
+                 <div className="text-xs text-center p-2 rounded bg-secondary text-textSecondary font-mono">
                      {statusMessage}
                  </div>
              )}

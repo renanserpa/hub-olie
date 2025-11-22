@@ -21,7 +21,6 @@ const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
 export const login = async (email: string, password: string): Promise<UserProfile> => {
   console.log("[AuthService] Tentando login...", email);
   
-  // 1. Autenticação no Supabase Auth
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
@@ -35,7 +34,6 @@ export const login = async (email: string, password: string): Promise<UserProfil
 
   console.log("[AuthService] Auth OK. Buscando perfil...");
 
-  // 2. Tentar buscar perfil público (Resiliente a falhas de tabela)
   try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -51,7 +49,6 @@ export const login = async (email: string, password: string): Promise<UserProfil
 
   } catch (err) {
       console.warn("[AuthService] Exceção ao buscar perfil. Usando dados de sessão.", err);
-      // Permite login mesmo se a tabela profiles não existir
       return mapUserToProfile(data.user) as UserProfile;
   }
 };
@@ -63,23 +60,31 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error || !session?.user) {
-      return null;
-    }
+    // Adiciona um timeout de 2 segundos para evitar que a inicialização trave se o Supabase não responder
+    const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+            console.warn("[AuthService] Timeout ao buscar sessão. Assumindo deslogado.");
+            resolve(null);
+        }, 2000);
+    });
 
-    try {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-        return mapUserToProfile(session.user, profile);
-    } catch {
-        return mapUserToProfile(session.user);
-    }
+    const sessionPromise = (async () => {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session?.user) return null;
+
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
+            return mapUserToProfile(session.user, profile);
+        } catch {
+            return mapUserToProfile(session.user);
+        }
+    })();
+
+    return Promise.race([sessionPromise, timeoutPromise]);
 };
 
 export const listenAuthChanges = (callback: (user: UserProfile | null) => void) => {
