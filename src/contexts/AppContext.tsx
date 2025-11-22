@@ -81,14 +81,15 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     let isMounted = true;
     console.log("[AppContext] 🚀 Inicializando Auth...");
 
-    // TIMEOUT DE SEGURANÇA (2000ms)
-    // Dá um tempo razoável para o Supabase responder antes de assumir que o usuário está deslogado.
+    // TIMEOUT DE SEGURANÇA (1500ms)
+    // Se o Supabase não responder em 1.5s, liberamos a UI para o Login.
+    // Isso evita a tela branca infinita.
     const safetyTimeout = setTimeout(() => {
         if (isMounted && isLoading) {
-            console.warn("[AppContext] ⚠️ Timeout de segurança (2s). Liberando UI.");
+            console.warn("[AppContext] ⚠️ Timeout de segurança. Liberando UI.");
             setIsLoading(false);
         }
-    }, 2000);
+    }, 1500);
 
     const initAuth = async () => {
       try {
