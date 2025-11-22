@@ -10,7 +10,7 @@ import Toaster from './components/Toaster';
 import LoginPage from './components/LoginPage';
 import { Spinner } from './components/ui/Spinner';
 
-// Module Pages
+// Module Pages (Devem apontar para src/pages/*)
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -22,7 +22,7 @@ import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
 import OrdersPage from './pages/OrdersPage';
 import InventoryPage from './pages/InventoryPage';
-import ProductionPage from './pages/ProductionPage'; // Now importing from pages
+import ProductionPage from './pages/ProductionPage';
 import LogisticsPage from './pages/LogisticsPage';
 import ContactsPage from './pages/ContactsPage';
 import OmnichannelPage from './pages/OmnichannelPage';
