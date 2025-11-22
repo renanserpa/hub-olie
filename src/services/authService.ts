@@ -2,13 +2,9 @@
 import { supabase } from '../lib/supabaseClient';
 import { UserProfile } from '../types';
 
-// Helper para converter User do Supabase para o nosso UserProfile
 const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
     if (!user) return null;
-    
-    // Prioridade: Perfil do DB > Metadados do Auth > Fallback
     const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'Vendas';
-    
     return {
         id: user.id,
         email: user.email!,
@@ -20,35 +16,21 @@ const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
 
 export const login = async (email: string, password: string): Promise<UserProfile> => {
   console.log("[AuthService] Tentando login...", email);
-  
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    console.error("[AuthService] Erro Auth:", error);
-    throw new Error(error.message);
-  }
-  
-  if (!data.user) {
-    throw new Error('Erro desconhecido: Usuário não retornado.');
-  }
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error('Erro desconhecido: Usuário não retornado.');
 
-  console.log("[AuthService] Auth OK. Buscando perfil...");
-
+  // Tenta buscar o perfil, mas permite login mesmo se falhar (modo recuperação)
   try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .maybeSingle();
-        
-      if (profileError) {
-          console.warn("[AuthService] Erro não-bloqueante ao ler profiles:", profileError.message);
-      }
-
       return mapUserToProfile(data.user, profile) as UserProfile;
-
   } catch (err) {
-      console.warn("[AuthService] Exceção ao buscar perfil. Usando dados de sessão.", err);
+      console.warn("[AuthService] Falha ao ler perfil, usando dados básicos.", err);
       return mapUserToProfile(data.user) as UserProfile;
   }
 };
@@ -60,27 +42,28 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
-    // Adiciona um timeout de 2 segundos para evitar que a inicialização trave se o Supabase não responder
+    // Timeout agressivo de 1.5s para liberar a UI rapidamente se a rede estiver lenta
     const timeoutPromise = new Promise<null>((resolve) => {
         setTimeout(() => {
-            console.warn("[AuthService] Timeout ao buscar sessão. Assumindo deslogado.");
+            console.warn("[AuthService] Timeout na verificação de sessão.");
             resolve(null);
-        }, 2000);
+        }, 1500);
     });
 
     const sessionPromise = (async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session?.user) return null;
-
         try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error || !session?.user) return null;
+
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
                 .maybeSingle();
             return mapUserToProfile(session.user, profile);
-        } catch {
-            return mapUserToProfile(session.user);
+        } catch (e) {
+            console.error("[AuthService] Erro ao recuperar sessão:", e);
+            return null;
         }
     })();
 
