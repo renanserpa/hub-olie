@@ -10,7 +10,7 @@ import Toaster from './components/Toaster';
 import LoginPage from './components/LoginPage';
 import { Spinner } from './components/ui/Spinner';
 
-// Module Pages (Devem apontar para src/pages/*)
+// Module Pages
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
