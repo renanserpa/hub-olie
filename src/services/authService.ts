@@ -2,13 +2,9 @@
 import { supabase } from '../lib/supabaseClient';
 import { UserProfile } from '../types';
 
-// Função segura para transformar usuário do Auth em Perfil do Sistema
 const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
     if (!user) return null;
-    
-    // Se não tiver perfil no banco, usa metadados ou padrão 'Vendas' para não travar
     const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'Vendas';
-    
     return {
         id: user.id,
         email: user.email!,
@@ -19,30 +15,19 @@ const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
 };
 
 export const login = async (email: string, password: string): Promise<UserProfile> => {
-  console.log("[AuthService] Tentando login direto...");
-  
+  console.log("[Auth] Tentando login...");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    console.error("[AuthService] Falha no Supabase:", error);
-    throw new Error(error.message);
-  }
-  
-  if (!data.user) {
-    throw new Error('Login realizado, mas nenhum usuário retornado.');
-  }
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error('Erro desconhecido no login.');
 
-  // Tenta buscar perfil, mas não trava se falhar (permite corrigir o banco depois)
+  // Tenta buscar perfil, mas não falha se a tabela não existir (permite bootstrap)
   let profile = null;
   try {
-      const { data: p } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .maybeSingle();
+      const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle();
       profile = p;
   } catch (e) {
-      console.warn("Não foi possível carregar perfil, usando dados básicos.");
+      console.warn("Perfil não carregado (possível falta de tabela):", e);
   }
   
   return mapUserToProfile(data.user, profile) as UserProfile;
@@ -56,33 +41,33 @@ export const logout = async (): Promise<void> => {
 
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session?.user) return null;
+        // Timeout de segurança para não travar a tela de loading
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
+        const sessionPromise = supabase.auth.getSession();
 
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-        return mapUserToProfile(session.user, profile);
+        const result: any = await Promise.race([sessionPromise, timeoutPromise]);
+        
+        if (!result || !result.data.session?.user) return null;
+
+        const user = result.data.session.user;
+        
+        // Busca perfil de forma otimista
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        return mapUserToProfile(user, profile);
     } catch (e) {
+        console.warn("[Auth] Sessão inválida ou expirada.");
         return null;
     }
 };
 
 export const listenAuthChanges = (callback: (user: UserProfile | null) => void) => {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-            callback(mapUserToProfile(session.user));
-        } else {
-            callback(null);
-        }
+        callback(session?.user ? mapUserToProfile(session.user) : null);
     });
     return () => data.subscription.unsubscribe();
 };
 
-// Stubs para evitar erros de importação em outros arquivos
+// Stubs
 export const register = async () => {};
 export const sendPasswordResetEmail = async () => {};
 export const signInWithMagicLink = async () => {};
