@@ -2,9 +2,11 @@
 import { supabase } from '../lib/supabaseClient';
 import { UserProfile } from '../types';
 
+// Função segura para transformar usuário do Auth em Perfil do Sistema
 const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
     if (!user) return null;
-    // Prioriza o role do perfil, depois metadados, depois fallback
+    
+    // Se não tiver perfil no banco, usa metadados ou padrão 'Vendas' para não travar
     const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'Vendas';
     
     return {
@@ -17,91 +19,62 @@ const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
 };
 
 export const login = async (email: string, password: string): Promise<UserProfile> => {
-  console.log("[AuthService] Tentando login para:", email);
+  console.log("[AuthService] Tentando login direto...");
   
-  // 1. Autenticação Base
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    console.error("[AuthService] Erro Supabase Auth:", error);
+    console.error("[AuthService] Falha no Supabase:", error);
     throw new Error(error.message);
   }
   
   if (!data.user) {
-    throw new Error('Erro desconhecido: Usuário não retornado pelo Supabase.');
+    throw new Error('Login realizado, mas nenhum usuário retornado.');
   }
 
-  // 2. Recuperação de Perfil (Resiliente)
-  // Se a tabela profiles não existir (erro 42P01), permitimos o login mesmo assim
-  // para que o usuário possa acessar o modal de configuração de banco.
+  // Tenta buscar perfil, mas não trava se falhar (permite corrigir o banco depois)
+  let profile = null;
   try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: p } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-          console.warn("[AuthService] Aviso ao buscar perfil:", profileError.message);
-      }
-      
-      return mapUserToProfile(data.user, profile) as UserProfile;
-  } catch (err) {
-      console.warn("[AuthService] Falha crítica ao ler perfil, usando dados básicos.", err);
-      return mapUserToProfile(data.user) as UserProfile;
+      profile = p;
+  } catch (e) {
+      console.warn("Não foi possível carregar perfil, usando dados básicos.");
   }
+  
+  return mapUserToProfile(data.user, profile) as UserProfile;
 };
 
 export const logout = async (): Promise<void> => {
     await supabase.auth.signOut();
-    localStorage.clear(); // Limpeza radical
+    localStorage.clear();
     window.location.href = '/login';
 };
 
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
-    // Timeout de segurança interno: Se o Supabase não responder em 2s,
-    // assumimos que não há usuário logado para destravar a UI.
-    const timeoutPromise = new Promise<null>((resolve) => {
-        setTimeout(() => {
-            console.warn("[AuthService] Timeout na verificação de sessão inicial.");
-            resolve(null);
-        }, 2000);
-    });
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session?.user) return null;
 
-    const sessionPromise = (async () => {
-        try {
-            const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
             
-            if (error) {
-                console.error("[AuthService] Erro getSession:", error);
-                return null;
-            }
-            
-            if (!session?.user) return null;
-
-            // Tenta buscar perfil, falha silenciosamente se não conseguir
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .maybeSingle();
-                
-            return mapUserToProfile(session.user, profile);
-        } catch (e) {
-            console.error("[AuthService] Exceção na sessão:", e);
-            return null;
-        }
-    })();
-
-    return Promise.race([sessionPromise, timeoutPromise]);
+        return mapUserToProfile(session.user, profile);
+    } catch (e) {
+        return null;
+    }
 };
 
 export const listenAuthChanges = (callback: (user: UserProfile | null) => void) => {
-    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log(`[AuthService] Evento: ${event}`);
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
-            // Mapeamento simplificado para evitar chamadas de banco desnecessárias no evento
-            callback(mapUserToProfile(session.user, { role: session.user.user_metadata?.role }));
+            callback(mapUserToProfile(session.user));
         } else {
             callback(null);
         }
@@ -109,12 +82,12 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void) 
     return () => data.subscription.unsubscribe();
 };
 
-// Stubs para manter compatibilidade de interface
+// Stubs para evitar erros de importação em outros arquivos
 export const register = async () => {};
 export const sendPasswordResetEmail = async () => {};
 export const signInWithMagicLink = async () => {};
 export const signInWithGoogle = async () => {};
-export const enrollTotp = async () => { throw new Error("MFA indisponível no modo recuperação."); };
-export const verifyTotpChallenge = async () => { throw new Error("MFA indisponível no modo recuperação."); };
+export const enrollTotp = async () => { throw new Error("Indisponível"); };
+export const verifyTotpChallenge = async () => { throw new Error("Indisponível"); };
 export const unenrollTotp = async () => {};
 export const getFactors = async () => { return { all: [], totp: [] }; };
