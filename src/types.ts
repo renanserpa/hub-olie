@@ -1,7 +1,8 @@
-
 import React from 'react';
 
-// --- CORE & SETTINGS ---
+// ==========================================
+// 1. CORE & AUTHENTICATION
+// ==========================================
 
 export type UserRole =
   | 'AdminGeral'
@@ -11,7 +12,6 @@ export type UserRole =
   | 'Financeiro'
   | 'Conteudo';
 
-// Consolidated User Interface
 export interface UserProfile {
   id: string;
   email: string;
@@ -21,7 +21,7 @@ export interface UserProfile {
   last_login?: string | null;
 }
 
-// Aliases for backward compatibility during refactor
+// Aliases for backward compatibility
 export type User = UserProfile;
 export type AuthUser = UserProfile;
 
@@ -35,31 +35,9 @@ export interface SystemConfig {
     updated_at: string;
 }
 
-export interface CompanyProfile {
-  id: string;
-  legal_name: string;
-  trade_name: string;
-  cnpj: string;
-  state_registration?: string;
-  address: {
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    zip_code: string;
-  };
-  contact_email: string;
-  contact_phone: string;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  manager_id?: string;
-}
+// ==========================================
+// 2. SYSTEM SETTINGS & INFRASTRUCTURE
+// ==========================================
 
 export type SettingsCategory = 'catalogs' | 'materials' | 'logistica' | 'sistema' | 'integrations' | 'appearance' | 'security';
 
@@ -89,9 +67,6 @@ export interface FieldConfig {
     options?: { value: string; label: string }[];
 }
 
-
-// --- SYSTEM & INITIALIZER ---
-
 export interface SystemRole {
     id: string;
     name: UserRole;
@@ -114,9 +89,21 @@ export interface SystemSettingsHistory {
     setting_key: string;
     old_value: string;
     new_value: string;
-    changed_by: string; // user email or 'AI'
+    changed_by: string;
     created_at: string;
 }
+
+export interface SystemAudit {
+    id: string;
+    key: string;
+    status: string;
+    details?: any;
+    created_at: string;
+}
+
+// ==========================================
+// 3. INTEGRATIONS & AUTOMATION (WEBHOOKS/AI)
+// ==========================================
 
 export interface WebhookLog {
     id: string;
@@ -130,6 +117,26 @@ export interface WebhookLog {
     correlation_id?: string;
 }
 
+export interface Integration {
+    id: string;
+    name: string;
+    description: string;
+    api_key: string;
+    endpoint_url: string;
+    status: "connected" | "disconnected" | "error";
+    is_active: boolean;
+    last_sync: string | null;
+    last_error?: string;
+}
+
+export interface IntegrationLog {
+    id: string;
+    integration_id: string;
+    event: string;
+    message: string;
+    created_at: string;
+}
+
 export interface GovernanceSuggestion {
     id: string;
     setting_key: string;
@@ -140,15 +147,19 @@ export interface GovernanceSuggestion {
     created_at: string;
 }
 
-export interface SystemAudit {
+export interface WorkflowRule {
     id: string;
-    key: string;
-    status: string;
-    details?: any;
-    created_at: string;
+    name: string;
+    description: string;
+    trigger: string;
+    action: string;
+    is_active: boolean;
+    type?: 'standard' | 'cognitive';
 }
 
+// Initializer & Agents
 export type AgentStatus = 'idle' | 'working' | 'error' | 'offline';
+export type LogStatus = 'running' | 'success' | 'error' | 'info';
 
 export interface InitializerAgent {
     id: string;
@@ -159,8 +170,6 @@ export interface InitializerAgent {
     last_heartbeat: string;
     health_score?: number;
 }
-
-export type LogStatus = 'running' | 'success' | 'error' | 'info';
 
 export interface InitializerLog {
     id: string;
@@ -180,28 +189,6 @@ export interface InitializerSyncState {
     updated_at: string;
 }
 
-export type IntegrationStatus = "connected" | "disconnected" | "error";
-
-export interface Integration {
-    id: string;
-    name: string;
-    description: string;
-    api_key: string;
-    endpoint_url: string;
-    status: IntegrationStatus;
-    is_active: boolean;
-    last_sync: string | null;
-    last_error?: string;
-}
-
-export interface IntegrationLog {
-    id: string;
-    integration_id: string;
-    event: string;
-    message: string;
-    created_at: string;
-}
-
 export interface Notification {
     id: string;
     title: string;
@@ -210,31 +197,9 @@ export interface Notification {
     created_at: string;
 }
 
-export interface WorkflowRule {
-    id: string;
-    name: string;
-    description: string;
-    trigger: string;
-    action: string;
-    is_active: boolean;
-    type?: 'standard' | 'cognitive';
-}
-
-export interface EdgeHealthStatus {
-  name: string;
-  status: 'ok' | 'error' | 'timeout';
-  responseTime: number;
-}
-
-export interface RlsPolicyStatus {
-  table: string;
-  policyName: string;
-  isEnabled: boolean;
-  command: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'ALL';
-  roles: string[];
-}
-
-// --- CONTACTS ---
+// ==========================================
+// 4. CONTACTS (CRM)
+// ==========================================
 
 export type ContactStage = 'Lead' | 'Cliente Ativo' | 'Contato Geral' | 'Fornecedor' | 'Inativo';
 
@@ -267,80 +232,11 @@ export interface Contact {
 }
 export type AnyContact = Omit<Contact, 'id'>;
 
+// ==========================================
+// 5. PRODUCTS & CATALOG
+// ==========================================
 
-// --- PRODUCTS, CATALOG & MATERIALS ---
-
-export interface Supplier {
-    id: string;
-    name: string;
-    document?: string;
-    email?: string;
-    phone?: string;
-    payment_terms: "à vista" | "15D" | "30D" | "45D" | "60D";
-    lead_time_days?: number | null;
-    rating?: number | null;
-    is_active: boolean;
-    notes?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-export interface MaterialGroup {
-    id: string;
-    name: string;
-    description?: string;
-    is_active: boolean;
-    created_at: string;
-}
-
-export interface Material {
-    id: string;
-    name: string;
-    sku?: string;
-    group_id: string;
-    unit: 'm' | 'un' | 'kg';
-    is_active: boolean;
-    created_at: string;
-    url_public?: string;
-    drive_file_id?: string;
-    description?: string;
-    supplier_id?: string;
-    supplier?: Supplier;
-    default_cost?: number;
-    low_stock_threshold?: number;
-    config_supply_groups?: { name: string };
-    care_instructions?: string;
-    technical_specs?: {
-        composition?: string;
-        weight_gsm?: number;
-        thickness_mm?: number;
-    }
-}
-
-export interface ColorPalette { id: string; name: string; descricao: string; is_active: boolean; }
-export interface FabricColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface ZipperColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface BiasColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface LiningColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface PullerColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
-export interface EmbroideryColor { id: string; name: string; hex: string; thread_type: string; is_active: boolean; }
-
-// Fixed Truncated Interface
-export interface FabricTexture { 
-    id: string; 
-    name: string; 
-    description: string; 
-    image_url: string; 
-    hex_code: string; 
-    fabric_color_id: string; 
-    supplier_sku: string; 
-    manufacturer_sku: string; 
-    manufacturer_id: string;
-    distributor_id: string;
-    is_active: boolean;
-}
-
-export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
+export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
 export interface ProductCategory {
     id: string;
@@ -353,14 +249,6 @@ export interface Collection {
     name: string;
     description?: string;
 }
-
-export type AnySettingsItem =
-    | ColorPalette | FabricColor | ZipperColor | BiasColor | MonogramFont | MaterialGroup | Material
-    | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection
-    | ProductionRoute
-    | MoldLibrary;
-
-export type ProductStatus = 'Rascunho' | 'Homologado Qualidade' | 'Ativo' | 'Suspenso' | 'Descontinuado';
 
 export interface ProductSize {
   id: string;
@@ -377,14 +265,8 @@ export interface ProductPart {
 
 export interface CombinationRule {
   id: string;
-  condition: {
-    part_key: string;
-    option_id: string;
-  };
-  consequence: {
-    part_key: string;
-    allowed_option_ids: string[];
-  };
+  condition: { part_key: string; option_id: string; };
+  consequence: { part_key: string; allowed_option_ids: string[]; };
 }
 
 export interface BOMComponent {
@@ -404,7 +286,6 @@ export interface ProductAttributes {
       allowed_font_ids?: string[];
       allowed_color_ids?: string[];
       max_chars?: number;
-      // Added to support form binding even if not in DB schema yet
       text?: string; 
       font?: string;
       color?: string;
@@ -419,8 +300,8 @@ export interface ProductAttributes {
 
 export interface ProductVariant {
   id: string;
-  product_id?: string; // Optional alias for compatibility
-  product_base_id: string; // Correct DB field
+  product_id?: string; // Alias
+  product_base_id: string;
   sku: string;
   sales_price: number;
   unit_of_measure: string;
@@ -459,8 +340,6 @@ export interface Product {
 }
 
 export type AnyProduct = Omit<Product, 'id' | 'created_at' | 'updated_at'>;
-
-// Tipo para criação de produto (simplificado)
 export interface CreateProductData {
     name: string;
     description?: string;
@@ -468,27 +347,43 @@ export interface CreateProductData {
     base_sku: string;
     base_price: number;
     category?: string;
-    // Optional fields for advanced creation if needed
     available_sizes?: ProductSize[];
     configurable_parts?: ProductPart[];
 }
+
+// Catalog Specifics
+export interface ColorPalette { id: string; name: string; descricao: string; is_active: boolean; }
+export interface FabricColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
+export interface ZipperColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
+export interface BiasColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
+export interface LiningColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
+export interface PullerColor { id: string; name: string; hex: string; palette_id: string; is_active: boolean; }
+export interface EmbroideryColor { id: string; name: string; hex: string; thread_type: string; is_active: boolean; }
+export interface FabricTexture { 
+    id: string; name: string; description: string; image_url: string; hex_code: string; 
+    fabric_color_id: string; supplier_sku: string; manufacturer_sku: string; 
+    manufacturer_id: string; distributor_id: string; is_active: boolean;
+}
+export interface MonogramFont { id: string; name: string; style: string; category: string; preview_url: string; font_file_url: string; is_active: boolean; }
+
+export type AnySettingsItem =
+    | ColorPalette | FabricColor | ZipperColor | BiasColor | MonogramFont | MaterialGroup | Material
+    | LiningColor | PullerColor | EmbroideryColor | FabricTexture | ProductCategory | Collection
+    | ProductionRoute | MoldLibrary;
+
+// ==========================================
+// 6. ORDERS (SALES)
+// ==========================================
+
+export type OrderStatus = 'pending_payment' | 'paid' | 'in_production' | 'awaiting_shipping' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface ConfigJson {
   fabricColor?: string;
   zipperColor?: string;
   biasColor?: string;
-  embroidery?: {
-    enabled: boolean;
-    text: string;
-    font: string;
-    color?: string;
-  };
+  embroidery?: { enabled: boolean; text: string; font: string; color?: string; };
   notes?: string;
 }
-
-// --- ORDERS ---
-
-export type OrderStatus = 'pending_payment' | 'paid' | 'in_production' | 'awaiting_shipping' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface OrderItem {
   id: string;
@@ -571,8 +466,10 @@ export interface Order {
     notes_internal?: OrderNote[];
 }
 
+// ==========================================
+// 7. PRODUCTION
+// ==========================================
 
-// --- PRODUCTION ---
 export type ProductionTaskStatus = 'Pendente' | 'Em Andamento' | 'Concluída';
 export type QualityCheckResult = 'Aprovado' | 'Reprovado' | 'Pendente';
 export type ProductionOrderStatus = 'novo' | 'planejado' | 'em_andamento' | 'em_espera' | 'finalizado' | 'cancelado';
@@ -644,58 +541,53 @@ export interface MoldLibrary {
     local_armazenamento: string;
 }
 
-// --- OMNICHANNEL ---
-export type Channel = 'whatsapp' | 'instagram' | 'site';
-export type Priority = 'low' | 'normal' | 'high' | 'urgent';
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-export type ConversationStatus = 'open' | 'closed' | 'pending';
+// ==========================================
+// 8. INVENTORY & PURCHASING
+// ==========================================
 
-export interface Conversation {
+export interface Supplier {
     id: string;
-    customerId: string;
-    customerName: string;
-    customerHandle?: string;
-    channel: Channel;
-    status: ConversationStatus;
-    assigneeId?: string;
-    priority: Priority;
-    tags: string[];
-    unreadCount: number;
-    lastMessageAt: string; // or Date
-    title: string;
-    quoteId?: string;
+    name: string;
+    document?: string;
+    email?: string;
+    phone?: string;
+    payment_terms: "à vista" | "15D" | "30D" | "45D" | "60D";
+    lead_time_days?: number | null;
+    rating?: number | null;
+    is_active: boolean;
+    notes?: string;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface Message {
+export interface MaterialGroup {
     id: string;
-    conversationId: string;
-    direction: 'in' | 'out' | 'note';
-    content: string;
-    authorName?: string;
-    createdAt: string; // or Date
-    status: MessageStatus;
+    name: string;
+    description?: string;
+    is_active: boolean;
+    created_at: string;
 }
 
-export interface QuoteItem {
+export interface Material {
     id: string;
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-    total: number;
+    name: string;
+    sku?: string;
+    group_id: string;
+    unit: 'm' | 'un' | 'kg';
+    is_active: boolean;
+    created_at: string;
+    url_public?: string;
+    drive_file_id?: string;
+    description?: string;
+    supplier_id?: string;
+    supplier?: Supplier;
+    default_cost?: number;
+    low_stock_threshold?: number;
+    config_supply_groups?: { name: string };
+    care_instructions?: string;
+    technical_specs?: { composition?: string; weight_gsm?: number; thickness_mm?: number; }
 }
 
-export interface Quote {
-    id: string;
-    status: 'draft' | 'sent' | 'approved' | 'rejected';
-    items: QuoteItem[];
-    totals: {
-        subtotal: number;
-        shipping: number;
-        grandTotal: number;
-    };
-}
-
-// --- INVENTORY ---
 export interface Warehouse {
     id: string;
     name: string;
@@ -718,14 +610,8 @@ export interface InventoryBalance {
 
 export type InventoryMovementType = 'in' | 'out' | 'adjust' | 'transfer';
 export type InventoryMovementReason = 
-    | 'RECEBIMENTO_PO' 
-    | 'CONSUMO_PRODUCAO' 
-    | 'VENDA_DIRETA' 
-    | 'AJUSTE_CONTAGEM' 
-    | 'DEVOLUCAO_CLIENTE' 
-    | 'PERDA_AVARIA' 
-    | 'TRANSFERENCIA_INTERNA'
-    | 'ENTRADA_PRODUCAO';
+    | 'RECEBIMENTO_PO' | 'CONSUMO_PRODUCAO' | 'VENDA_DIRETA' | 'AJUSTE_CONTAGEM' 
+    | 'DEVOLUCAO_CLIENTE' | 'PERDA_AVARIA' | 'TRANSFERENCIA_INTERNA' | 'ENTRADA_PRODUCAO';
 
 export interface InventoryMovement {
     id: string;
@@ -734,13 +620,45 @@ export interface InventoryMovement {
     type: InventoryMovementType;
     quantity: number;
     reason: InventoryMovementReason;
-    ref?: string; // PO number, Order number, etc.
+    ref?: string;
     notes?: string;
     warehouse_id?: string;
     created_at: string;
 }
 
-// --- LOGISTICS ---
+export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
+
+export interface PurchaseOrder {
+    id: string;
+    po_number: string;
+    supplier_id: string;
+    status: PurchaseOrderStatus;
+    total: number;
+    created_at: string;
+    updated_at: string;
+    issued_at?: string;
+    received_at?: string;
+    expected_delivery_date?: string;
+    supplier?: Supplier;
+    items: PurchaseOrderItem[];
+}
+
+export interface PurchaseOrderItem {
+    id: string;
+    po_id: string;
+    material_id: string;
+    material_name?: string;
+    quantity: number;
+    received_quantity: number;
+    unit_price: number;
+    total: number;
+    material?: Material;
+}
+
+// ==========================================
+// 9. LOGISTICS
+// ==========================================
+
 export type LogisticsTab = 'queue' | 'picking' | 'shipment' | 'settings';
 export type ShipmentStatus = 'pending' | 'quoted' | 'label_created' | 'in_transit' | 'delivered';
 
@@ -778,7 +696,10 @@ export interface LogisticsPickTask {
     created_at: string;
 }
 
-// --- MARKETING ---
+// ==========================================
+// 10. MARKETING & OMNICHANNEL
+// ==========================================
+
 export type MarketingChannel = 'email' | 'sms' | 'whatsapp' | 'instagram';
 export type MarketingCampaignStatus = 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled';
 
@@ -790,15 +711,7 @@ export interface MarketingCampaign {
     channels: MarketingChannel[];
     budget: number;
     spent: number;
-    kpis: {
-        sent: number;
-        delivered: number;
-        read: number;
-        clicked: number;
-        replies: number;
-        orders: number;
-        revenue: number;
-    };
+    kpis: { sent: number; delivered: number; read: number; clicked: number; replies: number; orders: number; revenue: number; };
     created_at: string;
     updated_at: string;
     started_at?: string;
@@ -830,37 +743,56 @@ export interface MarketingTemplate {
     content_preview: string;
 }
 
-// --- PURCHASING ---
-export type PurchaseOrderStatus = 'draft' | 'issued' | 'partial' | 'received' | 'canceled';
+export type Channel = 'whatsapp' | 'instagram' | 'site';
+export type Priority = 'low' | 'normal' | 'high' | 'urgent';
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+export type ConversationStatus = 'open' | 'closed' | 'pending';
 
-export interface PurchaseOrder {
+export interface Conversation {
     id: string;
-    po_number: string;
-    supplier_id: string;
-    status: PurchaseOrderStatus;
-    total: number;
-    created_at: string;
-    updated_at: string;
-    issued_at?: string;
-    received_at?: string;
-    expected_delivery_date?: string;
-    supplier?: Supplier;
-    items: PurchaseOrderItem[];
+    customerId: string;
+    customerName: string;
+    customerHandle?: string;
+    channel: Channel;
+    status: ConversationStatus;
+    assigneeId?: string;
+    priority: Priority;
+    tags: string[];
+    unreadCount: number;
+    lastMessageAt: string; 
+    title: string;
+    quoteId?: string;
 }
 
-export interface PurchaseOrderItem {
+export interface Message {
     id: string;
-    po_id: string;
-    material_id: string;
-    material_name?: string;
+    conversationId: string;
+    direction: 'in' | 'out' | 'note';
+    content: string;
+    authorName?: string;
+    createdAt: string; 
+    status: MessageStatus;
+}
+
+export interface QuoteItem {
+    id: string;
+    productName: string;
     quantity: number;
-    received_quantity: number;
-    unit_price: number;
+    unitPrice: number;
     total: number;
-    material?: Material;
 }
 
-// --- ANALYTICS ---
+export interface Quote {
+    id: string;
+    status: 'draft' | 'sent' | 'approved' | 'rejected';
+    items: QuoteItem[];
+    totals: { subtotal: number; shipping: number; grandTotal: number; };
+}
+
+// ==========================================
+// 11. ANALYTICS & FINANCE
+// ==========================================
+
 export type AnalyticsModule = 'overview' | 'orders' | 'production' | 'inventory' | 'logistics' | 'financial' | 'marketing';
 
 export interface AnalyticsKPI {
@@ -880,7 +812,6 @@ export interface AnalyticsSnapshot {
     recorded_at: string;
 }
 
-// --- EXECUTIVE ---
 export type ExecutiveModule = 'overview' | 'financial' | 'production' | 'sales' | 'logistics' | 'purchasing' | 'ai_insights';
 
 export interface ExecutiveKPI {
@@ -903,7 +834,6 @@ export interface AIInsight {
     generated_at: string;
 }
 
-// --- FINANCE ---
 export interface FinanceAccount {
     id: string;
     name: string;
@@ -949,7 +879,10 @@ export interface FinanceReceivable {
     status: 'pending' | 'paid' | 'overdue';
 }
 
-// --- TASK MANAGEMENT ---
+// ==========================================
+// 12. MISC (DASHBOARD, TASKS, MEDIA)
+// ==========================================
+
 export interface TaskStatus {
     id: string;
     name: string;
@@ -966,7 +899,6 @@ export interface Task {
     priority: 'baixa' | 'normal' | 'alta' | 'urgente';
 }
 
-// --- MEDIA ---
 export interface MediaAsset {
     id: string;
     drive_file_id: string;
@@ -979,8 +911,6 @@ export interface MediaAsset {
     created_at?: string;
 }
 
-
-// --- DASHBOARD ---
 export interface ActivityItem {
     id: string;
     type: 'order' | 'contact' | 'production';
@@ -991,8 +921,7 @@ export interface ActivityItem {
     icon: React.ElementType;
 }
 
-
-// --- APP DATA ---
+// Agregated App Data Type for Settings
 export interface AppData {
     catalogs: {
         paletas_cores: ColorPalette[];
@@ -1007,12 +936,7 @@ export interface AppData {
         };
         fontes_monogramas: MonogramFont[];
     };
-    logistica: {
-        metodos_entrega: any[];
-        calculo_frete: any[];
-        tipos_embalagem: any[];
-        tipos_vinculo: any[];
-    };
+    logistica: { metodos_entrega: any[]; calculo_frete: any[]; tipos_embalagem: any[]; tipos_vinculo: any[]; };
     sistema: SystemSetting[];
     system_settings_logs: SystemSettingsLog[];
     config_supply_groups: MaterialGroup[];
@@ -1034,11 +958,7 @@ export interface AppData {
     production_quality_checks: ProductionQualityCheck[];
     task_statuses: TaskStatus[];
     tasks: Task[];
-    omnichannel: {
-        conversations: Conversation[];
-        messages: Message[];
-        quotes: Quote[];
-    };
+    omnichannel: { conversations: Conversation[]; messages: Message[]; quotes: Quote[]; };
     logistics_waves: LogisticsWave[];
     logistics_shipments: LogisticsShipment[];
     logistics_pick_tasks: LogisticsPickTask[];

@@ -20,11 +20,11 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
+import OrdersPage from './pages/OrdersPage';
+import InventoryPage from './pages/InventoryPage';
 
 // Components acting as Pages (Legacy)
-import OrdersPage from './components/OrdersPage';
 import ProductionPage from './components/ProductionPage';
-import InventoryPage from './components/InventoryPage';
 import LogisticsPage from './components/LogisticsPage';
 import OmnichannelPage from './components/OmnichannelPage';
 import ContactsPage from './components/ContactsPage';
