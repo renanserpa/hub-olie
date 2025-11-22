@@ -60,7 +60,6 @@ export function useOrders() {
         const ordersListener = dataService.listenToCollection('orders', '*, customers(*)', undefined, () => {
             loadData();
         });
-        // Only needed if order items are updated independently often, otherwise getting full orders covers it
         const itemsListener = dataService.listenToCollection('order_items', undefined, undefined, () => {
             loadData(); 
         });
@@ -161,7 +160,6 @@ export function useOrders() {
             await dataService.addOrder(orderData);
             toast({ title: "Sucesso!", description: "Novo pedido criado." });
             setIsCreateDialogOpen(false);
-            // No manual refresh needed, realtime listener will handle it
         } catch (error) {
             toast({ title: "Erro", description: "Não foi possível criar o pedido.", variant: "destructive" });
         } finally {

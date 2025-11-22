@@ -1,4 +1,4 @@
-// modules/Purchasing/hooks/usePurchaseOrders.ts
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PurchaseOrder, PurchaseOrderItem, Supplier, Material } from '../../../types';
 import { dataService } from '../../../services/dataService';
@@ -80,7 +80,6 @@ export function usePurchaseOrders() {
 
             await dataService.createPO({ supplier_id: poData.supplier_id, items: itemsWithDetails });
             toast({ title: "Sucesso!", description: "Pedido de Compra criado." });
-            // Refresh manually to ensure list is up to date if realtime lags
             fetchOrders();
         } catch (error) {
             toast({ title: "Erro!", description: (error as Error).message, variant: "destructive" });
@@ -97,12 +96,10 @@ export function usePurchaseOrders() {
             await dataService.receivePOItems(poId, receivedItems);
             toast({ title: "Sucesso!", description: "Recebimento de materiais registrado no estoque." });
             
-            // Force refresh items for the selected PO to show updated received quantities
             if (selectedPOId === poId) {
                 const items = await dataService.getPurchaseOrderItems(poId);
                 setSelectedPOItems(items);
             }
-            // Force refresh orders list to update status (e.g. Partial -> Received)
             fetchOrders();
 
         } catch (error) {

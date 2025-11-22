@@ -11,7 +11,6 @@ import CustomizeItemDialog from './CustomizeItemDialog';
 interface OrderDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    // Updated signature to accept data directly
     onSave: (orderData: Partial<Order>) => Promise<void>;
     contacts: Contact[];
     products: Product[];
@@ -110,11 +109,9 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ isOpen, onClose, onSave, cont
                 origin: 'Manual',
             };
             
-            // Delegate save to parent via prop
             await onSave(newOrderData);
             onClose();
         } catch (error) {
-            // Error handling is mostly done in the parent hook now, but we keep this for safety
             console.error(error);
         } finally {
             setIsSubmitting(false);
