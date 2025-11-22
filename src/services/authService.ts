@@ -2,8 +2,10 @@
 import { supabase } from '../lib/supabaseClient';
 import { UserProfile } from '../types';
 
+// Helper seguro para mapear usuário
 const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
     if (!user) return null;
+    // Fallback seguro para role se o perfil não carregar
     const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'Vendas';
     return {
         id: user.id,
@@ -15,34 +17,39 @@ const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
 };
 
 export const login = async (email: string, password: string): Promise<UserProfile> => {
-  console.log("[Auth] Tentando login...");
+  console.log("[Auth] Iniciando login...");
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) throw new Error(error.message);
-  if (!data.user) throw new Error('Erro desconhecido no login.');
+  if (!data.user) throw new Error('Sem dados de usuário.');
 
-  // Tenta buscar perfil, mas não falha se a tabela não existir (permite bootstrap)
+  // Tenta buscar o perfil, mas não bloqueia se falhar (permite bootstrap)
   let profile = null;
   try {
       const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle();
       profile = p;
   } catch (e) {
-      console.warn("Perfil não carregado (possível falta de tabela):", e);
+      console.warn("[Auth] Aviso: Não foi possível carregar perfil extendido.");
   }
   
   return mapUserToProfile(data.user, profile) as UserProfile;
 };
 
 export const logout = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    try {
+        await supabase.auth.signOut();
+    } catch (e) {
+        console.error("Erro ao sair:", e);
+    }
     localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '/login';
 };
 
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
     try {
-        // Timeout de segurança para não travar a tela de loading
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
+        // Timeout agressivo de 2s para não travar a tela branca
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Auth")), 2000));
         const sessionPromise = supabase.auth.getSession();
 
         const result: any = await Promise.race([sessionPromise, timeoutPromise]);
@@ -51,11 +58,18 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
 
         const user = result.data.session.user;
         
-        // Busca perfil de forma otimista
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        // Tenta buscar perfil rapidamente
+        let profile = null;
+        try {
+             const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+             profile = data;
+        } catch(e) {
+            console.warn("Erro ao buscar perfil inicial.");
+        }
+        
         return mapUserToProfile(user, profile);
     } catch (e) {
-        console.warn("[Auth] Sessão inválida ou expirada.");
+        console.warn("[Auth] Sessão não encontrada ou timeout.", e);
         return null;
     }
 };
@@ -67,12 +81,12 @@ export const listenAuthChanges = (callback: (user: UserProfile | null) => void) 
     return () => data.subscription.unsubscribe();
 };
 
-// Stubs
+// Stubs vazios para evitar erros de importação
 export const register = async () => {};
 export const sendPasswordResetEmail = async () => {};
 export const signInWithMagicLink = async () => {};
 export const signInWithGoogle = async () => {};
-export const enrollTotp = async () => { throw new Error("Indisponível"); };
-export const verifyTotpChallenge = async () => { throw new Error("Indisponível"); };
+export const enrollTotp = async () => { throw new Error("N/A"); };
+export const verifyTotpChallenge = async () => { throw new Error("N/A"); };
 export const unenrollTotp = async () => {};
 export const getFactors = async () => { return { all: [], totp: [] }; };

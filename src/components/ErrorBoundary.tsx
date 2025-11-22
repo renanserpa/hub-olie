@@ -1,7 +1,5 @@
 
-import React, { ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Button } from './ui/Button';
+import React, { ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
@@ -22,37 +20,27 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('💥 UI ErrorBoundary caught:', error, errorInfo);
   }
 
   handleReload = () => {
     localStorage.clear();
-    sessionStorage.clear();
     window.location.href = '/';
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-center p-4 font-sans">
-            <div className="bg-white p-8 rounded-xl shadow-xl max-w-lg w-full border border-red-100">
-                <div className="bg-red-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900">Algo deu errado</h1>
-                <p className="text-gray-600 mt-2 mb-6">
-                  A aplicação encontrou um erro inesperado de renderização.
-                </p>
-                <div className="bg-gray-100 p-4 rounded-lg text-left mb-6 overflow-auto max-h-40">
-                    <p className="text-xs font-mono text-red-600 break-all">
-                        {this.state.error?.message || 'Erro desconhecido'}
-                    </p>
-                </div>
-                <Button onClick={this.handleReload} className="w-full bg-red-600 hover:bg-red-700 text-white">
-                  Limpar Cache e Recarregar
-                </Button>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', padding: '20px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>Erro de Renderização</h1>
+            <p style={{ color: '#666', marginBottom: '20px' }}>Ocorreu um erro inesperado na interface.</p>
+            <pre style={{ backgroundColor: '#f3f4f6', padding: '15px', borderRadius: '8px', color: '#ef4444', marginBottom: '20px', maxWidth: '100%', overflow: 'auto' }}>
+                {this.state.error?.message || 'Erro desconhecido'}
+            </pre>
+            <button onClick={this.handleReload} style={{ padding: '10px 20px', backgroundColor: '#333', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                Recarregar Página
+            </button>
         </div>
       );
     }

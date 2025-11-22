@@ -1,57 +1,57 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { login } from '../services/authService';
-import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Database, CheckCircle } from 'lucide-react';
-import { toast } from '../hooks/use-toast';
 import { supabase } from '../lib/supabaseClient';
+import { Loader2, AlertTriangle, CheckCircle, Database } from 'lucide-react';
 import BootstrapModal from './BootstrapModal';
+
+// Estilos inline para garantir que carregue mesmo se o Tailwind falhar
+const containerStyle = {
+    display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif'
+};
+const cardStyle = {
+    width: '100%', maxWidth: '400px', backgroundColor: 'white', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+};
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('adm@adm.com');
   const [password, setPassword] = useState('111111');
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<{msg: string, type: 'neutral' | 'success' | 'error'}>({ msg: 'Pronto', type: 'neutral' });
   const [isBootstrapOpen, setIsBootstrapOpen] = useState(false);
 
-  const handleTestConnection = async () => {
-      setIsLoading(true);
-      try {
-          // Teste simples de ping
+  // Teste de conexão ao montar
+  useEffect(() => {
+      const checkConnection = async () => {
           const { error } = await supabase.from('system_config').select('count', { count: 'exact', head: true });
-          
           if (error && error.code === '42P01') {
-              // Tabela não existe -> Precisa de Bootstrap
-              setConnectionStatus('error');
-              toast({ title: 'Tabelas Ausentes', description: 'Banco de dados precisa ser configurado.', variant: 'destructive' });
-              setIsBootstrapOpen(true);
+              setStatus({ msg: 'Tabelas não encontradas. Execute o Bootstrap.', type: 'error' });
+              setIsBootstrapOpen(true); // Abre automaticamente se faltar tabela
           } else if (error) {
-              setConnectionStatus('error');
-              toast({ title: 'Erro de Conexão', description: error.message, variant: 'destructive' });
+               setStatus({ msg: `Erro de conexão: ${error.message}`, type: 'error' });
           } else {
-              setConnectionStatus('success');
-              toast({ title: 'Conectado!', description: 'Supabase acessível.', variant: 'default' });
+              setStatus({ msg: 'Conectado ao Supabase.', type: 'success' });
           }
-      } catch (e: any) {
-          setConnectionStatus('error');
-          toast({ title: 'Erro Crítico', description: e.message, variant: 'destructive' });
-      } finally {
-          setIsLoading(false);
-      }
-  };
+      };
+      checkConnection();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setStatus({ msg: 'Autenticando...', type: 'neutral' });
+    
     try {
       await login(email, password);
-      toast({ title: 'Sucesso', description: 'Entrando...' });
+      setStatus({ msg: 'Sucesso! Redirecionando...', type: 'success' });
+      // Forçar recarregamento limpo
       window.location.href = '/';
     } catch (err: any) {
-      toast({ title: 'Erro no Login', description: err.message, variant: 'destructive' });
-      // Se o erro sugerir falta de tabelas, oferece o bootstrap
+      console.error(err);
+      setStatus({ msg: err.message || 'Erro ao entrar', type: 'error' });
+      
       if (err.message?.includes('profiles') || err.message?.includes('relation')) {
-          setIsBootstrapOpen(true);
+           setIsBootstrapOpen(true);
       }
     } finally {
       setIsLoading(false);
@@ -59,49 +59,55 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4 font-sans">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-        <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Olie Hub Ops</h1>
-            <p className="text-sm text-gray-500">Acesso de Recuperação</p>
+    <div style={containerStyle}>
+      <div style={cardStyle}>
+        <div style={{textAlign: 'center', marginBottom: '20px'}}>
+            <h1 style={{fontSize: '24px', fontWeight: 'bold', color: '#111827'}}>Olie Hub Ops</h1>
+            <p style={{fontSize: '14px', color: '#6b7280'}}>Acesso Administrativo</p>
         </div>
 
-        <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200">
-            <p className="font-semibold">Credenciais Padrão:</p>
-            <p>Email: adm@adm.com</p>
-            <p>Senha: 111111</p>
+        <div style={{marginBottom: '20px', padding: '10px', borderRadius: '6px', backgroundColor: status.type === 'error' ? '#fee2e2' : status.type === 'success' ? '#dcfce7' : '#f3f4f6', color: status.type === 'error' ? '#991b1b' : status.type === 'success' ? '#166534' : '#374151', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            {status.type === 'error' ? <AlertTriangle size={16}/> : status.type === 'success' ? <CheckCircle size={16}/> : <Database size={16}/>}
+            {status.msg}
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
+        <form onSubmit={handleLogin}>
+            <div style={{marginBottom: '15px'}}>
+              <label style={{display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '5px'}}>Email</label>
+              <input 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'}}
+              />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
+            <div style={{marginBottom: '20px'}}>
+              <label style={{display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '5px'}}>Senha</label>
+              <input 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'}}
+              />
             </div>
-            <Button type="submit" className="w-full mt-4" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin mr-2" /> : null} Entrar
-            </Button>
+            <button 
+                type="submit" 
+                disabled={isLoading}
+                style={{width: '100%', padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#D2A66D', color: 'white', fontWeight: '600', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1}}
+            >
+              {isLoading ? 'Carregando...' : 'Entrar no Sistema'}
+            </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-             <Button type="button" variant="outline" onClick={handleTestConnection} disabled={isLoading} className="flex-1 text-xs">
-                {connectionStatus === 'success' ? <CheckCircle className="w-3 h-3 mr-2 text-green-500"/> : <Database className="w-3 h-3 mr-2" />}
-                Testar Conexão
-             </Button>
-             <Button type="button" variant="outline" onClick={() => setIsBootstrapOpen(true)} disabled={isLoading} className="flex-1 text-xs">
-                Configurar Banco
-             </Button>
-        </div>
+        <button 
+            type="button"
+            onClick={() => setIsBootstrapOpen(true)}
+            style={{marginTop: '15px', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: 'transparent', color: '#6b7280', fontSize: '12px', cursor: 'pointer'}}
+        >
+            🛠️ Configurar Banco de Dados (Script SQL)
+        </button>
       </div>
+      
       <BootstrapModal isOpen={isBootstrapOpen} onClose={() => setIsBootstrapOpen(false)} />
     </div>
   );
