@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { getCurrentUser, listenAuthChanges } from '../services/authService';
 import { UserProfile } from '../types';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import WelcomeModal from '../components/WelcomeModal';
 import { dataService } from '../services/dataService';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
     AdminGeral: 'dashboard',
@@ -50,7 +50,7 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [isAIEnabled, setIsAIEnabled] = useState(false); 
+  const [isAIEnabled] = useState(false); 
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
   const hasRedirected = useRef(false);
@@ -79,26 +79,26 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
-    console.log("[AppContext] 🚀 Inicializando Auth...");
 
-    // TIMEOUT DE SEGURANÇA: 2 SEGUNDOS (Agressivo para evitar tela branca)
-    const safetyTimeout = setTimeout(() => {
-        if (isMounted && isLoading) {
-            console.warn("[AppContext] ⚠️ Timeout de segurança (2s). Liberando UI.");
+    if (!isSupabaseConfigured || !supabase) {
+        console.warn("[AppContext] Supabase não configurado (isSupabaseConfigured = false). App em modo offline/configuração.");
+        if (isMounted) {
             setIsLoading(false);
+            setUser(null);
         }
-    }, 2000);
+        return;
+    }
 
     const initAuth = async () => {
       try {
         const currentUser = await getCurrentUser();
+        
         if (isMounted) {
              setUser(currentUser);
-             console.log("[AppContext] ✅ Usuário:", currentUser ? currentUser.email : "Nenhum");
         }
       } catch (e) {
-        console.error("[AppContext] ❌ Erro sessão:", e);
-        if (isMounted) setError("Falha na inicialização.");
+        console.error("[AppContext] Erro auth:", e);
+        if (isMounted) setError(e instanceof Error ? e.message : "Authentication failed.");
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -115,7 +115,6 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     return () => { 
         isMounted = false; 
-        clearTimeout(safetyTimeout);
         unsubscribe(); 
     };
   }, []);

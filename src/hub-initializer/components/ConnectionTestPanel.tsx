@@ -1,13 +1,7 @@
 import React, { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "../../lib/supabaseClient";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-
-// Define locally since the imported module might not export it in this context
-const isSupabaseConfigured = Boolean(
-  (import.meta as any).env.VITE_SUPABASE_URL && 
-  (import.meta as any).env.VITE_SUPABASE_ANON_KEY
-);
 
 type ConnectionStatus = "idle" | "testing" | "ok" | "error";
 
