@@ -4,7 +4,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface ErrorBoundaryProps {
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 interface ErrorBoundaryState {

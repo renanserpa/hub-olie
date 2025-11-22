@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { login } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Wifi, AlertTriangle, CheckCircle, Database } from 'lucide-react';
+import { Loader2, Mail, Lock, Wifi, Database } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { supabase } from '../lib/supabaseClient';
 import BootstrapModal from './BootstrapModal';
