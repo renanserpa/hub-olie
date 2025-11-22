@@ -47,10 +47,10 @@ export const useApp = () => {
 
 const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Inicia carregando
   const [error, setError] = useState<string | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [isAIEnabled] = useState(false); 
+  const [isAIEnabled, setIsAIEnabled] = useState(false); 
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
   const hasRedirected = useRef(false);
@@ -81,15 +81,14 @@ const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     let isMounted = true;
     console.log("[AppContext] 🚀 Inicializando Auth...");
 
-    // TIMEOUT DE SEGURANÇA (1500ms)
-    // Se o Supabase não responder em 1.5s, liberamos a UI para o Login.
-    // Isso evita a tela branca infinita.
+    // TIMEOUT DE SEGURANÇA AUMENTADO (3000ms)
+    // Garante que a tela de login apareça mesmo se o Supabase demorar ou falhar silenciosamente.
     const safetyTimeout = setTimeout(() => {
         if (isMounted && isLoading) {
-            console.warn("[AppContext] ⚠️ Timeout de segurança. Liberando UI.");
+            console.warn("[AppContext] ⚠️ Timeout de segurança atingido. Forçando fim do carregamento.");
             setIsLoading(false);
         }
-    }, 1500);
+    }, 3000);
 
     const initAuth = async () => {
       try {

@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Core, Contexts & Layout
+// Core
 import { useApp } from './contexts/AppContext';
 import { MainLayout } from './components/Layout/MainLayout';
 import { ProtectedRoute } from './components/Navigation/ProtectedRoute';
@@ -10,7 +10,7 @@ import Toaster from './components/Toaster';
 import LoginPage from './components/LoginPage';
 import { Spinner } from './components/ui/Spinner';
 
-// Pages (Modules)
+// Module Pages
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -22,17 +22,18 @@ import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
 import OrdersPage from './pages/OrdersPage';
 import InventoryPage from './pages/InventoryPage';
-import ProductionPage from './components/ProductionPage'; // Wrapper is still in components/ProductionPage.tsx but points to module
+import ProductionPage from './pages/ProductionPage'; // Now importing from pages
 import LogisticsPage from './pages/LogisticsPage';
 import ContactsPage from './pages/ContactsPage';
 import OmnichannelPage from './pages/OmnichannelPage';
-
 
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
 
     useEffect(() => {
-        console.log("[Router] Estado atual:", { isLoading, user: user?.email });
+        if (!isLoading) {
+            console.log("[App] Ready. User:", user?.email || "Guest");
+        }
     }, [user, isLoading]);
 
     if (isLoading) {
@@ -70,10 +71,13 @@ const AppContent: React.FC = () => {
                     
                     <Route path="settings" element={<SettingsPage />} /> 
                     <Route path="system-config" element={<SettingsPage />} />
+                    
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            
             <Toaster />
         </BrowserRouter>
     );
