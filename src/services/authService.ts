@@ -6,7 +6,7 @@ import { UserProfile } from '../types';
 const mapUserToProfile = (user: any, profileData?: any): UserProfile | null => {
     if (!user) return null;
     // Fallback seguro para role se o perfil não carregar
-    const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'Vendas';
+    const role = profileData?.role || user.user_metadata?.role || user.app_metadata?.role || 'AdminGeral'; // Fallback para AdminGeral para permitir setup
     return {
         id: user.id,
         email: user.email!,
@@ -29,7 +29,7 @@ export const login = async (email: string, password: string): Promise<UserProfil
       const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).maybeSingle();
       profile = p;
   } catch (e) {
-      console.warn("[Auth] Aviso: Não foi possível carregar perfil extendido.");
+      console.warn("[Auth] Aviso: Não foi possível carregar perfil. Usando fallback.");
   }
   
   return mapUserToProfile(data.user, profile) as UserProfile;
@@ -64,7 +64,7 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
              const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
              profile = data;
         } catch(e) {
-            console.warn("Erro ao buscar perfil inicial.");
+            console.warn("Erro ao buscar perfil inicial. Usando fallback.");
         }
         
         return mapUserToProfile(user, profile);
