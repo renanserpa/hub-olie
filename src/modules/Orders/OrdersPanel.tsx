@@ -31,8 +31,9 @@ const OrdersPanel: React.FC = () => {
         isCreateDialogOpen,
         setIsCreateDialogOpen,
         updateOrderStatus,
+        createOrder, // Function added
         addItemToOrder,
-        refresh,
+        refresh, // Still useful for manual refreshes if needed, though realtime covers most
         kpis,
         isLoadingDetails,
     } = useOrders();
@@ -119,7 +120,7 @@ const OrdersPanel: React.FC = () => {
             <OrderDialog
                 isOpen={isCreateDialogOpen}
                 onClose={() => setIsCreateDialogOpen(false)}
-                onSave={refresh}
+                onSave={createOrder} // Pass the logic function
                 contacts={allContacts}
                 products={allProducts}
             />

@@ -22,12 +22,11 @@ import FinancePage from './pages/FinancePage';
 import InitializerPage from './hub-initializer/pages/InitializerPage';
 import OrdersPage from './pages/OrdersPage';
 import InventoryPage from './pages/InventoryPage';
+import ProductionPage from './components/ProductionPage'; // Wrapper is still in components/ProductionPage.tsx but points to module
+import LogisticsPage from './pages/LogisticsPage';
+import ContactsPage from './pages/ContactsPage';
+import OmnichannelPage from './pages/OmnichannelPage';
 
-// Components acting as Pages (Legacy)
-import ProductionPage from './components/ProductionPage';
-import LogisticsPage from './components/LogisticsPage';
-import OmnichannelPage from './components/OmnichannelPage';
-import ContactsPage from './components/ContactsPage';
 
 const AppContent: React.FC = () => {
     const { user, isLoading } = useApp();
