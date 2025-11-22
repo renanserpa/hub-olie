@@ -1,128 +1,142 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { login } from '../services/authService';
-import { supabase } from '../lib/supabaseClient';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
 import BootstrapModal from './BootstrapModal';
-
-// Estilos simples para garantir renderização sem dependências de bibliotecas de UI
-const styles = {
-    container: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'system-ui, sans-serif' },
-    card: { width: '100%', maxWidth: '400px', backgroundColor: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
-    title: { fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#111827', textAlign: 'center' as const },
-    subtitle: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem', textAlign: 'center' as const },
-    inputGroup: { marginBottom: '1rem' },
-    label: { display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' },
-    input: { width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '1rem' },
-    button: { width: '100%', padding: '0.75rem', backgroundColor: '#D2A66D', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer' },
-    secondaryButton: { width: '100%', padding: '0.75rem', backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #e5e7eb', borderRadius: '6px', marginTop: '1rem', cursor: 'pointer', fontSize: '0.875rem' },
-    statusBox: { padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', fontWeight: '500' },
-    statusSuccess: { backgroundColor: '#d1fae5', color: '#065f46' },
-    statusError: { backgroundColor: '#fee2e2', color: '#991b1b' },
-    statusInfo: { backgroundColor: '#e0f2fe', color: '#075985' },
-};
+import { Loader2, AlertTriangle, Database, Lock, Mail } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+import { toast } from '../hooks/use-toast';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('adm@adm.com');
   const [password, setPassword] = useState('111111');
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<{msg: string, type: 'info' | 'success' | 'error'}>({ msg: 'Verificando conexão...', type: 'info' });
   const [isBootstrapOpen, setIsBootstrapOpen] = useState(false);
-
-  useEffect(() => {
-      // Teste de conexão imediato ao montar
-      const testConnection = async () => {
-          try {
-              const { data, error } = await supabase.from('system_config').select('count', { count: 'exact', head: true });
-              
-              if (error) {
-                  if (error.code === '42P01') { // Tabela não existe
-                      setStatus({ msg: 'Banco de dados não configurado. Execute o script SQL.', type: 'error' });
-                      setIsBootstrapOpen(true);
-                  } else {
-                      setStatus({ msg: `Erro de conexão: ${error.message}`, type: 'error' });
-                  }
-              } else {
-                  setStatus({ msg: 'Conectado ao Supabase.', type: 'success' });
-              }
-          } catch (e: any) {
-              setStatus({ msg: `Erro crítico: ${e.message}`, type: 'error' });
-          }
-      };
-      testConnection();
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setStatus({ msg: 'Autenticando...', type: 'info' });
+    
+    if (!isSupabaseConfigured) {
+        toast({ title: "Erro de Configuração", description: "Cliente Supabase não inicializado.", variant: "destructive" });
+        return;
+    }
 
+    setIsLoading(true);
     try {
-      await login(email, password);
-      setStatus({ msg: 'Login realizado! Redirecionando...', type: 'success' });
-      // Pequeno delay para o usuário ver a mensagem
-      setTimeout(() => {
-          window.location.href = '/';
-      }, 500);
-    } catch (err: any) {
-      console.error(err);
-      setStatus({ msg: err.message || 'Falha no login.', type: 'error' });
+      const result = await login(email, password);
       
-      // Se o erro sugerir falta de tabelas, oferece o bootstrap
-      if (err.message?.includes('relation') || err.message?.includes('not exist') || err.message?.includes('profiles')) {
-          setIsBootstrapOpen(true);
+      if (result.ok) {
+          toast({ title: "Sucesso", description: "Autenticado com sucesso. Redirecionando..." });
+          // O redirecionamento é tratado pelo AppContext ao detectar o usuário
+      } else {
+          toast({ title: "Falha no Login", description: result.error, variant: "destructive" });
+          
+          // Se o erro sugerir problemas de estrutura (ex: perfil não criado), sugerimos o bootstrap
+          if (result.error?.includes('perfil') || result.error?.includes('relation')) {
+              setIsBootstrapOpen(true);
+          }
       }
+    } catch (err) {
+        toast({ title: "Erro Inesperado", description: "Consulte o console.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 🔴 ESTADO DE ERRO: Variáveis de Ambiente Ausentes
+  if (!isSupabaseConfigured) {
+      return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 font-sans">
+              <Card className="w-full max-w-md border-red-200 bg-red-50 dark:bg-red-900/10">
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400 text-xl">
+                          <AlertTriangle className="h-6 w-6" />
+                          Configuração Necessária
+                      </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-red-800 dark:text-red-200">
+                      <p className="text-sm font-medium">
+                          As variáveis de ambiente do Supabase não foram detectadas. O sistema não pode conectar ao banco de dados.
+                      </p>
+                      <div className="bg-white dark:bg-black/20 p-4 rounded border border-red-200 dark:border-red-800 text-xs font-mono break-all">
+                          VITE_SUPABASE_URL<br/>
+                          VITE_SUPABASE_ANON_KEY
+                      </div>
+                      <p className="text-xs">
+                          Configure estas variáveis no seu arquivo <code>.env.local</code> (desenvolvimento) ou nas configurações do projeto na Vercel (produção).
+                      </p>
+                      <div className="pt-2">
+                        <Button onClick={() => window.location.reload()} variant="outline" className="w-full bg-white dark:bg-transparent border-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-900 dark:text-red-100">
+                            Recarregar Página
+                        </Button>
+                      </div>
+                  </CardContent>
+              </Card>
+          </div>
+      )
+  }
+
+  // 🟢 ESTADO NORMAL: Formulário de Login
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Olie Hub Ops</h1>
-        <p style={styles.subtitle}>Modo de Acesso Seguro (v31)</p>
-
-        <div style={{
-            ...styles.statusBox,
-            ...(status.type === 'success' ? styles.statusSuccess : status.type === 'error' ? styles.statusError : styles.statusInfo)
-        }}>
-            {status.msg}
-        </div>
-
-        <form onSubmit={handleLogin}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Email</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                style={styles.input}
-                required
-              />
+    <div className="flex items-center justify-center min-h-screen bg-secondary dark:bg-dark-background p-4 font-sans">
+      <Card className="w-full max-w-md shadow-2xl border-border/50">
+        <CardHeader className="text-center pb-6 pt-8">
+            <div className="h-14 w-14 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-bold text-2xl mb-4 border border-primary/20">
+                OH
             </div>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Senha</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                style={styles.input}
-                required
-              />
-            </div>
-            <button type="submit" disabled={isLoading} style={{...styles.button, opacity: isLoading ? 0.7 : 1}}>
-              {isLoading ? 'Processando...' : 'Entrar'}
-            </button>
-        </form>
+            <CardTitle className="text-2xl font-bold">Olie Hub Ops</CardTitle>
+            <p className="text-sm text-textSecondary">Acesso Administrativo</p>
+        </CardHeader>
+        
+        <CardContent className="px-8 pb-8">
+            <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-1">
+                    <label className="block text-xs font-medium text-textSecondary uppercase tracking-wider">Email</label>
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-textSecondary" />
+                        <input 
+                            type="email" 
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm"
+                            placeholder="seu@email.com"
+                            required
+                        />
+                    </div>
+                </div>
+                <div className="space-y-1">
+                    <label className="block text-xs font-medium text-textSecondary uppercase tracking-wider">Senha</label>
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-textSecondary" />
+                        <input 
+                            type="password" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm"
+                            placeholder="••••••"
+                            required
+                        />
+                    </div>
+                </div>
 
-        <button 
-            type="button" 
-            onClick={() => setIsBootstrapOpen(true)} 
-            style={styles.secondaryButton}
-        >
-            🛠️ Configurar Banco de Dados (SQL)
-        </button>
-      </div>
+                <Button type="submit" className="w-full h-10 text-base font-medium shadow-md" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : 'Entrar no Sistema'}
+                </Button>
+            </form>
+
+            <div className="mt-8 pt-6 border-t border-border flex justify-center">
+                 <Button 
+                    variant="ghost" 
+                    onClick={() => setIsBootstrapOpen(true)} 
+                    className="text-xs gap-2 text-textSecondary hover:text-primary"
+                    size="sm"
+                >
+                    <Database size={14}/> 
+                    Ferramentas de Banco de Dados (SQL)
+                </Button>
+            </div>
+        </CardContent>
+      </Card>
 
       <BootstrapModal isOpen={isBootstrapOpen} onClose={() => setIsBootstrapOpen(false)} />
     </div>

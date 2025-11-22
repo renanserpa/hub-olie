@@ -1,23 +1,30 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-import { createClient } from '@supabase/supabase-js';
+// Leitura das variáveis de ambiente injetadas pelo Vite
+// Casting para 'any' para evitar erros de tipagem se os tipos do Vite não estiverem no escopo global
+const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-// --- CONFIGURAÇÃO DE RESGATE (HARDCODED) ---
-// Eliminamos qualquer dependência de variáveis de ambiente para garantir a conexão.
-const PROJECT_URL = "https://ijheukynkppcswgtrnwd.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqaGV1a3lua3BwY3N3Z3RybndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDM3OTEsImV4cCI6MjA3ODAxOTc5MX0.6t0sHi76ORNE_aEaanLYoPNuIGGkyKaCNooYBjDBMM4";
+// Verifica se as credenciais existem e não são strings vazias
+export const isSupabaseConfigured = Boolean(
+  SUPABASE_URL && 
+  SUPABASE_ANON_KEY && 
+  SUPABASE_URL.length > 0 && 
+  SUPABASE_ANON_KEY.length > 0
+);
 
-console.log("🔌 [Supabase] Inicializando cliente em modo RESGATE (v31)...");
-
-export const supabase = createClient(PROJECT_URL, ANON_KEY, {
-    auth: {
-        // CRÍTICO: Alteramos a chave para invalidar qualquer cache corrompido no navegador
-        storageKey: 'olie_hub_auth_v31_rescue',
+// Inicializa o cliente apenas se a configuração estiver válida.
+// Caso contrário, exporta null para que os serviços possam tratar o erro graciosamente.
+export const supabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+      auth: {
+        storageKey: 'oliehub-auth-prod-v1', // Chave única para evitar conflitos de sessão
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: false, // Desativado para evitar loops de redirecionamento
-    },
-    // Aumenta o timeout para conexões lentas
-    global: {
+        detectSessionInUrl: true,
+      },
+      global: {
         headers: { 'x-application-name': 'olie-hub-ops' },
-    },
-});
+      },
+    })
+  : null;
