@@ -1,5 +1,0 @@
-{
-  "name": "Olie Hub Ops Platform",
-  "description": "The settings module for the Olie Hub Ops Platform. Manage integrations, catalogs, materials, statuses, and global configurations for the Ateliê Olie production workflow.",
-  "requestFramePermissions": []
-}
