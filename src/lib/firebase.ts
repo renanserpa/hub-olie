@@ -1,1 +1,0 @@
-// DELETED - Use src/lib/supabaseClient.ts

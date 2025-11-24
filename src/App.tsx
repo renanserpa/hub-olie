@@ -1,90 +1,55 @@
-
-import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
-// Core
+import React from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AppTour } from './components/AppTour';
 import { useApp } from './contexts/AppContext';
-import { MainLayout } from './components/Layout/MainLayout';
-import { ProtectedRoute } from './components/Navigation/ProtectedRoute';
-import Toaster from './components/Toaster';
-import LoginPage from './components/LoginPage';
-import { Spinner } from './components/ui/Spinner';
-
-// Module Pages
-import DashboardPage from './pages/DashboardPage';
-import ProductsPage from './pages/ProductsPage';
-import SettingsPage from './pages/SettingsPage';
-import MarketingPage from './pages/MarketingPage';
-import PurchasesPage from './pages/PurchasesPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
-import FinancePage from './pages/FinancePage';
-import InitializerPage from './hub-initializer/pages/InitializerPage';
-import OrdersPage from './pages/OrdersPage';
-import InventoryPage from './pages/InventoryPage';
-import ProductionPage from './pages/ProductionPage';
-import LogisticsPage from './pages/LogisticsPage';
-import ContactsPage from './pages/ContactsPage';
-import OmnichannelPage from './pages/OmnichannelPage';
-
-const AppContent: React.FC = () => {
-    const { user, isLoading } = useApp();
-
-    useEffect(() => {
-        if (!isLoading) {
-            console.log("[App] Ready. User:", user?.email || "Guest");
-        }
-    }, [user, isLoading]);
-
-    if (isLoading) {
-        return <Spinner />;
-    }
-
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
-
-                <Route path="/" element={
-                    <ProtectedRoute>
-                        <MainLayout />
-                    </ProtectedRoute>
-                }>
-                    <Route index element={<DashboardPage />} />
-                    <Route path="dashboard" element={<Navigate to="/" replace />} />
-                    
-                    <Route path="orders" element={<OrdersPage />} />
-                    <Route path="production" element={<ProductionPage />} />
-                    <Route path="inventory" element={<InventoryPage />} />
-                    <Route path="purchases" element={<PurchasesPage />} />
-                    <Route path="logistics" element={<LogisticsPage />} />
-                    <Route path="finance" element={<FinancePage />} />
-                    <Route path="marketing" element={<MarketingPage />} />
-                    <Route path="contacts" element={<ContactsPage />} />
-                    <Route path="products" element={<ProductsPage />} />
-                    
-                    <Route path="omnichannel" element={user ? <OmnichannelPage user={user} /> : null} />
-                    
-                    <Route path="analytics" element={<AnalyticsPage />} />
-                    <Route path="executive" element={<ExecutiveDashboardPage />} />
-                    <Route path="initializer" element={<InitializerPage />} />
-                    
-                    <Route path="settings" element={<SettingsPage />} /> 
-                    <Route path="system-config" element={<SettingsPage />} />
-                    
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-                
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            
-            <Toaster />
-        </BrowserRouter>
-    );
-};
+import LoginPage from './modules/auth/LoginPage';
+import OrganizationSelectPage from './modules/organizations/OrganizationSelectPage';
+import DashboardPage from './modules/dashboard/DashboardPage';
+import OrdersListPage from './modules/orders/pages/OrdersListPage';
+import OrderDetailPage from './modules/orders/pages/OrderDetailPage';
+import OrderFormPage from './modules/orders/pages/OrderFormPage';
+import CustomersListPage from './modules/crm/pages/CustomersListPage';
+import CustomerFormPage from './modules/crm/pages/CustomerFormPage';
+import ProductionOrdersListPage from './modules/production/pages/ProductionOrdersListPage';
+import ProductionOrderDetailPage from './modules/production/pages/ProductionOrderDetailPage';
+import InventoryPage from './modules/inventory/InventoryPage';
+import LogisticsPage from './modules/logistics/LogisticsPage';
+import FinancePage from './modules/finance/FinancePage';
+import SettingsPage from './modules/settings/SettingsPage';
 
 const App: React.FC = () => {
-    return <AppContent />;
+  const { user, organization, tourSeen, completeTour } = useApp();
+
+  return (
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/organizations" element={<OrganizationSelectPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="orders" element={<OrdersListPage />} />
+            <Route path="orders/new" element={<OrderFormPage />} />
+            <Route path="orders/:id" element={<OrderDetailPage />} />
+            <Route path="crm/customers" element={<CustomersListPage />} />
+            <Route path="crm/customers/new" element={<CustomerFormPage />} />
+            <Route path="crm/customers/:id" element={<CustomerFormPage />} />
+            <Route path="production" element={<ProductionOrdersListPage />} />
+            <Route path="production/:id" element={<ProductionOrderDetailPage />} />
+            <Route path="inventory" element={<InventoryPage />} />
+            <Route path="logistics" element={<LogisticsPage />} />
+            <Route path="finance" element={<FinancePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to={user ? (organization ? '/' : '/organizations') : '/login'} replace />} />
+      </Routes>
+      <AppTour open={!!user && !tourSeen} onClose={completeTour} />
+    </>
+  );
 };
 
 export default App;
