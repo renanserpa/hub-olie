@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react';
 import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { Order } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
@@ -8,6 +9,26 @@ export const useOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!organization) {
+        setData([]);
+        return;
+      }
+      if (isMockMode) {
+        const { data: mockData, error: mockError } = await fetchMockTable<Order>('orders', organization.id);
+        if (mockError) throw mockError;
+        setData(mockData || []);
+      } else {
+        const { data: orders, error: queryError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('organization_id', organization.id)
+          .order('created_at', { ascending: false });
+        if (queryError) throw queryError;
+        setData(orders || []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos');

@@ -4,6 +4,9 @@ import { Button } from '../../../components/shared/Button';
 import { useOrders } from '../hooks/useOrders';
 import { ErrorState } from '../../../components/shared/FeedbackStates';
 import { useToast } from '../../../contexts/ToastContext';
+import { Table, TableSkeleton } from '../../../components/shared/Table';
+import { ORDER_STATUS_META, OrderStatus } from '../../../constants/orders';
+import { formatCurrency, formatDate } from '../../../lib/utils/format';
 
 const OrdersListPage: React.FC = () => {
   const { data, loading, error, refetch } = useOrders();
@@ -23,13 +26,20 @@ const OrdersListPage: React.FC = () => {
           <h1 id="orders-heading" className="text-2xl font-semibold">
             Lista de pedidos
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Acompanhe os pedidos do ateliê e avance para os detalhes com um clique.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Acompanhe os pedidos do ateliê e avance para os detalhes com um clique.
+          </p>
         </div>
         <Link to="/orders/new">
           <Button>Novo pedido</Button>
         </Link>
       </div>
 
+      {loading ? (
+        <TableSkeleton rows={4} columns={5} />
+      ) : error ? (
+        <ErrorState description={error} onAction={refetch} />
+      ) : (
         <Table
           data={data}
           columns={[

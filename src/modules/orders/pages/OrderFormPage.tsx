@@ -4,6 +4,9 @@ import { Button } from '../../../components/shared/Button';
 import { useUpsertOrder } from '../hooks/useUpsertOrder';
 import { useOrder } from '../hooks/useOrder';
 import { useApp } from '../../../contexts/AppContext';
+import { OrderStatus } from '../../../constants/orders';
+import { useToast } from '../../../contexts/ToastContext';
+import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
@@ -17,7 +20,7 @@ const OrderFormPage: React.FC = () => {
   const { showToast } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (data) {
       setCustomerName(data.customer_name);
       setTotal(data.total);
@@ -64,7 +67,9 @@ const OrderFormPage: React.FC = () => {
           <h1 id="order-form-heading" className="text-2xl font-semibold">
             {id ? 'Editar pedido' : 'Novo pedido'}
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Preencha os dados do cliente e o status para controlar o fluxo de produção.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Preencha os dados do cliente e o status para controlar o fluxo de produção.
+          </p>
         </div>
       </div>
 
@@ -113,6 +118,12 @@ const OrderFormPage: React.FC = () => {
             </select>
           </div>
         </div>
+
+        {formError && <p className="text-sm text-red-600">{formError}</p>}
+        {error && !formError && <p className="text-sm text-red-600">{error}</p>}
+
+        <Button type="submit" disabled={loading} className="w-full md:w-auto">
+          {loading ? 'Salvando...' : id ? 'Salvar alterações' : 'Criar pedido'}
         </Button>
       </form>
     </main>
