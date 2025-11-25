@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
 import { useToast } from '../../contexts/ToastContext';
+import { devLog } from '../../lib/utils/log';
 
 const LoginPage: React.FC = () => {
   const { login, user, organization, loading } = useApp();
@@ -10,6 +11,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const mountedRef = useRef(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -19,12 +21,13 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const result = await login(email, password);
+
       showToast('Login realizado com sucesso', 'success');
       navigate(result?.requiresOrganizationSelection || !organization ? '/select-org' : '/', { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       setError(message);
+
       showToast('Não foi possível entrar', 'error', message);
     } finally {
       setSubmitting(false);
@@ -32,7 +35,7 @@ const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!loading && user) {
+
       navigate(organization ? '/' : '/select-org', { replace: true });
     }
   }, [loading, user, organization, navigate]);
