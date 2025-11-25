@@ -67,6 +67,21 @@ export const mockProductionOrders: ProductionOrder[] = [
     status: 'planned',
     planned_start: new Date().toISOString(),
   },
+  {
+    id: 'prod-003',
+    organization_id: organizationId,
+    reference: 'OP-2024-003',
+    status: 'blocked',
+    planned_start: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'prod-004',
+    organization_id: organizationId,
+    reference: 'OP-2024-004',
+    status: 'completed',
+    planned_start: new Date(Date.now() - 172800000).toISOString(),
+    planned_end: new Date(Date.now() - 86400000).toISOString(),
+  },
 ];
 
 export const mockInventoryItems: InventoryItem[] = [

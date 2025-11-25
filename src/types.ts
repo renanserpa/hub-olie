@@ -43,6 +43,8 @@ export interface ProductionOrder {
   organization_id: UUID;
   reference: string;
   status: 'planned' | 'in_progress' | 'completed' | 'blocked';
+  priority?: string;
+  order_id?: UUID;
   planned_start: string;
   planned_end?: string;
 }

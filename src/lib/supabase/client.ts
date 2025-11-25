@@ -92,4 +92,14 @@ export const createMockProductionOrder = async (order: ProductionOrder): Promise
   return { data: [order], error: null };
 };
 
+export const updateMockProductionOrderStatus = async (
+  id: string,
+  status: ProductionOrder['status']
+): Promise<MockResponse<ProductionOrder>> => {
+  const idx = mockProductionOrders.findIndex((item) => item.id === id);
+  if (idx === -1) return { data: null, error: new Error('Ordem de produção não encontrada') };
+  mockProductionOrders[idx] = { ...mockProductionOrders[idx], status };
+  return { data: [mockProductionOrders[idx]], error: null };
+};
+
 export const mockOrganizationId = defaultOrganizationId;
