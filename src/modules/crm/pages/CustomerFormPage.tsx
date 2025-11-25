@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
@@ -23,6 +23,11 @@ const CustomerFormPage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (customer) {
@@ -38,6 +43,33 @@ const CustomerFormPage: React.FC = () => {
     }
   }, [customersError, showToast]);
 
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setEmailError(null);
+      return true;
+    }
+    if (!isValidEmail(value)) {
+      setEmailError('Informe um e-mail válido.');
+      return false;
+    }
+    setEmailError(null);
+    return true;
+  };
+
+  const validatePhone = (value: string) => {
+    const digits = normalizePhoneDigits(value);
+    if (!digits) {
+      setPhoneError(null);
+      return true;
+    }
+    if (digits.length < 10) {
+      setPhoneError('Informe um telefone válido com DDD.');
+      return false;
+    }
+    setPhoneError(null);
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organization) {
@@ -52,9 +84,9 @@ const CustomerFormPage: React.FC = () => {
       const payload: Customer = {
         id: id || crypto.randomUUID(),
         organization_id: organization.id,
-        name,
-        email,
-        phone,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         created_at: customer?.created_at || new Date().toISOString(),
       };
 
@@ -116,12 +148,18 @@ const CustomerFormPage: React.FC = () => {
             </label>
             <input
               id="customer-email"
-              type="email"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="contato@email.com"
             />
+            {emailError ? (
+              <p
+                id="customer-email-error"
+                className="mt-1 text-sm text-red-500"
+                role="alert"
+                aria-live="assertive"
+              >
+                {emailError}
+              </p>
+            ) : null}
           </div>
           <div>
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200" htmlFor="customer-phone">
@@ -129,11 +167,18 @@ const CustomerFormPage: React.FC = () => {
             </label>
             <input
               id="customer-phone"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
               placeholder="(11) 99999-9999"
             />
+            {phoneError ? (
+              <p
+                id="customer-phone-error"
+                className="mt-1 text-sm text-red-500"
+                role="alert"
+                aria-live="assertive"
+              >
+                {phoneError}
+              </p>
+            ) : null}
           </div>
         </div>
         {formError ? (

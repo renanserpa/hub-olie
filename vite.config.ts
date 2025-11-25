@@ -8,12 +8,4 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  optimizeDeps: {
-    exclude: ['react-router-dom'],
-  },
-  build: {
-    rollupOptions: {
-      external: ['react-router-dom'],
-    },
-  },
 });
