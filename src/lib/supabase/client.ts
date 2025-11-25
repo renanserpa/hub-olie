@@ -12,9 +12,6 @@ import { Customer, InventoryItem, InventoryMovement, Order, OrderItem, Productio
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const forceMockMode = import.meta.env.VITE_SUPABASE_MOCK === 'true';
-
-export const isMockMode = forceMockMode || !supabaseUrl || !supabaseAnonKey;
 
 export const supabase: SupabaseClient = createClient(
   supabaseUrl || 'https://mock.supabase.local',

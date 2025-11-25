@@ -5,7 +5,7 @@ import { useApp } from '../../contexts/AppContext';
 import { Organization } from '../../types';
 
 const OrganizationSelectPage: React.FC = () => {
-  const { organizations, selectOrganization, user, loading } = useApp();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,16 +14,6 @@ const OrganizationSelectPage: React.FC = () => {
       navigate('/', { replace: true });
     }
   }, [organizations, navigate, selectOrganization]);
-
-  if (loading) {
-    return (
-      <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm text-slate-500">Carregando organizações...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!user) {
     return <Navigate to="/login" replace />;

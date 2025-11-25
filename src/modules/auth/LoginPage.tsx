@@ -11,22 +11,6 @@ const LoginPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user && organization) {
-      navigate('/', { replace: true });
-    }
-  }, [organization, user, navigate]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    const result = await login(email, password);
-    setSubmitting(false);
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
     navigate(result.requiresOrganizationSelection ? '/select-org' : '/', { replace: true });
   };
 
