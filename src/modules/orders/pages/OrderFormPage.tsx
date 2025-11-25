@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { useUpsertOrder } from '../hooks/useUpsertOrder';
-import { useOrder } from '../hooks/useOrder';
+import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 import { useApp } from '../../../contexts/AppContext';
+import { useToast } from '../../../contexts/ToastContext';
+import { Order } from '../../../types';
+import { useOrder } from '../hooks/useOrder';
+import { useUpsertOrder } from '../hooks/useUpsertOrder';
+
+type OrderStatus = Order['status'];
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
@@ -17,7 +22,7 @@ const OrderFormPage: React.FC = () => {
   const { showToast } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (data) {
       setCustomerName(data.customer_name);
       setTotal(data.total);
@@ -29,6 +34,7 @@ const OrderFormPage: React.FC = () => {
     event.preventDefault();
     if (!organization) return;
     setFormError(null);
+
     try {
       await upsert({
         id: id || crypto.randomUUID(),
@@ -64,7 +70,9 @@ const OrderFormPage: React.FC = () => {
           <h1 id="order-form-heading" className="text-2xl font-semibold">
             {id ? 'Editar pedido' : 'Novo pedido'}
           </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Preencha os dados do cliente e o status para controlar o fluxo de produção.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            Preencha os dados do cliente e o status para controlar o fluxo de produção.
+          </p>
         </div>
       </div>
 
@@ -113,7 +121,18 @@ const OrderFormPage: React.FC = () => {
             </select>
           </div>
         </div>
-        </Button>
+
+        {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+        <div className="flex gap-3">
+          <Button type="button" variant="secondary" onClick={() => navigate('/orders')}>
+            Cancelar
+          </Button>
+          <Button type="submit" loading={loading}>
+            {id ? 'Salvar alterações' : 'Criar pedido'}
+          </Button>
+        </div>
       </form>
     </main>
   );
