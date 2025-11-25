@@ -1,18 +1,33 @@
-import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Skeleton } from '../../../components/shared/Skeleton';
-import { ORDER_STATUS_META } from '../../../constants';
-import { formatCurrency, formatDate } from '../../../lib/utils/format';
 import { useOrder } from '../hooks/useOrder';
+import { EmptyState, ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams();
-  const { data, loading, error } = useOrder(id);
+  const { data, loading, error, refetch } = useOrder(id);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
 
-  if (loading) return <Skeleton className="h-32 w-full" />;
-  if (error) return <p className="text-sm text-red-500">{error}</p>;
-  if (!data) return <p className="text-sm">Pedido não encontrado.</p>;
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar pedido', 'error', error);
+    }
+  }, [error, showToast]);
+
+  if (loading) return <LoadingState message="Carregando pedido..." />;
+  if (error) return <ErrorState description={error} onAction={refetch} />;
+  if (!data)
+    return (
+      <EmptyState
+        title="Pedido não encontrado"
+        description="Verifique se o link está correto ou volte para a lista de pedidos."
+        actionLabel="Voltar para pedidos"
+        onAction={() => navigate('/orders')}
+      />
+    );
 
   return (
     <div className="space-y-4">

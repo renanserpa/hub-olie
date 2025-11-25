@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
+import { useToast } from '../../contexts/ToastContext';
 
 const LoginPage: React.FC = () => {
   const { login, user, organization, loading } = useApp();
@@ -10,6 +11,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
     navigate(result.requiresOrganizationSelection ? '/select-org' : '/', { replace: true });
   };
@@ -44,7 +46,6 @@ const LoginPage: React.FC = () => {
             />
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={submitting || loading}>
             {submitting || loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>

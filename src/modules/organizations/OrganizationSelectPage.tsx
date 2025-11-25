@@ -3,10 +3,23 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
 import { Organization } from '../../types';
-
-const OrganizationSelectPage: React.FC = () => {
-
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (organizations.length === 1) {
+      selectOrganization(organizations[0]);
+      navigate('/', { replace: true });
+    }
+  }, [organizations, navigate, selectOrganization]);
+
+  if (loading) {
+    return <LoadingState message="Carregando organizações..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   useEffect(() => {
     if (organizations.length === 1) {
@@ -21,6 +34,7 @@ const OrganizationSelectPage: React.FC = () => {
 
   const handleSelect = (org: Organization) => {
     selectOrganization(org);
+    showToast('Organização selecionada', 'success');
     navigate('/', { replace: true });
   };
 
@@ -45,9 +59,6 @@ const OrganizationSelectPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-            Nenhuma organização atribuída a este usuário. Solicite acesso ao administrador.
-          </p>
         )}
       </div>
     </div>

@@ -1,14 +1,21 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+
 import { Button } from '../../components/shared/Button';
 import { ErrorState } from '../../components/shared/ErrorState';
 import { Skeleton } from '../../components/shared/Skeleton';
+
 import { ORDER_STATUS_FILTERS, ORDER_STATUS_META, OrderStatus } from '../../constants';
 import { formatCurrency, formatDate } from '../../lib/utils/format';
+
 import { useOrders } from '../orders/hooks/useOrders';
 import { useProductionOrders } from '../production/hooks/useProductionOrders';
 import { Order } from '../../types';
 
+
+// -----------------------------
+// Types
+// -----------------------------
 type PeriodFilter = '7d' | '30d' | 'all';
 
 const PERIOD_FILTERS: { key: PeriodFilter; label: string }[] = [
@@ -17,7 +24,15 @@ const PERIOD_FILTERS: { key: PeriodFilter; label: string }[] = [
   { key: 'all', label: 'Todo o período' },
 ];
 
-const DashboardCard: React.FC<{ title: string; value: string; helper?: string }> = ({ title, value, helper }) => (
+
+// -----------------------------
+// Small Reusable Components
+// -----------------------------
+const DashboardCard: React.FC<{ title: string; value: string; helper?: string }> = ({
+  title,
+  value,
+  helper,
+}) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
     <h3 className="mt-2 text-2xl font-semibold">{value}</h3>
@@ -36,6 +51,10 @@ const StatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
   );
 };
 
+
+// -----------------------------
+// Dashboard Page Component
+// -----------------------------
 const DashboardPage: React.FC = () => {
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useOrders();
   const { data: productionData, loading: productionLoading, error: productionError } = useProductionOrders();
@@ -46,31 +65,50 @@ const DashboardPage: React.FC = () => {
   const isLoading = ordersLoading || productionLoading;
   const errorMessage = ordersError || productionError;
 
-  const matchesPeriod = (order: Order, filter: PeriodFilter): boolean => {
+
+  // -----------------------------
+  // Filtering Logic
+  // -----------------------------
+  const matchesPeriod = (order: Order, filter: PeriodFilter) => {
     if (filter === 'all') return true;
+
     const createdAt = new Date(order.created_at);
     if (Number.isNaN(createdAt.getTime())) return false;
+
     const now = new Date();
     const days = filter === '7d' ? 7 : 30;
+
     const threshold = new Date(now);
     threshold.setDate(now.getDate() - days);
+
     return createdAt >= threshold;
   };
 
   const filteredOrders = useMemo(() => {
     return ordersData.filter((order) => {
-      const periodMatches = matchesPeriod(order, periodFilter);
-      const statusMatches = statusFilter === 'all' || order.status === statusFilter;
-      return periodMatches && statusMatches;
+      const okPeriod = matchesPeriod(order, periodFilter);
+      const okStatus = statusFilter === 'all' || order.status === statusFilter;
+      return okPeriod && okStatus;
     });
   }, [ordersData, periodFilter, statusFilter]);
 
-  const activeOrdersCount = filteredOrders.filter((order) => order.status !== 'fulfilled' && order.status !== 'cancelled').length;
-  const budgetOrdersCount = filteredOrders.filter((order) => order.status === 'draft').length;
-  const activeProductionCount = productionData.filter((prod) => prod.status !== 'completed').length;
+
+  // -----------------------------
+  // KPIs
+  // -----------------------------
+  const activeOrdersCount = filteredOrders.filter(
+    (o) => o.status !== 'fulfilled' && o.status !== 'cancelled'
+  ).length;
+
+  const budgetOrdersCount = filteredOrders.filter((o) => o.status === 'draft').length;
+
+  const activeProductionCount = productionData.filter(
+    (prod) => prod.status !== 'completed'
+  ).length;
+
   const pipelineRevenue = filteredOrders
-    .filter((order) => order.status !== 'cancelled')
-    .reduce((sum, order) => sum + (order.total || 0), 0);
+    .filter((o) => o.status !== 'cancelled')
+    .reduce((s, o) => s + (o.total || 0), 0);
 
   const overdueOrdersCount = filteredOrders.filter((order) => {
     if (!order.due_date) return false;
@@ -79,34 +117,53 @@ const DashboardPage: React.FC = () => {
     return dueDate < new Date() && order.status !== 'fulfilled' && order.status !== 'cancelled';
   }).length;
 
+
+  // Recent orders
   const latestOrders = useMemo(() => {
     return [...filteredOrders]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5);
   }, [filteredOrders]);
 
-  const handleRetry = () => {
-    window.location.reload();
-  };
 
+  // -----------------------------
+  // Error Handling
+  // -----------------------------
   if (errorMessage) {
-    return <ErrorState message={errorMessage} onRetry={handleRetry} actionLabel="Ver pedidos" actionHref="/orders" />;
+    return (
+      <ErrorState
+        message={errorMessage}
+        onRetry={() => window.location.reload()}
+        actionLabel="Ver pedidos"
+        actionHref="/orders"
+      />
+    );
   }
 
+
+  // -----------------------------
+  // Render UI
+  // -----------------------------
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-500">Visão geral</p>
           <h1 className="text-2xl font-semibold">Dashboard operacional</h1>
         </div>
+
         <Link to="/orders">
           <Button variant="secondary">Ir para pedidos</Button>
         </Link>
       </div>
 
+
+      {/* Filters */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Period */}
           <div className="flex items-center gap-2">
             <p className="text-xs uppercase tracking-wide text-slate-500">Período</p>
             <div className="flex gap-2">
@@ -122,6 +179,8 @@ const DashboardPage: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Status */}
           <div className="flex items-center gap-2">
             <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
             <div className="flex gap-2">
@@ -137,9 +196,12 @@ const DashboardPage: React.FC = () => {
               ))}
             </div>
           </div>
+
         </div>
       </div>
 
+
+      {/* KPI CARDS */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {isLoading ? (
           <>
@@ -158,7 +220,11 @@ const DashboardPage: React.FC = () => {
         )}
       </div>
 
+
+      {/* RECENT ORDERS + ALERTS */}
       <div className="grid gap-4 md:grid-cols-3">
+
+        {/* Recent Orders */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Últimos pedidos</h2>
@@ -168,6 +234,7 @@ const DashboardPage: React.FC = () => {
               </Button>
             </Link>
           </div>
+
           <div className="mt-4 space-y-3">
             {isLoading ? (
               <>
@@ -190,6 +257,7 @@ const DashboardPage: React.FC = () => {
                       {order.due_date && <span>Entrega {formatDate(order.due_date)}</span>}
                     </div>
                   </div>
+
                   <div className="text-right">
                     <p className="text-sm font-semibold">{formatCurrency(order.total)}</p>
                     <p className="text-xs text-slate-500">ID {order.id}</p>
@@ -202,8 +270,11 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
+
+        {/* Alerts */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-lg font-semibold">Alertas</h2>
+
           <div className="mt-3 space-y-3">
             {isLoading ? (
               <>
@@ -212,6 +283,7 @@ const DashboardPage: React.FC = () => {
               </>
             ) : (
               <>
+                {/* Overdue */}
                 <div className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-sm dark:border-amber-900/60 dark:bg-amber-950/40">
                   <div>
                     <p className="font-semibold text-amber-800 dark:text-amber-100">Pedidos atrasados</p>
@@ -219,6 +291,8 @@ const DashboardPage: React.FC = () => {
                   </div>
                   <span className="text-lg font-semibold text-amber-800 dark:text-amber-100">{overdueOrdersCount}</span>
                 </div>
+
+                {/* Production */}
                 <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm dark:border-blue-900/60 dark:bg-blue-950/40">
                   <div>
                     <p className="font-semibold text-blue-800 dark:text-blue-100">Ordens em produção</p>
@@ -230,7 +304,9 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
         </div>
+
       </div>
+
     </div>
   );
 };
