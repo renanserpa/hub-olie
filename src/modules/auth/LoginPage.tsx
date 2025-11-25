@@ -8,6 +8,8 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('demo@oliehub.com');
   const navigate = useNavigate();
 
+  console.log('[OlieHub] LoginPage render');
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const result = login(email);
