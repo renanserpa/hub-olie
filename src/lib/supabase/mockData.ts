@@ -26,7 +26,23 @@ export const mockOrders: Order[] = [
     customer_name: 'Cliente Beta',
     status: 'draft',
     total: 3200,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'order-003',
+    organization_id: organizationId,
+    customer_name: 'Ateliê Gama',
+    status: 'fulfilled',
+    total: 5400,
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'order-004',
+    organization_id: organizationId,
+    customer_name: 'Cliente Delta',
+    status: 'cancelled',
+    total: 1500,
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
