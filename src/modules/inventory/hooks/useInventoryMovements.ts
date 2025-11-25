@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchMockTable, isMock, supabase } from '../../../lib/supabase/client';
+import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { InventoryMovement } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
 
@@ -19,7 +19,7 @@ export const useInventoryMovements = () => {
       setLoading(true);
       setError(null);
       try {
-        if (isMock) {
+        if (isMockMode) {
           const { data, error } = await fetchMockTable<InventoryMovement>('inventory_movements', organization.id);
           if (error) throw error;
           setData(data || []);

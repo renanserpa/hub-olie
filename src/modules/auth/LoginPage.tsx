@@ -10,8 +10,8 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    login(email);
-    navigate('/', { replace: true });
+    const result = login(email);
+    navigate(result.requiresOrganizationSelection ? '/select-org' : '/', { replace: true });
   };
 
   return (

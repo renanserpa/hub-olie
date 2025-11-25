@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchMockTable, isMock, supabase } from '../../../lib/supabase/client';
+import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { Order } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
 
@@ -19,7 +19,7 @@ export const useOrder = (id?: string) => {
       setLoading(true);
       setError(null);
       try {
-        if (isMock) {
+        if (isMockMode) {
           const { data, error } = await fetchMockTable<Order>('orders', organization.id);
           if (error) throw error;
           const order = (data || []).find((o) => o.id === id) || null;

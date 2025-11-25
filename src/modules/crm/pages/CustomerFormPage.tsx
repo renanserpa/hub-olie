@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { useCustomers } from '../hooks/useCustomers';
 import { Skeleton } from '../../../components/shared/Skeleton';
-import { supabase, isMock, fetchMockTable } from '../../../lib/supabase/client';
+import { isMockMode, supabase, upsertMockCustomer } from '../../../lib/supabase/client';
 import { useApp } from '../../../contexts/AppContext';
 import { Customer } from '../../../types';
 
@@ -34,18 +34,14 @@ const CustomerFormPage: React.FC = () => {
         phone,
         created_at: customer?.created_at || new Date().toISOString(),
       };
-      if (isMock) {
-        const { data } = await fetchMockTable<Customer>('customers', organization.id);
-        if (data) {
-          const idx = data.findIndex((row) => row.id === payload.id);
-          if (idx >= 0) data[idx] = payload;
-          else data.push(payload);
-        }
+      if (isMockMode) {
+        const result = await upsertMockCustomer(payload);
+        if (result.error) throw result.error;
       } else {
         const { error } = await supabase.from('customers').upsert(payload);
         if (error) throw error;
       }
-      navigate('/crm/customers');
+      navigate('/customers');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar cliente');
     } finally {
