@@ -55,9 +55,10 @@ const ProductionOrdersListPage: React.FC = () => {
     try {
       await create({
         organization_id: organization.id,
-        reference: `OP-${Math.floor(Math.random() * 1000)}`,
+        code: `OP-${Math.floor(Math.random() * 1000)}`,
         status: 'planned',
-        planned_start: new Date().toISOString(),
+        priority: 0,
+        planned_start_date: new Date().toISOString(),
       });
       showToast('Ordem de produção criada', 'success');
       refetch();

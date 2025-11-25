@@ -27,7 +27,7 @@ export const useProductionOrders = () => {
           .from('production_orders')
           .select('*')
           .eq('organization_id', organization.id)
-          .order('planned_start', { ascending: false });
+          .order('planned_start_date', { ascending: false });
         if (error) throw error;
         setData(data || []);
       }

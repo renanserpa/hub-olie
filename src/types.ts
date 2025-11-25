@@ -41,12 +41,12 @@ export interface Customer {
 export interface ProductionOrder {
   id: UUID;
   organization_id: UUID;
-  reference: string;
+  code: string;
   status: 'planned' | 'in_progress' | 'completed' | 'blocked';
-  priority?: string;
+  priority: number;
   order_id?: UUID;
-  planned_start: string;
-  planned_end?: string;
+  planned_start_date: string;
+  planned_end_date?: string;
 }
 
 export interface InventoryItem {

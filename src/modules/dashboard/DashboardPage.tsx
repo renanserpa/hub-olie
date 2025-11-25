@@ -238,12 +238,12 @@ const DashboardPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{op.reference}</p>
+                      <p className="truncate font-medium">{op.code}</p>
                       <p className="text-xs text-slate-500">Status: {op.status}</p>
                     </div>
-                    {op.planned_end && (
+                    {op.planned_end_date && (
                       <p className="whitespace-nowrap text-xs text-slate-500">
-                        Entrega: {new Date(op.planned_end).toLocaleDateString('pt-BR')}
+                        Entrega: {new Date(op.planned_end_date).toLocaleDateString('pt-BR')}
                       </p>
                     )}
                   </div>
