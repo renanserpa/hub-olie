@@ -7,8 +7,6 @@ import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { ORDER_STATUS_FILTERS, ORDER_STATUS_META, OrderStatus } from '../../../constants/orders';
 import { formatCurrency, formatDate } from '../../../lib/utils/format';
 import { useToast } from '../../../contexts/ToastContext';
-import { useOrders } from '../hooks/useOrders';
-import { Order } from '../../../types';
 
 const OrdersListPage: React.FC = () => {
   const { data, loading, error, refetch } = useOrders();
@@ -158,22 +156,10 @@ const OrdersListPage: React.FC = () => {
 
   return (
     <main className="space-y-4" aria-labelledby="orders-heading">
-      <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Pedidos</p>
-            <h1 id="orders-heading" className="text-2xl font-semibold">
-              Lista de pedidos
-            </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Acompanhe os pedidos do ateliê, filtre por status e acesse os detalhes com um clique.
-            </p>
-          </div>
-          <div className="sm:pt-2">{renderHeaderActions}</div>
         </div>
       </div>
 
-      {renderContent()}
+
     </main>
   );
 };

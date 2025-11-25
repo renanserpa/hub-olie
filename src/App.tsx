@@ -30,6 +30,11 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/select-org" element={<OrganizationSelectPage />} />
+        {import.meta.env.DEV && (
+          <Route element={<ProtectedRoute />}>
+            <Route path="/__debug" element={<DebugPage />} />
+          </Route>
+        )}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
