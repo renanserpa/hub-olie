@@ -12,18 +12,21 @@ import { Customer, InventoryItem, InventoryMovement, Order, OrderItem, Productio
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const mockFlag = import.meta.env.VITE_SUPABASE_MOCK === 'true';
 
-export const isMock = mockFlag || !supabaseUrl || !supabaseAnonKey;
+export const isMockMode = !supabaseUrl || !supabaseAnonKey;
 
-const realClient: SupabaseClient | null = !isMock && supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || 'https://mock.supabase.local',
+  supabaseAnonKey || 'mock'
+);
 
-export const supabase: SupabaseClient =
-  (realClient as SupabaseClient) ?? createClient('https://mock.supabase.local', 'mock');
-
-export type TableName = 'orders' | 'order_items' | 'customers' | 'production_orders' | 'inventory_items' | 'inventory_movements';
+export type TableName =
+  | 'orders'
+  | 'order_items'
+  | 'customers'
+  | 'production_orders'
+  | 'inventory_items'
+  | 'inventory_movements';
 
 interface MockResponse<T> {
   data: T[] | null;
@@ -62,6 +65,16 @@ export const upsertMockOrder = async (order: Order): Promise<MockResponse<Order>
     mockOrders.push(order);
   }
   return { data: [order], error: null };
+};
+
+export const upsertMockCustomer = async (customer: Customer): Promise<MockResponse<Customer>> => {
+  const existingIndex = mockCustomers.findIndex((item) => item.id === customer.id);
+  if (existingIndex >= 0) {
+    mockCustomers[existingIndex] = customer;
+  } else {
+    mockCustomers.push(customer);
+  }
+  return { data: [customer], error: null };
 };
 
 export const deleteMockCustomer = async (customerId: string): Promise<MockResponse<Customer>> => {

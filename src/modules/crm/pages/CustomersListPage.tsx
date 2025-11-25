@@ -21,7 +21,7 @@ const CustomersListPage: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-slate-500">Clientes</p>
           <h1 className="text-2xl font-semibold">CRM</h1>
         </div>
-        <Link to="/crm/customers/new">
+        <Link to="/customers/new">
           <Button>Novo cliente</Button>
         </Link>
       </div>
@@ -41,7 +41,7 @@ const CustomersListPage: React.FC = () => {
               label: 'Ações',
               render: (_, row) => (
                 <div className="flex gap-2 text-sm">
-                  <Link className="text-blue-600" to={`/crm/customers/${row.id}`}>
+                  <Link className="text-blue-600" to={`/customers/${row.id}`}>
                     Editar
                   </Link>
                   <button className="text-red-500" onClick={() => handleDelete(row.id)} disabled={deleting}>

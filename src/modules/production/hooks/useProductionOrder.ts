@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchMockTable, isMock, supabase } from '../../../lib/supabase/client';
+import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { ProductionOrder } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
 
@@ -19,7 +19,7 @@ export const useProductionOrder = (id?: string) => {
       setLoading(true);
       setError(null);
       try {
-        if (isMock) {
+        if (isMockMode) {
           const { data, error } = await fetchMockTable<ProductionOrder>('production_orders', organization.id);
           if (error) throw error;
           const order = (data || []).find((row) => row.id === id) || null;

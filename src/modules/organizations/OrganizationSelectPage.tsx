@@ -1,17 +1,23 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
 import { Organization } from '../../types';
 
-const organizations: Organization[] = [
-  { id: 'org-001', name: 'Organização Demo' },
-  { id: 'org-002', name: 'Unidade SP' },
-];
-
 const OrganizationSelectPage: React.FC = () => {
-  const { selectOrganization } = useApp();
+  const { organizations, selectOrganization, user } = useApp();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (organizations.length === 1) {
+      selectOrganization(organizations[0]);
+      navigate('/', { replace: true });
+    }
+  }, [organizations, navigate, selectOrganization]);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleSelect = (org: Organization) => {
     selectOrganization(org);
