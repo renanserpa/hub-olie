@@ -8,7 +8,9 @@ export const ProtectedRoute: React.FC = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
-        Carregando OlieHub...
+        <div role="status" aria-live="polite" className="text-sm font-medium">
+          Carregando OlieHub...
+        </div>
       </div>
     );
   }
