@@ -35,28 +35,30 @@ export const Table = <T extends Record<string, any>>({ data, columns, emptyMessa
   }
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-          <tr>
-            {columns.map((col) => (
-              <th key={String(col.key)} className="px-4 py-3 font-semibold">
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr key={row[columns[0].key] as string || index} className="border-t border-slate-100 dark:border-slate-800">
+      <div className="w-full overflow-x-auto">
+        <table className="w-full min-w-full text-left text-sm">
+          <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+            <tr>
               {columns.map((col) => (
-                <td key={String(col.key)} className="px-4 py-3">
-                  {col.render ? col.render(row[col.key], row) : (row[col.key] as React.ReactNode)}
-                </td>
+                <th key={String(col.key)} className="px-4 py-3 font-semibold whitespace-nowrap">
+                  {col.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row, index) => (
+              <tr key={(row[columns[0].key] as string) || index} className="border-t border-slate-100 dark:border-slate-800">
+                {columns.map((col) => (
+                  <td key={String(col.key)} className="px-4 py-3 align-middle">
+                    {col.render ? col.render(row[col.key], row) : (row[col.key] as React.ReactNode)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

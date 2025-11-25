@@ -57,7 +57,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DashboardCard title="Pedidos" value={orders.data.length.toString()} helper="Em todas as etapas" />
         <DashboardCard title="Ordens de produção" value={production.data.length.toString()} helper="Planejadas e em execução" />
         <DashboardCard title="Itens em estoque" value={inventory.data.length.toString()} helper="Itens cadastrados" />
