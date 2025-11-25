@@ -14,6 +14,12 @@ const OrganizationSelectPage: React.FC = () => {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
+      devLog('OrganizationSelectPage', 'Página montada');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
       devLog('OrganizationSelectPage', 'Render inicial ou mudança de estado', {
         loading,
         hasUser: !!user,
@@ -21,7 +27,13 @@ const OrganizationSelectPage: React.FC = () => {
       });
     }
 
-    if (organizations.length === 1) {
+    if (!loading && user && organizations.length === 1) {
+      if (import.meta.env.DEV) {
+        devLog('OrganizationSelectPage', 'Selecionando organização automaticamente', {
+          orgId: organizations[0].id,
+        });
+      }
+
       selectOrganization(organizations[0]);
       navigate('/', { replace: true });
     }
@@ -37,7 +49,10 @@ const OrganizationSelectPage: React.FC = () => {
 
   const handleSelect = (org: Organization) => {
     if (import.meta.env.DEV) {
-      devLog('OrganizationSelectPage', 'Organização selecionada', { orgId: org.id });
+      devLog('OrganizationSelectPage', 'Organização selecionada', {
+        orgId: org.id,
+        target: '/',
+      });
     }
 
     selectOrganization(org);

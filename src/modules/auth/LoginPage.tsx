@@ -21,15 +21,17 @@ const LoginPage: React.FC = () => {
 
     try {
       if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Tentando login', { email });
+        devLog('LoginPage', 'Tentando login', { email, mode: import.meta.env.MODE });
       }
 
       const result = await login(email, password);
+      const target = result?.requiresOrganizationSelection || !organization ? '/select-org' : '/';
       showToast('Login realizado com sucesso', 'success');
-      navigate(result?.requiresOrganizationSelection || !organization ? '/select-org' : '/', { replace: true });
+      navigate(target, { replace: true });
       if (import.meta.env.DEV) {
         devLog('LoginPage', 'Login bem-sucedido', {
-          redirectedTo: result?.requiresOrganizationSelection || !organization ? '/select-org' : '/',
+          redirectedTo: target,
+          requiresOrganizationSelection: result?.requiresOrganizationSelection,
         });
       }
     } catch (err) {
@@ -46,6 +48,12 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
+      devLog('LoginPage', 'Página montada');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
       devLog('LoginPage', 'Render inicial ou mudança de estado', {
         loading,
         hasUser: !!user,
@@ -54,7 +62,11 @@ const LoginPage: React.FC = () => {
     }
 
     if (!loading && user) {
-      navigate(organization ? '/' : '/select-org', { replace: true });
+      const target = organization ? '/' : '/select-org';
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Usuário já autenticado, redirecionando', { target });
+      }
+      navigate(target, { replace: true });
     }
   }, [loading, user, organization, navigate]);
 
