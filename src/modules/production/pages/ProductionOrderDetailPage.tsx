@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useProductionOrder } from '../hooks/useProductionOrder';
-import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { EmptyState, ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 import { useToast } from '../../../contexts/ToastContext';
 
 const ProductionOrderDetailPage: React.FC = () => {
   const { id } = useParams();
   const { data, loading, error, refetch } = useProductionOrder(id);
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
@@ -17,7 +18,15 @@ const ProductionOrderDetailPage: React.FC = () => {
 
   if (loading) return <LoadingState message="Carregando ordem de produção..." />;
   if (error) return <ErrorState description={error} onAction={refetch} />;
-  if (!data) return <p className="text-sm">Ordem não encontrada.</p>;
+  if (!data)
+    return (
+      <EmptyState
+        title="Ordem não encontrada"
+        description="Verifique se a referência está correta ou retorne à lista de produção."
+        actionLabel="Voltar para produção"
+        onAction={() => navigate('/production')}
+      />
+    );
 
   return (
     <div className="space-y-4">

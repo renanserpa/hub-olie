@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { useOrder } from '../hooks/useOrder';
-import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { EmptyState, ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 import { useToast } from '../../../contexts/ToastContext';
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams();
   const { data, loading, error, refetch } = useOrder(id);
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
@@ -18,7 +19,15 @@ const OrderDetailPage: React.FC = () => {
 
   if (loading) return <LoadingState message="Carregando pedido..." />;
   if (error) return <ErrorState description={error} onAction={refetch} />;
-  if (!data) return <p className="text-sm">Pedido não encontrado.</p>;
+  if (!data)
+    return (
+      <EmptyState
+        title="Pedido não encontrado"
+        description="Verifique se o link está correto ou volte para a lista de pedidos."
+        actionLabel="Voltar para pedidos"
+        onAction={() => navigate('/orders')}
+      />
+    );
 
   return (
     <div className="space-y-4">
