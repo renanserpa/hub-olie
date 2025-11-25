@@ -7,6 +7,7 @@ import { useToast } from '../../../contexts/ToastContext';
 import { Customer } from '../../../types';
 import { useCustomers } from '../hooks/useCustomers';
 import { isMockMode, supabase, upsertMockCustomer } from '../../../lib/supabase/client';
+import { isValidEmail, normalizePhoneDigits } from '../../../lib/utils/format';
 
 const CustomerFormPage: React.FC = () => {
   const { id } = useParams();
