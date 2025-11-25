@@ -7,7 +7,6 @@ export const useProductionOrders = () => {
   const [data, setData] = useState<ProductionOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar ordens de produção');
