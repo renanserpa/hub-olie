@@ -8,15 +8,17 @@ import {
   mockOrders,
   mockProductionOrders,
 } from './mockData';
-import { Customer, InventoryItem, InventoryMovement, Order, OrderItem, ProductionOrder } from '../../types';
+import { Customer, InventoryItem, InventoryMovement, Order, ProductionOrder } from '../../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const isMockMode = !supabaseUrl || !supabaseAnonKey;
+
+// Even in mock mode we instantiate a client with placeholder values to avoid null checks across the app
 export const supabase: SupabaseClient = createClient(
   supabaseUrl || 'https://mock.supabase.local',
-  supabaseAnonKey || 'mock-key',
+  supabaseAnonKey || 'mock-anon-key',
 );
 
 export type TableName =

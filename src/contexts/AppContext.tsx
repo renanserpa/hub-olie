@@ -14,6 +14,7 @@ interface AppContextValue {
   bootstrapDurationMs?: number;
   role?: string;
   tourSeen: boolean;
+  bootstrapDurationMs?: number;
   completeTour: () => void;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
@@ -55,19 +56,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrganization(org);
     localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
   }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      if (isMockMode) {
-        setUser(MOCK_USER);
-        setOrganizations(DEFAULT_ORGANIZATIONS);
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
-        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-        return { requiresOrganizationSelection: false };
-      }
-
+main
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const mappedUser = mapSupabaseUser(data.user);
@@ -123,9 +112,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
     const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedOrg) setOrganization(JSON.parse(storedOrg));
-    if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
+    const initialize = async () => {
+      const storedUser = localStorage.getItem(STORAGE_KEYS.user);
+      const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
+      const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
     const finishBootstrap = () => {
       const durationMs = Math.round(performance.now() - start);

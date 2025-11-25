@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
@@ -11,6 +11,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const mountedRef = useRef(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -37,6 +38,7 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       setError(message);
+
       showToast('Não foi possível entrar', 'error', message);
       if (import.meta.env.DEV) {
         devLog('LoginPage', 'Erro ao fazer login', { message });

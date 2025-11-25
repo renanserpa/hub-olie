@@ -35,6 +35,9 @@ const OrganizationSelectPage: React.FC = () => {
       }
 
       selectOrganization(organizations[0]);
+      if (import.meta.env.DEV) {
+        devLog('OrgSelect', 'Redirecionando após seleção automática', { path: '/' });
+      }
       navigate('/', { replace: true });
     }
   }, [navigate, organizations, selectOrganization, user, loading]);
@@ -57,6 +60,9 @@ const OrganizationSelectPage: React.FC = () => {
 
     selectOrganization(org);
     showToast('Organização selecionada', 'success');
+    if (import.meta.env.DEV) {
+      devLog('OrgSelect', 'Redirecionando após seleção', { path: '/' });
+    }
     navigate('/', { replace: true });
   };
 
