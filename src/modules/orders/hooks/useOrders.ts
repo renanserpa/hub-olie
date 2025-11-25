@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { Order } from '../../../types';
+import { mockCustomers } from '../../../lib/supabase/mockData';
 import { useApp } from '../../../contexts/AppContext';
 
 export const useOrders = () => {
@@ -22,11 +23,17 @@ export const useOrders = () => {
         if (isMockMode) {
           const { data, error } = await fetchMockTable<Order>('orders', organization.id);
           if (error) throw error;
-          setData(data || []);
+          const orders = (data || []).map((order) => ({
+            ...order,
+            customer:
+              order.customer || mockCustomers.find((customer) => customer.id === order.customer_id && customer.organization_id === organization.id) ||
+              null,
+          }));
+          setData(orders);
         } else {
           const { data, error } = await supabase
             .from('orders')
-            .select('*')
+            .select('*, customer:customer_id(id, name, email, phone)')
             .eq('organization_id', organization.id)
             .order('created_at', { ascending: false });
           if (error) throw error;

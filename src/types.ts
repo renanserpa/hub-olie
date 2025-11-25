@@ -22,10 +22,17 @@ export interface OrderItem {
 export interface Order {
   id: UUID;
   organization_id: UUID;
-  customer_name: string;
+  customer_id?: UUID | null;
+  customer?: Customer | null;
   status: 'draft' | 'confirmed' | 'fulfilled' | 'cancelled';
-  total: number;
+  order_date?: string | null;
+  due_date?: string | null;
+  total_gross_amount: number;
+  total_net_amount: number;
+  notes?: string | null;
+  code?: string | null;
   created_at: string;
+  updated_at?: string;
   items?: OrderItem[];
 }
 

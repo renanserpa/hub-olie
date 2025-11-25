@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchMockTable, isMockMode, supabase } from '../../../lib/supabase/client';
 import { Order } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
+import { mockCustomers } from '../../../lib/supabase/mockData';
 
 export const useOrder = (id?: string) => {
   const { organization } = useApp();
@@ -23,11 +24,17 @@ export const useOrder = (id?: string) => {
           const { data, error } = await fetchMockTable<Order>('orders', organization.id);
           if (error) throw error;
           const order = (data || []).find((o) => o.id === id) || null;
-          setData(order);
+          if (!order) {
+            setData(null);
+          } else {
+            const customer =
+              order.customer || mockCustomers.find((c) => c.id === order.customer_id && c.organization_id === organization.id) || null;
+            setData({ ...order, customer });
+          }
         } else {
           const { data, error } = await supabase
             .from('orders')
-            .select('*, order_items(*)')
+            .select('*, order_items(*), customer:customer_id(id, name, email, phone)')
             .eq('organization_id', organization.id)
             .eq('id', id)
             .maybeSingle();

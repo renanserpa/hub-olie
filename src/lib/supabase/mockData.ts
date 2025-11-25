@@ -6,9 +6,19 @@ export const mockOrders: Order[] = [
   {
     id: 'order-001',
     organization_id: organizationId,
-    customer_name: 'Empresa Exemplo',
+    customer_id: 'cust-001',
+    customer: {
+      id: 'cust-001',
+      organization_id: organizationId,
+      name: 'Empresa Exemplo',
+      email: 'contato@exemplo.com',
+      phone: '+55 11 99999-9999',
+      created_at: new Date().toISOString(),
+    },
     status: 'confirmed',
-    total: 12800,
+    total_gross_amount: 12800,
+    total_net_amount: 12800,
+    order_date: new Date().toISOString().slice(0, 10),
     created_at: new Date().toISOString(),
     items: [
       {
@@ -23,9 +33,19 @@ export const mockOrders: Order[] = [
   {
     id: 'order-002',
     organization_id: organizationId,
-    customer_name: 'Cliente Beta',
+    customer_id: 'cust-002',
+    customer: {
+      id: 'cust-002',
+      organization_id: organizationId,
+      name: 'Cliente Beta',
+      email: 'beta@cliente.com',
+      phone: '+55 21 98888-8888',
+      created_at: new Date().toISOString(),
+    },
     status: 'draft',
-    total: 3200,
+    total_gross_amount: 3200,
+    total_net_amount: 3200,
+    order_date: new Date().toISOString().slice(0, 10),
     created_at: new Date().toISOString(),
   },
 ];

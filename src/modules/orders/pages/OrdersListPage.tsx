@@ -27,10 +27,14 @@ const OrdersListPage: React.FC = () => {
         <Table
           data={data}
           columns={[
-            { key: 'customer_name', label: 'Cliente' },
+            {
+              key: 'customer',
+              label: 'Cliente',
+              render: (_, row) => row.customer?.name || 'Não informado',
+            },
             { key: 'status', label: 'Status' },
             {
-              key: 'total',
+              key: 'total_gross_amount',
               label: 'Total',
               render: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`,
             },

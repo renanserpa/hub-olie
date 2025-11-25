@@ -18,7 +18,11 @@ export const useUpsertOrder = () => {
         if (result.error) throw result.error;
         return result.data?.[0];
       }
-      const { data, error } = await supabase.from('orders').upsert({ ...order, organization_id: organization.id }).select();
+      const { customer, items, ...payload } = order;
+      const { data, error } = await supabase
+        .from('orders')
+        .upsert({ ...payload, organization_id: organization.id })
+        .select('*, customer:customer_id(id, name, email, phone)');
       if (error) throw error;
       return data?.[0];
     } catch (err) {
