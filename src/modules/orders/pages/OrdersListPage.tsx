@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { Table } from '../../../components/shared/Table';
+import { ORDER_STATUS_META, OrderStatus } from '../../../constants';
+import { formatCurrency, formatDate } from '../../../lib/utils/format';
 import { useOrders } from '../hooks/useOrders';
 import { Skeleton } from '../../../components/shared/Skeleton';
 
@@ -28,12 +30,17 @@ const OrdersListPage: React.FC = () => {
           data={data}
           columns={[
             { key: 'customer_name', label: 'Cliente' },
-            { key: 'status', label: 'Status' },
+            {
+              key: 'status',
+              label: 'Status',
+              render: (value) => ORDER_STATUS_META[value as OrderStatus].label,
+            },
             {
               key: 'total',
               label: 'Total',
-              render: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`,
+              render: (value) => formatCurrency(Number(value)),
             },
+            { key: 'created_at', label: 'Criado em', render: (value) => formatDate(value as string) },
             {
               key: 'id',
               label: 'Ação',

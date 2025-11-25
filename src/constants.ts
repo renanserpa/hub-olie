@@ -16,3 +16,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Finanças', path: '/finance', icon: WalletCards },
   { label: 'Configurações', path: '/settings', icon: Settings },
 ];
+
+export * from './constants/orders';
