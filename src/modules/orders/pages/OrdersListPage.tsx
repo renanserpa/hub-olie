@@ -16,22 +16,20 @@ const OrdersListPage: React.FC = () => {
   }, [error, showToast]);
 
   return (
-    <div className="space-y-4">
+    <main className="space-y-4" aria-labelledby="orders-heading">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-500">Pedidos</p>
-          <h1 className="text-2xl font-semibold">Lista de pedidos</h1>
+          <h1 id="orders-heading" className="text-2xl font-semibold">
+            Lista de pedidos
+          </h1>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Acompanhe os pedidos do ateliê e avance para os detalhes com um clique.</p>
         </div>
         <Link to="/orders/new">
           <Button>Novo pedido</Button>
         </Link>
       </div>
 
-      {loading ? (
-        <TableSkeleton rows={4} columns={4} />
-      ) : error ? (
-        <ErrorState description={error} onAction={refetch} />
-      ) : (
         <Table
           data={data}
           columns={[
@@ -57,10 +55,10 @@ const OrdersListPage: React.FC = () => {
               ),
             },
           ]}
-          emptyMessage="Nenhum pedido encontrado"
+          emptyMessage="Nenhum pedido encontrado ainda. Cadastre o primeiro para acompanhar o fluxo."
         />
       )}
-    </div>
+    </main>
   );
 };
 
