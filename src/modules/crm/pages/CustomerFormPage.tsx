@@ -7,7 +7,6 @@ import { useToast } from '../../../contexts/ToastContext';
 import { Customer } from '../../../types';
 import { useCustomers } from '../hooks/useCustomers';
 import { isMockMode, supabase, upsertMockCustomer } from '../../../lib/supabase/client';
-import { formatPhoneNumber, isValidEmail, normalizePhoneDigits } from '../../../lib/utils/format';
 
 const CustomerFormPage: React.FC = () => {
   const { id } = useParams();
@@ -75,18 +74,6 @@ const CustomerFormPage: React.FC = () => {
     e.preventDefault();
     if (!organization) {
       setFormError('Selecione uma organização para continuar.');
-      return;
-    }
-
-    const isEmailValid = validateEmail(email);
-    const isPhoneValid = validatePhone(phone);
-
-    if (!isEmailValid || !isPhoneValid) {
-      if (!isEmailValid && emailInputRef.current) {
-        emailInputRef.current.focus();
-      } else if (!isPhoneValid && phoneInputRef.current) {
-        phoneInputRef.current.focus();
-      }
       return;
     }
 
@@ -161,17 +148,6 @@ const CustomerFormPage: React.FC = () => {
             </label>
             <input
               id="customer-email"
-              ref={emailInputRef}
-              type="email"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (emailError) validateEmail(e.target.value);
-              }}
-              onBlur={(e) => validateEmail(e.target.value)}
-              aria-invalid={Boolean(emailError)}
-              aria-describedby={emailError ? 'customer-email-error' : undefined}
               placeholder="contato@email.com"
             />
             {emailError ? (
@@ -191,16 +167,6 @@ const CustomerFormPage: React.FC = () => {
             </label>
             <input
               id="customer-phone"
-              ref={phoneInputRef}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                if (phoneError) validatePhone(e.target.value);
-              }}
-              onBlur={(e) => setPhone(formatPhoneNumber(e.target.value))}
-              aria-invalid={Boolean(phoneError)}
-              aria-describedby={phoneError ? 'customer-phone-error' : undefined}
               placeholder="(11) 99999-9999"
             />
             {phoneError ? (
