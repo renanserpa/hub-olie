@@ -26,16 +26,17 @@ const App: React.FC = () => {
     <>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/organizations" element={<OrganizationSelectPage />} />
+        <Route path="/select-org" element={<OrganizationSelectPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
             <Route path="orders" element={<OrdersListPage />} />
             <Route path="orders/new" element={<OrderFormPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
-            <Route path="crm/customers" element={<CustomersListPage />} />
-            <Route path="crm/customers/new" element={<CustomerFormPage />} />
-            <Route path="crm/customers/:id" element={<CustomerFormPage />} />
+            <Route path="orders/:id/edit" element={<OrderFormPage />} />
+            <Route path="customers" element={<CustomersListPage />} />
+            <Route path="customers/new" element={<CustomerFormPage />} />
+            <Route path="customers/:id" element={<CustomerFormPage />} />
             <Route path="production" element={<ProductionOrdersListPage />} />
             <Route path="production/:id" element={<ProductionOrderDetailPage />} />
             <Route path="inventory" element={<InventoryPage />} />
@@ -45,9 +46,9 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to={user ? (organization ? '/' : '/organizations') : '/login'} replace />} />
+        <Route path="*" element={<Navigate to={user ? (organization ? '/' : '/select-org') : '/login'} replace />} />
       </Routes>
-      <AppTour open={!!user && !tourSeen} onClose={completeTour} />
+      <AppTour open={!!user && !!organization && !tourSeen} onClose={completeTour} />
     </>
   );
 };
