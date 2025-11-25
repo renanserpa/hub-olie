@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
 import { useToast } from '../../contexts/ToastContext';
+import { devLog } from '../../lib/utils/log';
 
 const LoginPage: React.FC = () => {
   const { login, user, organization, loading } = useApp();
@@ -19,19 +20,39 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Tentando login', { email });
+      }
+
       const result = await login(email, password);
       showToast('Login realizado com sucesso', 'success');
       navigate(result?.requiresOrganizationSelection || !organization ? '/select-org' : '/', { replace: true });
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Login bem-sucedido', {
+          redirectedTo: result?.requiresOrganizationSelection || !organization ? '/select-org' : '/',
+        });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       setError(message);
       showToast('Não foi possível entrar', 'error', message);
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Erro ao fazer login', { message });
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('LoginPage', 'Render inicial ou mudança de estado', {
+        loading,
+        hasUser: !!user,
+        hasOrganization: !!organization,
+      });
+    }
+
     if (!loading && user) {
       navigate(organization ? '/' : '/select-org', { replace: true });
     }

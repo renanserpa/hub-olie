@@ -5,6 +5,7 @@ import { EmptyState, LoadingState } from '../../components/shared/FeedbackStates
 import { useApp } from '../../contexts/AppContext';
 import { useToast } from '../../contexts/ToastContext';
 import { Organization } from '../../types';
+import { devLog } from '../../lib/utils/log';
 
 const OrganizationSelectPage: React.FC = () => {
   const { user, organizations, selectOrganization, loading } = useApp();
@@ -12,11 +13,19 @@ const OrganizationSelectPage: React.FC = () => {
   const { showToast } = useToast();
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('OrganizationSelectPage', 'Render inicial ou mudança de estado', {
+        loading,
+        hasUser: !!user,
+        orgCount: organizations.length,
+      });
+    }
+
     if (organizations.length === 1) {
       selectOrganization(organizations[0]);
       navigate('/', { replace: true });
     }
-  }, [organizations, navigate, selectOrganization]);
+  }, [navigate, organizations, selectOrganization, user, loading]);
 
   if (loading) {
     return <LoadingState message="Carregando organizações..." />;
@@ -27,6 +36,10 @@ const OrganizationSelectPage: React.FC = () => {
   }
 
   const handleSelect = (org: Organization) => {
+    if (import.meta.env.DEV) {
+      devLog('OrganizationSelectPage', 'Organização selecionada', { orgId: org.id });
+    }
+
     selectOrganization(org);
     showToast('Organização selecionada', 'success');
     navigate('/', { replace: true });
