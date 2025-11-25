@@ -1,3 +1,9 @@
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { AuthUser } from '@supabase/supabase-js';
+import { isMockMode, mockOrganizationId, supabase } from '../lib/supabase/client';
+import { Organization, User } from '../types';
+import { devLog } from '../lib/utils/log';
+
 type LoginResult = { requiresOrganizationSelection?: boolean };
 
 interface AppContextValue {
@@ -43,6 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bootstrapDurationMs, setBootstrapDurationMs] = useState<number | undefined>();
   const [tourSeen, setTourSeen] = useState<boolean>(() => localStorage.getItem(STORAGE_KEYS.tour) === '1');
 
   const selectOrganization = useCallback((org: Organization) => {
@@ -100,6 +107,10 @@ main
   }, []);
 
   useEffect(() => {
+    const start = performance.now();
+    const storedUser = localStorage.getItem(STORAGE_KEYS.user);
+    const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
+    const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
     const initialize = async () => {
       const storedUser = localStorage.getItem(STORAGE_KEYS.user);
@@ -107,6 +118,21 @@ main
       const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
 
+    const finishBootstrap = () => {
+      const durationMs = Math.round(performance.now() - start);
+      setBootstrapDurationMs(durationMs);
+
+      if (import.meta.env.DEV) {
+        devLog('AppContext', 'Bootstrap concluído', {
+          durationMs,
+          isMockMode,
+          hasStoredUser: !!storedUser,
+          hasStoredOrganization: !!storedOrg,
+        });
+      }
+    };
+
+    refreshSession().finally(finishBootstrap);
   }, [refreshSession]);
 
   const value = useMemo(
