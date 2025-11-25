@@ -57,7 +57,6 @@ const CustomerFormPage: React.FC = () => {
         const { error } = await supabase.from('customers').upsert(payload);
         if (error) throw error;
       }
-      showToast(id ? 'Cliente atualizado com sucesso' : 'Cliente criado com sucesso', 'success');
       navigate('/customers');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao salvar cliente';

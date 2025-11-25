@@ -3,11 +3,6 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useApp } from '../../contexts/AppContext';
 import { Organization } from '../../types';
-import { LoadingState, EmptyState } from '../../components/shared/FeedbackStates';
-import { useToast } from '../../contexts/ToastContext';
-
-const OrganizationSelectPage: React.FC = () => {
-  const { organizations, selectOrganization, user, loading } = useApp();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -21,6 +16,17 @@ const OrganizationSelectPage: React.FC = () => {
   if (loading) {
     return <LoadingState message="Carregando organizações..." />;
   }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  useEffect(() => {
+    if (organizations.length === 1) {
+      selectOrganization(organizations[0]);
+      navigate('/', { replace: true });
+    }
+  }, [organizations, navigate, selectOrganization]);
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -53,7 +59,6 @@ const OrganizationSelectPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <EmptyState description="Nenhuma organização atribuída a este usuário. Solicite acesso ao administrador." />
         )}
       </div>
     </div>

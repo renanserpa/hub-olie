@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { useOrders } from '../hooks/useOrders';
 import { ErrorState } from '../../../components/shared/FeedbackStates';
 import { useToast } from '../../../contexts/ToastContext';
@@ -37,12 +36,17 @@ const OrdersListPage: React.FC = () => {
           data={data}
           columns={[
             { key: 'customer_name', label: 'Cliente' },
-            { key: 'status', label: 'Status' },
+            {
+              key: 'status',
+              label: 'Status',
+              render: (value) => ORDER_STATUS_META[value as OrderStatus].label,
+            },
             {
               key: 'total',
               label: 'Total',
-              render: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`,
+              render: (value) => formatCurrency(Number(value)),
             },
+            { key: 'created_at', label: 'Criado em', render: (value) => formatDate(value as string) },
             {
               key: 'id',
               label: 'Ação',

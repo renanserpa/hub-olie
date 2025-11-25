@@ -1,264 +1,312 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, PackageCheck, TimerReset, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import { Button } from '../../components/shared/Button';
+import { ErrorState } from '../../components/shared/ErrorState';
+import { Skeleton } from '../../components/shared/Skeleton';
+
+import { ORDER_STATUS_FILTERS, ORDER_STATUS_META, OrderStatus } from '../../constants';
+import { formatCurrency, formatDate } from '../../lib/utils/format';
+
 import { useOrders } from '../orders/hooks/useOrders';
 import { useProductionOrders } from '../production/hooks/useProductionOrders';
-import { useInventoryItems } from '../inventory/hooks/useInventoryItems';
-import { LoadingState, ErrorState, EmptyState } from '../../components/shared/FeedbackStates';
-import { useToast } from '../../contexts/ToastContext';
 import { Order } from '../../types';
-import { Button } from '../../components/shared/Button';
 
-type PeriodFilter = 'today' | '7d' | '30d' | 'all';
-type OrderStatusFilter = 'all' | Order['status'];
 
-const PERIOD_OPTIONS: { label: string; value: PeriodFilter }[] = [
-  { label: 'Hoje', value: 'today' },
-  { label: '7 dias', value: '7d' },
-  { label: '30 dias', value: '30d' },
-  { label: 'Todo período', value: 'all' },
+// -----------------------------
+// Types
+// -----------------------------
+type PeriodFilter = '7d' | '30d' | 'all';
+
+const PERIOD_FILTERS: { key: PeriodFilter; label: string }[] = [
+  { key: '7d', label: 'Últimos 7 dias' },
+  { key: '30d', label: 'Últimos 30 dias' },
+  { key: 'all', label: 'Todo o período' },
 ];
 
-const STATUS_OPTIONS: { label: string; value: OrderStatusFilter }[] = [
-  { label: 'Todos', value: 'all' },
-  { label: 'Orçamento', value: 'draft' },
-  { label: 'Confirmados', value: 'confirmed' },
-  { label: 'Atendidos', value: 'fulfilled' },
-  { label: 'Cancelados', value: 'cancelled' },
-];
 
-const DashboardCard: React.FC<{ title: string; value: string; helper?: string; icon?: React.ReactNode }> = ({
+// -----------------------------
+// Small Reusable Components
+// -----------------------------
+const DashboardCard: React.FC<{ title: string; value: string; helper?: string }> = ({
   title,
   value,
   helper,
-  icon,
 }) => (
-  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
-        <h3 className="mt-2 text-2xl font-semibold">{value}</h3>
-        {helper && <p className="text-xs text-slate-500">{helper}</p>}
-      </div>
-      {icon}
-    </div>
+  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
+    <h3 className="mt-2 text-2xl font-semibold">{value}</h3>
+    {helper && <p className="text-xs text-slate-500">{helper}</p>}
   </div>
 );
 
+const StatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
+  const meta = ORDER_STATUS_META[status];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${meta.badgeClass} ${meta.textClass}`}
+    >
+      {meta.label}
+    </span>
+  );
+};
+
+
+// -----------------------------
+// Dashboard Page Component
+// -----------------------------
 const DashboardPage: React.FC = () => {
-  const orders = useOrders();
-  const production = useProductionOrders();
-  const inventory = useInventoryItems();
-  const [period, setPeriod] = useState<PeriodFilter>('30d');
-  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
-  const { showToast } = useToast();
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useOrders();
+  const { data: productionData, loading: productionLoading, error: productionError } = useProductionOrders();
 
-  useEffect(() => {
-    if (orders.error) showToast('Erro ao carregar pedidos', 'error', orders.error);
-  }, [orders.error, showToast]);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('30d');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
 
-  useEffect(() => {
-    if (production.error) showToast('Erro ao carregar produção', 'error', production.error);
-  }, [production.error, showToast]);
+  const isLoading = ordersLoading || productionLoading;
+  const errorMessage = ordersError || productionError;
 
-  useEffect(() => {
-    if (inventory.error) showToast('Erro ao carregar estoque', 'error', inventory.error);
-  }, [inventory.error, showToast]);
+
+  // -----------------------------
+  // Filtering Logic
+  // -----------------------------
+  const matchesPeriod = (order: Order, filter: PeriodFilter) => {
+    if (filter === 'all') return true;
+
+    const createdAt = new Date(order.created_at);
+    if (Number.isNaN(createdAt.getTime())) return false;
+
+    const now = new Date();
+    const days = filter === '7d' ? 7 : 30;
+
+    const threshold = new Date(now);
+    threshold.setDate(now.getDate() - days);
+
+    return createdAt >= threshold;
+  };
 
   const filteredOrders = useMemo(() => {
-    const now = new Date();
-    const startDate = (() => {
-      if (period === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      if (period === '7d') return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      if (period === '30d') return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      return null;
-    })();
-
-    return orders.data.filter((order) => {
-      const createdAt = new Date(order.created_at);
-      if (startDate && createdAt < startDate) return false;
-      if (statusFilter !== 'all' && order.status !== statusFilter) return false;
-      return true;
+    return ordersData.filter((order) => {
+      const okPeriod = matchesPeriod(order, periodFilter);
+      const okStatus = statusFilter === 'all' || order.status === statusFilter;
+      return okPeriod && okStatus;
     });
-  }, [orders.data, period, statusFilter]);
+  }, [ordersData, periodFilter, statusFilter]);
 
-  const revenueTotal = useMemo(
-    () =>
-      filteredOrders
-        .filter((order) => order.status === 'confirmed' || order.status === 'fulfilled')
-        .reduce((sum, order) => sum + (order.total || 0), 0),
-    [filteredOrders]
-  );
 
-  const overdueOrders = useMemo(() => {
-    const now = new Date();
-    const threshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return filteredOrders.filter(
-      (order) => order.status !== 'fulfilled' && order.status !== 'cancelled' && new Date(order.created_at) < threshold
-    );
+  // -----------------------------
+  // KPIs
+  // -----------------------------
+  const activeOrdersCount = filteredOrders.filter(
+    (o) => o.status !== 'fulfilled' && o.status !== 'cancelled'
+  ).length;
+
+  const budgetOrdersCount = filteredOrders.filter((o) => o.status === 'draft').length;
+
+  const activeProductionCount = productionData.filter(
+    (prod) => prod.status !== 'completed'
+  ).length;
+
+  const pipelineRevenue = filteredOrders
+    .filter((o) => o.status !== 'cancelled')
+    .reduce((s, o) => s + (o.total || 0), 0);
+
+  const overdueOrdersCount = filteredOrders.filter((order) => {
+    if (!order.due_date) return false;
+    const dueDate = new Date(order.due_date);
+    if (Number.isNaN(dueDate.getTime())) return false;
+    return dueDate < new Date() && order.status !== 'fulfilled' && order.status !== 'cancelled';
+  }).length;
+
+
+  // Recent orders
+  const latestOrders = useMemo(() => {
+    return [...filteredOrders]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5);
   }, [filteredOrders]);
 
-  const productionInProgress = useMemo(
-    () => production.data.filter((po) => po.status === 'in_progress'),
-    [production.data]
-  );
 
-  const latestOrders = useMemo(
-    () =>
-      filteredOrders
-        .slice()
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5),
-    [filteredOrders]
-  );
-
-  const loadingState = orders.loading || production.loading || inventory.loading;
-  const anyError = orders.error || production.error || inventory.error;
-
-  if (loadingState) {
-    return <LoadingState message="Carregando visão geral..." />;
-  }
-
-  if (anyError) {
+  // -----------------------------
+  // Error Handling
+  // -----------------------------
+  if (errorMessage) {
     return (
       <ErrorState
-        description={anyError || 'Erro ao carregar dashboard'}
-        onAction={() => {
-          orders.refetch();
-          production.refetch();
-          inventory.refetch();
-        }}
+        message={errorMessage}
+        onRetry={() => window.location.reload()}
+        actionLabel="Ver pedidos"
+        actionHref="/orders"
       />
     );
   }
 
+
+  // -----------------------------
+  // Render UI
+  // -----------------------------
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Fase 1</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Visão geral</p>
           <h1 className="text-2xl font-semibold">Dashboard operacional</h1>
         </div>
+
+        <Link to="/orders">
+          <Button variant="secondary">Ir para pedidos</Button>
+        </Link>
       </div>
 
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Período</p>
-          {PERIOD_OPTIONS.map((option) => (
-            <Button
-              key={option.value}
-              variant={period === option.value ? 'primary' : 'secondary'}
-              className="h-8 rounded-full px-3 text-xs"
-              onClick={() => setPeriod(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
+
+      {/* Filters */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Period */}
+          <div className="flex items-center gap-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Período</p>
+            <div className="flex gap-2">
+              {PERIOD_FILTERS.map((option) => (
+                <Button
+                  key={option.key}
+                  variant={periodFilter === option.key ? 'primary' : 'secondary'}
+                  onClick={() => setPeriodFilter(option.key)}
+                  className="px-3 py-1.5 text-xs"
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="flex items-center gap-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
+            <div className="flex gap-2">
+              {ORDER_STATUS_FILTERS.map((option) => (
+                <Button
+                  key={option.key}
+                  variant={statusFilter === option.key ? 'primary' : 'secondary'}
+                  onClick={() => setStatusFilter(option.key)}
+                  className="px-3 py-1.5 text-xs"
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
-          {STATUS_OPTIONS.map((option) => (
-            <Button
-              key={option.value}
-              variant={statusFilter === option.value ? 'primary' : 'secondary'}
-              className="h-8 rounded-full px-3 text-xs"
-              onClick={() => setStatusFilter(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Pedidos no período"
-          value={filteredOrders.length.toString()}
-          helper="Pedidos filtrados"
-          icon={<PackageCheck className="h-8 w-8 text-slate-400" />}
-        />
-        <DashboardCard
-          title="Receita estimada"
-          value={`R$ ${revenueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          helper="Pedidos confirmados/atendidos"
-          icon={<TrendingUp className="h-8 w-8 text-slate-400" />}
-        />
-        <DashboardCard
-          title="OPs em produção"
-          value={productionInProgress.length.toString()}
-          helper="Status em andamento"
-          icon={<TimerReset className="h-8 w-8 text-slate-400" />}
-        />
-        <DashboardCard
-          title="Pedidos em atraso"
-          value={overdueOrders.length.toString()}
-          helper="Criados há 7+ dias sem conclusão"
-          icon={<AlertCircle className="h-8 w-8 text-slate-400" />}
-        />
+
+      {/* KPI CARDS */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </>
+        ) : (
+          <>
+            <DashboardCard title="Pedidos ativos" value={activeOrdersCount.toString()} helper="Em andamento" />
+            <DashboardCard title="Pedidos em orçamento" value={budgetOrdersCount.toString()} helper="Aguardando aprovação" />
+            <DashboardCard title="Produção ativa" value={activeProductionCount.toString()} helper="Ordens não concluídas" />
+            <DashboardCard title="Receita em pipeline" value={formatCurrency(pipelineRevenue)} helper="Pedidos não cancelados" />
+          </>
+        )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-lg font-semibold">Pedidos recentes</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            {latestOrders.length ? (
+
+      {/* RECENT ORDERS + ALERTS */}
+      <div className="grid gap-4 md:grid-cols-3">
+
+        {/* Recent Orders */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Últimos pedidos</h2>
+            <Link to="/orders">
+              <Button variant="secondary" className="px-3 py-1.5 text-xs">
+                Ver todos
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {isLoading ? (
+              <>
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </>
+            ) : latestOrders.length ? (
               latestOrders.map((order) => (
-                <div
+                <Link
                   key={order.id}
-                  className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/60"
+                  to={`/orders/${order.id}`}
+                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900/50"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{order.customer_name}</p>
-                      <p className="text-xs text-slate-500">Status: {order.status}</p>
+                  <div>
+                    <p className="text-sm font-semibold">{order.customer_name}</p>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+                      <StatusBadge status={order.status} />
+                      <span>Criado em {formatDate(order.created_at)}</span>
+                      {order.due_date && <span>Entrega {formatDate(order.due_date)}</span>}
                     </div>
-                    <p className="whitespace-nowrap font-semibold">
-                      R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
                   </div>
-                </div>
+
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">{formatCurrency(order.total)}</p>
+                    <p className="text-xs text-slate-500">ID {order.id}</p>
+                  </div>
+                </Link>
               ))
             ) : (
-              <EmptyState
-                title="Nenhum pedido no filtro"
-                description="Ajuste o período ou status para visualizar pedidos."
-                className="bg-white"
-              />
+              <p className="text-sm text-slate-600">Nenhum pedido encontrado para os filtros atuais.</p>
             )}
           </div>
         </div>
 
+
+        {/* Alerts */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-lg font-semibold">Produção em andamento</h2>
-          <div className="mt-3 space-y-2 text-sm">
-            {productionInProgress.length ? (
-              productionInProgress.slice(0, 5).map((op) => (
-                <div
-                  key={op.id}
-                  className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/60"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{op.code}</p>
-                      <p className="text-xs text-slate-500">Status: {op.status}</p>
-                    </div>
-                    {op.planned_end_date && (
-                      <p className="whitespace-nowrap text-xs text-slate-500">
-                        Entrega: {new Date(op.planned_end_date).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
+          <h2 className="text-lg font-semibold">Alertas</h2>
+
+          <div className="mt-3 space-y-3">
+            {isLoading ? (
+              <>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </>
             ) : (
-              <EmptyState
-                title="Nenhuma OP em produção"
-                description="Assim que uma OP entrar em andamento ela aparecerá aqui."
-                className="bg-white"
-              />
+              <>
+                {/* Overdue */}
+                <div className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-sm dark:border-amber-900/60 dark:bg-amber-950/40">
+                  <div>
+                    <p className="font-semibold text-amber-800 dark:text-amber-100">Pedidos atrasados</p>
+                    <p className="text-xs text-amber-700/80 dark:text-amber-200">Considera pedidos com due date passada</p>
+                  </div>
+                  <span className="text-lg font-semibold text-amber-800 dark:text-amber-100">{overdueOrdersCount}</span>
+                </div>
+
+                {/* Production */}
+                <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm dark:border-blue-900/60 dark:bg-blue-950/40">
+                  <div>
+                    <p className="font-semibold text-blue-800 dark:text-blue-100">Ordens em produção</p>
+                    <p className="text-xs text-blue-700/80 dark:text-blue-200">Planejadas ou em execução</p>
+                  </div>
+                  <span className="text-lg font-semibold text-blue-800 dark:text-blue-100">{activeProductionCount}</span>
+                </div>
+              </>
             )}
           </div>
         </div>
+
       </div>
+
     </div>
   );
 };
