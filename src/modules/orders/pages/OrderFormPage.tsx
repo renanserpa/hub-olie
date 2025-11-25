@@ -5,34 +5,41 @@ import { useUpsertOrder } from '../hooks/useUpsertOrder';
 import { useOrder } from '../hooks/useOrder';
 import { Skeleton } from '../../../components/shared/Skeleton';
 import { useApp } from '../../../contexts/AppContext';
+import { useCustomers } from '../../crm/hooks/useCustomers';
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
   const { organization } = useApp();
   const { data, loading: loadingOrder } = useOrder(id);
-  const [customerName, setCustomerName] = useState('');
-  const [total, setTotal] = useState(0);
+  const { data: customers } = useCustomers();
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [totalGross, setTotalGross] = useState(0);
   const [status, setStatus] = useState<'draft' | 'confirmed' | 'fulfilled' | 'cancelled'>('draft');
   const { upsert, loading, error } = useUpsertOrder();
   const navigate = useNavigate();
 
   React.useEffect(() => {
     if (data) {
-      setCustomerName(data.customer_name);
-      setTotal(data.total);
+      setCustomerId(data.customer_id || null);
+      setTotalGross(data.total_gross_amount);
       setStatus(data.status);
+    } else if (customers?.length) {
+      setCustomerId((prev) => prev || customers[0]?.id || null);
     }
-  }, [data]);
+  }, [data, customers]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!organization) return;
+    const orderDate = data?.order_date || new Date().toISOString().slice(0, 10);
     await upsert({
       id: id || crypto.randomUUID(),
       organization_id: organization.id,
-      customer_name: customerName,
+      customer_id: customerId,
       status,
-      total,
+      total_gross_amount: totalGross,
+      total_net_amount: totalGross,
+      order_date: orderDate,
       created_at: data?.created_at || new Date().toISOString(),
     });
     navigate('/orders');
@@ -52,12 +59,21 @@ const OrderFormPage: React.FC = () => {
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Cliente</label>
-          <input
+          <select
             className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
+            value={customerId || ''}
+            onChange={(e) => setCustomerId(e.target.value || null)}
             required
-          />
+          >
+            <option value="" disabled>
+              Selecione um cliente
+            </option>
+            {customers?.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -65,8 +81,8 @@ const OrderFormPage: React.FC = () => {
             <input
               type="number"
               className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-              value={total}
-              onChange={(e) => setTotal(Number(e.target.value))}
+              value={totalGross}
+              onChange={(e) => setTotalGross(Number(e.target.value))}
               min={0}
               step={0.01}
             />

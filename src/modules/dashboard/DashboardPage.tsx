@@ -46,10 +46,10 @@ const DashboardPage: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{order.customer_name}</p>
+                  <p className="font-medium">{order.customer?.name || 'Não informado'}</p>
                   <p className="text-xs text-slate-500">Status: {order.status}</p>
                 </div>
-                <p className="font-semibold">R$ {order.total.toLocaleString('pt-BR')}</p>
+                <p className="font-semibold">R$ {order.total_gross_amount.toLocaleString('pt-BR')}</p>
               </div>
             </div>
           ))}
