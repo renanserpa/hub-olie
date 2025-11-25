@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { useUpsertOrder } from '../hooks/useUpsertOrder';
 import { useOrder } from '../hooks/useOrder';
-import { Skeleton } from '../../../components/shared/Skeleton';
 import { useApp } from '../../../contexts/AppContext';
-import { OrderStatus } from '../../../constants';
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
   const { organization } = useApp();
-  const { data, loading: loadingOrder } = useOrder(id);
+  const { data, loading: loadingOrder, error: loadError, refetch } = useOrder(id);
   const [customerName, setCustomerName] = useState('');
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<OrderStatus>('draft');
   const { upsert, loading, error } = useUpsertOrder();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [formError, setFormError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (data) {
@@ -28,18 +28,33 @@ const OrderFormPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!organization) return;
-    await upsert({
-      id: id || crypto.randomUUID(),
-      organization_id: organization.id,
-      customer_name: customerName,
-      status,
-      total,
-      created_at: data?.created_at || new Date().toISOString(),
-    });
-    navigate('/orders');
+    setFormError(null);
+    try {
+      await upsert({
+        id: id || crypto.randomUUID(),
+        organization_id: organization.id,
+        customer_name: customerName,
+        status,
+        total,
+        created_at: data?.created_at || new Date().toISOString(),
+      });
+      showToast(id ? 'Pedido atualizado com sucesso.' : 'Pedido criado com sucesso.', 'success');
+      navigate('/orders');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao salvar pedido';
+      setFormError(message);
+      showToast('Erro ao salvar pedido', 'error', message);
+    }
   };
 
-  if (loadingOrder) return <Skeleton className="h-32 w-full" />;
+  useEffect(() => {
+    if (loadError) {
+      showToast('Erro ao carregar pedido', 'error', loadError);
+    }
+  }, [loadError, showToast]);
+
+  if (loadingOrder) return <LoadingState message="Carregando pedido..." />;
+  if (loadError) return <ErrorState description={loadError} onAction={refetch} />;
 
   return (
     <main className="space-y-4" aria-labelledby="order-form-heading">
@@ -98,13 +113,6 @@ const OrderFormPage: React.FC = () => {
             </select>
           </div>
         </div>
-        {error && (
-          <p className="text-sm text-red-500" role="alert" aria-live="assertive">
-            {error}
-          </p>
-        )}
-        <Button type="submit" loading={loading}>
-          Salvar pedido
         </Button>
       </form>
     </main>

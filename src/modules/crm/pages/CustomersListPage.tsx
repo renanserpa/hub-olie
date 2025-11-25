@@ -1,17 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Table } from '../../../components/shared/Table';
+import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { useCustomers } from '../hooks/useCustomers';
 import { useDeleteCustomer } from '../hooks/useDeleteCustomer';
-import { Skeleton } from '../../../components/shared/Skeleton';
+import { ErrorState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const CustomersListPage: React.FC = () => {
-  const { data, loading, error } = useCustomers();
-  const { remove, loading: deleting } = useDeleteCustomer();
+  const { data, loading, error, refetch } = useCustomers();
+  const { remove, loading: deleting, error: deleteError } = useDeleteCustomer();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar clientes', 'error', error);
+    }
+  }, [error, showToast]);
+
+  useEffect(() => {
+    if (deleteError) {
+      showToast('Erro ao excluir cliente', 'error', deleteError);
+    }
+  }, [deleteError, showToast]);
 
   const handleDelete = async (id: string) => {
-    await remove(id);
+    try {
+      await remove(id);
+      await refetch();
+      showToast('Cliente excluído com sucesso', 'success');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao excluir cliente';
+      showToast('Erro ao excluir cliente', 'error', message);
+    }
   };
 
   return (
@@ -26,10 +47,11 @@ const CustomersListPage: React.FC = () => {
         </Link>
       </div>
 
-      {loading && <Skeleton className="h-32 w-full" />}
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      {!loading && (
+      {loading ? (
+        <TableSkeleton rows={4} columns={4} />
+      ) : error ? (
+        <ErrorState description={error} onAction={refetch} />
+      ) : (
         <Table
           data={data}
           columns={[
