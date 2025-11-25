@@ -18,6 +18,7 @@ import InventoryPage from './modules/inventory/InventoryPage';
 import LogisticsPage from './modules/logistics/LogisticsPage';
 import FinancePage from './modules/finance/FinancePage';
 import SettingsPage from './modules/settings/SettingsPage';
+import { DebugPage } from './modules/debug/DebugPage';
 
 const App: React.FC = () => {
   const { user, organization, tourSeen, completeTour } = useApp();
@@ -29,6 +30,11 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/select-org" element={<OrganizationSelectPage />} />
+        {import.meta.env.DEV && (
+          <Route element={<ProtectedRoute />}>
+            <Route path="/__debug" element={<DebugPage />} />
+          </Route>
+        )}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
