@@ -1,3 +1,11 @@
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AuthUser } from '@supabase/supabase-js';
+import { isMockMode, mockOrganizationId, supabase } from '../lib/supabase/client';
+import { Organization, User } from '../types';
+import { devLog } from '../lib/utils/log';
+
+type LoginResult = { requiresOrganizationSelection?: boolean };
+
 interface AppContextValue {
   user: User | null;
   organization: Organization | null;
@@ -6,6 +14,10 @@ interface AppContextValue {
   role?: string;
   tourSeen: boolean;
   completeTour: () => void;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  logout: () => Promise<void>;
+  selectOrganization: (org: Organization) => void;
+  refreshSession: () => Promise<void>;
 }
 
 const STORAGE_KEYS = {
@@ -30,17 +42,105 @@ const mapSupabaseUser = (sessionUser: AuthUser | null): User | null => {
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tourSeen, setTourSeen] = useState<boolean>(() => localStorage.getItem(STORAGE_KEYS.tour) === '1');
+  const [bootStartedAt] = useState(() => (typeof performance !== 'undefined' ? performance.now() : 0));
+  const bootLoggedRef = useRef(false);
 
+  const selectOrganization = useCallback((org: Organization) => {
+    setOrganization(org);
+    localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      if (isMockMode) {
+        setUser(MOCK_USER);
+        setOrganizations(DEFAULT_ORGANIZATIONS);
+        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
+        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
+        return { requiresOrganizationSelection: false };
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const mappedUser = mapSupabaseUser(data.user);
+      setUser(mappedUser);
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(mappedUser));
+      setOrganizations(DEFAULT_ORGANIZATIONS);
+      localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
+      if (!organization && DEFAULT_ORGANIZATIONS.length === 1) {
+        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
+        return { requiresOrganizationSelection: false };
+      }
+      return { requiresOrganizationSelection: true };
+    } finally {
+      setLoading(false);
+    }
+  }, [organization, selectOrganization]);
+
+  const logout = useCallback(async () => {
+    if (!isMockMode) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setOrganizations([]);
     setOrganization(null);
+    localStorage.removeItem(STORAGE_KEYS.user);
+    localStorage.removeItem(STORAGE_KEYS.org);
+    localStorage.removeItem(STORAGE_KEYS.orgs);
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    if (isMockMode) {
+      setUser(MOCK_USER);
+      setOrganizations(DEFAULT_ORGANIZATIONS);
+      setOrganization(DEFAULT_ORGANIZATIONS[0]);
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await supabase.auth.getSession();
+    const mapped = mapSupabaseUser(data.session?.user ?? null);
+    setUser(mapped);
+    setLoading(false);
+  }, []);
+
+  const completeTour = useCallback(() => {
+    setTourSeen(true);
+    localStorage.setItem(STORAGE_KEYS.tour, '1');
+  }, []);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem(STORAGE_KEYS.user);
+    const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
+    const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
+
+    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedOrg) setOrganization(JSON.parse(storedOrg));
+    if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
+
+    refreshSession();
+  }, [refreshSession]);
+
+  useEffect(() => {
+    if (loading || bootLoggedRef.current) return;
+
+    const duration = (typeof performance !== 'undefined' ? performance.now() : bootStartedAt) - bootStartedAt;
+    devLog('[Boot]', `AppContext ready in ${Math.round(duration)}ms`, {
+      mockMode: isMockMode,
+      hasUser: !!user,
+      hasOrganization: !!organization,
+      organizationsCount: organizations.length,
+    });
+    bootLoggedRef.current = true;
+  }, [bootStartedAt, loading, organization, organizations.length, user]);
 
   const value = useMemo(
     () => ({
@@ -55,15 +155,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       tourSeen,
       completeTour,
     }),
+    [user, organization, organizations, loading, login, logout, selectOrganization, refreshSession, tourSeen, completeTour],
   );
 
-  return (
-    <AppContext.Provider value={value}>{children}</AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export const useApp = () => {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useApp must be used within AppProvider");
+  if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
 };

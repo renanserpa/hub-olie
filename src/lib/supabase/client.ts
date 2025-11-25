@@ -12,6 +12,13 @@ import { Customer, InventoryItem, InventoryMovement, Order, OrderItem, Productio
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const isMockMode = !supabaseUrl || !supabaseAnonKey;
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || 'https://mock.supabase.local',
+  supabaseAnonKey || 'mock-key',
+);
+
 export type TableName =
   | 'orders'
   | 'order_items'
@@ -85,7 +92,7 @@ export const createMockProductionOrder = async (order: ProductionOrder): Promise
 
 export const updateMockProductionOrderStatus = async (
   id: string,
-  status: ProductionOrder['status']
+  status: ProductionOrder['status'],
 ): Promise<MockResponse<ProductionOrder>> => {
   const idx = mockProductionOrders.findIndex((item) => item.id === id);
   if (idx === -1) return { data: null, error: new Error('Ordem de produção não encontrada') };
