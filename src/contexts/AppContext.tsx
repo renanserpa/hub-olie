@@ -32,15 +32,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshSession = useCallback(() => {
     setLoading(true);
-    const storedUser = localStorage.getItem('oh:user');
-    const storedOrg = localStorage.getItem('oh:org');
-    const storedOrgs = localStorage.getItem('oh:orgs');
-    const storedTour = localStorage.getItem('oh:tour');
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedOrg) setOrganization(JSON.parse(storedOrg));
-    if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
-    if (storedTour) setTourSeen(storedTour === 'true');
-    setLoading(false);
+    try {
+      const storedUser = localStorage.getItem('oh:user');
+      const storedOrg = localStorage.getItem('oh:org');
+      const storedOrgs = localStorage.getItem('oh:orgs');
+      const storedTour = localStorage.getItem('oh:tour');
+      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedOrg) setOrganization(JSON.parse(storedOrg));
+      if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
+      if (storedTour) setTourSeen(storedTour === 'true');
+    } catch (error) {
+      console.error('[OlieHub] Failed to refresh session', error);
+      setUser(null);
+      setOrganization(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {

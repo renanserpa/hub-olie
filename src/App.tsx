@@ -22,6 +22,8 @@ import SettingsPage from './modules/settings/SettingsPage';
 const App: React.FC = () => {
   const { user, organization, tourSeen, completeTour } = useApp();
 
+  console.log('[OlieHub] AppRoutes render, user/organization:', { user, organization });
+
   return (
     <>
       <Routes>
