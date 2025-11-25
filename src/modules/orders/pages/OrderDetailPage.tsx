@@ -5,6 +5,7 @@ import { useOrder } from '../hooks/useOrder';
 import { EmptyState, ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 import { useToast } from '../../../contexts/ToastContext';
 import { formatCurrency, formatDate } from '../../../lib/utils/format';
+import { ORDER_STATUS_META } from '../../../constants/orders';
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams();

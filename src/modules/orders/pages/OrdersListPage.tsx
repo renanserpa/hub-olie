@@ -7,6 +7,8 @@ import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { ORDER_STATUS_FILTERS, ORDER_STATUS_META, OrderStatus } from '../../../constants/orders';
 import { formatCurrency, formatDate } from '../../../lib/utils/format';
 import { useToast } from '../../../contexts/ToastContext';
+import { useOrders } from '../hooks/useOrders';
+import { Order } from '../../../types';
 
 const OrdersListPage: React.FC = () => {
   const { data, loading, error, refetch } = useOrders();
@@ -156,10 +158,22 @@ const OrdersListPage: React.FC = () => {
 
   return (
     <main className="space-y-4" aria-labelledby="orders-heading">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 id="orders-heading" className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Pedidos
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Visualize e gerencie os pedidos.</p>
+          </div>
+          <div className="hidden sm:block">{renderHeaderActions}</div>
         </div>
+        <div className="sm:hidden">{renderHeaderActions}</div>
       </div>
 
-
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        {renderContent()}
+      </div>
     </main>
   );
 };
