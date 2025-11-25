@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { deleteMockCustomer, isMock, supabase } from '../../../lib/supabase/client';
+import { deleteMockCustomer, isMockMode, supabase } from '../../../lib/supabase/client';
 import { useApp } from '../../../contexts/AppContext';
 
 export const useDeleteCustomer = () => {
@@ -12,7 +12,7 @@ export const useDeleteCustomer = () => {
     setLoading(true);
     setError(null);
     try {
-      if (isMock) {
+      if (isMockMode) {
         const { error } = await deleteMockCustomer(id);
         if (error) throw error;
         return true;

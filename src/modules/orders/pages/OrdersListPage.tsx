@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Table } from '../../../components/shared/Table';
+import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { useOrders } from '../hooks/useOrders';
-import { Skeleton } from '../../../components/shared/Skeleton';
+import { ErrorState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const OrdersListPage: React.FC = () => {
-  const { data, loading, error } = useOrders();
+  const { data, loading, error, refetch } = useOrders();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar pedidos', 'error', error);
+    }
+  }, [error, showToast]);
 
   return (
     <div className="space-y-4">
@@ -20,10 +28,11 @@ const OrdersListPage: React.FC = () => {
         </Link>
       </div>
 
-      {loading && <Skeleton className="h-32 w-full" />}
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      {!loading && (
+      {loading ? (
+        <TableSkeleton rows={4} columns={4} />
+      ) : error ? (
+        <ErrorState description={error} onAction={refetch} />
+      ) : (
         <Table
           data={data}
           columns={[

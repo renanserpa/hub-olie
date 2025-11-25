@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isMock, supabase, upsertMockOrder } from '../../../lib/supabase/client';
+import { isMockMode, supabase, upsertMockOrder } from '../../../lib/supabase/client';
 import { Order } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
 
@@ -13,7 +13,7 @@ export const useUpsertOrder = () => {
     setLoading(true);
     setError(null);
     try {
-      if (isMock) {
+      if (isMockMode) {
         const result = await upsertMockOrder({ ...order, organization_id: organization.id });
         if (result.error) throw result.error;
         return result.data?.[0];

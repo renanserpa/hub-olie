@@ -1,25 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Table } from '../../../components/shared/Table';
+import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { useProductionOrders } from '../hooks/useProductionOrders';
 import { useCreateProductionOrder } from '../hooks/useCreateProductionOrder';
-import { Skeleton } from '../../../components/shared/Skeleton';
 import { useApp } from '../../../contexts/AppContext';
+import { ErrorState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const ProductionOrdersListPage: React.FC = () => {
-  const { data, loading, error } = useProductionOrders();
+  const { data, loading, error, refetch } = useProductionOrders();
   const { create, loading: creating } = useCreateProductionOrder();
   const { organization } = useApp();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar ordens de produção', 'error', error);
+    }
+  }, [error, showToast]);
 
   const handleCreate = async () => {
     if (!organization) return;
-    await create({
-      organization_id: organization.id,
-      reference: `OP-${Math.floor(Math.random() * 1000)}`,
-      status: 'planned',
-      planned_start: new Date().toISOString(),
-    });
+    try {
+      await create({
+        organization_id: organization.id,
+        reference: `OP-${Math.floor(Math.random() * 1000)}`,
+        status: 'planned',
+        planned_start: new Date().toISOString(),
+      });
+      showToast('Ordem de produção criada', 'success');
+      refetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar ordem';
+      showToast('Erro ao criar ordem', 'error', message);
+    }
   };
 
   return (
@@ -34,10 +49,11 @@ const ProductionOrdersListPage: React.FC = () => {
         </Button>
       </div>
 
-      {loading && <Skeleton className="h-32 w-full" />}
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      {!loading && (
+      {loading ? (
+        <TableSkeleton rows={4} columns={4} />
+      ) : error ? (
+        <ErrorState description={error} onAction={refetch} />
+      ) : (
         <Table
           data={data}
           columns={[

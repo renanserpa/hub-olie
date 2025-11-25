@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useOrders } from '../orders/hooks/useOrders';
 import { useProductionOrders } from '../production/hooks/useProductionOrders';
 import { useInventoryItems } from '../inventory/hooks/useInventoryItems';
-import { Skeleton } from '../../components/shared/Skeleton';
+import { LoadingState, ErrorState } from '../../components/shared/FeedbackStates';
+import { useToast } from '../../contexts/ToastContext';
 
 const DashboardCard: React.FC<{ title: string; value: string; helper?: string }> = ({ title, value, helper }) => (
   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
@@ -16,9 +17,35 @@ const DashboardPage: React.FC = () => {
   const orders = useOrders();
   const production = useProductionOrders();
   const inventory = useInventoryItems();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (orders.error) showToast('Erro ao carregar pedidos', 'error', orders.error);
+  }, [orders.error, showToast]);
+
+  useEffect(() => {
+    if (production.error) showToast('Erro ao carregar produção', 'error', production.error);
+  }, [production.error, showToast]);
+
+  useEffect(() => {
+    if (inventory.error) showToast('Erro ao carregar estoque', 'error', inventory.error);
+  }, [inventory.error, showToast]);
 
   if (orders.loading || production.loading || inventory.loading) {
-    return <Skeleton className="h-40 w-full" />;
+    return <LoadingState message="Carregando visão geral..." />;
+  }
+
+  if (orders.error || production.error || inventory.error) {
+    return (
+      <ErrorState
+        description={orders.error || production.error || inventory.error || 'Erro ao carregar dashboard'}
+        onAction={() => {
+          orders.refetch();
+          production.refetch();
+          inventory.refetch();
+        }}
+      />
+    );
   }
 
   return (

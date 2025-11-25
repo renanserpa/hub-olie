@@ -1,15 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { Skeleton } from '../../../components/shared/Skeleton';
 import { useOrder } from '../hooks/useOrder';
+import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams();
-  const { data, loading, error } = useOrder(id);
+  const { data, loading, error, refetch } = useOrder(id);
+  const { showToast } = useToast();
 
-  if (loading) return <Skeleton className="h-32 w-full" />;
-  if (error) return <p className="text-sm text-red-500">{error}</p>;
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar pedido', 'error', error);
+    }
+  }, [error, showToast]);
+
+  if (loading) return <LoadingState message="Carregando pedido..." />;
+  if (error) return <ErrorState description={error} onAction={refetch} />;
   if (!data) return <p className="text-sm">Pedido não encontrado.</p>;
 
   return (

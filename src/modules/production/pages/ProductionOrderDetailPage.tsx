@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Skeleton } from '../../../components/shared/Skeleton';
 import { useProductionOrder } from '../hooks/useProductionOrder';
+import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const ProductionOrderDetailPage: React.FC = () => {
   const { id } = useParams();
-  const { data, loading, error } = useProductionOrder(id);
+  const { data, loading, error, refetch } = useProductionOrder(id);
+  const { showToast } = useToast();
 
-  if (loading) return <Skeleton className="h-32 w-full" />;
-  if (error) return <p className="text-sm text-red-500">{error}</p>;
+  useEffect(() => {
+    if (error) {
+      showToast('Erro ao carregar ordem', 'error', error);
+    }
+  }, [error, showToast]);
+
+  if (loading) return <LoadingState message="Carregando ordem de produção..." />;
+  if (error) return <ErrorState description={error} onAction={refetch} />;
   if (!data) return <p className="text-sm">Ordem não encontrada.</p>;
 
   return (

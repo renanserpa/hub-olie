@@ -1,30 +1,46 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { useCustomers } from '../hooks/useCustomers';
-import { Skeleton } from '../../../components/shared/Skeleton';
-import { supabase, isMock, fetchMockTable } from '../../../lib/supabase/client';
+import { isMockMode, supabase, upsertMockCustomer } from '../../../lib/supabase/client';
 import { useApp } from '../../../contexts/AppContext';
 import { Customer } from '../../../types';
+import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { useToast } from '../../../contexts/ToastContext';
 
 const CustomerFormPage: React.FC = () => {
   const { id } = useParams();
   const { organization } = useApp();
-  const { data, loading } = useCustomers();
+  const { data, loading, error: customersError, refetch } = useCustomers();
   const navigate = useNavigate();
-  const customer = data.find((c) => c.id === id);
+  const { showToast } = useToast();
+  const customer = useMemo(() => data.find((c) => c.id === id), [data, id]);
 
   const [name, setName] = useState(customer?.name || '');
   const [email, setEmail] = useState(customer?.email || '');
   const [phone, setPhone] = useState(customer?.phone || '');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (customer) {
+      setName(customer.name);
+      setEmail(customer.email || '');
+      setPhone(customer.phone || '');
+    }
+  }, [customer]);
+
+  useEffect(() => {
+    if (customersError) {
+      showToast('Erro ao carregar clientes', 'error', customersError);
+    }
+  }, [customersError, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organization) return;
     setSaving(true);
-    setError(null);
+    setFormError(null);
     try {
       const payload: Customer = {
         id: id || crypto.randomUUID(),
@@ -34,26 +50,26 @@ const CustomerFormPage: React.FC = () => {
         phone,
         created_at: customer?.created_at || new Date().toISOString(),
       };
-      if (isMock) {
-        const { data } = await fetchMockTable<Customer>('customers', organization.id);
-        if (data) {
-          const idx = data.findIndex((row) => row.id === payload.id);
-          if (idx >= 0) data[idx] = payload;
-          else data.push(payload);
-        }
+      if (isMockMode) {
+        const result = await upsertMockCustomer(payload);
+        if (result.error) throw result.error;
       } else {
         const { error } = await supabase.from('customers').upsert(payload);
         if (error) throw error;
       }
-      navigate('/crm/customers');
+      showToast(id ? 'Cliente atualizado com sucesso' : 'Cliente criado com sucesso', 'success');
+      navigate('/customers');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar cliente');
+      const message = err instanceof Error ? err.message : 'Erro ao salvar cliente';
+      setFormError(message);
+      showToast('Erro ao salvar cliente', 'error', message);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <Skeleton className="h-32 w-full" />;
+  if (loading) return <LoadingState message="Carregando cliente..." />;
+  if (customersError) return <ErrorState description={customersError} onAction={refetch} />;
 
   return (
     <div className="space-y-4">
@@ -93,7 +109,7 @@ const CustomerFormPage: React.FC = () => {
             />
           </div>
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {formError && <p className="text-sm text-red-500">{formError}</p>}
         <Button type="submit" loading={saving}>
           Salvar
         </Button>

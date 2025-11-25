@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createMockProductionOrder, isMock, supabase } from '../../../lib/supabase/client';
+import { createMockProductionOrder, isMockMode, supabase } from '../../../lib/supabase/client';
 import { ProductionOrder } from '../../../types';
 import { useApp } from '../../../contexts/AppContext';
 
@@ -13,7 +13,7 @@ export const useCreateProductionOrder = () => {
     setLoading(true);
     setError(null);
     try {
-      if (isMock) {
+      if (isMockMode) {
         const order: ProductionOrder = { ...payload, id: crypto.randomUUID(), organization_id: organization.id };
         const { data, error } = await createMockProductionOrder(order);
         if (error) throw error;
