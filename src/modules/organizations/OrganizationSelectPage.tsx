@@ -12,8 +12,20 @@ const OrganizationSelectPage: React.FC = () => {
   const { showToast } = useToast();
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('OrgSelect', 'Organizações carregadas', { count: organizations.length });
+    }
     if (organizations.length === 1) {
+      if (import.meta.env.DEV) {
+        devLog('OrgSelect', 'Apenas uma organização, selecionando automaticamente', {
+          id: organizations[0].id,
+          name: organizations[0].name,
+        });
+      }
       selectOrganization(organizations[0]);
+      if (import.meta.env.DEV) {
+        devLog('OrgSelect', 'Redirecionando após seleção automática', { path: '/' });
+      }
       navigate('/', { replace: true });
     }
   }, [organizations, navigate, selectOrganization]);
@@ -27,8 +39,14 @@ const OrganizationSelectPage: React.FC = () => {
   }
 
   const handleSelect = (org: Organization) => {
+    if (import.meta.env.DEV) {
+      devLog('OrgSelect', 'Organização selecionada', { id: org.id, name: org.name });
+    }
     selectOrganization(org);
     showToast('Organização selecionada', 'success');
+    if (import.meta.env.DEV) {
+      devLog('OrgSelect', 'Redirecionando após seleção', { path: '/' });
+    }
     navigate('/', { replace: true });
   };
 

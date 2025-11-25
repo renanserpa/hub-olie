@@ -1,7 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AuthUser } from '@supabase/supabase-js';
-import { isMockMode, mockOrganizationId, supabase } from '../lib/supabase/client';
-import { Organization, User } from '../types';
+
 
 type LoginResult = { requiresOrganizationSelection?: boolean };
 
@@ -52,19 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrganization(org);
     localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
   }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      if (isMockMode) {
-        setUser(MOCK_USER);
-        setOrganizations(DEFAULT_ORGANIZATIONS);
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
-        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-        return { requiresOrganizationSelection: false };
-      }
-
+main
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const mappedUser = mapSupabaseUser(data.user);
