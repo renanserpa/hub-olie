@@ -12,18 +12,15 @@ export const useOrders = () => {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       if (!organization) {
         setData([]);
         return;
       }
-
       if (isMockMode) {
         const { data: mockData, error: mockError } = await fetchMockTable<Order>('orders', organization.id);
         if (mockError) throw mockError;
         setData(mockData || []);
-        return;
       }
 
       const { data: orders, error: supabaseError } = await supabase
