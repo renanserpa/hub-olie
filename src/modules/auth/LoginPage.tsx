@@ -21,22 +21,54 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Tentando login', { email, mode: import.meta.env.MODE });
+      }
 
+      const result = await login(email, password);
+      const target = result?.requiresOrganizationSelection || !organization ? '/select-org' : '/';
       showToast('Login realizado com sucesso', 'success');
-      navigate(result?.requiresOrganizationSelection || !organization ? '/select-org' : '/', { replace: true });
+      navigate(target, { replace: true });
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Login bem-sucedido', {
+          redirectedTo: target,
+          requiresOrganizationSelection: result?.requiresOrganizationSelection,
+        });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       setError(message);
 
       showToast('Não foi possível entrar', 'error', message);
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Erro ao fazer login', { message });
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('LoginPage', 'Página montada');
+    }
+  }, []);
 
-      navigate(organization ? '/' : '/select-org', { replace: true });
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('LoginPage', 'Render inicial ou mudança de estado', {
+        loading,
+        hasUser: !!user,
+        hasOrganization: !!organization,
+      });
+    }
+
+    if (!loading && user) {
+      const target = organization ? '/' : '/select-org';
+      if (import.meta.env.DEV) {
+        devLog('LoginPage', 'Usuário já autenticado, redirecionando', { target });
+      }
+      navigate(target, { replace: true });
     }
   }, [loading, user, organization, navigate]);
 

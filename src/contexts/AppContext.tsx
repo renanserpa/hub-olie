@@ -117,7 +117,6 @@ main
       const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
       const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-
     const finishBootstrap = () => {
       const durationMs = Math.round(performance.now() - start);
       setBootstrapDurationMs(durationMs);

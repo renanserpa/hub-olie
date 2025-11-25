@@ -5,6 +5,7 @@ import { EmptyState, LoadingState } from '../../components/shared/FeedbackStates
 import { useApp } from '../../contexts/AppContext';
 import { useToast } from '../../contexts/ToastContext';
 import { Organization } from '../../types';
+import { devLog } from '../../lib/utils/log';
 
 const OrganizationSelectPage: React.FC = () => {
   const { user, organizations, selectOrganization, loading } = useApp();
@@ -13,22 +14,33 @@ const OrganizationSelectPage: React.FC = () => {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      devLog('OrgSelect', 'Organizações carregadas', { count: organizations.length });
+      devLog('OrganizationSelectPage', 'Página montada');
     }
-    if (organizations.length === 1) {
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      devLog('OrganizationSelectPage', 'Render inicial ou mudança de estado', {
+        loading,
+        hasUser: !!user,
+        orgCount: organizations.length,
+      });
+    }
+
+    if (!loading && user && organizations.length === 1) {
       if (import.meta.env.DEV) {
-        devLog('OrgSelect', 'Apenas uma organização, selecionando automaticamente', {
-          id: organizations[0].id,
-          name: organizations[0].name,
+        devLog('OrganizationSelectPage', 'Selecionando organização automaticamente', {
+          orgId: organizations[0].id,
         });
       }
+
       selectOrganization(organizations[0]);
       if (import.meta.env.DEV) {
         devLog('OrgSelect', 'Redirecionando após seleção automática', { path: '/' });
       }
       navigate('/', { replace: true });
     }
-  }, [organizations, navigate, selectOrganization]);
+  }, [navigate, organizations, selectOrganization, user, loading]);
 
   if (loading) {
     return <LoadingState message="Carregando organizações..." />;
@@ -40,8 +52,12 @@ const OrganizationSelectPage: React.FC = () => {
 
   const handleSelect = (org: Organization) => {
     if (import.meta.env.DEV) {
-      devLog('OrgSelect', 'Organização selecionada', { id: org.id, name: org.name });
+      devLog('OrganizationSelectPage', 'Organização selecionada', {
+        orgId: org.id,
+        target: '/',
+      });
     }
+
     selectOrganization(org);
     showToast('Organização selecionada', 'success');
     if (import.meta.env.DEV) {
