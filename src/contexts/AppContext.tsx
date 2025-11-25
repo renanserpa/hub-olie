@@ -68,6 +68,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const getStoredOrganization = useCallback((): Organization | null => {
+    const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
+    if (!storedOrg) return null;
+
+    try {
+      return JSON.parse(storedOrg) as Organization;
+    } catch (error) {
+      console.error('Erro ao parsear organização armazenada', error);
+      return null;
+    }
+  }, []);
+
+  const resolveOrganizationSelection = useCallback(
+    (orgs: Organization[]): Organization | null => {
+      if (orgs.length === 1) return orgs[0];
+      if (orgs.length > 1) {
+        const storedOrg = getStoredOrganization();
+        if (storedOrg) {
+          return orgs.find((org) => org.id === storedOrg.id) || null;
+        }
+      }
+
+      return null;
+    },
+    [getStoredOrganization]
+  );
+
   const hydrateFromStorage = useCallback(() => {
     const storedUser = localStorage.getItem(STORAGE_KEYS.user);
     const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
@@ -124,22 +151,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUser(mappedUser);
     persistUser(mappedUser);
     const orgs = await loadOrganizations(mappedUser?.id);
-
-    if (orgs.length === 1) {
-      selectOrganization(orgs[0]);
-    } else if (orgs.length > 1) {
-      const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
-      if (!storedOrg) {
-        selectOrganization(null);
-      } else {
-        selectOrganization(JSON.parse(storedOrg));
-      }
-    }
+    selectOrganization(resolveOrganizationSelection(orgs));
 
     const storedTour = localStorage.getItem(STORAGE_KEYS.tour);
     if (storedTour) setTourSeen(storedTour === 'true');
     setLoading(false);
-  }, [loadOrganizations, persistUser, selectOrganization]);
+  }, [loadOrganizations, persistUser, resolveOrganizationSelection, selectOrganization]);
 
   const refreshSession = useCallback(async () => {
     setLoading(true);
@@ -160,7 +177,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     await bootstrapSupabaseSession();
-  }, [bootstrapSupabaseSession, hydrateFromStorage, organization, organizations.length, persistOrganizations, persistUser, selectOrganization, user]);
+  }, [
+    bootstrapSupabaseSession,
+    hydrateFromStorage,
+    organization,
+    organizations.length,
+    persistOrganizations,
+    persistUser,
+    resolveOrganizationSelection,
+    selectOrganization,
+    user,
+  ]);
 
   useEffect(() => {
     if (isMockMode) {
@@ -176,18 +203,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(mappedUser);
       persistUser(mappedUser);
       const orgs = await loadOrganizations(mappedUser?.id);
-      if (orgs.length === 1) {
-        selectOrganization(orgs[0]);
-      } else if (!orgs.length) {
-        selectOrganization(null);
-      }
+      selectOrganization(resolveOrganizationSelection(orgs));
       setLoading(false);
     });
 
     return () => {
       subscription?.subscription?.unsubscribe();
     };
-  }, [bootstrapSupabaseSession, hydrateFromStorage, loadOrganizations, persistUser, selectOrganization]);
+  }, [bootstrapSupabaseSession, hydrateFromStorage, loadOrganizations, persistUser, resolveOrganizationSelection, selectOrganization]);
 
   const login = useCallback(
     async (email: string, password?: string) => {
