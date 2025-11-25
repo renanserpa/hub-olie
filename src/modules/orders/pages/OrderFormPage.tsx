@@ -3,12 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
 import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
 import { useApp } from '../../../contexts/AppContext';
-import { useToast } from '../../../contexts/ToastContext';
-import { Order } from '../../../types';
-import { useOrder } from '../hooks/useOrder';
-import { useUpsertOrder } from '../hooks/useUpsertOrder';
-
-type OrderStatus = Order['status'];
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
@@ -122,17 +116,7 @@ const OrderFormPage: React.FC = () => {
           </div>
         </div>
 
-        {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-        <div className="flex gap-3">
-          <Button type="button" variant="secondary" onClick={() => navigate('/orders')}>
-            Cancelar
-          </Button>
-          <Button type="submit" loading={loading}>
-            {id ? 'Salvar alterações' : 'Criar pedido'}
-          </Button>
-        </div>
       </form>
     </main>
   );

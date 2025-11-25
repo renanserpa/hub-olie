@@ -1,9 +1,3 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AuthUser } from '@supabase/supabase-js';
-import { isMockMode, mockOrganizationId, supabase } from '../lib/supabase/client';
-import { devLog } from '../lib/utils/log';
-import { Organization, User } from '../types';
-
 type LoginResult = { requiresOrganizationSelection?: boolean };
 
 interface AppContextValue {
@@ -11,6 +5,7 @@ interface AppContextValue {
   organization: Organization | null;
   organizations: Organization[];
   loading: boolean;
+  bootstrapDurationMs?: number;
   role?: string;
   tourSeen: boolean;
   bootstrapDurationMs?: number;
@@ -48,26 +43,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [bootstrapDurationMs, setBootstrapDurationMs] = useState<number | undefined>(undefined);
   const [tourSeen, setTourSeen] = useState<boolean>(() => localStorage.getItem(STORAGE_KEYS.tour) === '1');
 
   const selectOrganization = useCallback((org: Organization) => {
     setOrganization(org);
     localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
   }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      if (isMockMode) {
-        setUser(MOCK_USER);
-        setOrganizations(DEFAULT_ORGANIZATIONS);
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
-        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-        return { requiresOrganizationSelection: false };
-      }
-
+main
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const mappedUser = mapSupabaseUser(data.user);
@@ -118,31 +100,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    const bootstrapStart = performance.now();
 
     const initialize = async () => {
       const storedUser = localStorage.getItem(STORAGE_KEYS.user);
       const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
       const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-      if (storedUser) setUser(JSON.parse(storedUser));
-      if (storedOrg) setOrganization(JSON.parse(storedOrg));
-      if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
 
-      await refreshSession();
-
-      const duration = Math.round(performance.now() - bootstrapStart);
-      setBootstrapDurationMs(duration);
-
-      if (import.meta.env.DEV) {
-        devLog('AppContext', 'Bootstrap finished', {
-          durationMs: duration,
-          isMockMode,
-        });
-      }
-    };
-
-    initialize();
   }, [refreshSession]);
 
   const value = useMemo(

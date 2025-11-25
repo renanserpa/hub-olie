@@ -10,14 +10,6 @@ export const useOrder = (id?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!id) {
-      setData(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
     try {
       if (!organization) {
         setData(null);
