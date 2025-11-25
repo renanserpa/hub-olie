@@ -32,7 +32,7 @@ const ProductionOrderDetailPage: React.FC = () => {
     <div className="space-y-4">
       <div>
         <p className="text-xs uppercase tracking-wide text-slate-500">Produção</p>
-        <h1 className="text-2xl font-semibold">{data.reference}</h1>
+        <h1 className="text-2xl font-semibold">{data.code}</h1>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
@@ -41,7 +41,7 @@ const ProductionOrderDetailPage: React.FC = () => {
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
           <p className="text-xs uppercase text-slate-500">Início planejado</p>
-          <h3 className="text-xl font-semibold">{new Date(data.planned_start).toLocaleString('pt-BR')}</h3>
+          <h3 className="text-xl font-semibold">{new Date(data.planned_start_date).toLocaleString('pt-BR')}</h3>
         </div>
       </div>
     </div>
