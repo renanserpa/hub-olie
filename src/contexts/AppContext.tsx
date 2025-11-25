@@ -8,6 +8,7 @@ interface AppContextValue {
   bootstrapDurationMs?: number;
   role?: string;
   tourSeen: boolean;
+  bootstrapDurationMs?: number;
   completeTour: () => void;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
@@ -42,7 +43,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [bootstrapDurationMs, setBootstrapDurationMs] = useState<number | undefined>();
   const [tourSeen, setTourSeen] = useState<boolean>(() => localStorage.getItem(STORAGE_KEYS.tour) === '1');
 
   const selectOrganization = useCallback((org: Organization) => {
@@ -100,30 +100,13 @@ main
   }, []);
 
   useEffect(() => {
-    const start = performance.now();
-    const storedUser = localStorage.getItem(STORAGE_KEYS.user);
-    const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
-    const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedOrg) setOrganization(JSON.parse(storedOrg));
-    if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
+    const initialize = async () => {
+      const storedUser = localStorage.getItem(STORAGE_KEYS.user);
+      const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
+      const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-    const finishBootstrap = () => {
-      const durationMs = Math.round(performance.now() - start);
-      setBootstrapDurationMs(durationMs);
 
-      if (import.meta.env.DEV) {
-        devLog('AppContext', 'Bootstrap concluído', {
-          durationMs,
-          isMockMode,
-          hasStoredUser: !!storedUser,
-          hasStoredOrganization: !!storedOrg,
-        });
-      }
-    };
-
-    refreshSession().finally(finishBootstrap);
   }, [refreshSession]);
 
   const value = useMemo(
