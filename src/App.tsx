@@ -18,6 +18,7 @@ import InventoryPage from './modules/inventory/InventoryPage';
 import LogisticsPage from './modules/logistics/LogisticsPage';
 import FinancePage from './modules/finance/FinancePage';
 import SettingsPage from './modules/settings/SettingsPage';
+import { DebugPage } from './modules/debug/DebugPage';
 
 const App: React.FC = () => {
   const { user, organization, tourSeen, completeTour } = useApp();
@@ -48,6 +49,11 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Route>
+        {import.meta.env.DEV && (
+          <Route element={<ProtectedRoute />}>
+            <Route path="/__debug" element={<DebugPage />} />
+          </Route>
+        )}
         <Route path="*" element={<Navigate to={user ? (organization ? '/' : '/select-org') : '/login'} replace />} />
       </Routes>
       <AppTour open={!!user && !!organization && !tourSeen} onClose={completeTour} />
