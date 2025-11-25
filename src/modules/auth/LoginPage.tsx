@@ -13,24 +13,6 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  useEffect(() => {
-    if (user && organization) {
-      navigate('/', { replace: true });
-    }
-  }, [organization, user, navigate]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    const result = await login(email, password);
-    setSubmitting(false);
-    if (result.error) {
-      setError(result.error);
-      showToast('Erro ao entrar', 'error', result.error);
-      return;
-    }
-    showToast('Login realizado', 'success');
     navigate(result.requiresOrganizationSelection ? '/select-org' : '/', { replace: true });
   };
 
@@ -64,7 +46,6 @@ const LoginPage: React.FC = () => {
             />
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={submitting || loading} loading={submitting || loading}>
             {submitting || loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>

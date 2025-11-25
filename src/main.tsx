@@ -10,7 +10,10 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-createRoot(rootElement).render(
+console.log('[OlieHub] main.tsx carregado, montando <App />');
+const root = createRoot(rootElement);
+
+root.render(
   <React.StrictMode>
     <BrowserRouter>
       <ToastProvider>
@@ -19,5 +22,5 @@ createRoot(rootElement).render(
         </AppProvider>
       </ToastProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
