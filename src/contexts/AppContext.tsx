@@ -1,8 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AuthUser } from '@supabase/supabase-js';
-import { isMockMode, mockOrganizationId, supabase } from '../lib/supabase/client';
-import { Organization, User } from '../types';
-import { devLog } from '../lib/utils/log';
+
 
 type LoginResult = { requiresOrganizationSelection?: boolean };
 
@@ -48,26 +44,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [tourSeen, setTourSeen] = useState<boolean>(() => localStorage.getItem(STORAGE_KEYS.tour) === '1');
-  const [bootStartedAt] = useState(() => (typeof performance !== 'undefined' ? performance.now() : 0));
-  const bootLoggedRef = useRef(false);
 
   const selectOrganization = useCallback((org: Organization) => {
     setOrganization(org);
     localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
   }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      if (isMockMode) {
-        setUser(MOCK_USER);
-        setOrganizations(DEFAULT_ORGANIZATIONS);
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
-        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-        return { requiresOrganizationSelection: false };
-      }
-
+main
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const mappedUser = mapSupabaseUser(data.user);
@@ -128,19 +110,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     refreshSession();
   }, [refreshSession]);
-
-  useEffect(() => {
-    if (loading || bootLoggedRef.current) return;
-
-    const duration = (typeof performance !== 'undefined' ? performance.now() : bootStartedAt) - bootStartedAt;
-    devLog('[Boot]', `AppContext ready in ${Math.round(duration)}ms`, {
-      mockMode: isMockMode,
-      hasUser: !!user,
-      hasOrganization: !!organization,
-      organizationsCount: organizations.length,
-    });
-    bootLoggedRef.current = true;
-  }, [bootStartedAt, loading, organization, organizations.length, user]);
 
   const value = useMemo(
     () => ({

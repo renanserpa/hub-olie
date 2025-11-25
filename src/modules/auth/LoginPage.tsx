@@ -21,26 +21,13 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Tentando login', { email });
-      }
-      const result = await login(email, password);
-      if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Login bem-sucedido', {
-          requiresOrganizationSelection: result?.requiresOrganizationSelection ?? false,
-          userId: user?.id ?? null,
-          email: user?.email ?? email,
-          organizationId: organization?.id ?? null,
-        });
-      }
+
       showToast('Login realizado com sucesso', 'success');
       navigate(result?.requiresOrganizationSelection || !organization ? '/select-org' : '/', { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       setError(message);
-      if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Falha no login', { message });
-      }
+
       showToast('Não foi possível entrar', 'error', message);
     } finally {
       setSubmitting(false);
@@ -48,24 +35,7 @@ const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Componente montado', {
-          hasUser: !!user,
-          hasOrganization: !!organization,
-        });
-      }
-    }
-  }, [organization, user]);
 
-  useEffect(() => {
-    if (!loading && user) {
-      if (import.meta.env.DEV) {
-        devLog('LoginPage', 'Usuário autenticado detectado, redirecionando', {
-          hasOrganization: !!organization,
-        });
-      }
       navigate(organization ? '/' : '/select-org', { replace: true });
     }
   }, [loading, user, organization, navigate]);

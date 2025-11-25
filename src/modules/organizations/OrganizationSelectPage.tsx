@@ -4,7 +4,6 @@ import { Button } from '../../components/shared/Button';
 import { EmptyState, LoadingState } from '../../components/shared/FeedbackStates';
 import { useApp } from '../../contexts/AppContext';
 import { useToast } from '../../contexts/ToastContext';
-import { devLog } from '../../lib/utils/log';
 import { Organization } from '../../types';
 
 const OrganizationSelectPage: React.FC = () => {
@@ -36,9 +35,6 @@ const OrganizationSelectPage: React.FC = () => {
   }
 
   if (!user) {
-    if (import.meta.env.DEV) {
-      devLog('OrgSelect', 'Usuário ausente, redirecionando para login');
-    }
     return <Navigate to="/login" replace />;
   }
 
@@ -55,9 +51,6 @@ const OrganizationSelectPage: React.FC = () => {
   };
 
   if (!organizations.length) {
-    if (import.meta.env.DEV) {
-      devLog('OrgSelect', 'Nenhuma organização encontrada');
-    }
     return <EmptyState description="Nenhuma organização disponível." />;
   }
 
