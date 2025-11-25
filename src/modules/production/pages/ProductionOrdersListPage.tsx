@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../../components/shared/Button';
 import { TableSkeleton } from '../../../components/shared/Table';
 import { useProductionOrders } from '../hooks/useProductionOrders';
@@ -18,6 +18,7 @@ const ProductionOrdersListPage: React.FC = () => {
   const { showToast } = useToast();
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [dragging, setDragging] = useState<ProductionOrder | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     setOrders(data);
@@ -50,6 +51,15 @@ const ProductionOrdersListPage: React.FC = () => {
     }
   };
 
+  const filteredOrders = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return orders;
+
+    return orders.filter((order) =>
+      [order.code, order.status].some((value) => value.toLowerCase().includes(term)),
+    );
+  }, [orders, search]);
+
   const handleCreate = async () => {
     if (!organization) return;
     try {
@@ -75,24 +85,47 @@ const ProductionOrdersListPage: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-slate-500">Produção</p>
           <h1 className="text-2xl font-semibold">Ordens de produção</h1>
         </div>
-        <Button onClick={handleCreate} loading={creating} className="w-full sm:w-auto">
-          Nova ordem
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+          <div className="w-full sm:w-56">
+            <label htmlFor="production-search" className="sr-only">
+              Buscar ordens de produção
+            </label>
+            <input
+              id="production-search"
+              type="search"
+              placeholder="Buscar por código ou status"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <Button onClick={handleCreate} loading={creating} className="w-full sm:w-auto">
+            Nova ordem
+          </Button>
+        </div>
       </div>
 
       {loading ? (
         <TableSkeleton rows={3} columns={3} />
       ) : error ? (
         <ErrorState description={error} onAction={refetch} />
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <EmptyState
           title="Nenhuma ordem de produção"
-          description="Crie uma nova OP para começar a acompanhar a produção."
+          description={
+            search
+              ? 'Ajuste a busca ou limpe o filtro para visualizar as ordens.'
+              : 'Crie uma nova OP para começar a acompanhar a produção.'
+          }
           actionLabel="Nova ordem"
           onAction={handleCreate}
         />
       ) : (
-        <ProductionKanbanBoard orders={orders} onDropStatus={handleDropStatus} onDragStart={handleDragStart} />
+        <ProductionKanbanBoard
+          orders={filteredOrders}
+          onDropStatus={handleDropStatus}
+          onDragStart={handleDragStart}
+        />
       )}
     </div>
   );
