@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../../components/shared/Button';
-import { useUpsertOrder } from '../hooks/useUpsertOrder';
-import { useOrder } from '../hooks/useOrder';
-import { useApp } from '../../../contexts/AppContext';
-import { OrderStatus } from '../../../constants/orders';
-import { useToast } from '../../../contexts/ToastContext';
 import { ErrorState, LoadingState } from '../../../components/shared/FeedbackStates';
+import { useApp } from '../../../contexts/AppContext';
 
 const OrderFormPage: React.FC = () => {
   const { id } = useParams();
@@ -32,6 +28,7 @@ const OrderFormPage: React.FC = () => {
     event.preventDefault();
     if (!organization) return;
     setFormError(null);
+
     try {
       await upsert({
         id: id || crypto.randomUUID(),
@@ -119,12 +116,7 @@ const OrderFormPage: React.FC = () => {
           </div>
         </div>
 
-        {formError && <p className="text-sm text-red-600">{formError}</p>}
-        {error && !formError && <p className="text-sm text-red-600">{error}</p>}
 
-        <Button type="submit" disabled={loading} className="w-full md:w-auto">
-          {loading ? 'Salvando...' : id ? 'Salvar alterações' : 'Criar pedido'}
-        </Button>
       </form>
     </main>
   );

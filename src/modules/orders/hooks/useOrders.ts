@@ -21,17 +21,20 @@ export const useOrders = () => {
         const { data: mockData, error: mockError } = await fetchMockTable<Order>('orders', organization.id);
         if (mockError) throw mockError;
         setData(mockData || []);
-      } else {
-        const { data: orders, error: queryError } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('organization_id', organization.id)
-          .order('created_at', { ascending: false });
-        if (queryError) throw queryError;
-        setData(orders || []);
       }
+
+      const { data: orders, error: supabaseError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('organization_id', organization.id)
+        .order('created_at', { ascending: false });
+
+      if (supabaseError) throw supabaseError;
+      setData(orders || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos');
+      const message = err instanceof Error ? err.message : 'Erro ao carregar pedidos';
+      setError(message);
+      setData([]);
     } finally {
       setLoading(false);
     }
