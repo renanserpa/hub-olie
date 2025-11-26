@@ -56,34 +56,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.org, JSON.stringify(org));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      if (isMockMode) {
-        setUser(MOCK_USER);
-        setOrganizations(DEFAULT_ORGANIZATIONS);
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
-        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-        return { requiresOrganizationSelection: false };
-      }
+  const login = useCallback(
+    async (email: string, password: string): Promise<LoginResult> => {
+      setLoading(true);
+      try {
+        if (isMockMode) {
+          setUser(MOCK_USER);
+          localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(MOCK_USER));
+          setOrganizations(DEFAULT_ORGANIZATIONS);
+          localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const mappedUser = mapSupabaseUser(data.user);
-      setUser(mappedUser);
-      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(mappedUser));
-      setOrganizations(DEFAULT_ORGANIZATIONS);
-      localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
-      if (!organization && DEFAULT_ORGANIZATIONS.length === 1) {
-        selectOrganization(DEFAULT_ORGANIZATIONS[0]);
-        return { requiresOrganizationSelection: false };
+          if (!organization && DEFAULT_ORGANIZATIONS.length === 1) {
+            selectOrganization(DEFAULT_ORGANIZATIONS[0]);
+            return { requiresOrganizationSelection: false };
+          }
+
+          return { requiresOrganizationSelection: true };
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const mappedUser = mapSupabaseUser(data.user);
+        setUser(mappedUser);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(mappedUser));
+
+        // Placeholder: fetch organizations when backend is ready. For now, keep defaults to unblock flow.
+        setOrganizations(DEFAULT_ORGANIZATIONS);
+        localStorage.setItem(STORAGE_KEYS.orgs, JSON.stringify(DEFAULT_ORGANIZATIONS));
+
+        if (!organization && DEFAULT_ORGANIZATIONS.length === 1) {
+          selectOrganization(DEFAULT_ORGANIZATIONS[0]);
+          return { requiresOrganizationSelection: false };
+        }
+
+        return { requiresOrganizationSelection: true };
+      } finally {
+        setLoading(false);
       }
-      return { requiresOrganizationSelection: true };
-    } finally {
-      setLoading(false);
-    }
-  }, [organization, selectOrganization]);
+    },
+    [organization, selectOrganization],
+  );
 
   const logout = useCallback(async () => {
     if (!isMockMode) {
@@ -101,7 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isMockMode) {
       setUser(MOCK_USER);
       setOrganizations(DEFAULT_ORGANIZATIONS);
-      setOrganization(DEFAULT_ORGANIZATIONS[0]);
+      setOrganization((current) => current ?? DEFAULT_ORGANIZATIONS[0]);
       setLoading(false);
       return;
     }
@@ -123,9 +136,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const storedOrg = localStorage.getItem(STORAGE_KEYS.org);
     const storedOrgs = localStorage.getItem(STORAGE_KEYS.orgs);
 
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedOrg) setOrganization(JSON.parse(storedOrg));
-    if (storedOrgs) setOrganizations(JSON.parse(storedOrgs));
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        devLog('AppContext', 'Erro ao recuperar usuário do storage', { error });
+      }
+    }
+
+    if (storedOrg) {
+      try {
+        setOrganization(JSON.parse(storedOrg));
+      } catch (error) {
+        devLog('AppContext', 'Erro ao recuperar organização do storage', { error });
+      }
+    }
+
+    if (storedOrgs) {
+      try {
+        setOrganizations(JSON.parse(storedOrgs));
+      } catch (error) {
+        devLog('AppContext', 'Erro ao recuperar lista de organizações do storage', { error });
+      }
+    }
 
     const finishBootstrap = () => {
       const durationMs = Math.round(performance.now() - start);

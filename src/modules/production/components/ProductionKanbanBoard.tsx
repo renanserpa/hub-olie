@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ProductionOrder } from '../../../types';
+import { PRODUCTION_STATUS_COLUMNS } from '../../../constants/production';
 import { ProductionKanbanColumn } from './ProductionKanbanColumn';
 
 interface Props {
@@ -8,16 +9,9 @@ interface Props {
   onDragStart: (order: ProductionOrder) => void;
 }
 
-const STATUS_COLUMNS: { key: ProductionOrder['status']; label: string }[] = [
-  { key: 'planned', label: 'Planejada' },
-  { key: 'in_progress', label: 'Em produção' },
-  { key: 'blocked', label: 'Bloqueada' },
-  { key: 'completed', label: 'Concluída' },
-];
-
 export const ProductionKanbanBoard: React.FC<Props> = ({ orders, onDropStatus, onDragStart }) => {
   const grouped = useMemo(() => {
-    return STATUS_COLUMNS.map((column) => ({
+    return PRODUCTION_STATUS_COLUMNS.map((column) => ({
       ...column,
       items: orders.filter((order) => order.status === column.key),
     }));

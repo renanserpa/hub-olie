@@ -54,11 +54,6 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Route>
-        {import.meta.env.DEV && (
-          <Route element={<ProtectedRoute />}>
-            <Route path="/__debug" element={<DebugPage />} />
-          </Route>
-        )}
         <Route path="*" element={<Navigate to={user ? (organization ? '/' : '/select-org') : '/login'} replace />} />
       </Routes>
       <AppTour open={!!user && !!organization && !tourSeen} onClose={completeTour} />
