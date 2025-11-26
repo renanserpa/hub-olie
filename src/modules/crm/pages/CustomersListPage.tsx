@@ -85,14 +85,14 @@ const CustomersListPage: React.FC = () => {
     }
 
     if (!filteredCustomers.length) {
-      return (
-        <EmptyState
-          title="Nenhum cliente encontrado"
-          description="Ajuste a busca ou cadastre um novo cliente para começar."
-          actionLabel="Cadastrar cliente"
-          onAction={() => refetch()}
-        />
-      );
+        return (
+          <EmptyState
+            title="Nenhum cliente cadastrado."
+            description="Ajuste a busca ou cadastre um novo cliente."
+            actionLabel="Cadastrar cliente"
+            onAction={() => refetch()}
+          />
+        );
     }
 
     return (
@@ -135,7 +135,7 @@ const CustomersListPage: React.FC = () => {
             ),
           },
         ]}
-        emptyMessage="Nenhum cliente cadastrado"
+        emptyMessage="Nenhum cliente cadastrado."
       />
     );
   };

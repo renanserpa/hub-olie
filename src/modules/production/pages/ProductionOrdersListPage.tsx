@@ -86,7 +86,7 @@ const ProductionOrdersListPage: React.FC = () => {
         <ErrorState description={error} onAction={refetch} />
       ) : orders.length === 0 ? (
         <EmptyState
-          title="Nenhuma ordem de produção"
+          title="Nenhuma ordem de produção."
           description="Crie uma nova OP para começar a acompanhar a produção."
           actionLabel="Nova ordem"
           onAction={handleCreate}

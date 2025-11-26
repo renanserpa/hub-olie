@@ -22,7 +22,7 @@ const InventoryPage: React.FC = () => {
     }
   }, [movements.error, showToast]);
 
-  if (items.loading || movements.loading) return <LoadingState message="Carregando estoque..." />;
+  if (items.loading || movements.loading) return <LoadingState message="Carregando dados…" />;
 
   if (items.error || movements.error)
     return (
@@ -55,7 +55,7 @@ const InventoryPage: React.FC = () => {
                 { key: 'sku', label: 'SKU' },
                 { key: 'quantity', label: 'Quantidade' },
               ]}
-              emptyMessage="Nenhum item"
+              emptyMessage="Nenhum item encontrado."
             />
           )}
         </div>
@@ -72,7 +72,7 @@ const InventoryPage: React.FC = () => {
                 { key: 'created_at', label: 'Data' },
                 { key: 'note', label: 'Observação' },
               ]}
-              emptyMessage="Sem movimentações"
+              emptyMessage="Nenhuma movimentação registrada."
             />
           )}
         </div>
