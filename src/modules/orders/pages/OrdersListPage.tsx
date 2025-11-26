@@ -7,6 +7,8 @@ import { Table, TableSkeleton } from '../../../components/shared/Table';
 import { ORDER_STATUS_FILTERS, ORDER_STATUS_META, OrderStatus } from '../../../constants/orders';
 import { formatCurrency, formatDate } from '../../../lib/utils/format';
 import { useToast } from '../../../contexts/ToastContext';
+import { useOrders } from '../hooks/useOrders';
+import { Order } from '../../../types';
 
 const OrdersListPage: React.FC = () => {
   const { data, loading, error, refetch } = useOrders();
@@ -103,15 +105,15 @@ const OrdersListPage: React.FC = () => {
       return <ErrorState description={error} onAction={refetch} />;
     }
 
-    if (!filteredOrders.length) {
-      return (
-        <EmptyState
-          title="Nenhum pedido encontrado"
-          description="Ajuste os filtros ou cadastre um novo pedido para começar."
-          actionLabel="Cadastrar pedido"
-          onAction={() => refetch()}
-        />
-      );
+      if (!filteredOrders.length) {
+        return (
+          <EmptyState
+            title="Nenhum pedido encontrado."
+            description="Ajuste os filtros ou cadastre um novo pedido."
+            actionLabel="Cadastrar pedido"
+            onAction={() => refetch()}
+          />
+        );
     }
 
     return (
@@ -156,10 +158,20 @@ const OrdersListPage: React.FC = () => {
 
   return (
     <main className="space-y-4" aria-labelledby="orders-heading">
+      <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-slate-500">Pedidos</p>
+            <h1 id="orders-heading" className="text-2xl font-semibold">
+              Gestão de pedidos
+            </h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Visualize, filtre e detalhe os pedidos do ateliê.</p>
+          </div>
+          <div className="w-full sm:w-auto sm:pt-2">{renderHeaderActions}</div>
         </div>
       </div>
 
-
+      {renderContent()}
     </main>
   );
 };

@@ -13,13 +13,13 @@ interface FeedbackProps {
 export const LoadingState: React.FC<{ message?: string; className?: string }> = ({ message, className }) => (
   <div className={`flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 ${className || ''}`}>
     <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-    <p className="mt-3 text-sm text-slate-600 dark:text-slate-200">{message || 'Carregando dados...'}</p>
+    <p className="mt-3 text-sm text-slate-600 dark:text-slate-200">{message || 'Carregando dados…'}</p>
   </div>
 );
 
 export const ErrorState: React.FC<FeedbackProps> = ({
   title = 'Não foi possível carregar',
-  description = 'Ocorreu um erro ao buscar as informações.',
+  description = 'Algo deu errado ao carregar os dados.',
   actionLabel = 'Tentar novamente',
   onAction,
   className,
@@ -39,7 +39,7 @@ export const ErrorState: React.FC<FeedbackProps> = ({
 );
 
 export const EmptyState: React.FC<FeedbackProps> = ({
-  title = 'Nenhum registro encontrado',
+  title = 'Nenhum registro encontrado.',
   description,
   actionLabel,
   onAction,
