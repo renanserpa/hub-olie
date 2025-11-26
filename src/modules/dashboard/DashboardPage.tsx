@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Skeleton } from '../../components/shared/Skeleton';
 import { formatCurrency, formatDate } from '../../lib/utils/format';
+import { ORDER_STATUS_META, OrderStatus } from '../../constants/orders';
 import { useOrders } from '../orders/hooks/useOrders';
 import { useProductionOrders } from '../production/hooks/useProductionOrders';
 
@@ -110,6 +111,21 @@ const DashboardPage: React.FC = () => {
         value: total,
       }));
   }, [ordersData]);
+
+  const renderStatusBadge = (status: OrderStatus | string) => {
+    const meta = ORDER_STATUS_META[status as OrderStatus];
+    const label = meta?.label ?? status;
+    const badgeClass = meta?.badgeClass ?? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
+    const textClass = meta?.textClass ?? 'text-slate-700 dark:text-slate-200';
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold ${badgeClass} ${textClass}`}
+      >
+        {label}
+      </span>
+    );
+  };
 
   return (
     <main className="space-y-4">
@@ -222,9 +238,9 @@ const DashboardPage: React.FC = () => {
                     <p className="font-semibold">{order.customer_name}</p>
                     <p className="text-xs text-slate-500">{formatDate(order.created_at)}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-1">
                     <p className="font-semibold">{formatCurrency(order.total)}</p>
-                    <p className="text-xs uppercase text-slate-500">{order.status}</p>
+                    <div className="flex justify-end">{renderStatusBadge(order.status)}</div>
                   </div>
                 </div>
               ))}
