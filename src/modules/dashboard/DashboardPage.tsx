@@ -59,7 +59,7 @@ const DashboardPage: React.FC = () => {
   const pipelineRevenue = useMemo(
     () =>
       ordersData
-        .filter((order) => order.status === 'confirmed' && order.status !== 'fulfilled' && order.status !== 'cancelled')
+        .filter((order) => order.status === 'confirmed')
         .reduce((sum, order) => sum + (order.total || 0), 0),
     [ordersData]
   );
