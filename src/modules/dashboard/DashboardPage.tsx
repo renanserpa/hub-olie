@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Skeleton } from '../../components/shared/Skeleton';
 import { formatCurrency, formatDate } from '../../lib/utils/format';
+import { ORDER_STATUS_META, OrderStatus } from '../../constants/orders';
 import { useOrders } from '../orders/hooks/useOrders';
 import { useProductionOrders } from '../production/hooks/useProductionOrders';
 
@@ -10,13 +11,28 @@ type StatCardProps = {
   title: string;
   value: string;
   helper?: string;
+  tooltip?: string;
   loading?: boolean;
   error?: string | null;
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, helper, loading, error }) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, helper, tooltip, loading, error }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-    <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
+    <div className="flex items-center gap-2">
+      <p className="text-xs uppercase tracking-wide text-slate-500" title={tooltip}>
+        {title}
+      </p>
+      {tooltip ? (
+        <span
+          className="text-xs text-slate-400"
+          title={tooltip}
+          aria-label="Mais informações"
+          role="note"
+        >
+          ⓘ
+        </span>
+      ) : null}
+    </div>
     {loading ? (
       <Skeleton className="mt-2 h-7 w-20" />
     ) : (
@@ -96,34 +112,52 @@ const DashboardPage: React.FC = () => {
       }));
   }, [ordersData]);
 
+  const renderStatusBadge = (status: OrderStatus | string) => {
+    const meta = ORDER_STATUS_META[status as OrderStatus];
+    const label = meta?.label ?? status;
+    const badgeClass = meta?.badgeClass ?? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
+    const textClass = meta?.textClass ?? 'text-slate-700 dark:text-slate-200';
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold ${badgeClass} ${textClass}`}
+      >
+        {label}
+      </span>
+    );
+  };
+
   return (
     <main className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Pedidos ativos"
           value={activeOrders.length.toString()}
-          helper="Pedidos em andamento"
+          helper="Pedidos com status diferente de Concluído ou Cancelado."
+          tooltip="Inclui pedidos ativos/em andamento; exclui Concluídos e Cancelados."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
         <StatCard
           title="Orçamentos"
           value={quotes.length.toString()}
-          helper="Pedidos em orçamento"
+          helper="Pedidos em orçamento (status Rascunho)."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
         <StatCard
           title="Produção ativa"
           value={activeProduction.length.toString()}
-          helper="Ordens em execução"
+          helper="Ordens de produção com status Em execução."
+          tooltip="Considera ordens de produção em andamento (Em execução)."
           loading={productionLoading}
           error={productionError ? 'Não foi possível carregar produção.' : null}
         />
         <StatCard
           title="Receita em pipeline"
           value={formatCurrency(pipelineRevenue)}
-          helper="Pedidos confirmados em aberto"
+          helper="Somente pedidos confirmados; não inclui orçamentos nem cancelados."
+          tooltip="Base apenas em pedidos confirmados; orçamentos/cancelados ficam de fora."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
@@ -204,9 +238,9 @@ const DashboardPage: React.FC = () => {
                     <p className="font-semibold">{order.customer_name}</p>
                     <p className="text-xs text-slate-500">{formatDate(order.created_at)}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-1">
                     <p className="font-semibold">{formatCurrency(order.total)}</p>
-                    <p className="text-xs uppercase text-slate-500">{order.status}</p>
+                    <div className="flex justify-end">{renderStatusBadge(order.status)}</div>
                   </div>
                 </div>
               ))}
