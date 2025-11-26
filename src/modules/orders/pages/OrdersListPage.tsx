@@ -158,20 +158,22 @@ const OrdersListPage: React.FC = () => {
 
   return (
     <main className="space-y-4" aria-labelledby="orders-heading">
-      <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Pedidos</p>
-            <h1 id="orders-heading" className="text-2xl font-semibold">
-              Gestão de pedidos
+            <h1 id="orders-heading" className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Pedidos
             </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Visualize, filtre e detalhe os pedidos do ateliê.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Visualize e gerencie os pedidos.</p>
           </div>
-          <div className="w-full sm:w-auto sm:pt-2">{renderHeaderActions}</div>
+          <div className="hidden sm:block">{renderHeaderActions}</div>
         </div>
+        <div className="sm:hidden">{renderHeaderActions}</div>
       </div>
 
-      {renderContent()}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        {renderContent()}
+      </div>
     </main>
   );
 };

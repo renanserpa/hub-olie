@@ -43,8 +43,12 @@ export const fetchMockTable = async <T>(table: TableName, organization_id?: stri
   switch (table) {
     case 'orders':
       return { data: filterByOrg(mockOrders, organization_id) as T[], error: null };
-    case 'order_items':
-      return { data: mockOrderItems as T[], error: null };
+    case 'order_items': {
+      const allowedOrderIds = (organization_id ? filterByOrg(mockOrders, organization_id) : mockOrders).map(
+        (order) => order.id,
+      );
+      return { data: mockOrderItems.filter((item) => allowedOrderIds.includes(item.order_id)) as T[], error: null };
+    }
     case 'customers':
       return { data: filterByOrg(mockCustomers, organization_id) as T[], error: null };
     case 'production_orders':

@@ -46,8 +46,10 @@ export interface ProductionOrder {
   status: 'planned' | 'in_progress' | 'completed' | 'blocked';
   priority: number;
   order_id?: UUID;
+  created_at?: string;
   planned_start_date: string;
   planned_end_date?: string;
+  description?: string | null;
 }
 
 export interface InventoryItem {

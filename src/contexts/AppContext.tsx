@@ -79,11 +79,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectOrganization(DEFAULT_ORGANIZATIONS[0]);
         return { requiresOrganizationSelection: false };
       }
-      return { requiresOrganizationSelection: true };
-    } finally {
-      setLoading(false);
-    }
-  }, [organization, selectOrganization]);
+    },
+    [organization, selectOrganization],
+  );
 
   const logout = useCallback(async () => {
     if (!isMockMode) {
@@ -101,7 +99,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isMockMode) {
       setUser(MOCK_USER);
       setOrganizations(DEFAULT_ORGANIZATIONS);
-      setOrganization(DEFAULT_ORGANIZATIONS[0]);
+      setOrganization((current) => current ?? DEFAULT_ORGANIZATIONS[0]);
       setLoading(false);
       return;
     }
