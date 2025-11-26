@@ -32,6 +32,8 @@ const ProductionOrderDetailPage: React.FC = () => {
       />
     );
 
+  const priorityMeta = getPriorityMeta(data.priority);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">

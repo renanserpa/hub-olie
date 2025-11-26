@@ -105,15 +105,15 @@ const OrdersListPage: React.FC = () => {
       return <ErrorState description={error} onAction={refetch} />;
     }
 
-    if (!filteredOrders.length) {
-      return (
-        <EmptyState
-          title="Nenhum pedido encontrado"
-          description="Ajuste os filtros ou cadastre um novo pedido para começar."
-          actionLabel="Cadastrar pedido"
-          onAction={() => refetch()}
-        />
-      );
+      if (!filteredOrders.length) {
+        return (
+          <EmptyState
+            title="Nenhum pedido encontrado."
+            description="Ajuste os filtros ou cadastre um novo pedido."
+            actionLabel="Cadastrar pedido"
+            onAction={() => refetch()}
+          />
+        );
     }
 
     return (
