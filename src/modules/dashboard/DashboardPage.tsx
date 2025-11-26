@@ -10,13 +10,28 @@ type StatCardProps = {
   title: string;
   value: string;
   helper?: string;
+  tooltip?: string;
   loading?: boolean;
   error?: string | null;
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, helper, loading, error }) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, helper, tooltip, loading, error }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-    <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
+    <div className="flex items-center gap-2">
+      <p className="text-xs uppercase tracking-wide text-slate-500" title={tooltip}>
+        {title}
+      </p>
+      {tooltip ? (
+        <span
+          className="text-xs text-slate-400"
+          title={tooltip}
+          aria-label="Mais informações"
+          role="note"
+        >
+          ⓘ
+        </span>
+      ) : null}
+    </div>
     {loading ? (
       <Skeleton className="mt-2 h-7 w-20" />
     ) : (
@@ -102,28 +117,31 @@ const DashboardPage: React.FC = () => {
         <StatCard
           title="Pedidos ativos"
           value={activeOrders.length.toString()}
-          helper="Pedidos em andamento"
+          helper="Pedidos com status diferente de Concluído ou Cancelado."
+          tooltip="Inclui pedidos ativos/em andamento; exclui Concluídos e Cancelados."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
         <StatCard
           title="Orçamentos"
           value={quotes.length.toString()}
-          helper="Pedidos em orçamento"
+          helper="Pedidos em orçamento (status Rascunho)."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
         <StatCard
           title="Produção ativa"
           value={activeProduction.length.toString()}
-          helper="Ordens em execução"
+          helper="Ordens de produção com status Em execução."
+          tooltip="Considera ordens de produção em andamento (Em execução)."
           loading={productionLoading}
           error={productionError ? 'Não foi possível carregar produção.' : null}
         />
         <StatCard
           title="Receita em pipeline"
           value={formatCurrency(pipelineRevenue)}
-          helper="Pedidos confirmados em aberto"
+          helper="Somente pedidos confirmados; não inclui orçamentos nem cancelados."
+          tooltip="Base apenas em pedidos confirmados; orçamentos/cancelados ficam de fora."
           loading={ordersLoading}
           error={ordersError ? 'Não foi possível carregar pedidos.' : null}
         />
