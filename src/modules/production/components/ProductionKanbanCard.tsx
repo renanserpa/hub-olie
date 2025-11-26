@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PRODUCTION_STATUS_META } from '../../../constants/production';
+import {
+  PRODUCTION_STATUS_META,
+  getProductionPriorityMeta,
+} from '../../../constants/production';
 import { formatDate } from '../../../lib/utils/format';
 import { ProductionOrder } from '../../../types';
 
@@ -13,6 +16,7 @@ export const ProductionKanbanCard: React.FC<Props> = ({ order, onDragStart }) =>
   const plannedEnd = formatDate(order.planned_end_date);
   const plannedStart = formatDate(order.planned_start_date);
   const statusMeta = PRODUCTION_STATUS_META[order.status];
+  const priorityMeta = getProductionPriorityMeta(order.priority);
 
   return (
     <Link to={`/production/${order.id}`} className="block" draggable={false}>
@@ -29,7 +33,14 @@ export const ProductionKanbanCard: React.FC<Props> = ({ order, onDragStart }) =>
             {statusMeta.label}
           </span>
         </div>
-        <p className="mt-1 text-xs text-amber-600">Prioridade: {order.priority}</p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-xs text-slate-500">Prioridade</span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${priorityMeta.badgeClass} ${priorityMeta.textClass}`}
+          >
+            {priorityMeta.label}
+          </span>
+        </div>
         {order.order_id && (
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">Pedido: {order.order_id}</p>
         )}
