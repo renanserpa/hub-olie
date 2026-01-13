@@ -1,0 +1,1259 @@
+
+[
+  {
+    "tabela": "bias_colors",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "hex",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "cmyk",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "stock_product_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "price_per_meter",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "bias_colors",
+    "coluna": "palette_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "codigo",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "unit",
+    "tipo": "USER-DEFINED",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "default_cost",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "NO",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "supply_group_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_basic_materials",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "codigo",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "type",
+    "tipo": "USER-DEFINED",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "allowed_positions_json",
+    "tipo": "ARRAY",
+    "nulo": "YES",
+    "padrao": "ARRAY[]::jsonb[]",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "max_colors",
+    "tipo": "integer",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "price_extra",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_customization_components",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "style",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'regular'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "category",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'script'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "preview_url",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "font_file_url",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "config_fonts",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "customers",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "document",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "email",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "phones",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'[]'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "tags",
+    "tipo": "ARRAY",
+    "nulo": "YES",
+    "padrao": "'{}'::text[]",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "status",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'active'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "customers",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "hex",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "cmyk",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "stock_product_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "price_per_meter",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "palette_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "cmyk_code",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "fabric_colors",
+    "coluna": "hex_code",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "material_id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "type",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "quantity",
+    "tipo": "numeric",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "unit",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "warehouse_from",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "warehouse_to",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "location_from",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "location_to",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "reference",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "notes",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "created_by",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "inventory_movements",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "order_id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "variant_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "attrs",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "quantity",
+    "tipo": "integer",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "unit_price",
+    "tipo": "numeric",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "discount",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "notes",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "order_items",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "orders",
+    "coluna": "number",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "origin",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'admin'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "status",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'novo'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "channel",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'admin'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "customer_id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "shipping_address_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "shipping_method",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "shipping_fee",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "shipping_distance_km",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "subtotal",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "discounts",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "total",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "approved_quote_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "orders",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "po_number",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "product_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "variant_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "quantity",
+    "tipo": "integer",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "status",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": "'pending'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "priority",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'normal'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "due_date",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "started_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "completed_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "notes",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "production_orders",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "products",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "slug",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "category",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "description",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "status",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": "'draft'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "base_sku",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "tags",
+    "tipo": "ARRAY",
+    "nulo": "YES",
+    "padrao": "'{}'::text[]",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "product_visual_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "sku_template",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'${baseSku}-${cor-tecido}-${cor-ziper}'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "name_template",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": "'${name} | Tecido ${cor-tecido} / Zíper ${cor-ziper}'::text",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "max_variants",
+    "tipo": "integer",
+    "nulo": "YES",
+    "padrao": "60",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "blocked_combinations",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'[]'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "base_price",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": "0",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "products",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "YES",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "document",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "email",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "phone",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "contact_person",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "payment_terms",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "lead_time_days",
+    "tipo": "integer",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "rating",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "notes",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "metadata",
+    "tipo": "jsonb",
+    "nulo": "YES",
+    "padrao": "'{}'::jsonb",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "suppliers",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "id",
+    "tipo": "uuid",
+    "nulo": "NO",
+    "padrao": "gen_random_uuid()",
+    "chave_primaria": true
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "name",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "hex",
+    "tipo": "text",
+    "nulo": "NO",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "cmyk",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "stock_product_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "price_delta",
+    "tipo": "numeric",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "is_active",
+    "tipo": "boolean",
+    "nulo": "NO",
+    "padrao": "true",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "created_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "updated_at",
+    "tipo": "timestamp with time zone",
+    "nulo": "NO",
+    "padrao": "now()",
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "palette_id",
+    "tipo": "uuid",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  },
+  {
+    "tabela": "zipper_colors",
+    "coluna": "cmyk_code",
+    "tipo": "text",
+    "nulo": "YES",
+    "padrao": null,
+    "chave_primaria": false
+  }
+]

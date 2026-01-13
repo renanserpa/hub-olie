@@ -1,0 +1,56 @@
+{
+  "finalizar módulo produção": {
+    "route": ["ArquitetoSupremo", "PromptArchitectAI", "EngenheiroDeDados", "IntegratorAI", "GeminiAI", "ArquitetoSupremo_Finalizador"],
+    "context": "production",
+    "action": "generate_diff_with_audit",
+    "report": "/reports/audit_production_gemini_v3.md"
+  },
+  "criar op para o pedido": {
+    "route": ["ExecutorAI"],
+    "context": "production",
+    "action": "create_production_order_from_order_number",
+    "report": null
+  },
+  "auditoria completa do fluxo": {
+    "route": ["SYSTEM_AUDIT_START", "ArquitetoSupremo_AUDIT", "PromptArchitectAI_AUDIT", "EngenheiroDeDados_AUDIT", "IntegratorAI_AUDIT", "ArquitetoSupremo_AUDIT_FINISH", "SYSTEM_AUDIT_END"],
+    "context": "production",
+    "action": "audit_flow",
+    "report": "/reports/audit_production_command_v3.md"
+  },
+  "auditoria cognitiva geral": {
+    "route": ["SYSTEM_AUDIT_START", "AtlasAI_AUDIT", "GeminiAI_AUDIT", "EngenheiroDeDados_AUDIT", "Vercel_AUDIT", "ArquitetoSupremo_Finalizador"],
+    "context": "system_wide",
+    "action": "full_cognitive_audit",
+    "report": "/reports/system_orchestration_audit_v3.md"
+  },
+  "integração google fullstack": {
+    "route": ["ArquitetoSupremo", "GeminiHubAI", "ArquitetoSupremo_Finalizador"],
+    "context": "integrations",
+    "action": "google_fullstack_integration",
+    "report": "/reports/google_integration_audit.md"
+  },
+  "gerar relatório diretoria": {
+    "route": ["AnalyticsAI", "ExecutiveAI", "ArquitetoSupremo"],
+    "context": "executive",
+    "action": "generate_report",
+    "report": "/reports/executive_v3_diff.md"
+  },
+  "atualizar KPIs analytics": {
+    "route": ["AnalyticsAI", "IntegratorAI", "Supabase"],
+    "context": "analytics",
+    "action": "update_kpis",
+    "report": "/reports/analytics_v3_diff.md"
+  },
+  "criar campanha marketing": {
+    "route": ["CatalisadorAI", "MarketingAI", "VisualDesignerAI", "ScriptWriterAI"],
+    "context": "marketing",
+    "action": "create_campaign",
+    "report": "/reports/marketing_v3_diff.md"
+  },
+  "fechar pedido compras": {
+    "route": ["PurchasesAI", "FinanceAI", "InventoryAI"],
+    "context": "purchases",
+    "action": "close_po",
+    "report": "/reports/purchases_v3_diff.md"
+  }
+}
