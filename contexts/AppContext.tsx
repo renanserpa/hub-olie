@@ -13,10 +13,6 @@ const DEFAULT_PAGE_BY_ROLE: Record<string, string> = {
     Conteudo: 'marketing',
 };
 
-interface MfaChallenge {
-    amr: { method: string; timestamp: number }[];
-}
-
 interface AppContextType {
   user: UserProfile | null;
   isLoading: boolean;
@@ -24,8 +20,6 @@ interface AppContextType {
   setActiveModule: (module: string) => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  mfaChallenge: MfaChallenge | null;
-  setMfaChallenge: (challenge: MfaChallenge | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -40,22 +34,9 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const hasRedirected = useRef(false);
-
-  // Theme Logic
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem("theme");
-    return (saved as 'light' | 'dark') || 'light';
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
@@ -69,10 +50,11 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
     if (user) {
         setIsWelcomeModalOpen(false);
         try {
+            // Tenta atualizar, mas não trava se a tabela profiles não existir (ainda em bootstrap)
             await supabaseService.updateDocument<UserProfile>('profiles', user.id, { last_login: new Date().toISOString() });
             setUser(prev => prev ? { ...prev, last_login: new Date().toISOString() } : null);
         } catch (error) {
-            console.error("Failed to update last_login", error);
+            console.warn("Could not update profile (DB might need bootstrap):", error);
         }
         performRedirection(user.role);
     }
@@ -85,33 +67,35 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
         const currentUser = await getCurrentUser();
         if (isMounted) setUser(currentUser);
       } catch (e) {
-        console.error("[Auth] Initial check failed", e);
+        console.error("[Auth] Session check failed", e);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
+    
     checkInitialAuth();
+    
     const unsubscribe = listenAuthChanges((authUser) => {
       if (isMounted) {
         setUser(authUser);
-        if (isLoading) setIsLoading(false);
+        setIsLoading(false);
       }
     });
+
     return () => { isMounted = false; unsubscribe(); };
   }, []);
 
   useEffect(() => {
     if (user && !isLoading && !hasRedirected.current) {
-        if (user.last_login === null) setIsWelcomeModalOpen(true);
-        else performRedirection(user.role);
-    }
-    if (!user && !isLoading) {
-        hasRedirected.current = false;
-        setActiveModule('dashboard'); 
+        if (!user.last_login) {
+            setIsWelcomeModalOpen(true);
+        } else {
+            performRedirection(user.role);
+        }
     }
   }, [user, isLoading, performRedirection]);
 
-  const value = { user, isLoading, activeModule, setActiveModule, theme, toggleTheme, mfaChallenge, setMfaChallenge };
+  const value = { user, isLoading, activeModule, setActiveModule, theme, toggleTheme };
 
   return (
     <AppContext.Provider value={value}>

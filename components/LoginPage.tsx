@@ -1,16 +1,16 @@
-
-import React, { useState, useEffect } from 'react';
-import { login, register, signInWithMagicLink, signInWithGoogle } from '../services/authService';
+import React, { useState } from 'react';
+import { login, register, signInWithMagicLink, signInWithGoogle, loginAsDev } from '../services/authService';
 import { Button } from './ui/Button';
-import { Loader2, Mail, Lock, Sparkles, Send, Globe, Database, Wifi, AlertTriangle } from 'lucide-react';
+import { Loader2, Mail, Lock, Sparkles, Send, Globe, Database, Wifi, Code2 } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import ForgotPasswordModal from './ForgotPasswordModal';
-import BootstrapModal from './BootstrapModal'; // Import BootstrapModal
+import BootstrapModal from './BootstrapModal';
 import { cn } from '../lib/utils';
 import { useTranslation } from '../hooks/useTranslation';
 import { useApp } from '../contexts/AppContext';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { supabase } from '../lib/supabaseClient';
+import { UserRole } from '../types';
 
 type LoginView = 'password' | 'register' | 'magiclink' | 'magiclink_sent';
 
@@ -21,39 +21,56 @@ const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [isBootstrapOpen, setIsBootstrapOpen] = useState(false); // State for Bootstrap Modal
+  const [isBootstrapOpen, setIsBootstrapOpen] = useState(false);
   const [view, setView] = useState<LoginView>('password');
   const [loginError, setLoginError] = useState(false);
   const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // State para Dev Mode
+  const [devRole, setDevRole] = useState<UserRole>('AdminGeral');
+  const [showDevMode, setShowDevMode] = useState(false);
+
+  const roles: UserRole[] = ['AdminGeral', 'Administrativo', 'Producao', 'Vendas', 'Financeiro', 'Conteudo'];
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
   }
 
+  const handleDevLogin = async () => {
+    setIsLoading(true);
+    try {
+        loginAsDev(devRole);
+        toast({ title: 'Modo Desenvolvedor Ativado', description: `Acesso concedido como ${devRole}. As conexões reais estão desativadas.` });
+        setTimeout(() => window.location.reload(), 500);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const testSupabaseConnection = async () => {
       setIsLoading(true);
       try {
           console.log("Iniciando diagnóstico de conexão...");
-          // Tenta fazer uma query simples na tabela de configurações
           const { data, error } = await supabase.from('system_config').select('olie_hub_name').limit(1);
 
           if (error) {
               console.error("Erro diagnóstico:", error);
-              // Código 42P01 significa "relation does not exist" (tabela não existe)
               if (error.code === '42P01') {
-                  toast({ title: 'Banco de Dados Incompleto', description: 'As tabelas necessárias não foram encontradas.', variant: 'destructive' });
-                  setIsBootstrapOpen(true); // Abre o modal automaticamente
+                  toast({ title: 'Banco de Dados Incompleto', description: 'As tabelas necessárias não foram encontradas. Use o botão Configurar Banco.', variant: 'destructive' });
+                  setIsBootstrapOpen(true);
               } else {
-                  toast({ title: 'Erro de Conexão Supabase', description: `Falha: ${error.message} (${error.code})`, variant: 'destructive' });
+                  toast({ title: 'Erro de Conexão Supabase', description: `Falha: ${error.message}. Verifique suas chaves API.`, variant: 'destructive' });
               }
           } else if (data) {
-              toast({ title: 'Conexão Supabase OK', description: `Acesso válido.`, variant: 'default' }); 
+              toast({ title: 'Conexão Supabase OK', description: `Acesso ao banco confirmado.`, variant: 'default' }); 
           }
       } catch (e: any) {
            console.error("Exceção diagnóstico:", e);
-           toast({ title: 'ERRO FATAL', description: `Cliente Supabase não inicializado. ${e.message}`, variant: 'destructive' });
+           toast({ title: 'ERRO FATAL', description: `Cliente Supabase não inicializado. Verifique o arquivo .env`, variant: 'destructive' });
       } finally {
           setIsLoading(false);
       }
@@ -61,19 +78,12 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-        toast({ title: "Erro", description: "Formato de e-mail inválido.", variant: 'destructive'});
-        return;
-    }
+    if (!validateEmail(email)) return toast({ title: "Erro", description: "Formato de e-mail inválido.", variant: 'destructive'});
     setIsLoading(true);
     try {
       await login(email, password);
       toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
-      
-      setTimeout(() => {
-          window.location.reload();
-      }, 500);
-      
+      setTimeout(() => { window.location.reload(); }, 500);
     } catch (err) {
       const error = err as any;
       console.error("Login Error:", error);
@@ -87,18 +97,9 @@ const LoginPage: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-        toast({ title: "Erro", description: "Formato de e-mail inválido.", variant: 'destructive'});
-        return;
-    }
-    if (password !== confirmPassword) {
-        toast({ title: "Erro", description: "As senhas não coincidem.", variant: 'destructive'});
-        return;
-    }
-    if (password.length < 6) {
-        toast({ title: "Erro", description: "A senha deve ter no mínimo 6 caracteres.", variant: 'destructive'});
-        return;
-    }
+    if (!validateEmail(email)) return toast({ title: "Erro", description: "Formato de e-mail inválido.", variant: 'destructive'});
+    if (password !== confirmPassword) return toast({ title: "Erro", description: "As senhas não coincidem.", variant: 'destructive'});
+    if (password.length < 6) return toast({ title: "Erro", description: "A senha deve ter no mínimo 6 caracteres.", variant: 'destructive'});
 
     setIsLoading(true);
     try {
@@ -114,10 +115,7 @@ const LoginPage: React.FC = () => {
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-        toast({ title: "Erro", description: "E-mail inválido.", variant: 'destructive'});
-        return;
-    }
+    if (!validateEmail(email)) return toast({ title: "Erro", description: "E-mail inválido.", variant: 'destructive'});
     setIsLoading(true);
     try {
       await signInWithMagicLink(email);
@@ -130,11 +128,8 @@ const LoginPage: React.FC = () => {
   };
   
   const handleGoogleLogin = async () => {
-    try {
-        await signInWithGoogle();
-    } catch (error) {
-        toast({ title: 'Erro', description: (error as Error).message, variant: 'destructive' });
-    }
+    try { await signInWithGoogle(); } 
+    catch (error) { toast({ title: 'Erro', description: (error as Error).message, variant: 'destructive' }); }
   };
 
   if (appLoading) {
@@ -155,9 +150,7 @@ const LoginPage: React.FC = () => {
           
           <div className="p-8 md:p-12 flex flex-col justify-center bg-background dark:bg-dark-background z-10 relative order-2 md:order-1">
               <div className="mb-8 text-center">
-                  <div className="h-12 w-12 mx-auto bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md mb-4">
-                    OH
-                  </div>
+                  <div className="h-12 w-12 mx-auto bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md mb-4">OH</div>
                   <h1 className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary">
                       {view === 'register' ? 'Criar Conta' : t('login.title')}
                   </h1>
@@ -180,19 +173,10 @@ const LoginPage: React.FC = () => {
                           <label className="block text-xs font-medium text-textSecondary mb-1">{t('login.emailLabel')}</label>
                           <div className="relative">
                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><Mail className="h-4 w-4 text-textSecondary" /></div>
-                              <input
-                                  type="email"
-                                  value={email}
-                                  onChange={(e) => setEmail(e.target.value)}
-                                  required
-                                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                              />
+                              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
                           </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {t('login.magicLink.submitButton')}
-                      </Button>
+                      <Button type="submit" className="w-full" disabled={isLoading}>{isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t('login.magicLink.submitButton')}</Button>
                       <Button variant="link" className="w-full text-xs" onClick={() => setView('password')}>{t('login.magicLink.backButton')}</Button>
                   </form>
               ) : (
@@ -201,32 +185,16 @@ const LoginPage: React.FC = () => {
                           <label className="block text-xs font-medium text-textSecondary mb-1">{t('login.emailLabel')}</label>
                            <div className="relative">
                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><Mail className="h-4 w-4 text-textSecondary" /></div>
-                              <input
-                                  type="email"
-                                  value={email}
-                                  onChange={(e) => setEmail(e.target.value)}
-                                  required
-                                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                              />
+                              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
                           </div>
                       </div>
                       <div>
                           <label className="block text-xs font-medium text-textSecondary mb-1">{t('login.passwordLabel')}</label>
                           <div className="relative">
                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><Lock className="h-4 w-4 text-textSecondary" /></div>
-                              <input
-                                  type="password"
-                                  value={password}
-                                  onChange={(e) => setPassword(e.target.value)}
-                                  required
-                                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                              />
+                              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
                           </div>
-                          {view === 'register' && (
-                              <div className="mt-2">
-                                  <PasswordStrengthMeter password={password} />
-                              </div>
-                          )}
+                          {view === 'register' && <div className="mt-2"><PasswordStrengthMeter password={password} /></div>}
                       </div>
 
                       {view === 'register' && (
@@ -234,13 +202,7 @@ const LoginPage: React.FC = () => {
                               <label className="block text-xs font-medium text-textSecondary mb-1">Confirmar Senha</label>
                               <div className="relative">
                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><Lock className="h-4 w-4 text-textSecondary" /></div>
-                                  <input
-                                      type="password"
-                                      value={confirmPassword}
-                                      onChange={(e) => setConfirmPassword(e.target.value)}
-                                      required
-                                      className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                  />
+                                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/50" />
                               </div>
                           </div>
                       )}
@@ -258,25 +220,11 @@ const LoginPage: React.FC = () => {
                       {view === 'password' && (
                         <>
                              <div className="flex gap-2 mt-3">
-                                <Button 
-                                    type="button" 
-                                    variant="ghost" 
-                                    onClick={testSupabaseConnection} 
-                                    className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wifi className="w-3 h-3" />}
-                                    Diagnóstico
+                                <Button type="button" variant="ghost" onClick={testSupabaseConnection} className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border" disabled={isLoading}>
+                                    {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wifi className="w-3 h-3" />} Diagnóstico
                                 </Button>
-                                <Button 
-                                    type="button" 
-                                    variant="ghost" 
-                                    onClick={() => setIsBootstrapOpen(true)}
-                                    className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border"
-                                    disabled={isLoading}
-                                >
-                                    <Database className="w-3 h-3" />
-                                    Configurar Banco
+                                <Button type="button" variant="ghost" onClick={() => setIsBootstrapOpen(true)} className="flex-1 text-xs flex items-center justify-center gap-2 text-textSecondary hover:text-textPrimary border border-border" disabled={isLoading}>
+                                    <Database className="w-3 h-3" /> Configurar Banco
                                 </Button>
                             </div>
 
@@ -286,31 +234,36 @@ const LoginPage: React.FC = () => {
                             </div>
                             
                             <div className="grid grid-cols-2 gap-3">
-                                <Button type="button" variant="outline" onClick={() => setView('magiclink')} className="text-xs">
-                                    <Sparkles className="mr-2 h-3 w-3" /> Link Mágico
-                                </Button>
-                                <Button type="button" variant="outline" onClick={handleGoogleLogin} className="text-xs">
-                                    <Globe className="mr-2 h-3 w-3" /> Google
-                                </Button>
+                                <Button type="button" variant="outline" onClick={() => setView('magiclink')} className="text-xs"><Sparkles className="mr-2 h-3 w-3" /> Link Mágico</Button>
+                                <Button type="button" variant="outline" onClick={handleGoogleLogin} className="text-xs"><Globe className="mr-2 h-3 w-3" /> Google</Button>
+                            </div>
+
+                            {/* DEV MODE SECTION */}
+                            <div className="mt-8 pt-4 border-t border-dashed border-border">
+                                <div className="flex items-center justify-center gap-2 cursor-pointer text-xs text-textSecondary hover:text-primary transition-colors" onClick={() => setShowDevMode(!showDevMode)}>
+                                    <Code2 size={14} /> <span className="font-mono">Dev Mode Access</span>
+                                </div>
+                                {showDevMode && (
+                                    <div className="mt-3 p-3 bg-secondary rounded-lg border border-border animate-fade-in-up">
+                                        <label className="block text-xs font-semibold mb-2 text-textPrimary">Selecionar Função (Mock)</label>
+                                        <div className="flex gap-2">
+                                            <select value={devRole} onChange={(e) => setDevRole(e.target.value as UserRole)} className="flex-1 text-xs p-2 rounded border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none">
+                                                {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                                            </select>
+                                            <Button size="sm" onClick={handleDevLogin} disabled={isLoading}>Entrar</Button>
+                                        </div>
+                                        <p className="text-[10px] text-textSecondary mt-2">*Este modo ignora a autenticação do Supabase e permite testar a UI.</p>
+                                    </div>
+                                )}
                             </div>
                         </>
                       )}
 
                       <div className="mt-4 text-center text-xs">
                           {view === 'password' ? (
-                              <p className="text-textSecondary">
-                                  Não tem conta?{' '}
-                                  <button type="button" onClick={() => setView('register')} className="font-semibold text-primary hover:underline">
-                                      Cadastre-se
-                                  </button>
-                              </p>
+                              <p className="text-textSecondary">Não tem conta? <button type="button" onClick={() => setView('register')} className="font-semibold text-primary hover:underline">Cadastre-se</button></p>
                           ) : (
-                              <p className="text-textSecondary">
-                                  Já tem conta?{' '}
-                                  <button type="button" onClick={() => setView('password')} className="font-semibold text-primary hover:underline">
-                                      Faça Login
-                                  </button>
-                              </p>
+                              <p className="text-textSecondary">Já tem conta? <button type="button" onClick={() => setView('password')} className="font-semibold text-primary hover:underline">Faça Login</button></p>
                           )}
                       </div>
                   </form>
@@ -320,10 +273,7 @@ const LoginPage: React.FC = () => {
             <img 
                 src="https://images.unsplash.com/photo-1605218427368-bc64b7b1104b?q=80&w=1600&auto=format&fit=crop" 
                 alt="Olie Hub Atelier" 
-                className={cn(
-                    "absolute inset-0 w-full h-full object-cover transition-opacity duration-700",
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                )}
+                className={cn("absolute inset-0 w-full h-full object-cover transition-opacity duration-700", imageLoaded ? 'opacity-100' : 'opacity-0')}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
             />
@@ -331,7 +281,6 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
-
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
       <BootstrapModal isOpen={isBootstrapOpen} onClose={() => setIsBootstrapOpen(false)} />
     </>
