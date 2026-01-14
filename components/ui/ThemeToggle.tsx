@@ -1,10 +1,10 @@
 import React from 'react';
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
+import { useApp } from "../../contexts/AppContext";
 import { IconButton } from "./IconButton";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useApp();
 
   return (
     <IconButton
